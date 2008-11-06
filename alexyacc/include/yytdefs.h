@@ -3,7 +3,7 @@ yytdefs.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1997-99 P. D. Stearns
+Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 ************************************************************/
 
 #ifdef __cplusplus
@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 /* Microsoft defines */
-#ifdef  _MSC_VER
+#ifdef _MSC_VER
 
 /* version 6.0 compatibility */
 #if (_MSC_VER <= 600)
@@ -30,6 +30,11 @@ extern "C" {
 #pragma pack(push,8)
 #else
 #pragma pack(2)
+#endif
+
+/* stream initialisation */
+#ifdef _DLL
+#define YYNINITSTREAM
 #endif
 
 /* 32/16-bit modifiers */
@@ -81,9 +86,21 @@ extern "C" {
 #pragma warn -nak
 #endif
 
+#if (__BORLANDC__) >= 0x0530
+#pragma pack(push, 1)
+#pragma nopackwarning
+#else
+#pragma option -a-
+#endif  /* (__BORLANDC__) >= 0x0530 */
+
 #pragma option -a-
 
 #endif  /* !RC_INVOKED */
+
+/* stream initialisation */
+#ifdef _RTLDLL
+#define YYNINITSTREAM
+#endif
 
 /* 32/16-bit modifiers */
 #ifndef YYCDECL

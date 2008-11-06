@@ -1,24 +1,44 @@
 EXEC = main.out
-CPPFLAGS = -DUNIX_OS -Ialexyacc/include/
+CPPFLAGS = -DUNIX_OS -Ialexyacc/include/ -DDEBUG
 CPPC = g++
 
 $(EXEC):EaseaSym.o EaseaLex.o EaseaParse.o alexyacc/libalex.so
+#$(EXEC):EaseaSym.o easealex.o EaseaParse.o alexyacc/libalex.so
 	$(CPPC) $(CPPFLAGS) $^ -o $@
 
 
 %.o:%.cpp
 	$(CPPC) $(CPPFLAGS) -c -o $@ $<
 
-
+#compile library for alex and ayacc unix version
 alexyacc/libalex.so:alexyacc/*.cpp
 	cd alexyacc && make libalex.so
 
 clean:
-	rm -f *.o $(EXEC) 
+	rm -f *.o $(EXEC)
+	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
 	cd alexyacc && make clean
 
 
-# g++ -DUNIX_OS -Iinclude EaseaLex.o  EaseaParse.o EaseaSym.o alexyacc/*.o -o main.out
-# g++ EaseaSym.cpp -Iinclude/ -DUNIX_OS -c
-# g++ EaseaLex.cpp -Iinclude/ -DUNIX_OS -c
-# g++ EaseaParse.cpp -Iinclude/ -DUNIX_OS -c
+#handle file between windows and local directory
+winclean:
+	rm -f $(TMP_DIR)/EaseaLex.cpp $(TMP_DIR)/EaseaLex.h $(TMP_DIR)/EaseaParse.cpp $(TMP_DIR)/EaseaParse.h $(TMP_DIR)/EaseaParse.v
+
+winrealclean: winclean
+	rm -f $(TMP_DIR)/EaseaParse.y $(TMP_DIR)/EaseaLex.l
+
+#send alex and ayacc files to windows
+winsend: winsend_l winsend_y
+winsend_l:
+	sudo cp EaseaLex.l $(TMP_DIR)/
+winsend_y:
+	sudo cp EaseaParse.y $(TMP_DIR)/
+
+#receveive alex and ayacc files from windows
+winreceive: winreceive_l winreceive_y
+
+winreceive_l:
+	cp $(TMP_DIR)/EaseaLex.cpp $(TMP_DIR)/EaseaLex.h ./
+
+winreceive_y:
+	cp $(TMP_DIR)/EaseaParse.cpp $(TMP_DIR)/EaseaParse.h ./

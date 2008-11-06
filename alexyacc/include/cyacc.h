@@ -6,10 +6,8 @@ cyacc.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1997-99 P. D. Stearns
+Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 ************************************************************/
-
-#define YY_AYACC
 
 #include <stdio.h>
 #include <stddef.h>
@@ -22,6 +20,8 @@ Copyright (c) 1997-99 P. D. Stearns
 #if defined(YYTUDEFS) || defined(YYUDEFS)
 #include <yytudefs.h>
 #endif
+
+#define YY_AYACC
 
 // modifiers
 #ifndef YYCDECL
@@ -57,41 +57,41 @@ typedef short yystack_t;
 #define YYTK_END		0			// $end token
 #define YYTK_ERROR		256			// error token
 
-#ifndef YYCNONTERMGOTO_T
-#define YYCNONTERMGOTO_T
-typedef short yycnontermgoto_t;
-#endif
-
 #ifndef YYCSTATEGOTO_T
 #define YYCSTATEGOTO_T
-typedef struct yycstategoto {
-	short current;					// current state
-	short next;						// next state
-} yycstategoto_t;
+typedef short yycstategoto_t;
 #endif
 
-#ifndef YYNONTERMGOTO_T
-#define YYNONTERMGOTO_T
-typedef struct yynontermgoto {
-	short base;						// base
-	short def;						// default state
-} yynontermgoto_t;
+#ifndef YYCNONTERMGOTO_T
+#define YYCNONTERMGOTO_T
+typedef struct yycnontermgoto {
+	short nonterm;					// nonterminal
+	short next;						// next state
+} yycnontermgoto_t;
 #endif
 
 #ifndef YYSTATEGOTO_T
 #define YYSTATEGOTO_T
 typedef struct yystategoto {
-	short check;					// check
-	short next;						// next state
+	short base;						// base
+	short def;						// default state
 } yystategoto_t;
 #endif
 
+#ifndef YYNONTERMGOTO_T
+#define YYNONTERMGOTO_T
+typedef struct yynontermgoto {
+	short check;					// check
+	short next;						// next state
+} yynontermgoto_t;
+#endif
+
 // action types
-#define YYAT_SHIFT		0		// shift action
-#define YYAT_REDUCE		1		// reduce action
-#define YYAT_ERROR		2		// error
-#define YYAT_ACCEPT		3		// accept
-#define YYAT_DEFAULT	4		// default state
+#define YYAT_SHIFT		0			// shift action
+#define YYAT_REDUCE		1			// reduce action
+#define YYAT_ERROR		2			// error
+#define YYAT_ACCEPT		3			// accept
+#define YYAT_DEFAULT	4			// default state
 
 #ifndef YYCSTATEACTION_T
 #define YYCSTATEACTION_T
@@ -101,39 +101,41 @@ typedef short yycstateaction_t;
 #ifndef YYCTOKENACTION_T
 #define YYCTOKENACTION_T
 typedef struct yyctokenaction {
-	int token;					// lookahead token
-	unsigned char type;			// action to perform
-	short sr;					// state to shift/production to reduce
+	int token;						// lookahead token
+	unsigned char type;				// action to perform
+	short sr;						// state to shift/production to reduce
 } yyctokenaction_t;
 #endif
 
 #ifndef YYSTATEACTION_T
 #define YYSTATEACTION_T
 typedef struct yystateaction {
-	short base;					// base
-	unsigned char lookahead;	// lookahead needed
-	unsigned char type;			// action to perform
-	short sr;					// shift/reduce
+	short base;						// base
+	unsigned char lookahead;		// lookahead needed
+	unsigned char type;				// action to perform
+	short sr;						// shift/reduce
 } yystateaction_t;
 #endif
 
 #ifndef YYTOKENACTION_T
 #define YYTOKENACTION_T
 typedef struct yytokenaction {
-	short check;				// check
-	unsigned char type;			// action type
-	short sr;					// shift/reduce
+	short check;					// check
+	unsigned char type;				// action type
+	short sr;						// shift/reduce
 } yytokenaction_t;
 #endif
 
+// nonterminals
+#define YYNT_ALL		(-1)		// match all nonterminals
+
 // states
-#define YYST_ALL		(-1)	// match all states
-#define YYST_ERROR		(-1)	// goto error
+#define YYST_ERROR		(-1)		// goto error
 
 #ifndef YYREDUCTION_T
 #define YYREDUCTION_T
 typedef struct yyreduction {
-	short rule;						// the rhs symbol
+	short nonterm;					// the rhs symbol
 	short length;					// number of symbols on lhs
 	short action;					// the user action
 } yyreduction_t;
@@ -256,11 +258,11 @@ public:
 	void _yyerrok() { yysetskip(0); }
 #endif
 	void yyexit(int exitcode) { yyexitflg = 1; yyexitcode = exitcode; }
-	void yyforceerror() { yythrowerror(0); }
+	void yyforceerror() { yythrowerror(); }
 	int yypopping() const { return yypopflg; }
 	int yyrecovering() const { return yyskip > 0; }
 	void yyretire(int retirecode) { yyretireflg = 1; yyretirecode = retirecode; }
-	void yythrowerror(int pop) { yyerrorflg = 1; yyerrorpop = pop; }
+	void yythrowerror(int pop = 0) { yyerrorflg = 1; yyerrorpop = pop; }
 
 	// compatibility
 	int yycparse() { return yyparse(); }
@@ -306,7 +308,7 @@ protected:
 	void yydthrowerror(int errorpop) const;
 	void yydretire(int retirecode) const;
 	void yydattemptrecovery() const;
-	void yydebugoutput(const char *string) const;
+	void yydebugoutput(const char* string) const;
 #endif
 };
 
@@ -324,9 +326,9 @@ protected:
 	const yystateaction_t YYNEARFAR* yystateaction;
 	const yytokenaction_t YYNEARFAR* yytokenaction;
 	int yytokenaction_size;
-	const yynontermgoto_t YYNEARFAR* yynontermgoto;
 	const yystategoto_t YYNEARFAR* yystategoto;
-	int yystategoto_size;
+	const yynontermgoto_t YYNEARFAR* yynontermgoto;
+	int yynontermgoto_size;
 	const yytokendest_t YYNEARFAR* yytokendestptr;
 	int yytokendest_size;
 	int yytokendestbase;
@@ -345,8 +347,8 @@ public:
 protected:
 	const yycstateaction_t YYNEARFAR* yycstateaction;
 	const yyctokenaction_t YYNEARFAR* yyctokenaction;
-	const yycnontermgoto_t YYNEARFAR* yycnontermgoto;
 	const yycstategoto_t YYNEARFAR* yycstategoto;
+	const yycnontermgoto_t YYNEARFAR* yycnontermgoto;
 	const yyctokendest_t YYNEARFAR* yyctokendestptr;
 };
 

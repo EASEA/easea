@@ -6,7 +6,7 @@ milconv.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1997-99 P. D. Stearns
+Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 ************************************************************/
 
 /* variables */
@@ -71,18 +71,5 @@ Copyright (c) 1997-99 P. D. Stearns
 #define BEGIN (yy)->yymstart = 
 #define YYSTATE (yy)->yymstart
 #define YY_START (yy)->yymstart
-
-#ifndef input
-#define input() (*yy->yyminput)(yy)
-#define YY_INPUT
-#endif
-#ifndef output
-#define output(ch) (*yy->yymoutput)(yy, (ch))
-#define YY_OUTPUT
-#endif
-#ifdef unput
-#define unput(ch) (*yy->yymunput)(yy, (ch))
-#define YY_UNPUT
-#endif
 
 #endif
