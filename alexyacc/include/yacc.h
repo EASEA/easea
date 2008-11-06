@@ -6,8 +6,14 @@ yacc.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define YY_AYACC
 
 #include <stdio.h>
 #include <stddef.h>
@@ -20,12 +26,6 @@ Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 #if defined(YYTUDEFS) || defined(YYUDEFS)
 #include <yytudefs.h>
 #endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define YY_AYACC
 
 /* modifiers */
 #ifndef YYCDECL
@@ -83,33 +83,33 @@ typedef short yystack_t;
 #define YYTK_END		0			/* $end token */
 #define YYTK_ERROR		256			/* error token */
 
-#ifndef YYCSTATEGOTO_T
-#define YYCSTATEGOTO_T
-typedef short yycstategoto_t;
-#endif
-
 #ifndef YYCNONTERMGOTO_T
 #define YYCNONTERMGOTO_T
-typedef struct yycnontermgoto {
-	short nonterm;					/* nonterminal */
-	short next;						/* next state */
-} yycnontermgoto_t;
+typedef short yycnontermgoto_t;
 #endif
 
-#ifndef YYSTATEGOTO_T
-#define YYSTATEGOTO_T
-typedef struct yystategoto {
-	short base;						/* base */
-	short def;						/* default state */
-} yystategoto_t;
+#ifndef YYCSTATEGOTO_T
+#define YYCSTATEGOTO_T
+typedef struct yycstategoto {
+	short current;					/* current state */
+	short next;						/* next state */
+} yycstategoto_t;
 #endif
 
 #ifndef YYNONTERMGOTO_T
 #define YYNONTERMGOTO_T
 typedef struct yynontermgoto {
+	short base;						/* base */
+	short def;						/* default state */
+} yynontermgoto_t;
+#endif
+
+#ifndef YYSTATEGOTO_T
+#define YYSTATEGOTO_T
+typedef struct yystategoto {
 	short check;					/* check */
 	short next;						/* next state */
-} yynontermgoto_t;
+} yystategoto_t;
 #endif
 
 /* action types */
@@ -152,16 +152,14 @@ typedef struct yytokenaction {
 } yytokenaction_t;
 #endif
 
-/* nonterminals */
-#define YYNT_ALL		(-1)		/* match all nonterminals */
-
 /* states */
+#define YYST_ALL		(-1)		/* match all states */
 #define YYST_ERROR		(-1)		/* goto error */
 
 #ifndef YYREDUCTION_T
 #define YYREDUCTION_T
 typedef struct yyreduction {
-	short nonterm;					/* the rhs symbol */
+	short rule;						/* the rhs symbol */
 	short length;					/* number of symbols on lhs */
 	short action;					/* the user action */
 } yyreduction_t;
@@ -384,17 +382,17 @@ extern char YYFAR *YYNEAR YYDCDECL yysattributestackptr;	/* static attribute sta
 /* compact parser */
 extern YYCONST yycstateaction_t YYNEARFAR YYDCDECL yycstateaction[];
 extern YYCONST yyctokenaction_t YYNEARFAR YYDCDECL yyctokenaction[];
-extern YYCONST yycstategoto_t YYNEARFAR YYDCDECL yycstategoto[];
 extern YYCONST yycnontermgoto_t YYNEARFAR YYDCDECL yycnontermgoto[];
+extern YYCONST yycstategoto_t YYNEARFAR YYDCDECL yycstategoto[];
 extern YYCONST yyctokendest_t YYNEARFAR *YYNEAR YYDCDECL yyctokendestptr;
 
 /* fast parser */
 extern YYCONST yystateaction_t YYNEARFAR YYDCDECL yystateaction[];
 extern YYCONST yytokenaction_t YYNEARFAR YYDCDECL yytokenaction[];
 extern int YYNEAR YYDCDECL yytokenaction_size;
-extern YYCONST yystategoto_t YYNEARFAR YYDCDECL yystategoto[];
 extern YYCONST yynontermgoto_t YYNEARFAR YYDCDECL yynontermgoto[];
-extern int YYNEAR YYDCDECL yynontermgoto_size;
+extern YYCONST yystategoto_t YYNEARFAR YYDCDECL yystategoto[];
+extern int YYNEAR YYDCDECL yystategoto_size;
 extern YYCONST yytokendest_t YYNEARFAR *YYNEAR YYDCDECL yytokendestptr;
 extern int YYNEAR YYDCDECL yytokendest_size;
 extern int YYNEAR YYDCDECL yytokendestbase;
@@ -403,10 +401,6 @@ extern YYCONST yyreduction_t YYNEARFAR YYDCDECL yyreduction[];
 
 extern YYCONST yydestructor_t YYNEARFAR *YYNEAR YYDCDECL yydestructorptr;
 
-#ifdef __cplusplus
-}
-#endif
-
 /* user defines */
 #if defined(YYBUDEFS) || defined(YYUDEFS)
 #include <yybudefs.h>
@@ -414,5 +408,9 @@ extern YYCONST yydestructor_t YYNEARFAR *YYNEAR YYDCDECL yydestructorptr;
 
 /* defines */
 #include <yybdefs.h>
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif

@@ -3,9 +3,7 @@ yycpush.cpp
 This file can be freely modified for the generation of
 custom code.
 
-[Ansi]
-
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
 
 #include <stdlib.h>
@@ -68,9 +66,8 @@ int yyparser::yypush(yystack_t state)
 		if (::yydebugstack || yydebugstack) {
 			yydebugoutput("\nstack");
 			int n = sprintf(string, "\n     +");
-			int i;
-			for (i = 0; i < 10; i++) {
-				n += sprintf(&string[n], " %5d", (int)i);
+			for (int i = 0; i < 10; i++) {
+				n += sprintf(&string[n], " %5d", (int) i);
 			}
 			yydebugoutput(string);
 
@@ -79,11 +76,11 @@ int yyparser::yypush(yystack_t state)
 				rows += yytop / 10;
 			}
 			for (i = 0; i < rows; i++) {
-				n = sprintf(string, "\n %5d", (int)(10 * i));
+				n = sprintf(string, "\n %5d", (int) (10 * i));
 				for (int j = 0; j < 10; j++) {
 					int index = 10 * i + j;
 					if (index <= yytop) {
-						n += sprintf(&string[n], " %5d", (int)yystackptr[index]);
+						n += sprintf(&string[n], " %5d", (int) yystackptr[index]);
 					}
 					else {
 						n += sprintf(&string[n], "     -");

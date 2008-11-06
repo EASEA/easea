@@ -3,9 +3,7 @@ yycldbug.cpp
 This file can be freely modified for the generation of
 custom code.
 
-[Ansi]
-
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
 
 #include <stdio.h>
@@ -32,7 +30,7 @@ void yylexer::yydmatch(int expr) const
 	}
 }
 
-void yylexer::yydebugoutput(const char* string) const
+void yylexer::yydebugoutput(const char *string) const
 {
 	yyassert(string != NULL);
 
@@ -52,7 +50,6 @@ void yylexer::yydebugoutput(const char* string) const
 	}
 	else {
 		OutputDebugString(string);
-		Sleep(0);		// makes sure debug string is processed
 	}
 #endif
 }

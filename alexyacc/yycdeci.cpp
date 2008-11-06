@@ -3,9 +3,7 @@ yycdeci.cpp
 This file can be freely modified for the generation of
 custom code.
 
-[Ansi]
-
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
 
 #include <string.h>
@@ -23,9 +21,8 @@ void yyfparser::yydestructclearin()
 	if (yylookahead) {
 		// clean up any token attributes
 		if (yytokendestptr != NULL) {
-			int index = yytokendestbase + yychar;
-			if (index >= 0 && index < yytokendest_size) {
-				int action = yytokendestptr[index];
+			if (yychar >= 0 && yychar < yytokendest_size) {
+				int action = yytokendestptr[yychar];
 				if (action != -1) {
 					// user actions in here
 					memcpy(yyvalptr, yylvalptr, yyattribute_size);

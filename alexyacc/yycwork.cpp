@@ -3,9 +3,7 @@ yycwork.cpp
 This file can be freely modified for the generation of
 custom code.
 
-[Ansi]
-
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
 
 #include <string.h>
@@ -116,22 +114,20 @@ int yyfparser::yywork()
 			{
 				yystack_t state = yypeek();       // get top state
 				short next;
-
-				int nonterm = yyreduction[sr].nonterm;
-				while (1) {
-					int index = yystategoto[state].base + nonterm;
-					if (index >= 0 && index < yynontermgoto_size) {
-						if (yynontermgoto[index].check == state) {
-							next = yynontermgoto[index].next;
-							break;
-						}
+				int nonterm = yyreduction[sr].rule;
+				const yynontermgoto_t YYNEARFAR* q = &yynontermgoto[nonterm];
+				int index = q->base + state;
+				if (index >= 0 && index < yystategoto_size) {
+					const yystategoto_t YYNEARFAR* r = &yystategoto[index];
+					if (r->check == nonterm) {
+						next = r->next;
 					}
-
-					next = yystategoto[state].def;
-					if (next == -1) {
-						break;
+					else {
+						next = q->def;
 					}
-					state = next;
+				}
+				else {
+					next = q->def;
 				}
 				yyassert(next != -1);
 

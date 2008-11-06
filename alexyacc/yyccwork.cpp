@@ -3,9 +3,7 @@ yyccwork.cpp
 This file can be freely modified for the generation of
 custom code.
 
-[Ansi]
-
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
 
 #include <string.h>
@@ -113,24 +111,13 @@ int yycparser::yywork()
 			{
 				yystack_t state = yypeek();       // get top state
 
-				int nonterm = yyreduction[sr].nonterm;
-				int index = yycstategoto[state];
-				while (1) {
-					if (yycnontermgoto[index].nonterm == -1) {
-						if (yycnontermgoto[index].next != -1) {
-							state = yycnontermgoto[index].next;
-							index = yycstategoto[state];
-							continue;
-						}
-						break;
-					}
-					if (yycnontermgoto[index].nonterm == nonterm) {
-						break;
-					}
+				int index = yycnontermgoto[yyreduction[sr].rule];
+				while (yycstategoto[index].current != YYST_ALL &&
+					yycstategoto[index].current != state) {
 					index++;
 				}
-				short next = yycnontermgoto[index].next;
-				yyassert(next != -1);
+				short next = yycstategoto[index].next;
+				assert(next != YYST_ERROR);
 
 				if (!yypush(next)) {
 #ifdef YYDEBUG
@@ -255,7 +242,7 @@ int yycparser::yywork()
 
 					// clean up any token attributes
 					if (yyctokendestptr != NULL) {
-						const yyctokendest_t YYNEARFAR* tokendestptr = yyctokendestptr;
+						const yyctokendest_t YYNEARFAR *tokendestptr = yyctokendestptr;
 						while (tokendestptr->token != 0) {
 							if (tokendestptr->token == yychar) {
 								// user actions in here

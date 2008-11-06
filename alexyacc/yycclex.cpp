@@ -3,9 +3,7 @@ yycclex.cpp
 This file can be freely modified for the generation of
 custom code.
 
-[Ansi]
-
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
 
 #include <stdlib.h>
@@ -68,7 +66,7 @@ int yyclexer::yylex()
 			// look for a transition
 			int index = yystate[state].base;
 			while (1) {
-				if (yyctransition[index].next == -1) {
+				if (yyctransition[index].next == 0) {
 					state = yystate[state].def;
 					if (state <= 0) {
 						if (state < 0) {
@@ -81,7 +79,6 @@ int yyclexer::yylex()
 						}
 						break;
 					}
-					index = yystate[state].base;
 				}
 				if (ch >= yyctransition[index].first &&
 					ch <= yyctransition[index].last) {

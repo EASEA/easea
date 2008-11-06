@@ -6,7 +6,7 @@ miyconv.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
 
 /* variables */
@@ -43,7 +43,7 @@ Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 #define yycparse() yymcparse(yy)
 #define yycwipe() yymcwipe(yy)
 #define yycwork() yymcwork(yy)
-#define yydestructpop(num) yymdestructpop(yy, (num))
+#define yydestructpop(num) yymdestructpop(yy, (pop))
 #define yyparse() yymparse(yy)
 #define yyparsecleanup() yymparsecleanup(yy)
 #define yyparseinit() yymparseinit(yy)
@@ -55,14 +55,14 @@ Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 /* service functions */
 #define yygettoken() (*yy->yymgettoken)(yy)
 #define yystackoverflow() (*yy->yymstackoverflow)(yy)
-#define yyerror(text) (*yy->yymerror)(yy, (text))
+#define yyerror(text) (*yy->yymerror)(yy, text)
 #define yysyntaxerror() (*yy->yymsyntaxerror)(yy)
-#define yydiscard(token) (*yy->yymdiscard)(yy, (token))
+#define yydiscard() (*yy->yymdiscard)(yy)
 
 /* action functions */
 #define yycdestructclearin() yymcdestructclearin(yy)
 #define yydestructclearin() yymdestructclearin(yy)
-#define yysetin(token) yymsetin(yy, (token))
+#define yysetin(token) yymsetin(yy, (token)
 #define yyunclearin() yymunclearin(yy)
 #define yyabort() yymabort(yy)
 #define yyaccept() yymaccept(yy)

@@ -6,8 +6,10 @@ clex.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
+
+#define YY_ALEX
 
 #include <stdio.h>
 #include <assert.h>
@@ -19,8 +21,6 @@ Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 #if defined(YYTUDEFS) || defined(YYUDEFS)
 #include <yytudefs.h>
 #endif
-
-#define YY_ALEX
 
 // modifiers
 #ifndef YYCDECL

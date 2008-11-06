@@ -6,7 +6,7 @@ mlconv.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
+Copyright (c) 1997-99 P. D. Stearns
 ************************************************************/
 
 /* variables */
@@ -71,5 +71,18 @@ Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 #define BEGIN (YYLEXNAME).yymstart = 
 #define YYSTATE (YYLEXNAME).yymstart
 #define YY_START (YYLEXNAME).yymstart
+
+#ifndef input
+#define input() (*(YYLEXNAME)->yyminput)(&(YYLEXNAME))
+#define YY_INPUT
+#endif
+#ifndef output
+#define output(ch) (*(YYLEXNAME)->yymoutput)(&(YYLEXNAME), (ch))
+#define YY_OUTPUT
+#endif
+#ifdef unput
+#define unput(ch) (*(YYLEXNAME)->yymunput)(&(YYLEXNAME), (ch))
+#define YY_UNPUT
+#endif
 
 #endif
