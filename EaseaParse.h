@@ -109,6 +109,7 @@ public:
   
   double assign(CSymbol* pIdentifier, double dValue);
   double divide(double dDividend, double dDivisor);
+  void yysyntaxerror();
   CSymbol* insert() const;
 
 #line 115 "C:\\repo\\src\\EaseaParse.h"

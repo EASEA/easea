@@ -1987,7 +1987,7 @@ nNB_MIG=(int)yyattribute(2 - 2).dValue;
 #line 1241 "C:\\repo\\src\\EaseaParse.y"
 
       if (SymbolTable.find(yyattribute(1 - 1).pSymbol->sName)==NULL){
-         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,yyattribute(1 - 1).pSymbol->sName);
+	fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,yyattribute(1 - 1).pSymbol->sName);
          exit(1);
       }
       (*(YYSTYPE YYFAR*)yyvalptr).dValue = (SymbolTable.find(yyattribute(1 - 1).pSymbol->sName))->dValue;
@@ -2095,8 +2095,13 @@ double CEASEAParser::divide(double a, double b)
   }
 }
 
+void CEASEAParser::yysyntaxerror(){
+  
+  fprintf(stderr,"%s \t Error line %d\n",sEZ_FILE_NAME,EASEALexer.yylineno);
+  exit(-1);
+}
 
-#line 2100 "C:\\repo\\src\\EaseaParse.cpp"
+#line 2104 "C:\\repo\\src\\EaseaParse.cpp"
 void YYPARSENAME::yytables()
 {
 	yyattribute_size = sizeof(YYSTYPE);

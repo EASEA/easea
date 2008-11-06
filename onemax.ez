@@ -1,0 +1,100 @@
+/*_________________________________________________________
+
+This C:\WINDOWS\a_onemax\onemax.ez file was automatically created by GUIDE v0.1b
+
+_________________________________________________________*/
+
+\User declarations:
+#define SIZE 100      
+float pMutPerGene=0.1;
+
+inline void swap(bool& a, bool& b)
+  {bool c=a; a=b; b=c;}
+\end
+
+\User functions:
+
+\end
+
+\Initialisation function:
+
+\end
+
+\User classes:
+GenomeClass
+{
+  bool x[SIZE]; 
+}
+\end
+
+\GenomeClass::initialiser:
+  for (int i=0;i<SIZE;i++) Genome.x[i]=tossCoin(.5)?1:0;
+\end
+
+\GenomeClass::crossover:
+  int CrossoverPosition=random(0,SIZE);
+
+  for(int i=0;i<CrossoverPosition+1;i++)
+    swap(child1.x[i],child2.x[i]);
+\end
+
+\GenomeClass::mutator:
+  int NbMut=0;
+  for (int i=0;i<SIZE;i++)
+    if (tossCoin(pMutPerGene)){
+       NbMut++;
+       Genome.x[i]=Genome.x[i]?0:1;
+    }
+  return NbMut;
+\end
+
+\GenomeClass::evaluator:
+  int Score=0;         
+  for (int i=0; i<SIZE;i++)
+    Score+=(int)Genome.x[i];
+  return Score;
+\end
+
+\GenomeClass::display:
+
+\end
+
+\At each new generation:
+
+\end
+
+\Default run parameters:
+
+// Variation operators:
+  Operators are called: Sequentially
+  Mutation probability: 0.3
+  Crossover probability: 0.8
+
+// Evolution Engine:
+  Evaluator goal: Minimise
+  Number of generations: 2000
+  Evolutionary engine: Custom
+  Population size: 100
+  Elite: 10
+  Fertility: 80
+  Genitors selector: Tournament 2
+  Selected genitors: 100
+  Offspring size: 100
+  Reduce parents: Tournament 2
+  Surviving parents: 20
+  Reduce offspring: Tournament 2
+  Surviving offspring: 80
+  Final reduce: Tournament 2
+  Elitism: Strong
+
+// Island model:
+  Number of islands: 5
+  Emigration policy: Move
+  Migrants selector: Tournament 2
+  Migrants destination: Neighbours
+  Migration frequency: 0.2
+  Number of emigrants: 3
+  Immigration replacement: Tournament 2
+  Immigration policy: Add
+\end
+
