@@ -6,7 +6,7 @@ myconv.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1997-99 P. D. Stearns
+Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 ************************************************************/
 
 /* variables */
@@ -35,7 +35,7 @@ Copyright (c) 1997-99 P. D. Stearns
 #define yyattributestackptr (YYPARSENAME).yymattributestackptr
 #define yysattributestackptr (YYPARSENAME).yymsattributestackptr
 #define yyparsedebug (YYPARSENAME).yymdebug
-#define yyparsedebugstack (YYPARSENAME)->yymdebugstack
+#define yyparsedebugstack (YYPARSENAME).yymdebugstack
 #define yyparsedebugflush (YYPARSENAME).yymdebugflush
 #define yyparsedebugout (YYPARSENAME).yymdebugout
 
@@ -43,7 +43,7 @@ Copyright (c) 1997-99 P. D. Stearns
 #define yycparse() yymcparse(&(YYPARSENAME))
 #define yycwipe() yymcwipe(&(YYPARSENAME))
 #define yycwork() yymcwork(&(YYPARSENAME))
-#define yydestructpop(num) yymdestructpop(&(YYPARSENAME), (pop))
+#define yydestructpop(num) yymdestructpop(&(YYPARSENAME), (num))
 #define yyparse() yymparse(&(YYPARSENAME))
 #define yyparsecleanup() yymparsecleanup(&(YYPARSENAME))
 #define yyparseinit() yymparseinit(&(YYPARSENAME))
@@ -57,12 +57,12 @@ Copyright (c) 1997-99 P. D. Stearns
 #define yystackoverflow() (*(YYPARSENAME).yymstackoverflow)(&(YYPARSENAME))
 #define yyerror(text) (*(YYPARSENAME).yymerror)(&(YYPARSENAME), (text))
 #define yysyntaxerror() (*(YYPARSENAME).yymsyntaxerror)(&(YYPARSENAME))
-#define yydiscard() (*(YYPARSENAME).yymdiscard)(&(YYPARSENAME))
+#define yydiscard(token) (*(YYPARSENAME).yymdiscard)(&(YYPARSENAME), (token))
 
 /* action functions */
 #define yycdestructclearin() yymcdestructclearin(&(YYPARSENAME))
 #define yydestructclearin() yymdestructclearin(&(YYPARSENAME))
-#define yysetin(token) yymsetin(&(YYPARSENAME), (token)
+#define yysetin(token) yymsetin(&(YYPARSENAME), (token))
 #define yyunclearin() yymunclearin(&(YYPARSENAME))
 #define yyabort() yymabort(&(YYPARSENAME))
 #define yyaccept() yymaccept(&(YYPARSENAME))
@@ -74,7 +74,7 @@ Copyright (c) 1997-99 P. D. Stearns
 #define yypopping() yympopping(&(YYPARSENAME))
 #define yyrecovering() yymrecovering(&(YYPARSENAME))
 #define yyretire(retirecode) yymretire(&(YYPARSENAME), (retirecode))
-#define yythrowerror(pop) yymthrowerror(&YYPARSENAME), (pop))
+#define yythrowerror(pop) yymthrowerror(&(YYPARSENAME), (pop))
 
 #ifdef YY_COMPATIBLE
 #undef yyerrok

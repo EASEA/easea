@@ -6,14 +6,8 @@ mlex.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1997-99 P. D. Stearns
+Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 ************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define YY_ALEX
 
 #include <stdio.h>
 #include <assert.h>
@@ -25,6 +19,12 @@ extern "C" {
 #if defined(YYTUDEFS) || defined(YYUDEFS)
 #include <yytudefs.h>
 #endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define YY_ALEX
 
 /* modifiers */
 #ifndef YYCDECL
@@ -272,6 +272,10 @@ extern int YYNEAR YYDCDECL yydebug;
 extern int YYNEAR YYDCDECL yydebugflush;
 #endif
 
+#ifdef __cplusplus
+}
+#endif
+
 /* user defines */
 #if defined(YYBUDEFS) || defined(YYUDEFS)
 #include <yybudefs.h>
@@ -279,9 +283,5 @@ extern int YYNEAR YYDCDECL yydebugflush;
 
 /* defines */
 #include <yybdefs.h>
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif

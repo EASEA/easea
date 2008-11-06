@@ -3,7 +3,9 @@ yycwipe.cpp
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1997-99 P. D. Stearns
+[Ansi]
+
+Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 ************************************************************/
 
 #include <string.h>

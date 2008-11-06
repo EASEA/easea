@@ -3,7 +3,9 @@ yycstsiz.cpp
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1997-99 P. D. Stearns
+[Ansi]
+
+Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 ************************************************************/
 
 #include <stdlib.h>
@@ -30,7 +32,7 @@ int yylexer::yysettextsize(int size)
 		}
 
 		size_t textcharsize = size + 1;	// include the '\0'
-		if (textcharsize <= (size_t) size) {
+		if (textcharsize <= (size_t)size) {
 			return 0;		// integer overflow
 		}
 		size_t statebufcharsize = size * sizeof(int);

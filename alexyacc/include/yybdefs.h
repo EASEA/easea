@@ -3,7 +3,7 @@ yybdefs.h
 This file can be freely modified for the generation of
 custom code.
 
-Copyright (c) 1997-99 P. D. Stearns
+Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 ************************************************************/
 
 #ifdef __cplusplus
@@ -28,7 +28,13 @@ extern "C" {
 
 #if !defined(RC_INVOKED)
 
+#if (__BORLANDC__) >= 0x0530
+/* restore default packing */
+#pragma pack(pop)
+#pragma nopackwarning
+#else
 #pragma option -a. /* restore default packing */
+#endif  /* (__BORLANDC__) >= 0x0530 */
 
 #if defined(__STDC__)
 #pragma warn .nak
