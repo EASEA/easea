@@ -10,7 +10,6 @@ Centre de Mathématiques Appliquées
 ****************************************************************************/
 
 #include "Easea.h"
-#include "debug.h"
 
 // Globals     
 CSymbol *pCURRENT_CLASS;
@@ -40,7 +39,7 @@ char sDISCARD_PRM[50];
 int nMINIMISE=2;
 int nELITE;
 bool bELITISM=0;
-bool bVERBOSE=1;
+bool bVERBOSE=0;
 int nPOP_SIZE, nOFF_SIZE, nSURV_PAR_SIZE, nSURV_OFF_SIZE;
 int nNB_GEN;
 int nNB_ISLANDS;
@@ -94,7 +93,7 @@ class CSymbol;
 %token USER_EVALUATOR                   
 %token END_OF_FUNCTION                   
 //%token DELETE
-//%token <szString> WHATEVER_COMES_AFTER
+%token <szString> END_METHODS
 %token <pSymbol> IDENTIFIER
 %token <pSymbol> IDENTIFIER2
 %token <pSymbol> BOOL
@@ -105,6 +104,7 @@ class CSymbol;
 %token <pSymbol> POINTER
 %token <dValue> NUMBER
 %token <dValue> NUMBER2
+%token METHODS
 %token STATIC       
 %token NB_GEN       
 %token NB_ISLANDS
@@ -136,7 +136,6 @@ class CSymbol;
 %include {
 #include "EaseaSym.h"
 #include "EaseaLex.h"
-#include <cyacc.h>
 }
 
 // parser name and class definition
@@ -153,7 +152,6 @@ public:
   double assign(CSymbol* pIdentifier, double dValue);
   double divide(double dDividend, double dDivisor);
   CSymbol* insert() const;
-  void yysyntaxerror();
 }
 
 // constructor
@@ -200,14 +198,14 @@ EASEA :  RunParameters GenomeAnalysis;
 GenomeAnalysis
     : ClassDeclarationsSection GenomeDeclarationSection {
         if (bVERBOSE) printf("                    _______________________________________\n");
-        if ((TARGET==DREAM)&& bVERBOSE) printf ("\nGeneration of the JAVA source files for %s : %s.cpp\n\n",sPROJECT_NAME,sPROJECT_NAME);
-        if ((TARGET!=DREAM)&& bVERBOSE) printf ("\nGeneration of the C++ source file for %s : %s.cpp\n\n",sPROJECT_NAME,sPROJECT_NAME);
+        if ((TARGET==DREAM)&& bVERBOSE) printf ("\nGeneration of the JAVA source files for %s.\n\n",sPROJECT_NAME);
+        if ((TARGET!=DREAM)&& bVERBOSE) printf ("\nGeneration of the C++ source file for %s.\n\n",sPROJECT_NAME);
       }
       StandardFunctionsAnalysis
     | GenomeDeclarationSection {
         if (bVERBOSE) printf("                    _______________________________________\n");
-        if ((TARGET==DREAM)&& bVERBOSE) printf ("\nGeneration of the JAVA source files for %s : %s.cpp\n\n",sPROJECT_NAME,sPROJECT_NAME);
-        if ((TARGET!=DREAM)&& bVERBOSE) printf ("\nGeneration of the C++ source file for %s : %s.cpp\n\n",sPROJECT_NAME,sPROJECT_NAME);
+        if ((TARGET==DREAM)&& bVERBOSE) printf ("\nGeneration of the JAVA source files for %s.\n\n",sPROJECT_NAME);
+        if ((TARGET!=DREAM)&& bVERBOSE) printf ("\nGeneration of the C++ source file for %s.\n\n",sPROJECT_NAME);
       }
       StandardFunctionsAnalysis
   ;
@@ -234,12 +232,6 @@ ClassDeclaration
   '{' VariablesDeclarations '}' {
       if (bVERBOSE) printf("Class %s declared for %d bytes.\n\n",$1->sName,$1->nSize);
     }                       
-    MethodsDeclaration {}
-  ;
-
-MethodsDeclaration
-  : '[' Methods ']' {}
-  |
   ;
 
 VariablesDeclarations
@@ -251,6 +243,15 @@ VariablesDeclarations
 VariablesDeclaration
   : Qualifier BaseType {pCURRENT_TYPE=$2; pCURRENT_TYPE->ObjectQualifier=$1;} BaseObjects {}
   | Qualifier UserType {pCURRENT_TYPE=$2; pCURRENT_TYPE->ObjectQualifier=$1;} UserObjects {}
+  | MethodsDeclaration
+  ;
+
+MethodsDeclaration
+  : METHODS END_METHODS{
+    pCURRENT_CLASS->sString = new char[strlen($2) + 1];
+    strcpy(pCURRENT_CLASS->sString, $2);      
+    if (bVERBOSE) printf("\n    The following methods have been declared:\n\n%s\n\n",pCURRENT_CLASS->sString);
+    }
   ;
 
 Qualifier
@@ -364,14 +365,14 @@ BaseConstructorParameter
   : NUMBER {}
   ;
   
-Methods
-  : Method
-  | Methods Method
-  ;
+//Methods
+//  : Method
+//  | Methods Method
+//  ;
 
-Method
-  : NUMBER {}
-  ;
+//Method
+//  : NUMBER {}
+//  ;
   
 GenomeDeclarationSection
   : GENOME {
@@ -381,11 +382,19 @@ GenomeDeclarationSection
       pGENOME->pSymbolList=new CLList<CSymbol *>();
       pGENOME->ObjectType=oUserClass;
       pGENOME->ObjectQualifier=0;
+      pGENOME->sString=NULL;
     }
-    '{' VariablesDeclarations '}' {
-    }
+    '{' VariablesDeclarations '}' {}
   ;
-  
+
+//GenomeMethodsDeclaration
+//  : GENOME_METHODS GENOME_END_METHODS{
+//    pCURRENT_CLASS->sString = new char[strlen($2) + 1];
+//    strcpy(pCURRENT_CLASS->sString, $2);      
+//    }
+//  |
+//  ;
+
 UserConstructorParameters
   : UserConstructorParameter
   | UserConstructorParameters UserConstructorParameter
@@ -457,7 +466,7 @@ StandardFunctionAnalysis
     } }
     END_OF_FUNCTION {   
       if (TARGET==DREAM) fprintf(fpOutputFile,"  }\n");
-      if (TARGET!=GPU) fprintf(fpOutputFile,"}");
+      fprintf(fpOutputFile,"}");
     }
   | USER_EVALUATOR { 
       if (bVERBOSE) printf("Inserting user genome evaluator (taken from .ez file).\n");
@@ -475,14 +484,14 @@ StandardFunctionAnalysis
           fprintf(fpOutputFile,"  EZ_NB_EVALUATIONS++;\n",sPROJECT_NAME);
     } }
     END_OF_FUNCTION {
-      if ((TARGET!=EO) && (TARGET!=GPU)) fprintf(fpOutputFile,"}\n");
+          if (TARGET!=EO) fprintf(fpOutputFile,"}\n");
     }
   ;
 
 RunParameters
-: Parameter {;}
-| RunParameters Parameter {;}
-;           
+  : Parameter
+  | RunParameters Parameter
+  ;           
   
 Parameter
   :  NB_GEN NUMBER2
@@ -1246,19 +1255,45 @@ Expr
 int main(int argc, char *argv[]){
   int n = YYEXIT_FAILURE;
   int nParamNb=0;
-  char *psTemp;
+  char *sTemp;
+  int i=0;
   
   TARGET=bVERBOSE=0;
   sRAW_PROJECT_NAME[0]=0; // used to ask for a filename if no filename is found on the command line.
 
   while ((++nParamNb) < argc) {
-    psTemp=&(argv[nParamNb][0]);
-    if ((argv[nParamNb][0]=='-')||(argv[nParamNb][0]=='/')) psTemp=&(argv[nParamNb][1]);
-    if (!mystricmp(psTemp,"eo"))  TARGET=EO;
-    else if (!mystricmp(psTemp,"galib"))  TARGET=GALIB;
-    else if (!mystricmp(psTemp,"dream"))  TARGET=DREAM;
-    else if (!mystricmp(psTemp,"gpu"))  TARGET=GPU;
-    else if (!mystricmp(psTemp,"v"))  bVERBOSE=true;
+    sTemp=&(argv[nParamNb][0]);
+    if ((argv[nParamNb][0]=='-')||(argv[nParamNb][0]=='/')) sTemp=&(argv[nParamNb][1]);
+    if (!mystricmp(sTemp,"eo"))  TARGET=EO;
+    else if (!mystricmp(sTemp,"galib"))  TARGET=GALIB;
+    else if (!mystricmp(sTemp,"dream"))  TARGET=DREAM;
+    else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
+    else if (!mystricmp(sTemp,"path"))  {
+      if (argv[++nParamNb][0]=='"') {
+        strcpy(sEZ_PATH,&(argv[nParamNb][1]));
+        while (argv[++nParamNb][strlen(argv[nParamNb])]!='"')
+          strcat(sEZ_PATH,argv[nParamNb]);
+          argv[nParamNb][strlen(argv[nParamNb])]=0;
+          strcat(sEZ_PATH,argv[nParamNb]);
+      }
+      else {
+        if (argv[nParamNb][strlen(argv[nParamNb])-1]=='"') argv[nParamNb][strlen(argv[nParamNb])-1]=0;
+        strcpy(sEZ_PATH,argv[nParamNb]);
+      }
+    }
+    else if (!mystricmp(sTemp,"eo_dir"))  {
+      if (argv[++nParamNb][0]=='"') {
+        strcpy(sEO_DIR,&(argv[nParamNb][1]));
+        while (argv[++nParamNb][strlen(argv[nParamNb])]!='"')
+          strcat(sEO_DIR,argv[nParamNb]);
+          argv[nParamNb][strlen(argv[nParamNb])]=0;
+          strcat(sEO_DIR,argv[nParamNb]);
+      }
+      else {
+        if (argv[nParamNb][strlen(argv[nParamNb])-1]=='"') argv[nParamNb][strlen(argv[nParamNb])-1]=0;
+        strcpy(sEO_DIR,argv[nParamNb]);
+      }
+    }
     else strcpy(sRAW_PROJECT_NAME,argv[nParamNb]);
   }
 
@@ -1305,8 +1340,3 @@ double CEASEAParser::divide(double a, double b)
   }
 }
 
-
-void CEASEAParser::yysyntaxerror(){
-	fprintf(stderr,"%s\t Error at line %d\n",sEZ_FILE_NAME,EASEALexer.yylineno);
-	exit(-1);
-}

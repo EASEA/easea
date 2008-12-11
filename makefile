@@ -1,14 +1,19 @@
 EXEC = main.out
 CPPFLAGS = -DUNIX_OS -Ialexyacc/include/ -DDEBUG
 CPPC = g++
+LDFLAGS = 
+
 
 $(EXEC):EaseaSym.o EaseaLex.o EaseaParse.o alexyacc/libalex.so
 #$(EXEC):EaseaSym.o easealex.o EaseaParse.o alexyacc/libalex.so
-	$(CPPC) $(CPPFLAGS) $^ -o $@
+	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
 
 
 %.o:%.cpp
 	$(CPPC) $(CPPFLAGS) -c -o $@ $<
+
+EaseaParse.cpp:winreceive
+EaseaLex.cpp:winreceive
 
 #compile library for alex and ayacc unix version
 alexyacc/libalex.so:alexyacc/*.cpp
@@ -39,6 +44,8 @@ winreceive: winreceive_l winreceive_y
 
 winreceive_l:
 	cp $(TMP_DIR)/EaseaLex.cpp $(TMP_DIR)/EaseaLex.h ./
+	chmod -x EaseaLex.cpp EaseaLex.h
 
 winreceive_y:
 	cp $(TMP_DIR)/EaseaParse.cpp $(TMP_DIR)/EaseaParse.h ./
+	chmod -x EaseaParse.cpp EaseaParse.h

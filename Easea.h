@@ -21,6 +21,7 @@ Centre de Mathématiques Appliquées
 #define GALIB 1
 #define EO 2
 #define DREAM 3
+#define GPU 4
 #define UNIX 1
 #define WINDOWS 2
 #define UNKNOWN_OS 3

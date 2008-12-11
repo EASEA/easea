@@ -1,9 +1,3 @@
-/*_________________________________________________________
-
-This C:\WINDOWS\a_onemax\onemax.ez file was automatically created by GUIDE v0.1b
-
-_________________________________________________________*/
-
 \User declarations:
 #define SIZE 100      
 float pMutPerGene=0.1;
@@ -65,36 +59,23 @@ GenomeClass
 
 \Default run parameters:
 
-// Variation operators:
-  Operators are called: Sequentially
+// Variation operators
   Mutation probability: 0.3
   Crossover probability: 0.8
 
 // Evolution Engine:
-  Evaluator goal: Minimise
+  Evaluator goal: Minimise       // or maximise
   Number of generations: 2000
-  Evolutionary engine: Custom
-  Population size: 100
-  Elite: 10
-  Fertility: 80
-  Genitors selector: Tournament 2
-  Selected genitors: 100
-  Offspring size: 100
+  Population: 100
+  Elite: 1 
+  Genitors: 80                   // those who can be parents
+  Genitors selector: sequential
+  Parents selector: Tournament 2 // Selection of a parent to create a child
+  Offspring: 100
   Reduce parents: Tournament 2
   Surviving parents: 20
   Reduce offspring: Tournament 2
   Surviving offspring: 80
   Final reduce: Tournament 2
   Elitism: Strong
-
-// Island model:
-  Number of islands: 5
-  Emigration policy: Move
-  Migrants selector: Tournament 2
-  Migrants destination: Neighbours
-  Migration frequency: 0.2
-  Number of emigrants: 3
-  Immigration replacement: Tournament 2
-  Immigration policy: Add
 \end
-
