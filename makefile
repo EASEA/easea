@@ -12,8 +12,8 @@ $(EXEC):EaseaSym.o EaseaLex.o EaseaParse.o alexyacc/libalex.so
 %.o:%.cpp
 	$(CPPC) $(CPPFLAGS) -c -o $@ $<
 
-EaseaParse.cpp:winreceive
-EaseaLex.cpp:winreceive
+# EaseaParse.cpp:winreceive
+# EaseaLex.cpp:winreceive
 
 #compile library for alex and ayacc unix version
 alexyacc/libalex.so:alexyacc/*.cpp

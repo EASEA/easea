@@ -13,36 +13,29 @@
 
 \ANALYSE_PARAMETERS
 #include <unistd.h>
-#include "outputea.h"
+#include "tool/outputea.h"
 #include <stdio.h>
-#include "tool.h"
-#include "krnl.h"
+#include "tool/tool.h"
 
 #define TAILLE_POP \POP_SIZE
 #define TAILLE_POP_ENFANTS \OFF_SIZE
 #define PRESSION_SELECTION 2
 #define PRESSION_REPLACEMENT 2
 #define NB_GENERATION \NB_GEN
-//#define GPGPU
+#define GPGPU
+#include "EASEAIndividual.h"  //Generated individual
+#include "EASEAGPUEval.h"     //Generated header for gpu evaluation
+#include "EASEAUserFunc.h"
 
-
-
-
-//INSERT_USER_FUNCTIONS
-\INSERT_USER_FUNCTIONS
-//INSERT_USER_DECLARATIONS
-\INSERT_USER_DECLARATIONS
 //INSERT_INITIALISATION_FUNCTION 
 \INSERT_INITIALISATION_FUNCTION 
-
-#include "onemax_cudaGenome.h"
 
 
 
 //static inline size_t tournoi(CIndividu** population, size_t popSize, size_t pression){
 size_t tournoi(CIndividu** population, size_t popSize, size_t pression){
   size_t meilleurIndividu = 0;
-  int meilleurFitness = 0;
+  float meilleurFitness = 0;
   
   for( size_t i = 0 ; i<pression ; i++ ){
     size_t index = getRandomIntMax(popSize);
@@ -71,7 +64,7 @@ CIndividu* remplacement(CIndividu** population, size_t popSize){
 }
 
 
-#define GPU_BUFFER_POS(buffer,index) (buffer+CIndividu::genomeSize()*index)
+#define GPU_BUFFER_POS(buffer,index) (buffer+sizeof(genome_t)*index)
 
 
 #ifdef GPGPU
@@ -79,10 +72,12 @@ void gpuEvaluation(char* parentGenomes,CIndividu** pPopParents,size_t popSize){
   OutputEa oeaNull;
 
   // compute fitness for all initial population on gpu
-  float* results = launch_krnl(popSize,parentGenomes,0,&oeaNull);
+  float* results = launch_krnl(popSize,parentGenomes);
   // write fitness in corresponding individuals
-  for (size_t i=0;i<popSize;i++)
+  for (size_t i=0;i<popSize;i++){
+    printf("%p %f\n",pPopParents[i],results[i]);
     pPopParents[i]->setFitness(results[i]);
+  }
   delete[] results;
 }
 #endif
@@ -103,8 +98,8 @@ int main(){
 	
   CIndividu **pPopParents=pPopCourante; // Pointeur sur la population de parents
   CIndividu **pPopEnfants=&(pPopCourante[TAILLE_POP]); // Pointeur sur
-  char* parentGenomes = (char*)malloc(CIndividu::genomeSize()*TAILLE_POP);
-  char* offspringGenomes = (char*)malloc(CIndividu::genomeSize()*TAILLE_POP_ENFANTS);
+  char* parentGenomes = (char*)malloc(sizeof(genome_t)*TAILLE_POP);
+  char* offspringGenomes = (char*)malloc(sizeof(genome_t)*TAILLE_POP_ENFANTS);
   // la population
   // d'enfants
   float fPMut=0.05f;
@@ -118,7 +113,7 @@ int main(){
   //  int fIntensity =39 ; // pour l'instant c'est l'init defaut
   size_t generationCourante = 0;
 	
-	
+  showInfo();
 	
   printf( "\n----> Cre'ation de la population : \n");
 	
@@ -142,13 +137,14 @@ int main(){
 
 #ifdef GPGPU
   gpuEvaluation(parentGenomes,pPopParents,TAILLE_POP);
+  showPopulationBooleanArray(parentGenomes,SIZE,TAILLE_POP);
 #else
   for (i=0;i<TAILLE_POP;i++)
     pPopParents[i]->evaluation();
  
 #endif
   printf("\n\n");
-
+  //exit(-1);
 
   for (i=0;i<TAILLE_POP;i++)
     printf("%s\n",pPopParents[i]->toString().c_str());
@@ -184,7 +180,7 @@ int main(){
 	  pPopEnfants[nNbEnfants]=i2->croisement(i1,GPU_BUFFER_POS(offspringGenomes,nNbEnfants));
 				
 	printf("%p + %p = %p\n",i1,i2,pPopEnfants[nNbEnfants]);
-				
+	
       }
       else { // ope'rateur unaire (clonage)
 	CIndividu *i1;
@@ -193,10 +189,12 @@ int main(){
 	pPopEnfants[nNbEnfants]=new CIndividu(i1,GPU_BUFFER_POS(offspringGenomes,nNbEnfants));
 	printf("Clonage: %p clone' en %p\n",i1,pPopEnfants[nNbEnfants]);
       }
-			
+      
       //printf("\nMutation de %p\n",pPopEnfants[nNbEnfants]);
-			
+      
       pPopEnfants[nNbEnfants]->mutation(fPMut,GPU_BUFFER_POS(offspringGenomes,nNbEnfants)); // mutation.
+      memcpy(GPU_BUFFER_POS(offspringGenomes,nNbEnfants),&(pPopEnfants[nNbEnfants]->genome),sizeof(genome_t));
+
       nNbEnfants++;
     }
     // Bon, et bien on est maintenant au complet (parents + enfants)
@@ -214,6 +212,11 @@ int main(){
     for (i=0;i<TAILLE_POP_ENFANTS;i++)		
       pPopEnfants[i]->evaluation();
 #endif
+
+
+    for (i=0;i<TAILLE_POP;i++)
+      printf("%s\n",pPopEnfants[i]->toString().c_str());
+      
 		
     printf("\n\n");
     // Il faut maintenant remplir la nouvelle population et on raisonne
@@ -320,7 +323,18 @@ int main(){
 \ANALYSE_PARAMETERS
 
 
-\START_EO_GENOME_H_TPL// -*- mode: c++; c-indent-level: 2; c++-member-init-indent: 8; comment-column: 35; -*-
+\START_USER_FUN_H_TPL
+#ifndef USER_FUNC
+#define USER_FUNC
+//INSERT_USER_FUNCTIONS
+\INSERT_USER_FUNCTIONS
+//INSERT_USER_DECLARATIONS
+\INSERT_USER_DECLARATIONS
+#endif
+
+
+
+\START_GPU_INDIVIDUAL_H_TPL// -*- mode: c++; c-indent-level: 2; c++-member-init-indent: 8; comment-column: 35; -*-
 //
 // (The above line is useful in Emacs-like editors)
 //
@@ -334,10 +348,6 @@ int main(){
 //
 
 \ANALYSE_USER_CLASSES
-
-
-
-
 #ifndef CINDIVIDU_HPP
 #define CINDIVIDU_HPP
 
@@ -345,7 +355,10 @@ int main(){
 #include <stdlib.h>
 //#include <iostream>
 #include <sstream>
-#include "tool.h"
+#include "tool/tool.h"
+#include "EASEAUserFunc.h"
+
+
 
 
 
@@ -371,12 +384,11 @@ public:
   float evaluation();
   CIndividu* croisement(const CIndividu* i1,char* gpuBuffer)const;
   bool mutation(float, char* gpuBuffer);
-  int nFitness; // a transformer en float 
+  float nFitness; // a transformer en float 
   std::string toString();
   static size_t genomeSize(){ return sizeof(char)*LG_GENOME;}
   void setFitness(float f){ this->nFitness = f;}
 
-private:
   genome_t genome;
 };
 
@@ -384,18 +396,26 @@ private:
 void showPopulationBooleanArray(char* population,size_t genSize, size_t popSize);
 void showFitnessArray(float* fitnesses, size_t popSize);
 
-
+#endif
+\START_GPU_INDIVIDUAL_CPP_TPL// -*- mode: c++; c-indent-level: 2; c++-member-init-indent: 8; comment-column: 35; -*-
+#include "EASEAIndividual.h"
 
 CIndividu::CIndividu(char* gpuBuffer){
   //GENOME_CTOR
   \GENOME_CTOR
   \INSERT_INITIALISER
+    ;
+
+  //copy the current genome in the gpuBuffer
+  memcpy(gpuBuffer,&(this->genome),sizeof(genome_t));
 }
 
 
 CIndividu::CIndividu(const CIndividu* ind, char* gpuBuffer){
+  
    //INSERT_INITIALISER
   this->genome.copy(ind->genome);
+  if(gpuBuffer) memcpy(gpuBuffer,&(this->genome),sizeof(genome_t));
 }
 
 CIndividu::~CIndividu(){
@@ -418,8 +438,10 @@ CIndividu* CIndividu::croisement(const CIndividu* i1,char* gpuBuffer) const {
   CIndividu* child2 = new CIndividu(i1,NULL);
   //INSERT_CROSSOVER
   \INSERT_CROSSOVER
-
-    return child1;
+    ;
+  memcpy(gpuBuffer,&(child1->genome),sizeof(genome_t));
+  free(child2);
+  return child1;
 }
 
 
@@ -435,564 +457,289 @@ std::string CIndividu::toString(){
 }
 
 
+void showPopulationBooleanArray(char* population,size_t genSize, size_t popSize){
+  size_t i,j;
+
+  for( i=0; i<popSize ; i++ ){
+    for( j=0 ; j<genSize ; j++){
+      printf( " %d |", population[i*genSize+j]);
+    }
+    printf( "\n");
+  }
+}
+
+
+void showFitnessArray(float* fitnesses, size_t popSize){
+  size_t i;
+
+  for(  i=0; i<popSize ; i++ ){
+    printf("Fitness of %d is %f\n", i, fitnesses[i]);
+  }
+}
 
 
 
 
+\START_GPU_EVAL_H_TPL
+//START_GPU_EVAL_H_TPL
+#ifndef GPU_EVA_H_TPL
+#define GPU_EVA_H_TPL
 
-// void showPopulationBooleanArray(char* population,size_t genSize, size_t popSize){
-//   size_t i,j;
+float* 
+launch_krnl(size_t popSize, BOOLEAN_EA* pop);
+void showInfo(void);
 
-//   for( i=0; i<popSize ; i++ ){
-//     for( j=0 ; j<genSize ; j++){
-//       printf( " %d |", population[i*genSize+j]);
-//     }
-//     printf( "\n");
-//   }
-// }
-
-
-// void showFitnessArray(float* fitnesses, size_t popSize){
-//   size_t i;
-
-//   for(  i=0; i<popSize ; i++ ){
-//     printf("Fitness of %d is %f\n", i, fitnesses[i]);
-//   }
-// }
 #endif
 
+\START_GPU_EVAL_CU_TPL
+//START_GPU_EVAL_CU_TPL
+#define DEBUG_KRNL
+#include "tool/basetype.h"
+#include "tool/tool.h"
+#include "tool/timing.h"
+#include "tool/debug.h"
+#include "EASEAUserFunc.h"
+#include "EASEAIndividual.h"
+#include <iostream>
+#include <assert.h>
+
+
+using namespace std;
 
 
 
-\START_EO_EVAL_TPL// -*- mode: c++; c-indent-level: 2; c++-member-init-indent: 8; comment-column: 35; -*-
-//
-// (The above line is useful in Emacs-like editors)
-//
-//****************************************
-//                                         
-//  EASEAEvalFunc.h
-//                                         
-//  C++ file generated by AESAE-EO v0.7b
-//                                         
-//****************************************
-//
+#define MAX_THREAD_NUM 512
+#define NB_MP 8
 
-/*
-Evaluator in EO: a functor that computes the fitness of an EO
-=============================================================
-*/
- 
-#ifndef _EASEAEvalFunc_h
-#define _EASEAEvalFunc_h
 
-// include whatever general include you need
-#include <stdexcept>
-#include <fstream>
 
-// include the base definition of eoEvalFunc
-#include "eoEvalFunc.h"
+#define NB_MP 8
+#define MAX_BLOCK_SIZE 512
 
-/** 
-  Always write a comment in this format before class definition
-  if you want the class to be documented by Doxygen
-*/
-template <class EOT>
-class EASEAEvalFunc : public eoEvalFunc<EOT>
-{
-public:
-  /// Ctor - no requirement
-// START eventually add or modify the anyVariable argument
-  EASEAEvalFunc()
-  //  EASEAEvalFunc( varType  _anyVariable) : anyVariable(_anyVariable) 
-// END eventually add or modify the anyVariable argument
-  {
-    // START Code of Ctor of an EASEAEvalFunc object
-    // END   Code of Ctor of an EASEAEvalFunc object
+
+bool
+repartition(size_t popSize, size_t* nbBlock, size_t* nbThreadPB, size_t* nbThreadLB, 
+	    size_t nbMP, size_t maxBlockSize){
+  
+  (*nbThreadLB) = 0;
+  
+  if( ((float)popSize / (float)nbMP) <= maxBlockSize ){
+    //la population répartie sur les MP tient dans une bloc par MP
+    (*nbThreadPB) = partieEntiereSup( (float)popSize/(float)nbMP);
+    (*nbBlock) = popSize/(*nbThreadPB);
+    if( popSize%nbMP != 0 ){
+      //on fait MP-1 block de équivalent et un plus petit
+      (*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
+    }
   }
-
-  /** Actually compute the fitness
-   *
-   * @param EOT & _eo the EO object to evaluate
-   *                  it should stay templatized to be usable 
-   *                  with any fitness type
-   */
-  void operator()(EOT & genome)
-  {
-    // test for invalid to avoid recomputing fitness of unmodified individuals
-    if (genome.invalid())
-      {
-    // START Code of computation of fitness of the EASEA object
-\INSERT_EVALUATOR
-    // END   Code of computation of fitness of the EASEA object
+  else{
+    //la population est trop grande pour etre répartie sur les MP
+    //directement
+    (*nbBlock) = partieEntiereSup( (float)popSize/((float)maxBlockSize*8));
+    (*nbBlock) *=8;
+    (*nbThreadPB) = popSize/(*nbBlock);
+    if( popSize%maxBlockSize!=0){
+      (*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
+      
+      // Le rest est trop grand pour etre placé dans un seul block (c'est possible uniquement qd 
+      // le nombre de block dépasse maxBlockSize 
+      while( (*nbThreadLB) > maxBlockSize ){
+	//on augmente le nombre de blocs principaux jusqu'à ce que nbthreadLB retombe en dessous de maxBlockSize
+	(*nbBlock) += nbMP;
+ 	(*nbThreadPB) = popSize/(*nbBlock);
+	(*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
       }
+    }
   }
-
-private:
-// START Private data of an EASEAEvalFunc object
-  //  varType anyVariable;       // for example ...
-// END   Private data of an EASEAEvalFunc object
-};
-
-
-#endif
-
-\START_EO_INITER_TPL// -*- mode: c++; c-indent-level: 2; c++-member-init-indent: 8; comment-column: 35; -*-
-//
-// (The above line is useful in Emacs-like editors)
-//
-//****************************************
-//                                         
-//  EASEAInit.h
-//                                         
-//  C++ file generated by AESAE-EO v0.7b
-//                                         
-//****************************************
-//
-
-/*
-objects initialization in EO
-============================
-*/
-
-#ifndef _EASEAInit_h
-#define _EASEAInit_h
-
-// include the base definition of eoInit
-#include <eoInit.h>
-
-/** 
- *  Always write a comment in this format before class definition
- *  if you want the class to be documented by Doxygen
- *
- * There is NO ASSUMPTION on the class GenoypeT.
- * In particular, it does not need to derive from EO (e.g. to initialize 
- *    atoms of an eoVector you will need an eoInit<AtomType>)
- */
-template <class GenotypeT>
-class EASEAInit: public eoInit<GenotypeT> {
-public:
-  /// Ctor - no requirement
-// START eventually add or modify the anyVariable argument
-  EASEAInit()
-  //  EASEAInit( varType & _anyVariable) : anyVariable(_anyVariable) 
-// END eventually add or modify the anyVariable argument
-  {
-    // START Code of Ctor of an EASEAInit object
-    // END   Code of Ctor of an EASEAInit object
-  }
+  
+  if((((*nbBlock)*(*nbThreadPB) + (*nbThreadLB))  == popSize) 
+     && ((*nbThreadLB) <= maxBlockSize) && ((*nbThreadPB) <= maxBlockSize))
+    return true;
+  else 
+    return false;
+}
 
 
-  /** initialize a genotype
-   *
-   * @param _genotype  generally a genotype that has been default-constructed
-   *                   whatever it contains will be lost
-   */
-  void operator()(GenotypeT & _genotype)
-  {
-    // START Code of random initialization of an EASEAGenome object
-\INSERT_EO_INITIALISER
-    // END   Code of random initialization of an EASEAGenome object
-    _genotype.invalidate();    // IMPORTANT in case the _genotype is old
-  }
-
-private:
-// START Private data of an EASEAInit object
-  //  varType & anyVariable;       // for example ...
-// END   Private data of an EASEAInit object
-};
-
-#endif
 
 
-\START_EO_MUT_TPL// -*- mode: c++; c-indent-level: 2; c++-member-init-indent: 8; comment-column: 35; -*-
-//
-// (The above line is useful in Emacs-like editors)
-//
-//****************************************
-//                                         
-//  EASEAMutation.h
-//                                         
-//  C++ file generated by AESAE-EO v0.7b
-//                                         
-//****************************************
-//
-
-/*
-simple mutation operators
-=========================
-*/
-
-#ifndef EASEAMutation_H
-#define EASEAMutation_H
-
-
-#include <eoOp.h>
-
-/** 
- *  Always write a comment in this format before class definition
- *  if you want the class to be documented by Doxygen
- *
- * THere is NO ASSUMPTION on the class GenoypeT.
- * In particular, it does not need to derive from EO
- */
-template<class GenotypeT> 
-class EASEAMutation: public eoMonOp<GenotypeT>
-{
-public:
-  /**
-   * Ctor - no requirement
-   */
-// START eventually add or modify the anyVariable argument
-  EASEAMutation()
-  //  EASEAMutation( varType  _anyVariable) : anyVariable(_anyVariable) 
-// END eventually add or modify the anyVariable argument
-  {
-    // START Code of Ctor of an EASEAMutation object
-    // END   Code of Ctor of an EASEAMutation object
-  }
-
-  /// The class name. Used to display statistics
-  string className() const { return "EASEAMutation"; }
-
-  /**
-   * modifies the parent
-   * @param _genotype The parent genotype (will be modified)
-   */
-  bool operator()(GenotypeT & _genotype) 
-  {
-    // START code for mutation of the _genotype object
-\INSERT_MUTATOR
-    // END code for mutation of the _genotype object
-
-private:
-// START Private data of an EASEAMutation object
-  //  varType anyVariable;       // for example ...
-// END   Private data of an EASEAMutation object
-};
-
-#endif
-
-\START_EO_QUAD_XOVER_TPL// -*- mode: c++; c-indent-level: 2; c++-member-init-indent: 8; comment-column: 35; -*-
-//
-// (The above line is useful in Emacs-like editors)
-//
-//****************************************
-//                                         
-//  EASEAQuadCrossover.h
-//                                         
-//  C++ file generated by AESAE-EO v0.7b
-//                                         
-//****************************************
-//
-
-/*
-Template for simple quadratic crossover operators
-=================================================
-
-Quadratic crossover operators modify both genotypes
-*/
-
-#ifndef EASEAQuadCrossover_H
-#define EASEAQuadCrossover_H
-
-#include <eoOp.h>
-
-/** 
- *  Always write a comment in this format before class definition
- *  if you want the class to be documented by Doxygen
- *
- * THere is NO ASSUMPTION on the class GenoypeT.
- * In particular, it does not need to derive from EO
- */
-template<class GenotypeT> 
-class EASEAQuadCrossover: public eoQuadOp<GenotypeT>
-{
-public:
-  /**
-   * Ctor - no requirement
-   */
-// START eventually add or modify the anyVariable argument
-  EASEAQuadCrossover()
-  //  EASEAQuadCrossover( varType  _anyVariable) : anyVariable(_anyVariable) 
-// END eventually add or modify the anyVariable argument
-  {
-    // START Code of Ctor of an EASEAQuadCrossover object
-    // END   Code of Ctor of an EASEAQuadCrossover object
-  }
-
-  /// The class name. Used to display statistics
-  string className() const { return "EASEAQuadCrossover"; }
-
-  /**
-   * eoQuad crossover - modifies both genotypes
-   */
-  bool operator()(GenotypeT& child1, GenotypeT & child2) 
-  {
-      GenotypeT parent1(child1);
-      GenotypeT parent2(child2);
+__host__ void showInfo(){
+  int devCount,i;
+  cudaError_t lastError;
+  struct cudaDeviceProp cdp;
+  
+  CDC(lastError,"cudaGetDeviceCount",cudaGetDeviceCount(&devCount));
+  
+  printf("Number of device : %d\n",devCount);
+  for( i=0 ; i<devCount ; i++ ){
+    CDC(lastError,"cudaGetDeviceProperties",cudaGetDeviceProperties(&cdp,i));
+    printf("Name : %s\n",cdp.name);
+    printf("TotalGlobalMem %d\n",cdp.totalGlobalMem);
+    printf("SharedMemPerBlock %d\n",cdp.sharedMemPerBlock);
+    printf("regsPerBlock %d\n",cdp.regsPerBlock);
+    printf("warpSize %d\n",cdp.warpSize);
+    printf("memPitch %d\n",cdp.memPitch);
+    printf("maxThreadsPerBlock %d\n",cdp.maxThreadsPerBlock);
     
-    // START code for crossover of child1 and child2 objects
-\INSERT_CROSSOVER
-    return (parent1!=child1)||(parent2!=child2);
-    // END code for crossover of child1 and child2 objects
+    printf("maxThreadsDim.x %d\n",cdp.maxThreadsDim[0]);
+    printf("maxThreadsDim.y %d\n",cdp.maxThreadsDim[1]);
+    printf("maxThreadsDim.z %d\n",cdp.maxThreadsDim[2]);
+    
+    printf("maxGridSize.x %d\n",cdp.maxGridSize[0]);
+    printf("maxGridSize.y %d\n",cdp.maxGridSize[1]);
+    printf("maxGridSize.z %d\n",cdp.maxGridSize[2]);
+    
+    printf("totalConstMem %d\n",cdp.totalConstMem);
+    printf("major %d\n",cdp.major);
+    printf("minor %d\n",cdp.minor);
+    printf("clockRate %d\n",cdp.clockRate);
+    printf("textureAlignment %d\n",cdp.textureAlignment);
+    printf("deviceOverlap %d\n",cdp.deviceOverlap);
+    printf("multiProcessorCount %d\n",cdp.multiProcessorCount);
+  }
+}
+
+
+__host__ __device__ FITNESS_TYPE gpuEvaluate(BOOLEAN_EA* rawGenome){
+
+
+  genome_t* genome = (genome_t*)rawGenome;
+
+  //INSERT_EVALUATOR
+  \INSERT_EVALUATOR
+}
+
+
+__global__ void cudaEvaluatePopulationSM(BOOLEAN_EA* d_population, float* d_fitnesses, size_t nbThreadLB){
+
+  extern __shared__ BOOLEAN_EA s_data[];
+  size_t id = blockDim.x*blockIdx.x+threadIdx.x;    
+  size_t individual = id*sizeof(genome_t);
+  size_t i=0;
+
+
+  // last block is the block which computes reminder
+  if( blockIdx.x == gridDim.x-1){
+    if( threadIdx.x >= nbThreadLB ) return;
   }
 
-private:
-// START Private data of an EASEAQuadCrossover object
-  //  varType anyVariable;       // for example ...
-// END   Private data of an EASEAQuadCrossover object
-};
+  //do the copy in the shared memory
+  for(i=0;i<sizeof(genome_t);i++) s_data[(threadIdx.x*sizeof(genome_t))+i] = d_population[individual+i];
+  
+  
+  d_fitnesses[id] = gpuEvaluate(s_data+(threadIdx.x*sizeof(genome_t)));
 
-#endif
-
-\START_EO_CONTINUE_TPL// -*- mode: c++; c-indent-level: 2; c++-member-init-indent: 8; comment-column: 35; -*-
-//
-// (The above line is useful in Emacs-like editors)
-//
-//****************************************
-//                                         
-//  EASEA_make_continue.h
-//                                         
-//  C++ file generated by AESAE-EO v0.7b
-//                                         
-//****************************************
-//
-
-#ifndef _make_continue_h
-#define _make_continue_h
-
-/*
-Contains the templatized version of parser-based choice of stopping criterion
-It can then be instantiated, and compiled on its own for a given EOType
-(see e.g. in dir ga, ga.cpp)
-*/
-
-// Continuators - all include eoContinue.h
-#include <eoCombinedContinue.h>
-#include <eoGenContinue.h>
-#include <eoSteadyFitContinue.h>
-#include <eoEvalContinue.h>
-#include <eoFitContinue.h>
-#ifndef _MSC_VER
-#include <eoCtrlCContinue.h>  // CtrlC handling (using 2 global variables!)
-#endif
-
-  // also need the parser and param includes
-#include <utils/eoParser.h>
-#include <utils/eoState.h>
+}
 
 
-/////////////////// the stopping criterion ////////////////
-template <class Indi>
-eoCombinedContinue<Indi> * make_combinedContinue(eoCombinedContinue<Indi> *_combined, eoContinue<Indi> *_cont)
-{
-  if (_combined)       // already exists
-    _combined->add(*_cont);
+
+
+__global__ void cudaEvaluatePopulation(BOOLEAN_EA* d_population, float* d_fitnesses, size_t nbThreadLB){
+
+
+  size_t individual = blockDim.x*blockIdx.x*sizeof(genome_t)+threadIdx.x*sizeof(genome_t);
+  size_t id = blockDim.x*blockIdx.x+threadIdx.x;
+  size_t i=0;
+
+  // last block is the block which computes reminder
+  if( blockIdx.x == gridDim.x-1){
+    if( threadIdx.x >= nbThreadLB ) return;
+  }
+  
+  d_fitnesses[id] = 0;
+  //real computation
+  for( i=0 ; i<sizeof(genome_t) ; i++ )
+    if(d_population[individual+i])
+      d_fitnesses[id] += 1;
+}
+
+
+
+float* 
+launch_krnl(size_t popSize, BOOLEAN_EA* pop){
+  BOOLEAN_EA* d_population;
+  float* fitnessTab, * d_fitnessTab;
+  cudaError_t lastError = cudaSuccess;
+
+  size_t nbBlock,nbThreadPB,nbThreadLB;
+  size_t memSize = sizeof(genome_t) * popSize;
+  fitnessTab = new float[popSize];
+
+  CDC(lastError,"CudaMalloc d_population",cudaMalloc( (void**) &d_population, memSize));
+  CDC(lastError,"CudaMalloc d_fitnessTab",cudaMalloc( (void**) &d_fitnessTab, popSize*sizeof(float)));
+  
+  
+
+  CDC(lastError,"CudaMemCpy #1",cudaMemcpy( d_population, pop, memSize, cudaMemcpyHostToDevice));
+  //cudaThreadSynchronize();
+  
+  //compute the repartition over MP and SP
+  repartition(popSize,&nbBlock,&nbThreadPB,&nbThreadLB,NB_MP,MAX_THREAD_NUM);
+  dim3 dimBlock(nbThreadPB);
+  dim3 dimGrid;
+
+  size_t sharedMemSize = nbThreadPB*sizeof(genome_t)*sizeof(BOOLEAN_EA);
+
+  
+  cout << "repartition -> nbBlock : " << nbBlock << " nbThreadPB : " << nbThreadPB
+       << " nbThreadLB : " << nbThreadLB << endl;
+
+  cout << "Shared memory usage : " << sharedMemSize << endl;
+
+  //wird things, take a look. Does the bug of repartition function become from here?
+  if( nbThreadLB == 0 )
+    dimGrid = dim3(nbBlock+1);
   else
-    _combined = new eoCombinedContinue<Indi>(*_cont);
-  return _combined;
+    dimGrid = dim3(nbBlock+1);
+
+
+  CDC(
+      lastError,
+      "Launch kernel",
+      (cudaEvaluatePopulationSM<<< dimGrid, dimBlock , sharedMemSize >>>(d_population,d_fitnessTab,nbThreadLB)));
+  cudaThreadSynchronize();
+  
+  CDC(lastError,"CudaMemCpy #2",cudaMemcpy( fitnessTab , d_fitnessTab , popSize*sizeof(float), cudaMemcpyDeviceToHost));
+
+  CDC(lastError,"CudaFree d_population",cudaFree( (void*) d_population));
+  CDC(lastError,"CudaFree d_fitnessTab",cudaFree( (void*) d_fitnessTab));
+
+  return fitnessTab;
 }
 
-template <class Indi>
-eoContinue<Indi> & do_make_continue(eoParser& _parser, eoState& _state, eoEvalFuncCounter<Indi> & _eval)
-{
-  //////////// Stopping criterion ///////////////////
-  // the combined continue - to be filled
-  eoCombinedContinue<Indi> *continuator = NULL;
+//START_EO_INITER_TPL
+//START_EO_MUT_TPL
+//START_EO_QUAD_XOVER_TPL
+//START_EO_CONTINUE_TPL
+//START_EO_PARAM_TPL
+\START_EO_MAKEFILE_TPL
+NVCC = nvcc
+CPPC = g++
+CC = g++
 
-  // for each possible criterion, check if wanted, otherwise do nothing
+NVCCFLAGS = -g -O2 -I/usr/include/libxml2/
+CPPFLAGS = $(NVCCFLAGS)
+CFLAGS = $(NVCCFLAGS)
 
-  // First the eoGenContinue - need a default value so you can run blind
-  // but we also need to be able to avoid it <--> 0
-  eoValueParam<unsigned>& maxGenParam = _parser.createParam(\NB_GEN, "maxGen", "Maximum number of generations () = none)",'G',"Stopping criterion");
-  // and give control to EASEA
-    EZ_NB_GEN = maxGenParam.value();
-    pEZ_NB_GEN = & maxGenParam.value();
+LDFLAGS = -lxml2
 
-    // do not test for positivity in EASEA
-    //    if (maxGenParam.value()) // positive: -> define and store
-    //      {
-  eoGenContinue<Indi> *genCont = new eoGenContinue<Indi>(maxGenParam.value());
-  _state.storeFunctor(genCont);
-  // and "add" to combined
-  continuator = make_combinedContinue<Indi>(continuator, genCont);
-  //      }
+HDR= $(wildcard *.h)
 
-  // the steadyGen continue - only if user imput
-  eoValueParam<unsigned>& steadyGenParam = _parser.createParam(unsigned(100), "steadyGen", "Number of generations with no improvement",'s', "Stopping criterion");
-  eoValueParam<unsigned>& minGenParam = _parser.createParam(unsigned(0), "minGen", "Minimum number of generations",'g', "Stopping criterion");
-    if (_parser.isItThere(steadyGenParam))
-      {
-  eoSteadyFitContinue<Indi> *steadyCont = new eoSteadyFitContinue<Indi>
-    (minGenParam.value(), steadyGenParam.value());
-  // store
-  _state.storeFunctor(steadyCont);
-  // add to combinedContinue
-  continuator = make_combinedContinue<Indi>(continuator, steadyCont);
-      }
+all:EASEA.out
 
-  // Same thing with Eval - but here default value is 0
-  eoValueParam<unsigned long>& maxEvalParam = _parser.createParam((unsigned long)0, "maxEval", "Maximum number of evaluations (0 = none)",'E',"Stopping criterion");
 
-    if (maxEvalParam.value()) // positive: -> define and store
-      {
-  eoEvalContinue<Indi> *evalCont = new eoEvalContinue<Indi>(_eval, maxEvalParam.value());
-  _state.storeFunctor(evalCont);
-  // and "add" to combined
-  continuator = make_combinedContinue<Indi>(continuator, evalCont);
-      }
-    /*
-  // the steadyEval continue - only if user imput
-  eoValueParam<unsigned>& steadyGenParam = _parser.createParam(unsigned(100), "steadyGen", "Number of generations with no improvement",'s', "Stopping criterion");
-  eoValueParam<unsigned>& minGenParam = _parser.createParam(unsigned(0), "minGen", "Minimum number of generations",'g', "Stopping criterion");
-    if (_parser.isItThere(steadyGenParam))
-      {
-  eoSteadyGenContinue<Indi> *steadyCont = new eoSteadyFitContinue<Indi>
-    (minGenParam.value(), steadyGenParam.value());
-  // store
-  _state.storeFunctor(steadyCont);
-  // add to combinedContinue
-  continuator = make_combinedContinue<Indi>(continuator, steadyCont);
-      }
-    */
-    // the target fitness
-    eoFitContinue<Indi> *fitCont;
-    eoValueParam<double>& targetFitnessParam = _parser.createParam(double(0.0), "targetFitness", "Stop when fitness reaches",'T', "Stopping criterion");
-    if (_parser.isItThere(targetFitnessParam))
-      {
-  fitCont = new eoFitContinue<Indi>
-    (targetFitnessParam.value());
-  // store
-  _state.storeFunctor(fitCont);
-  // add to combinedContinue
-  continuator = make_combinedContinue<Indi>(continuator, fitCont);
-      }
+EASEA.out: tool/tool.o EASEAIndividual.o EASEA.o EASEAGPUEval.o
+			    $(NVCC) -o $@ $^ $(LDFLAGS) $(NVCCFLAGS)
 
-#ifndef _MSC_VER
-    // the CtrlC interception (Linux only I'm afraid)
-    eoCtrlCContinue<Indi> *ctrlCCont;
-    eoValueParam<bool>& ctrlCParam = _parser.createParam(false, "CtrlC", "Terminate current generation upon Ctrl C",'C', "Stopping criterion");
-    if (_parser.isItThere(ctrlCParam))
-      {
-  ctrlCCont = new eoCtrlCContinue<Indi>;
-  // store
-  _state.storeFunctor(ctrlCCont);
-  // add to combinedContinue
-  continuator = make_combinedContinue<Indi>(continuator, ctrlCCont);
-      }
-#endif
+tool/%.o:tool/%.c tool/%.h
+			    $(CC) -c -o $@ $< $(CFLAGS)
 
-    // now check that there is at least one!
-    if (!continuator)
-      throw runtime_error("You MUST provide a stopping criterion");
-  // OK, it's there: store in the eoState
-  _state.storeFunctor(continuator);
+%.o:%.cpp $(HDR)
+			    $(CPPC) -c -o $@ $< $(CPPFLAGS)
 
-  // and return
-    return *continuator;
-}
+%.o:%.cu $(HDR)
+			    $(NVCC) -c -o $@ $< $(NVCCFLAGS) --device-emulation
 
-#endif
-
-\START_EO_PARAM_TPL#****************************************
-#                                         
-#  EASEA.prm
-#                                         
-#  Parameter file generated by AESAE-EO v0.7b
-#                                         
-#****************************************
-######    General    ######
-# --help=0 # -h : Prints this message
-# --stopOnUnknownParam=1 # Stop if unknown param entered
---seed=S   # -S : Random number seed. It is possible to give a specific seed.
-
-######    Evolution Engine    ######
---popSize=\POP_SIZE # -P : Population Size
---selection=\SELECTOR\SELECT_PRM # -S : Selection: Roulette, Ranking(p,e), DetTour(T), StochTour(t) or Sequential(ordered/unordered)
---nbOffspring=\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
---replacement=General # Type of replacement: Generational, ESComma, ESPlus, SSGA(T), EP(T)
-
-######    Evolution Engine / Replacement    ######
---elite=\ELITE_SIZE  # Nb of elite parents (percentage or absolute)
---eliteType=\ELITISM # Strong (true) or weak (false) elitism (set elite to 0 for none)
---surviveParents=\SURV_PAR_SIZE # Nb of surviving parents (percentage or absolute)
---reduceParents=\RED_PAR\RED_PAR_PRM # Parents reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
---surviveOffspring=\SURV_OFF_SIZE  # Nb of surviving offspring (percentage or absolute)
---reduceOffspring=\RED_OFF\RED_OFF_PRM # Offspring reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
---reduceFinal=\RED_FINAL\RED_FINAL_PRM # Final reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
-
-######    Output    ######
-# --useEval=1 # Use nb of eval. as counter (vs nb of gen.)
-# --useTime=1 # Display time (s) every generation
-# --printBestStat=1 # Print Best/avg/stdev every gen.
-# --printPop=0 # Print sorted pop. every gen.
-
-######    Output - Disk    ######
-# --resDir=Res # Directory to store DISK outputs
-# --eraseDir=1 # erase files in dirName if any
-# --fileBestStat=0 # Output bes/avg/std to file
-
-######    Output - Graphical    ######
---plotBestStat=1 # Plot Best/avg Stat
---plotHisto=1 # Plot histogram of fitnesses
-
-######    Persistence    ######
-# --Load= # -L : A save file to restart from
-# --recomputeFitness=0 # -r : Recompute the fitness after re-loading the pop.?
-# --saveFrequency=0 # Save every F generation (0 = only final state, absent = never)
-# --saveTimeInterval=0 # Save every T seconds (0 or absent = never)
-# --status=OneMaxGenomeEA.status # Status file
-
-######    Stopping criterion    ######
---maxGen=\NB_GEN # -G : Maximum number of generations () = none)
-# --steadyGen=100 # -s : Number of generations with no improvement
-# --minGen=0 # -g : Minimum number of generations
-# --maxEval=0 # -E : Maximum number of evaluations (0 = none)
-# --targetFitness=0 # -T : Stop when fitness reaches
-# --CtrlC=0 # -C : Terminate current generation upon Ctrl C
-
-######    Variation Operators    ######
-# --cross1Rate=1 # -1 : Relative rate for crossover 1
-# --mut1Rate=1 # -1 : Relative rate for mutation 1
---pCross=\XOVER_PROB # -C : Probability of Crossover
---pMut=\MUT_PROB # -M : Probability of Mutation
-
-\START_EO_MAKEFILE_TPL#****************************************
-#                                         
-#  EASEA.mak
-#                                         
-#  Makefile generated by AESAE-EO v0.7b
-#                                         
-#****************************************
-
-# sample makefile for building an EA evolving a new genotype
-
-DIR_EO = \EO_DIR
-
-.cpp: ; c++  -DPACKAGE=\"eo\" -I. -I$(DIR_EO)/src -Wall -g  -o $@  $*.cpp $(DIR_EO)/src/libeo.a $(DIR_EO)/src/utils/libeoutils.a
-
-.cpp.o: ; c++ -DPACKAGE=\"eo\" -I. -I\EO_DIR/src -Wall -g -c $*.cpp
-
-LIB_EO = $(DIR_EO)/src/utils/libeoutils.a $(DIR_EO)/src/libeo.a
-
-SOURCES = EASEA.cpp \
-  EASEAEvalFunc.h \
-  EASEAGenome.h \
-  EASEAInit.h \
-  EASEAMutation.h \
-  EASEAQuadCrossover.h \
-  $(LIB_EO)
-
-ALL = EASEA EASEA.opt
-
-EASEA : $(SOURCES)
-	c++ -g -I. -I$(DIR_EO)/src -o $@ EASEA.cpp $(LIB_EO) -lm -Wno-deprecated 
-
-EASEA.opt : $(SOURCES)
-	c++ -O4 -I. -I$(DIR_EO)/src -o $@ EASEA.cpp $(LIB_EO) -lm -Wno-deprecated 
-
-all : $(ALL)
-
-clean : ; /bin/rm  *.o $(ALL)
-
+clean:
+			    rm *.o EASEA.out
+ 
 \TEMPLATE_END

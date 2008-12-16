@@ -11,9 +11,9 @@ _________________________________________________________*/
 
 \User declarations:
 #define SIZE 16
-float pMutPerGene=0.1;
+static float pMutPerGene=0.1;
 
-inline void swap(bool& a, bool& b)
+static inline void swap(bool& a, bool& b)
   {bool c=a; a=b; b=c;}
 \end
 
@@ -59,9 +59,14 @@ for(int i=0;i<CrossoverPosition+1;i++)
 \end
 
 \GenomeClass::evaluator:
-  int Score=0;         
-  for (int i=0; i<SIZE;i++)
-    Score+=(int)Genome.x[i];
+float Score=0;         
+for (int i=0; i<SIZE;i++)
+  Score+=(Genome.x[i]?1.:0.);
+
+
+for( size_t i=0; i<SIZE ; i++ )
+  printf("%d ",(Genome.x[i]==1?1:0));
+  printf("\n");
   
   return Score;
 \end

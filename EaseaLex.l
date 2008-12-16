@@ -33,7 +33,7 @@ protected:
   CSymbolTable *pSymbolTable;   // the symbol table
   bool bSymbolInserted,bWithinEvaluator;  // used to change evalutor type from double to float 
   bool bInitFunction,bDisplayFunction,bFunction, bNotFinishedYet, bWithinEO_Function, bWithinGPU_Function;
-  bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
+  bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover,bWithinGPUEval;
   bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationFunction;
   bool bCatchNextSemiColon,bWaitingToClosePopulation;
   CSymbol *pASymbol;
@@ -47,7 +47,7 @@ public:
 // constructor
 {                                
   bFunction=bWithinEvaluator=bDisplayFunction=bInitFunction=bNotFinishedYet=0;
-  bSymbolInserted=bDoubleQuotes=bWithinDisplayFunction=bWithinInitialiser=bWithinMutator=bWithinXover=0;
+  bSymbolInserted=bDoubleQuotes=bWithinDisplayFunction=bWithinInitialiser=bWithinMutator=bWithinXover=bWithinGPUEval=0;
   bWaitingForSemiColon=bFinishNB_GEN=bFinishMINIMISE=bFinishMINIMIZE=bGenerationFunction=0;
   bCatchNextSemiColon,bWaitingToClosePopulation=0;
 }
@@ -213,12 +213,12 @@ YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
         }
         else if(TARGET==GPU){
           if (pSym->Object->ObjectType==oObject)
-            fprintf(fpOutputFile,"    genome.%s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName);
+            fprintf(fpOutputFile,"    %s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName);
           if (pSym->Object->ObjectType==oPointer)
-            fprintf(fpOutputFile,"    genome.%s=(genome.%s ? new %s(*(genome.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+            fprintf(fpOutputFile,"    %s=(genome.%s ? new %s(*(genome.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
           if (pSym->Object->ObjectType==oArray){
             fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-            fprintf(fpOutputFile,"       genome.%s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+            fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
           }
 	}
 	else 
@@ -406,7 +406,7 @@ YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
 <TEMPLATE_ANALYSIS>"\\INSERT_EVALUATOR"  {        
       yyreset();
       yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-      BEGIN COPY_EVALUATOR;   
+      BEGIN COPY_EVALUATOR;
     }
 <TEMPLATE_ANALYSIS>"\\ANALYSE_PARAMETERS"  {        
       yyreset();
@@ -466,6 +466,56 @@ YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
 <TEMPLATE_ANALYSIS>"\\NB_MIG" {fprintf(fpOutputFile,"%d",nNB_MIG);}
 <TEMPLATE_ANALYSIS>"\\MIG_FREQ" {fprintf(fpOutputFile,"%f",fMIG_FREQ);}
 <TEMPLATE_ANALYSIS>"\\MIG_TARGET_SELECTOR" {fprintf(fpOutputFile,"%s",sMIG_TARGET_SELECTOR);}
+
+<TEMPLATE_ANALYSIS>"\\START_GPU_INDIVIDUAL_H_TPL"  {
+      char sFileName[1000];
+      fclose(fpOutputFile);
+      strcpy(sFileName, sRAW_PROJECT_NAME);
+      strcat(sFileName,"Individual.h");
+      fpOutputFile=fopen(sFileName,"w");    
+      if (bVERBOSE) printf("Creating %s...\n",sFileName);
+    }
+
+
+<TEMPLATE_ANALYSIS>"\\START_GPU_INDIVIDUAL_CPP_TPL"  {
+      char sFileName[1000];
+      fclose(fpOutputFile);
+      strcpy(sFileName, sRAW_PROJECT_NAME);
+      strcat(sFileName,"Individual.cpp");
+      fpOutputFile=fopen(sFileName,"w");    
+      if (bVERBOSE) printf("Creating %s...\n",sFileName);
+    }
+
+
+<TEMPLATE_ANALYSIS>"\\START_GPU_EVAL_CU_TPL"  {
+      char sFileName[1000];
+      fclose(fpOutputFile);
+      strcpy(sFileName, sRAW_PROJECT_NAME);
+      strcat(sFileName,"GPUEval.cu");
+      fpOutputFile=fopen(sFileName,"w");    
+      if (bVERBOSE) printf("Creating %s...\n",sFileName);
+    }
+
+
+<TEMPLATE_ANALYSIS>"\\START_GPU_EVAL_H_TPL"  {
+      char sFileName[1000];
+      fclose(fpOutputFile);
+      strcpy(sFileName, sRAW_PROJECT_NAME);
+      strcat(sFileName,"GPUEval.h");
+      fpOutputFile=fopen(sFileName,"w");    
+      bWithinGPUEval = true;
+      if (bVERBOSE) printf("Creating %s...\n",sFileName);
+    }
+
+<TEMPLATE_ANALYSIS>"\\START_USER_FUN_H_TPL"  {
+      char sFileName[1000];
+      fclose(fpOutputFile);
+      strcpy(sFileName, sRAW_PROJECT_NAME);
+      strcat(sFileName,"UserFunc.h");
+      fpOutputFile=fopen(sFileName,"w");    
+      if (bVERBOSE) printf("Creating %s...\n",sFileName);
+    }
+
 
 <TEMPLATE_ANALYSIS>"\\START_EO_GENOME_H_TPL"  {
       char sFileName[1000];
@@ -619,7 +669,7 @@ YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
       } }
       printf ("Have a nice compile time.\n");
       if (TARGET==EO) fprintf(fpOutputFile,"\n# That's all folks ! \n");
-      else fprintf(fpOutputFile,"\n// That's all folks ! \n");
+      else if( TARGET == GPU ) fprintf(stdout,"\n// That's all folks ! \n");
       fflush(fpOutputFile);
       fclose(fpOutputFile);
       fclose(fpTemplateFile);
@@ -1073,7 +1123,7 @@ YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
   if (bWithinDisplayFunction && TARGET!=GPU) fprintf(fpOutputFile,"(*this)");
   else if ((TARGET==EO)&&(bWithinInitialiser)) fprintf(fpOutputFile, "(*genome)");
   else if ((TARGET==EO)&&(bWithinMutator)) fprintf(fpOutputFile, "_genotype");
-  //else if (TARGET==GPU) fprintf(fpOutputFile,"(*this)");
+  else if (TARGET==GPU && bWithinGPUEval) fprintf(fpOutputFile,"(*genome)");
   else fprintf(fpOutputFile,"genome");
  } // local genome name
 <COPY_USER_FUNCTION>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
@@ -1151,7 +1201,14 @@ YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
     if (TARGET==GALIB) fprintf(fpOutputFile,"EZ_EVAL+=(double)(clock()-EZ_t1);\n  return (float)");
     if (TARGET==EO)  {fprintf(fpOutputFile,"genome.fitness(");bCatchNextSemiColon=true;}// changes function type// changes function type
     if (TARGET==DREAM) {fprintf(fpOutputFile,"infoHabitant.setFitness(new Double(");bCatchNextSemiColon=true;}// changes function type
-    if (TARGET==GPU) { fprintf(fpOutputFile,"return nFitness = ");}
+    if (TARGET==GPU ) { 
+      if( bWithinGPUEval ){
+	fprintf(fpOutputFile,"return ");
+	bWithinGPUEval = false;
+      }
+      else
+	fprintf(fpOutputFile,"return nFitness = ");
+    }
     bWithinEvaluator=0;
   }
   else if ((bWithinMutator)&&(TARGET!=GALIB)) {

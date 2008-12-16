@@ -1,5 +1,5 @@
 \User declarations:
-#define SIZE 100      
+#define SIZE 16 
 float pMutPerGene=0.1;
 
 inline void swap(bool& a, bool& b)
@@ -43,9 +43,10 @@ GenomeClass
 \end
 
 \GenomeClass::evaluator:
-  int Score=0;         
+  float Score=0;         
   for (int i=0; i<SIZE;i++)
     Score+=(int)Genome.x[i];
+
   return Score;
 \end
 
