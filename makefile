@@ -1,5 +1,5 @@
 EXEC = main.out
-CPPFLAGS = -DUNIX_OS -Ialexyacc/include/ -DDEBUG
+CPPFLAGS = -DUNIX_OS -Ialexyacc/include/ -DDEBUG -g
 CPPC = g++
 LDFLAGS = 
 
@@ -21,7 +21,7 @@ alexyacc/libalex.so:alexyacc/*.cpp
 
 clean:
 	rm -f *.o $(EXEC)
-	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
+#rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
 	cd alexyacc && make clean
 
 

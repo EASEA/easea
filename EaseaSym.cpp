@@ -70,11 +70,204 @@ CSymbol::~CSymbol(){
 /////////////////////////////////////////////////////////////////////////////
 // symbol  commands
 
+void CSymbol::printHdr(FILE *fp){
+  CListItem<CSymbol*> *pSym;
+  int i;
+
+  if (strcmp(sName,"Genome")&&(TARGET==GPU)){   // If we are printing a user class other than the genome
+    
+
+    fprintf(fp,"\nclass %s {\npublic:\n// Default methods for class %s\n",sName,sName); // class  header
+
+    fprintf(fp,"// Class members \n"); // Now, we must print the class members
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+        fprintf(fp,"  %s %s;\n",pSym->Object->pType->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oPointer)
+        fprintf(fp,"  %s *%s;\n",pSym->Object->pType->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray)
+        fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
+    }
+    
+    // output functions declaration
+    fprintf(fp,"\n  %s* copy%sToGpu(%s* EASEA_Var);// Copy to GPU\n",sName,sName,sName); // Copy cplx genome to GPU      
+    fprintf(fp,"  %s();  // Constructor\n",sName); // constructor
+    fprintf(fp,"  %s(%s &EASEA_Var); // Copy constructor\n",sName,sName); // copy constructor
+    fprintf(fp,"  ~%s();  // Destructor\n",sName); // destructor
+    fprintf(fp,"  %s& operator=(%s &EASEA_Var);  // Operator=\n",sName,sName); // operator=
+    fprintf(fp,"  bool operator==(%s &EASEA_Var) const;  // Operator==\n",sName); // operator==
+    fprintf(fp,"  bool operator!=(%s &EASEA_Var) const;// operator!=\n\n",sName); // operator!=
+    fprintf(fp,"  friend istream& operator>> (istream& is, %s& EASEA_Var); // Input stream extraction operator\n",sName); // Output stream insertion operator
+    fprintf(fp,"  friend istream& operator>> (istream& is, %s& EASEA_Var); // Input stream extraction operator\n",sName); // Output stream insertion operator
+
+    fprintf(fp,"};\n");
+  }
+}
+
+void CSymbol::printCode(FILE *fp){
+  CListItem<CSymbol*> *pSym;
+  int i;
+
+  if (strcmp(sName,"Genome")&&(TARGET!=DREAM)){   // If we are printing a user class other than the genome
+  
+
+    if( TARGET == GPU ){
+      fprintf(fp,"\n  %s* %s::copy%sToGpu(%s* inputObj){  // Copy to GPU\n",sName,sName,sName,sName); // Copy cplx genome to GPU      
+      fprintf(fp,"    %s tmp;\n",sName); // Copy cplx genome to GPU
+      fprintf(fp,"    %s* ret = NULL;\n",sName);
+      pSymbolList->reset();
+      while (pSym=pSymbolList->walkToNextItem()){
+	
+	if(pSym->Object->ObjectType==oPointer){
+	  fprintf(fp,"\n    if( inputObj->%s != NULL )\n",pSym->Object->sName);
+	  fprintf(fp,"      tmp.%s = copy%sToGpu(inputObj->%s);\n",pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+	  fprintf(fp,"    else\n");
+	  fprintf(fp,"      tmp.%s = NULL;\n",pSym->Object->sName);
+	}
+	else if(pSym->Object->ObjectType==oArray){
+	  if(pSym->Object->pType->ObjectType==oBaseClass){
+	    fprintf(fp,"\n    cudaMalloc( (void**) &(tmp.%s),%d);\n",pSym->Object->sName,pSym->Object->nSize);
+	    fprintf(fp,"    cudaMemcpy( tmp.%s,inputObj->%s,%d,cudaMemcpyHostToDevice);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->nSize);
+	  }
+	}
+	else
+	  fprintf(fp,"    tmp.%s = inputObj->%s;\n",pSym->Object->sName,pSym->Object->sName);
+	//fprintf(fp," taille %d\n",pSym->Object->nSize); 
+      }
+      
+      //fprintf(fp,"\n    cudaMalloc( (void**)&ret, sizeof(%s));\n",sName);
+      fprintf(fp,"    cudaMemcpy( ret, &tmp, sizeof(%s),cudaMemcpyHostToDevice);\n",sName);
+      fprintf(fp,"  }\n\n"); // End of copy cplx genome to GPU
+    }
+
+    fprintf(fp,"  %s::%s(){  // Constructor\n",sName,sName); // constructor
+    pSymbolList->reset(); // in which we initialise all pointers to NULL
+    while (pSym=pSymbolList->walkToNextItem())
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    %s=NULL;\n",pSym->Object->sName);
+    fprintf(fp,"  }\n"); // constructor
+ 
+    fprintf(fp,"  %s::%s(%s &EASEA_Var) {  // Copy constructor\n",sName,sName,sName); // copy constructor
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    %s=EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       %s[EASEA_Ndx]=EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer){
+	fprintf(fp,"    %s=(EASEA_Var.%s ? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      }
+    }
+    fprintf(fp,"  }\n"); // copy constructor
+
+    fprintf(fp,"  %s::~%s() {  // Destructor\n",sName,sName); // destructor
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    if (%s) delete %s;\n    %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+    }
+    fprintf(fp,"  }\n"); // destructor
+
+    fprintf(fp,"  %s& %s::operator=(%s &EASEA_Var) {  // Operator=\n",sName,sName,sName); // operator=
+    fprintf(fp,"    if (&EASEA_Var == this) return *this;\n");
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    %s = EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       %s[EASEA_Ndx] = EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer){
+	fprintf(fp,"    if (%s) delete %s;\n",pSym->Object->sName,pSym->Object->sName);
+	fprintf(fp,"    %s = (EASEA_Var.%s? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      }
+    }
+    fprintf(fp,"  return *this;\n  }\n\n"); // operator<=
+
+    fprintf(fp,"  bool %s::operator==(%s &EASEA_Var) const {  // Operator==\n",sName,sName); // operator==
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (TARGET==GPU){
+	if (pSym->Object->ObjectType==oObject)
+	  fprintf(fp,"    if (%s!=EASEA_Var.%s) return false;\n",pSym->Object->sName,pSym->Object->sName);
+	if (pSym->Object->ObjectType==oArray){
+	  fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	  fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return false;}\n",pSym->Object->sName,pSym->Object->sName);
+	}
+	if (pSym->Object->ObjectType==oPointer){
+	  fprintf(fp,"    if (((%s) && (!EASEA_Var.%s)) || ((!%s) && (EASEA_Var.%s))) return false;\n",pSym->Object->sName,pSym->Object->sName, pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+	  fprintf(fp,"    if ((%s)&&(%s!=EASEA_Var.%s)) return false;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName, pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->sName);
+	}                                               
+      }
+    }
+    if (TARGET==GPU)  fprintf(fp,"  return true;\n  }\n\n"); // operator==
+
+    fprintf(fp,"bool %s::operator!=(%s &EASEA_Var) const {return !(*this==EASEA_Var);} // operator!=\n\n",sName,sName); // operator!=
+
+    fprintf(fp,"ostream& operator<< (ostream& os, const %s& EASEA_Var) { // Output stream insertion operator\n",sName); // Output stream insertion operator
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    os <<  \"%s:\" << EASEA_Var.%s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {os << \"Array %s : \";\n",pSym->Object->sName);
+	fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       os << \"[\" << EASEA_Ndx << \"]:\" << EASEA_Var.%s[EASEA_Ndx] << \"\\t\";}\n    os << \"\\n\";\n",pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    if (EASEA_Var.%s) os << \"%s:\" << *(EASEA_Var.%s) << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+    }
+    fprintf(fp,"    return os;\n  }\n\n"); // Output stream insertion operator
+
+    fprintf(fp,"istream& operator>> (istream& is, %s& EASEA_Var) { // Input stream extraction operator\n",sName); // Output stream insertion operator
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if ((pSym->Object->ObjectType==oObject)&&(strcmp(pSym->Object->pType->sName, "bool"))) 
+	fprintf(fp,"    is >> EASEA_Var.%s;\n",pSym->Object->sName);
+      if ((pSym->Object->ObjectType==oArray)&&(strcmp(pSym->Object->pType->sName, "bool"))) {
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       is >> EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName);
+      }                                         
+    }
+    fprintf(fp,"    return is;\n  }\n\n"); // Input stream extraction operator
+
+    if (sString) {
+      if (bVERBOSE) printf ("Inserting Methods into %s Class.\n",sName);
+      fprintf(fpOutputFile,"// User-defined methods:\n\n");
+      fprintf(fpOutputFile,"%s\n",sString);
+    }
+  }
+  else {
+    fprintf(fp,"// Class members \n"); // Now, we must print the class members
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectQualifier==1) // 1=Static
+        fprintf(fp,"  static");
+      if (pSym->Object->ObjectType==oObject)
+        fprintf(fp,"  %s %s;\n",pSym->Object->pType->sName,pSym->Object->sName);
+      if ((pSym->Object->ObjectType==oPointer)&&(TARGET==DREAM))
+        fprintf(fp,"  %s %s;\n",pSym->Object->pType->sName,pSym->Object->sName);
+      if ((pSym->Object->ObjectType==oPointer)&&(TARGET!=DREAM))
+        fprintf(fp,"  %s *%s;\n",pSym->Object->pType->sName,pSym->Object->sName);
+      if ((pSym->Object->ObjectType==oArray)&&(TARGET==DREAM))
+        fprintf(fp,"  public %s[] %s = new %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
+      if ((pSym->Object->ObjectType==oArray)&&(TARGET!=DREAM))
+        fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
+    }
+  }
+}
+
+
 void CSymbol::print(FILE *fp){
   CListItem<CSymbol*> *pSym;
   int i;
 
   if (strcmp(sName,"Genome")&&(TARGET!=DREAM)){   // If we are printing a user class other than the genome
+
 
     fprintf(fp,"\nclass %s {\npublic:\n// Default methods for class %s\n",sName,sName); // class  header
 
@@ -89,111 +282,141 @@ void CSymbol::print(FILE *fp){
         fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
     }
 
+    
+    if( TARGET == GPU ){
+      fprintf(fp,"\n  %s* copy%sToGpu(%s* inputObj){  // Copy to GPU\n",sName,sName,sName); // Copy cplx genome to GPU      
+      fprintf(fp,"    %s tmp();\n",sName); // Copy cplx genome to GPU
+      fprintf(fp,"    %s* ret = NULL;\n",sName);
+      pSymbolList->reset();
+      while (pSym=pSymbolList->walkToNextItem()){
+
+	if(pSym->Object->ObjectType==oPointer){
+	  fprintf(fp,"\n    if( inputObj->%s != NULL )\n",pSym->Object->sName);
+	  fprintf(fp,"      tmp.%s = copy%sToGpu(inputObj->%s);\n",pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+	  fprintf(fp,"    else\n");
+	  fprintf(fp,"      tmp.%s = NULL;\n",pSym->Object->sName);
+	}
+	else if(pSym->Object->ObjectType==oArray){
+	  if(pSym->Object->pType->ObjectType==oBaseClass){
+	    fprintf(fp,"\n    cudaMalloc( (void**) &(tmp.%s),%d);\n",pSym->Object->sName,pSym->Object->nSize);
+	    fprintf(fp,"    cudaMemcpy( tmp.%s,inputObj->%s,%d,cudaMemcpyHostToDevice);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->nSize);
+	  }
+	}
+	else
+	  fprintf(fp,"    tmp.%s = inputObj->%s;\n",pSym->Object->sName,pSym->Object->sName);
+	//fprintf(fp," taille %d\n",pSym->Object->nSize); 
+      }
+      
+      //fprintf(fp,"\n    cudaMalloc( (void**)&ret, sizeof(%s));\n",sName);
+      fprintf(fp,"    cudaMemcpy( ret, &tmp, sizeof(%s),cudaMemcpyHostToDevice);\n",sName);
+      fprintf(fp,"  }\n\n"); // End of copy cplx genome to GPU
+    }
+
     fprintf(fp,"  %s(){  // Constructor\n",sName); // constructor
-          pSymbolList->reset(); // in which we initialise all pointers to NULL
-          while (pSym=pSymbolList->walkToNextItem())
-            if (pSym->Object->ObjectType==oPointer)
-              fprintf(fp,"    %s=NULL;\n",pSym->Object->sName);
+    pSymbolList->reset(); // in which we initialise all pointers to NULL
+    while (pSym=pSymbolList->walkToNextItem())
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    %s=NULL;\n",pSym->Object->sName);
     fprintf(fp,"  }\n"); // constructor
  
     fprintf(fp,"  %s(%s &EASEA_Var) {  // Copy constructor\n",sName,sName); // copy constructor
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oObject)
-              fprintf(fp,"    %s=EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
-            if (pSym->Object->ObjectType==oArray){
-              fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              fprintf(fp,"       %s[EASEA_Ndx]=EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
-            }
-            if (pSym->Object->ObjectType==oPointer){
-              fprintf(fp,"    %s=(EASEA_Var.%s ? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-            }
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    %s=EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       %s[EASEA_Ndx]=EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer){
+	fprintf(fp,"    %s=(EASEA_Var.%s ? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      }
+    }
     fprintf(fp,"  }\n"); // copy constructor
 
     fprintf(fp,"  ~%s() {  // Destructor\n",sName); // destructor
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oPointer)
-              fprintf(fp,"    if (%s) delete %s;\n    %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    if (%s) delete %s;\n    %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+    }
     fprintf(fp,"  }\n"); // destructor
 
     fprintf(fp,"  %s& operator=(%s &EASEA_Var) {  // Operator=\n",sName,sName); // operator=
     fprintf(fp,"    if (&EASEA_Var == this) return *this;\n");
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oObject)
-              fprintf(fp,"    %s = EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
-            if (pSym->Object->ObjectType==oArray){
-              fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              fprintf(fp,"       %s[EASEA_Ndx] = EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
-            }
-             if (pSym->Object->ObjectType==oPointer){
-              fprintf(fp,"    if (%s) delete %s;\n",pSym->Object->sName,pSym->Object->sName);
-              fprintf(fp,"    %s = (EASEA_Var.%s? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-            }
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    %s = EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       %s[EASEA_Ndx] = EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer){
+	fprintf(fp,"    if (%s) delete %s;\n",pSym->Object->sName,pSym->Object->sName);
+	fprintf(fp,"    %s = (EASEA_Var.%s? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      }
+    }
     fprintf(fp,"  return *this;\n  }\n\n"); // operator<=
 
     fprintf(fp,"  bool operator==(%s &EASEA_Var) const {  // Operator==\n",sName); // operator==
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (TARGET==GALIB){
-              if (pSym->Object->ObjectType==oObject)
-                fprintf(fp,"    if (%s!=EASEA_Var.%s) return gaFalse;\n",pSym->Object->sName,pSym->Object->sName);
-              if (pSym->Object->ObjectType==oArray){
-                fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-                fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return gaFalse;}\n",pSym->Object->sName,pSym->Object->sName);
-              }
-               if (pSym->Object->ObjectType==oPointer){
-                fprintf(fp,"    if (((%s) && (!EASEA_Var.%s)) || ((!%s) && (EASEA_Var.%s))) return gaFalse;\n",pSym->Object->sName,pSym->Object->sName, pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
-                fprintf(fp,"    if ((%s)&&(%s!=EASEA_Var.%s)) return gaFalse;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName, pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->sName);
-              }                                               
-            }
-            if (TARGET==EO){
-              if (pSym->Object->ObjectType==oObject)
-                fprintf(fp,"    if (%s!=EASEA_Var.%s) return false;\n",pSym->Object->sName,pSym->Object->sName);
-              if (pSym->Object->ObjectType==oArray){
-                fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-                fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return false;}\n",pSym->Object->sName,pSym->Object->sName);
-              }
-               if (pSym->Object->ObjectType==oPointer){
-                fprintf(fp,"    if (((%s) && (!EASEA_Var.%s)) || ((!%s) && (EASEA_Var.%s))) return false;\n",pSym->Object->sName,pSym->Object->sName, pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
-                fprintf(fp,"    if ((%s)&&(%s!=EASEA_Var.%s)) return false;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName, pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->sName);
-              }                                               
-            }
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (TARGET==GALIB){
+	if (pSym->Object->ObjectType==oObject)
+	  fprintf(fp,"    if (%s!=EASEA_Var.%s) return gaFalse;\n",pSym->Object->sName,pSym->Object->sName);
+	if (pSym->Object->ObjectType==oArray){
+	  fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	  fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return gaFalse;}\n",pSym->Object->sName,pSym->Object->sName);
+	}
+	if (pSym->Object->ObjectType==oPointer){
+	  fprintf(fp,"    if (((%s) && (!EASEA_Var.%s)) || ((!%s) && (EASEA_Var.%s))) return gaFalse;\n",pSym->Object->sName,pSym->Object->sName, pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+	  fprintf(fp,"    if ((%s)&&(%s!=EASEA_Var.%s)) return gaFalse;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName, pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->sName);
+	}                                               
+      }
+      if (TARGET==EO && TARGET==GPU){
+	if (pSym->Object->ObjectType==oObject)
+	  fprintf(fp,"    if (%s!=EASEA_Var.%s) return false;\n",pSym->Object->sName,pSym->Object->sName);
+	if (pSym->Object->ObjectType==oArray){
+	  fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	  fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return false;}\n",pSym->Object->sName,pSym->Object->sName);
+	}
+	if (pSym->Object->ObjectType==oPointer){
+	  fprintf(fp,"    if (((%s) && (!EASEA_Var.%s)) || ((!%s) && (EASEA_Var.%s))) return false;\n",pSym->Object->sName,pSym->Object->sName, pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+	  fprintf(fp,"    if ((%s)&&(%s!=EASEA_Var.%s)) return false;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName, pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->sName);
+	}                                               
+      }
+    }
     if (TARGET==GALIB)  fprintf(fp,"  return gaTrue;\n  }\n\n"); // operator==
-    if (TARGET==EO)  fprintf(fp,"  return true;\n  }\n\n"); // operator==
+    if (TARGET==EO && TARGET==GPU)  fprintf(fp,"  return true;\n  }\n\n"); // operator==
 
     fprintf(fp,"  bool operator!=(%s &EASEA_Var) const {return !(*this==EASEA_Var);} // operator!=\n\n",sName); // operator!=
 
     fprintf(fp,"  friend ostream& operator<< (ostream& os, const %s& EASEA_Var) { // Output stream insertion operator\n",sName); // Output stream insertion operator
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oObject)
-              fprintf(fp,"    os <<  \"%s:\" << EASEA_Var.%s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
-            if (pSym->Object->ObjectType==oArray){
-              fprintf(fp,"    {os << \"Array %s : \";\n",pSym->Object->sName);
-              fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              fprintf(fp,"       os << \"[\" << EASEA_Ndx << \"]:\" << EASEA_Var.%s[EASEA_Ndx] << \"\\t\";}\n    os << \"\\n\";\n",pSym->Object->sName);
-            }
-            if (pSym->Object->ObjectType==oPointer)
-              fprintf(fp,"    if (EASEA_Var.%s) os << \"%s:\" << *(EASEA_Var.%s) << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    os <<  \"%s:\" << EASEA_Var.%s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {os << \"Array %s : \";\n",pSym->Object->sName);
+	fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       os << \"[\" << EASEA_Ndx << \"]:\" << EASEA_Var.%s[EASEA_Ndx] << \"\\t\";}\n    os << \"\\n\";\n",pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    if (EASEA_Var.%s) os << \"%s:\" << *(EASEA_Var.%s) << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+    }
     fprintf(fp,"    return os;\n  }\n\n"); // Output stream insertion operator
 
     fprintf(fp,"  friend istream& operator>> (istream& is, %s& EASEA_Var) { // Input stream extraction operator\n",sName); // Output stream insertion operator
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if ((pSym->Object->ObjectType==oObject)&&(strcmp(pSym->Object->pType->sName, "bool"))) 
-              fprintf(fp,"    is >> EASEA_Var.%s;\n",pSym->Object->sName);
-            if ((pSym->Object->ObjectType==oArray)&&(strcmp(pSym->Object->pType->sName, "bool"))) {
-              fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              fprintf(fp,"       is >> EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName);
-            }                                         
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if ((pSym->Object->ObjectType==oObject)&&(strcmp(pSym->Object->pType->sName, "bool"))) 
+	fprintf(fp,"    is >> EASEA_Var.%s;\n",pSym->Object->sName);
+      if ((pSym->Object->ObjectType==oArray)&&(strcmp(pSym->Object->pType->sName, "bool"))) {
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       is >> EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName);
+      }                                         
+    }
     fprintf(fp,"    return is;\n  }\n\n"); // Input stream extraction operator
 
     if (sString) {
@@ -230,61 +453,61 @@ void CSymbol::print(FILE *fp){
     }
 
     fprintf(fp,"\n  %s(){  // Constructor\n",sName); // constructor
-          pSymbolList->reset(); // in which we initialise all pointers to NULL
-          while (pSym=pSymbolList->walkToNextItem())
-            if (pSym->Object->ObjectType==oPointer)
-              fprintf(fp,"    %s=null;\n",pSym->Object->sName);
+    pSymbolList->reset(); // in which we initialise all pointers to NULL
+    while (pSym=pSymbolList->walkToNextItem())
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    %s=null;\n",pSym->Object->sName);
     fprintf(fp,"  }\n\n"); // constructor
  
     fprintf(fp,"  public %s (%s EZ_%s) {  \n// Memberwise Cloning\n",sName,sName,sName); // copy constructor
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oObject)
-              fprintf(fp,"    %s=EZ_%s.%s;\n",pSym->Object->sName,sName,pSym->Object->sName);
-            if (pSym->Object->ObjectType==oArray){
-              fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              if (pSym->Object->pType->ObjectType==oUserClass) fprintf(fp,"       %s[EASEA_Ndx]=new %s(EZ_%s.%s[EASEA_Ndx]);}\n",pSym->Object->sName,pSym->Object->pType->sName,sName,pSym->Object->sName);
-              else fprintf(fp,"       %s[EASEA_Ndx]=EZ_%s.%s[EASEA_Ndx];}\n",pSym->Object->sName,sName,pSym->Object->sName);
-            }
-            if (pSym->Object->ObjectType==oPointer){
-              fprintf(fp,"    %s=(EZ_%s.%s!=null ? new %s(EZ_%s.%s) : null);\n",pSym->Object->sName,sName,pSym->Object->sName,pSym->Object->pType->sName,sName,pSym->Object->sName);
-            }
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    %s=EZ_%s.%s;\n",pSym->Object->sName,sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	if (pSym->Object->pType->ObjectType==oUserClass) fprintf(fp,"       %s[EASEA_Ndx]=new %s(EZ_%s.%s[EASEA_Ndx]);}\n",pSym->Object->sName,pSym->Object->pType->sName,sName,pSym->Object->sName);
+	else fprintf(fp,"       %s[EASEA_Ndx]=EZ_%s.%s[EASEA_Ndx];}\n",pSym->Object->sName,sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer){
+	fprintf(fp,"    %s=(EZ_%s.%s!=null ? new %s(EZ_%s.%s) : null);\n",pSym->Object->sName,sName,pSym->Object->sName,pSym->Object->pType->sName,sName,pSym->Object->sName);
+      }
+    }
     fprintf(fp,"  }\n\n"); // copy constructor
 
     fprintf(fp,"  public Object copy() throws CloneNotSupportedException {\n");
     fprintf(fp,"    %s EZ_%s = new %s();\n",sName,sName,sName);
     fprintf(fp,"    // Memberwise copy\n");
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oObject)
-              fprintf(fp,"    EZ_%s.%s = %s;\n",sName,pSym->Object->sName,pSym->Object->sName);
-            if (pSym->Object->ObjectType==oArray){
-              fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              if (pSym->Object->pType->ObjectType==oUserClass) fprintf(fp,"       EZ_%s.%s[EASEA_Ndx] = new %s(%s[EASEA_Ndx]);}\n",sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-              else fprintf(fp,"       EZ_%s.%s[EASEA_Ndx] = %s[EASEA_Ndx];}\n",sName,pSym->Object->sName,pSym->Object->sName);
-            }
-             if (pSym->Object->ObjectType==oPointer){
-              fprintf(fp,"    EZ_%s.%s = (%s != null ? new %s(%s) : null);\n",sName,pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-            }
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    EZ_%s.%s = %s;\n",sName,pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	if (pSym->Object->pType->ObjectType==oUserClass) fprintf(fp,"       EZ_%s.%s[EASEA_Ndx] = new %s(%s[EASEA_Ndx]);}\n",sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+	else fprintf(fp,"       EZ_%s.%s[EASEA_Ndx] = %s[EASEA_Ndx];}\n",sName,pSym->Object->sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer){
+	fprintf(fp,"    EZ_%s.%s = (%s != null ? new %s(%s) : null);\n",sName,pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      }
+    }
     fprintf(fp,"    return EZ_%s;\n  }\n\n",sName); // operator<=
 
     fprintf(fp,"  public String toString() {\n");
     fprintf(fp,"    String EASEA_S = new String();\n");
     fprintf(fp,"    //Default display function\n");
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oObject)
-              fprintf(fp,"    EASEA_S = EASEA_S +  \"%s:\" + %s + \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
-            if (pSym->Object->ObjectType==oArray){
-              fprintf(fp,"    {EASEA_S = EASEA_S + \"Array %s : \";\n",pSym->Object->sName);
-              fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              fprintf(fp,"       EASEA_S = EASEA_S + \"[\" + EASEA_Ndx + \"]:\" + %s[EASEA_Ndx] + \"\\t\";}\n    EASEA_S = EASEA_S + \"\\n\";\n",pSym->Object->sName);
-            }
-            if (pSym->Object->ObjectType==oPointer)
-              fprintf(fp,"    if (%s!=null) EASEA_S = EASEA_S + \"%s:\" + %s + \"\\n\";\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    EASEA_S = EASEA_S +  \"%s:\" + %s + \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {EASEA_S = EASEA_S + \"Array %s : \";\n",pSym->Object->sName);
+	fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       EASEA_S = EASEA_S + \"[\" + EASEA_Ndx + \"]:\" + %s[EASEA_Ndx] + \"\\t\";}\n    EASEA_S = EASEA_S + \"\\n\";\n",pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    if (%s!=null) EASEA_S = EASEA_S + \"%s:\" + %s + \"\\n\";\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+    }
     fprintf(fp,"    return EASEA_S;\n  }\n}\n\n"); // Output stream insertion operator
     fclose(fp);
   }
@@ -311,6 +534,7 @@ void CSymbol::print(FILE *fp){
     fprintf(fp,"};\n",sName);
 }
 
+
 void CSymbol::printClasses(FILE *fp){
   CListItem<CSymbol*> *pSym;
   if (bAlreadyPrinted) return;
@@ -321,6 +545,30 @@ void CSymbol::printClasses(FILE *fp){
       pSym->Object->pType->printClasses(fp);
   print(fp);
 }
+
+void CSymbol::printClassesHdr(FILE *fp){
+  CListItem<CSymbol*> *pSym;
+  if (bAlreadyPrinted) return;
+  bAlreadyPrinted=true;
+  pSymbolList->reset();
+  while (pSym=pSymbolList->walkToNextItem())
+    if ((pSym->Object->pType->ObjectType==oUserClass)&&(!pSym->Object->pType->bAlreadyPrinted))
+      pSym->Object->pType->printClassesHdr(fp);
+  printHdr(fp);
+}
+
+void CSymbol::printClassesCode(FILE *fp){
+  CListItem<CSymbol*> *pSym;
+  if (bAlreadyPrinted) return;
+  bAlreadyPrinted=true;
+  pSymbolList->reset();
+  while (pSym=pSymbolList->walkToNextItem())
+    if ((pSym->Object->pType->ObjectType==oUserClass)&&(!pSym->Object->pType->bAlreadyPrinted))
+      pSym->Object->pType->printClassesCode(fp);
+  printCode(fp);
+}
+
+
 
 void CSymbol::printAllSymbols(FILE *fp, char *sCompleteName, EObjectType FatherType, CListItem<CSymbol *> *pSym){
   char sNewCompleteName[1000], s[20];
@@ -415,3 +663,14 @@ CSymbol* CSymbolTable::find(const char *s){
       return pSym;     
   return NULL;
   }
+
+
+
+void reInitAlreadyPtedBit(CLList<CSymbol *> *pSymbolList){
+  CListItem<CSymbol*>* pSym = NULL;
+  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
+    fprintf(stderr,"reinit\n");
+    pSym->Object->bAlreadyPrinted = false;
+    pSym->Object->pType->bAlreadyPrinted = false;
+  }
+}

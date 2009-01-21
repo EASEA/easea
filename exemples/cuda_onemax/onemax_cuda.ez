@@ -79,8 +79,8 @@ for( size_t i=0; i<SIZE ; i++ )
 
 // Variation operators:
   Operators are called: Sequentially
-  Mutation probability: 0.4
-  Crossover probability: 0.8
+  Mutation probability: 0.05
+  Crossover probability: 1
 
 // Evolution Engine:
   Evaluator goal: Maximise
@@ -96,7 +96,7 @@ for( size_t i=0; i<SIZE ; i++ )
   Surviving parents: 0
   Reduce offspring: Tournament 2
   Surviving offspring: 10
-  Final reduce: Tournament 2
+  Final reduce: Tournament 5
   Elitism: Strong
 
 // Island model:
