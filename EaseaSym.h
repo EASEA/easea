@@ -35,7 +35,6 @@ public:
   CListItem<T> *pNext; // pointer to the next object in the list      
 };
 
-
 /////////////////////////////////////////////////////////////////////////////
 // Linked List
 
@@ -56,7 +55,7 @@ public :
   CListItem<T> *walkToNextItem();
   CListItem<T> *remove(T *p);
   };
-void reInitAlreadyPtedBit(CLList<CSymbol *> *pSymbolList);
+
  /////////////////////////////////////////////////////////////////////////////
 // Symbol
 
@@ -80,16 +79,15 @@ public:
   CSymbol *pClass;  // pointer to the variable class in which it is defined.
   CLList<CSymbol *> *pSymbolList; // pointer on a list of class members (if the symbol is a class)
                                         // pointer on the class (if the symbol is a variable)
-
+  
 // Operations
 public:
   void print(FILE *f);
-  void printHdr(FILE *fp);
-  void printCode(FILE* fp);
   void printClasses(FILE *f);      
-  void printClassesHdr(FILE* f);
-  void printClassesCode(FILE* f);
   void printAllSymbols(FILE *f, char *, EObjectType, CListItem<CSymbol *> *pSym);
+  void printUserClasses(FILE* fp);
+  void printUC(FILE* fp);
+
 };
 
 /////////////////////////////////////////////////////////////////////////////

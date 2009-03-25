@@ -10,10 +10,12 @@
 //                                         
 //****************************************
 
+ 
+
 
 #define GPU_BUFFER_POS(buffer,index) (buffer+sizeof(EASEAGenome)*index)
 \ANALYSE_PARAMETERS
-//#define ONLY_RESULT
+#define ONLY_RESULT
 #define MINIMAL_VERBOSE
 #define MARGIN 5         // margin between cpu and gpu evaluation (only in mixed mode)
 //#define MARGIN_ERROR   // if defined margin margin errors are fatal
@@ -26,13 +28,40 @@
 #include "tool/timing.h"
 #include <opt.h>
 #include <float.h>
+#include <time.h>
+
+
+#ifdef TOTAL_TIMING
+struct timeval total_time;
+#endif
+
+#ifdef MEMCPY_TIMING
+struct timeval total_memcopy_time;
+#endif
+
+#ifdef DATAMOTION_TIMING
+struct timeval data_motion_t;
+#endif
+
+#ifdef KRNL_TIMING
+struct timeval krnl_t;
+#endif
+
+#ifdef CPUCOMPUTE_TIMING
+struct timeval cpu_compute_time;
+#endif
+
+
+
+
 
 #define PRESSION_SELECTION \SELECT_PRM
 #define PRESSION_REPLACEMENT \RED_FINAL_PRM
 
 #include "EASEAUserFunc.h"
 #include "EASEAIndividual.h"  //Generated individual
-#include "EASEAGPUEval.h"     //Generated header for gpu evaluation
+#include <iostream>
+
 
 
 //**************************************************
@@ -52,46 +81,23 @@ size_t nOFFSPRINGSIZE = \OFF_SIZE;
 size_t nNB_GENERATION = \NB_GEN;
 
 
-
-
 //INSERT_INITIALISATION_FUNCTION 
 \INSERT_INITIALISATION_FUNCTION 
 
 
 
-// debug evaluation function
-// this function does an evaluation on gpu and on cpu
-// compares values between both evaluations
-// and warn user (progammer) if a difference exists
-// (or return a false value if margin_error is defined)
+
+
 
 int
 DEBUG_evalPopulation(char* parentGenomes, CIndividu** pPopParents, size_t popSize){
   int i;
   int ret = true;
-  float* results = launch_krnl(popSize,parentGenomes);
-  for (i=0;i<popSize;i++){
+
+
+  for (i=0;i<popSize;i++)
     pPopParents[i]->evaluation();
-    if( (results[i] != pPopParents[i]->nFitness) && (pPopParents[i]->nFitness != 0) ){
-      float percentError = ((results[i]-pPopParents[i]->nFitness)/pPopParents[i]->nFitness)*100;
-
-#ifdef FULL_VERBOSE
-      fprintf(stderr,"****ERROR*** %f != %f \n",results[i], pPopParents[i]->nFitness);
-      fprintf(stderr,"****ERROR*** %f\n", percentError);
-#endif
-      
-
-      // error control
-      if( percentError > MARGIN ){
-#ifdef MARGIN_ERROR
-	fprintf( stderr , "****ERROR*** Error is greather than %d% --> %d\n",MARGIN,percentError);
-	ret = false;
-#else
-	fprintf( stderr , "****WARNING*** Error is greather than %d% --> %.2f%\n",MARGIN,percentError);
-#endif
-      }
-    }
-  }
+    
   return ret;
 }
 
@@ -138,7 +144,14 @@ CIndividu* selection(CIndividu** population, size_t popSize){
 int compareIndividuals(const void* a, const void* b){
   const CIndividu* i1 = *(const CIndividu**)a;
   const CIndividu* i2 = *(const CIndividu**)b;
-  return (((CIndividu*)i2)->nFitness - ((CIndividu*)i1)->nFitness);
+  if( i1->nFitness < i2->nFitness)
+    return -1;
+  else 
+    if( i1->nFitness > i2->nFitness )
+      return 1;
+    else
+      return 0;
+  //return ((float)(i1->nFitness - i2->nFitness));
 }
 
 
@@ -149,8 +162,8 @@ void sortPopulation(CIndividu** population, size_t popSize){
 }
 
 CIndividu* remplacement(CIndividu** population, size_t popSize){
-  size_t meilleurIndividu = tournoi(population,popSize,PRESSION_REPLACEMENT);
-  //size_t meilleurIndividu = 0;
+  //size_t meilleurIndividu = tournoi(population,popSize,PRESSION_REPLACEMENT);
+  size_t meilleurIndividu = popSize-1;
   CIndividu* selected = population[meilleurIndividu];
 
   //suppression de l'individu selectionne de la population courante
@@ -161,16 +174,6 @@ CIndividu* remplacement(CIndividu** population, size_t popSize){
 
 
 
-void gpuEvaluation(char* parentGenomes,CIndividu** pPopParents,size_t popSize){
-  // compute fitness for all initial population on gpu
-  float* results = launch_krnl(popSize,parentGenomes);
-  //write fitness in corresponding individuals
-  for (size_t i=0;i<popSize;i++){
-    //printf("%p %f\n",pPopParents[i],results[i]);
-    pPopParents[i]->setFitness(results[i]);
-  }
-  delete[] results;
-}
 
 
 float returnedFitness;
@@ -202,7 +205,9 @@ int mainLoop(int argc,char** argv){
 	
   // Cre'ation et initialisation de la population
   for (i=0;i<nTAILLE_POP;i++) {
-    pPopParents[i]=new CIndividu(GPU_BUFFER_POS(parentGenomes,i));
+    pPopParents[i]=new CIndividu(NULL);
+
+
 #ifndef ONLY_RESULT
     printf("\npPopParents[%d]=%p\n",i,pPopParents[i]); 
 #endif
@@ -241,16 +246,6 @@ int mainLoop(int argc,char** argv){
     printf("%s\n",pPopParents[i]->toString().c_str());
 #endif
   
-  sortPopulation(pPopParents,nTAILLE_POP);
-  fprintf(stdout,"sorted population \n");
-
-#ifndef ONLY_RESULT
-  for (i=0;i<nTAILLE_POP;i++)
-    printf("%s\n",pPopParents[i]->toString().c_str());
-#endif
-  fprintf(stdout,"sorted population \n");
-
-  // Boucle e'volutionnaire
   while( generationCourante < nNB_GENERATION ){
 
 
@@ -306,13 +301,12 @@ int mainLoop(int argc,char** argv){
       
       //printf("\nMutation de %p\n",pPopEnfants[nNbEnfants]);      
       pPopEnfants[nNbEnfants]->mutation(fPMut,GPU_BUFFER_POS(offspringGenomes,nNbEnfants)); // mutation.
-      memcpy(GPU_BUFFER_POS(offspringGenomes,nNbEnfants),&(pPopEnfants[nNbEnfants]->genome),sizeof(EASEAGenome));
 
       nNbEnfants++;
     }
     // Bon, et bien on est maintenant au complet (parents + enfants)
     // Il faut maintenant e'valuer tous les enfants
-		
+    
 
     #if defined(FULL_VERBOSE) && !defined(ONLY_RESULT)
     printf("\n");
@@ -320,12 +314,6 @@ int mainLoop(int argc,char** argv){
     printf("\n");
     #endif
 
-
-//     if( bGPGPU )
-//       gpuEvaluation(offspringGenomes,pPopEnfants,nOFFSPRINGSIZE);
-//     else
-//       for (i=0;i<nOFFSPRINGSIZE;i++)		
-// 	pPopEnfants[i]->evaluation();
 
     if(!DEBUG_evalPopulation(offspringGenomes,pPopEnfants,nOFFSPRINGSIZE))
       return -1;
@@ -388,11 +376,13 @@ int mainLoop(int argc,char** argv){
 		
     
     // remplacement part
+    sortPopulation(pPopCourante,nTaillePopCourante); // this is for deterministic replacement (this will be handled in a better way later)
+
     while(nTailleNouvellePop<nTAILLE_POP){
       pNouvellePop[nTailleNouvellePop]=remplacement(pPopCourante,nTaillePopCourante);
 
       #if defined(MINIMAL_VERBOSE) && !defined(ONLY_RESULT)
-      printf("%p est e'lu\n\n",pNouvellePop[nTailleNouvellePop]);
+      printf("the elected one is : %s",pNouvellePop[nTailleNouvellePop]->toString().c_str());
       #endif
 
       nTaillePopCourante--; 
@@ -468,13 +458,43 @@ int mainLoop(int argc,char** argv){
 
 
 int main(int argc, char** argv){
+
+#ifdef TOTAL_TIMING
+  total_time.tv_sec = 0;
+  total_time.tv_usec = 0;
+#endif
+
+#ifdef MEMCPY_TIMING
+  total_memcopy_time.tv_sec = 0;
+  total_memcopy_time.tv_usec = 0;
+#endif
+
+
+#ifdef DATAMOTION_TIMING
+  data_motion_t.tv_sec = 0;
+  data_motion_t.tv_usec = 0;
+#endif
+
+//   memcpy_t.tv_sec = 0;
+//   memcpy_t.tv_usec = 0;
+
+#ifdef KRNL_TIMING
+  krnl_t.tv_sec = 0;
+  krnl_t.tv_usec = 0;
+#endif
+
+#ifdef CPUCOMPUTE_TIMING
+  cpu_compute_time.tv_sec = 0;
+  cpu_compute_time.tv_usec = 0;
+#endif
+
   int nb_run = 1;
   optrega(&fPMut,OPT_FLOAT,'\0',"fPMut","fPMut");
   optrega(&fPCross,OPT_FLOAT,'\0',"fPCross","fPCross");
   optrega(&bElitisme,OPT_INT,'\0',"bElitisme","bElitisme");
   //optrega(&bGPGPU,OPT_BOOL,'\0',"bGPGPU","bGPGPU");
-  optrega(&nTAILLE_POP,OPT_INT,'\0',"nTAILLE_POP","nTAILLE_POP");
-  optrega(&nOFFSPRINGSIZE,OPT_INT,'\0',"nOFFSPRINGSIZE","nOFFSPRINGSIZE");
+  optrega(&nTAILLE_POP,OPT_INT,'p',"nTAILLE_POP","nTAILLE_POP");
+  optrega(&nOFFSPRINGSIZE,OPT_INT,'o',"nOFFSPRINGSIZE","nOFFSPRINGSIZE");
   optrega(&nNB_GENERATION,OPT_INT,'\0',"nNB_GENERATION","nNB_GENERATION");
   optrega(&nb_run,OPT_INT,'r',"nb_run","nb of run");
 
@@ -486,6 +506,14 @@ int main(int argc, char** argv){
 #ifndef ONLY_RESULT
   showInfo();
 #endif
+  
+  AESAEInitFunction(argc,argv);
+  fprintf(stdout,"evaluation mode is : ");
+
+  fprintf(stdout,"number of run : %d\n",nb_run);
+  fprintf(stdout,"population size : %d\n",nTAILLE_POP);
+  fprintf(stdout,"offspring population size : %d\n",nOFFSPRINGSIZE);
+  fprintf(stdout,"number of generation : %d\n",nNB_GENERATION);
 
 
   float* bestFitness = new float[nb_run];
@@ -493,24 +521,46 @@ int main(int argc, char** argv){
   float pi = 1./nb_run;
   float sigma = 0;
   int status;
-  DECLARE_TIME(total);
-
+#ifdef TOTAL_TIMING
+  DECLARE_TIME(tmp);
+#endif
   // run nb_run time the GA
   for( size_t i=0 ; i<nb_run ; i++ ){
-    TIME_ST(total);
+#ifdef TOTAL_TIMING
+    TIME_ST(tmp);
+#endif
+
     status = mainLoop(argc,argv);
-    TIME_END(total);
+#ifdef TOTAL_TIMING
+    TIME_END(tmp);
+#endif
     if( status != 0){
       fprintf(stderr,"GA doesn't finish normaly\n");
       return -1;
     }
     else{
       bestFitness[i] = returnedFitness;
-      fprintf(stdout,"best fitness for %d run : %f\n",i,bestFitness[i]);
-      SHOW_TIME(total);
+#ifndef MINIMAL_VERBOSE
+      //fprintf(stdout,"best fitness for %d run : %f\n",i,bestFitness[i]);
+      //SHOW_TIME(tmp);
+#endif
       xb += returnedFitness*pi;
+#ifdef TOTAL_TIMING
+      timersub(&tmp_end,&tmp_beg,&tmp_res);
+      timeradd(&total_time,&tmp_res,&total_time);
+#endif
     }
   }
+
+  // compute the mean time
+#ifdef TOTAL_TIMING
+  double time_usec = total_time.tv_usec + total_time.tv_sec*1000000;
+  time_usec /= nb_run;
+  total_time.tv_sec = time_usec/1000000;
+  total_time.tv_usec = time_usec - total_time.tv_sec*1000000;
+#endif
+  
+
 
   for( size_t i=0 ; i<nb_run ; i++ )
     sigma += pi*pow(bestFitness[i],2);
@@ -519,9 +569,29 @@ int main(int argc, char** argv){
   sigma = sqrt(sigma);
 
 
+  fprintf(stdout,"Mean best fitness : %f\n",xb);
   fprintf(stdout,"Standard deviation : %f\n",sigma);
-  fprintf(stdout,"Mean : %f\n",xb);
 
+
+#ifdef TOTAL_TIMING
+  printf("mean time : %d.%06d\n",total_time.tv_sec,total_time.tv_usec);
+#endif
+#ifdef DATAMOTION_TIMING
+  printf("total_data_motion_time : %d.%06d\n",data_motion_t.tv_sec,data_motion_t.tv_usec);
+#endif
+
+#ifdef MEMCPY_TIMING  
+  printf("total_memcpy_time : %d.%06d\n",memcpy_t.tv_sec,memcpy_t.tv_usec);
+#endif
+
+#ifdef KRNL_TIMING
+  printf("total_krnl_time : %d.%06d\n",krnl_t.tv_sec,krnl_t.tv_usec);
+#endif
+
+#ifdef CPUCOMPUTE_TIMING
+  printf("cpu_compute_time : %d.%06d\n",cpu_compute_time.tv_sec,cpu_compute_time.tv_usec);
+#endif
+ 
   return 0;
 }
 
@@ -654,7 +724,20 @@ public:
     //INSERT_CROSSOVER
     \INSERT_CROSSOVER
       ;
-    if(gpuBuffer)memcpy(gpuBuffer,&(child1->genome),sizeof(EASEAGenome));
+
+    if(gpuBuffer){
+#ifdef MEMCPY_TIMING
+      DECLARE_TIME(tmp);
+      TIME_ST(tmp);
+#endif
+      memcpy(gpuBuffer,&(child1->genome),sizeof(EASEAGenome));
+#ifdef MEMCPY_TIMING
+      TIME_END(tmp);
+      timersub(&tmp_end,&tmp_beg,&tmp_res);	    
+      timeradd(&tmp_res,&total_memcopy_time,&total_memcopy_time);
+#endif
+    }
+
     free(child2);
     return child1;
   }
@@ -667,7 +750,7 @@ public:
     return false;
   }
 
-  float nFitness; // a transformer en float 
+
   std::string toString(){
     if(this != NULL) {
     std::ostringstream cout;    
@@ -688,7 +771,8 @@ public:
   }
 
   void setFitness(float f){ this->nFitness = f;}
-    
+
+  float nFitness; // a transformer en float     
   EASEAGenome genome;
 };
 
@@ -703,25 +787,6 @@ void showPopulationBooleanArray(char* population,size_t genSize, size_t popSize)
   }
 }
 
-// void showIndiv(Generic_T_adGenome* gen){
-//   int i;
-//   for( i=0 ; i<501; i++ )printf("%f | ",gen->sigma[i]);
-//   printf("\n");
-//   for( i=0 ; i<501; i++ )printf("%f | ",gen->x[i]);
-//   printf("\n");
-//   printf("\n");
-// }
-	
-
-
-// void DEBUG_show_gpu_pop(char* population,size_t genSize, size_t popSize){
-//   int i;
-
-//   for( i=0 ; i<popSize ; i++){
-//     Generic_T_adGenome* gen = (Generic_T_adGenome*)GPU_BUFFER_POS(population,i);
-//     showIndiv(gen);
-//   }
-// }
 
 
 void showFitnessArray(float* fitnesses, size_t popSize){
@@ -734,224 +799,7 @@ void showFitnessArray(float* fitnesses, size_t popSize){
 
 #endif
 
-\START_GPU_EVAL_H_TPL
-//START_GPU_EVAL_H_TPL
-#ifndef GPU_EVA_H_TPL
-#define GPU_EVA_H_TPL
 
-#define DEBUG_KRNL
-#include "tool/basetype.h"
-#include "tool/tool.h"
-#include "tool/timing.h"
-#include "tool/debug.h"
-#include "EASEAUserFunc.h"
-#include "EASEAIndividual.h"
-#include <iostream>
-#include <assert.h>
-
-using namespace std;
-
-
-
-#define MAX_THREAD_NUM 512
-#define NB_MP 8
-
-
-
-#define NB_MP 8
-#define MAX_BLOCK_SIZE 512
-
-
-bool
-repartition(size_t popSize, size_t* nbBlock, size_t* nbThreadPB, size_t* nbThreadLB, 
-	    size_t nbMP, size_t maxBlockSize){
-  
-  (*nbThreadLB) = 0;
-  
-  if( ((float)popSize / (float)nbMP) <= maxBlockSize ){
-    //la population répartie sur les MP tient dans une bloc par MP
-    (*nbThreadPB) = partieEntiereSup( (float)popSize/(float)nbMP);
-    (*nbBlock) = popSize/(*nbThreadPB);
-    if( popSize%nbMP != 0 ){
-      //on fait MP-1 block de équivalent et un plus petit
-      (*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
-    }
-  }
-  else{
-    //la population est trop grande pour etre répartie sur les MP
-    //directement
-    (*nbBlock) = partieEntiereSup( (float)popSize/((float)maxBlockSize*8));
-    (*nbBlock) *=8;
-    (*nbThreadPB) = popSize/(*nbBlock);
-    if( popSize%maxBlockSize!=0){
-      (*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
-      
-      // Le rest est trop grand pour etre placé dans un seul block (c'est possible uniquement qd 
-      // le nombre de block dépasse maxBlockSize 
-      while( (*nbThreadLB) > maxBlockSize ){
-	//on augmente le nombre de blocs principaux jusqu'à ce que nbthreadLB retombe en dessous de maxBlockSize
-	(*nbBlock) += nbMP;
- 	(*nbThreadPB) = popSize/(*nbBlock);
-	(*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
-      }
-    }
-  }
-  
-  if((((*nbBlock)*(*nbThreadPB) + (*nbThreadLB))  == popSize) 
-     && ((*nbThreadLB) <= maxBlockSize) && ((*nbThreadPB) <= maxBlockSize))
-    return true;
-  else 
-    return false;
-}
-
-
-
-
-__host__ void showInfo(){
-  int devCount,i;
-  cudaError_t lastError;
-  struct cudaDeviceProp cdp;
-  
-  CDC(lastError,"cudaGetDeviceCount",cudaGetDeviceCount(&devCount));
-  
-  printf("Number of device : %d\n",devCount);
-  for( i=0 ; i<devCount ; i++ ){
-    CDC(lastError,"cudaGetDeviceProperties",cudaGetDeviceProperties(&cdp,i));
-    printf("Name : %s\n",cdp.name);
-    printf("TotalGlobalMem %d\n",cdp.totalGlobalMem);
-    printf("SharedMemPerBlock %d\n",cdp.sharedMemPerBlock);
-    printf("regsPerBlock %d\n",cdp.regsPerBlock);
-    printf("warpSize %d\n",cdp.warpSize);
-    printf("memPitch %d\n",cdp.memPitch);
-    printf("maxThreadsPerBlock %d\n",cdp.maxThreadsPerBlock);
-    
-    printf("maxThreadsDim.x %d\n",cdp.maxThreadsDim[0]);
-    printf("maxThreadsDim.y %d\n",cdp.maxThreadsDim[1]);
-    printf("maxThreadsDim.z %d\n",cdp.maxThreadsDim[2]);
-    
-    printf("maxGridSize.x %d\n",cdp.maxGridSize[0]);
-    printf("maxGridSize.y %d\n",cdp.maxGridSize[1]);
-    printf("maxGridSize.z %d\n",cdp.maxGridSize[2]);
-    
-    printf("totalConstMem %d\n",cdp.totalConstMem);
-    printf("major %d\n",cdp.major);
-    printf("minor %d\n",cdp.minor);
-    printf("clockRate %d\n",cdp.clockRate);
-    printf("textureAlignment %d\n",cdp.textureAlignment);
-    printf("deviceOverlap %d\n",cdp.deviceOverlap);
-    printf("multiProcessorCount %d\n",cdp.multiProcessorCount);
-  }
-}
-
-
-__host__ __device__ FITNESS_TYPE gpuEvaluate(BOOLEAN_EA* rawGenome){
-
-
-  EASEAGenome* genome = (EASEAGenome*)rawGenome;
-
-  //INSERT_EVALUATOR
-  \INSERT_EVALUATOR
-}
-
-
-__global__ void cudaEvaluatePopulationSM(BOOLEAN_EA* d_population, float* d_fitnesses, size_t nbThreadLB){
-
-  extern __shared__ BOOLEAN_EA s_data[];
-  size_t id = blockDim.x*blockIdx.x+threadIdx.x;    
-  size_t individual = id*sizeof(EASEAGenome);
-  size_t i=0;
-
-
-  // last block is the block which computes reminder
-  if( blockIdx.x == gridDim.x-1){
-    if( threadIdx.x >= nbThreadLB ) return;
-  }
-
-  //do the copy in the shared memory
-  for(i=0;i<sizeof(EASEAGenome);i++) s_data[(threadIdx.x*sizeof(EASEAGenome))+i] = d_population[individual+i];
-  
-  
-  d_fitnesses[id] = gpuEvaluate(s_data+(threadIdx.x*sizeof(EASEAGenome)));
-
-}
-
-
-
-
-__global__ void cudaEvaluatePopulation(BOOLEAN_EA* d_population, float* d_fitnesses, size_t nbThreadLB){
-
-
-  size_t individual = blockDim.x*blockIdx.x*sizeof(EASEAGenome)+threadIdx.x*sizeof(EASEAGenome);
-  size_t id = blockDim.x*blockIdx.x+threadIdx.x;
-
-
-  // last block is the block which computes reminder
-  if( blockIdx.x == gridDim.x-1){
-    if( threadIdx.x >= nbThreadLB ) return;
-  }
-  
-  d_fitnesses[id] = gpuEvaluate(d_population+(id*sizeof(EASEAGenome)));
-}
-
-
-
-float* 
-launch_krnl(size_t popSize, BOOLEAN_EA* pop){
-  BOOLEAN_EA* d_population;
-  float* fitnessTab, * d_fitnessTab;
-  cudaError_t lastError = cudaSuccess;
-
-  size_t nbBlock,nbThreadPB,nbThreadLB;
-   size_t memSize = sizeof(EASEAGenome) * popSize;
-  fitnessTab = new float[popSize];
-
-  CDC(lastError,"CudaMalloc d_population",cudaMalloc( (void**) &d_population, memSize));
-  CDC(lastError,"CudaMalloc d_fitnessTab",cudaMalloc( (void**) &d_fitnessTab, popSize*sizeof(float)));
-  
-  
-
-  CDC(lastError,"CudaMemCpy #1",cudaMemcpy( d_population, pop, memSize, cudaMemcpyHostToDevice));
-  //cudaThreadSynchronize();
-  
-  //compute the repartition over MP and SP
-  repartition(popSize,&nbBlock,&nbThreadPB,&nbThreadLB,NB_MP,MAX_THREAD_NUM);
-  dim3 dimBlock(nbThreadPB);
-  dim3 dimGrid;
-
-  //  size_t sharedMemSize = nbThreadPB*sizeof(EASEAGenome)*sizeof(BOOLEAN_EA);
-
-#ifndef ONLY_RESULT
-  cout << "repartition -> nbBlock : " << nbBlock << " nbThreadPB : " << nbThreadPB
-       << " nbThreadLB : " << nbThreadLB << endl;
-#endif
-
-  //wird things, take a look. Does the bug of repartition function become from here?
-  if( nbThreadLB == 0 )
-    dimGrid = dim3(nbBlock+1);
-  else
-    dimGrid = dim3(nbBlock+1);
-
-
-  CDC(
-      lastError,
-      "Launch kernel",
-      (cudaEvaluatePopulation<<< dimGrid, dimBlock >>>(d_population,d_fitnessTab,nbThreadLB)));
-  cudaThreadSynchronize();
-  
-  CDC(lastError,"CudaMemCpy #2",cudaMemcpy( fitnessTab , d_fitnessTab , popSize*sizeof(float), cudaMemcpyDeviceToHost));
-
-  CDC(lastError,"CudaFree d_population",cudaFree( (void*) d_population));
-  CDC(lastError,"CudaFree d_fitnessTab",cudaFree( (void*) d_fitnessTab));
-
-  return fitnessTab;
-}
-#endif
-
-//START_EO_INITER_TPL
-//START_EO_MUT_TPL
-//START_EO_QUAD_XOVER_TPL
-//START_EO_CONTINUE_TPL
-//START_EO_PARAM_TPL
 \START_EO_MAKEFILE_TPL
 NVCC = nvcc
 CPPC = nvcc
@@ -959,11 +807,8 @@ CC = g++
 
 
 CFLAGS = -g -I/home/maitre/pfx/opt/include 
-NVCCFLAGS = $(CFLAGS) #--use_fast_math #--device-emulation
+NVCCFLAGS = $(CFLAGS) --ptxas-options=-v #--use_fast_math # --device-emulation
 CPPFLAGS = $(CFLAGS) -I/usr/local/cuda/include
-
-
-LDFLAGS = -lxml2
 
 HDR= $(wildcard *.h)
 
@@ -971,7 +816,7 @@ all:EASEA.out
 
 
 EASEA.out: tool/tool.o EASEA.o
-			    $(NVCC) -o $@ $^ $(LDFLAGS) $(NVCCFLAGS) /home/maitre/pfx/opt/lib/libopt.a 
+				$(NVCC) -o $@ $^ $(LDFLAGS) $(NVCCFLAGS) /home/maitre/pfx/opt/lib/libopt.a $(EXTFLAGS)
 
 tool/%.o:tool/%.c tool/%.h
 			    $(CC) -c -o $@ $< $(CFLAGS)
@@ -980,7 +825,7 @@ tool/%.o:tool/%.c tool/%.h
 			    $(CPPC) -c -o $@ $< $(CPPFLAGS)
 
 %.o:%.cu $(HDR)
-			    $(NVCC) -c -o $@ $< $(NVCCFLAGS) 
+			    $(NVCC) -c -o $@ $< $(NVCCFLAGS) $(EXTFLAGS)
 
 clean:
 			    rm *.o EASEA.out

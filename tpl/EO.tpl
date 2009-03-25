@@ -24,6 +24,7 @@
 
 // Miscellany includes and declarations
 #include <iostream>
+#include <string.h>
 using namespace std;
 
 // eo general include
@@ -50,6 +51,7 @@ inline float random(float b1=0, float b2=1){
 \ANALYSE_PARAMETERS
 \INSERT_USER_DECLARATIONS
 \INSERT_INITIALISATION_FUNCTION 
+
 
 // include here whatever specific files for your representation
 // Basically, this should include at least the following
@@ -99,6 +101,16 @@ typedef EASEAGenome<MyFitT> Indi;      // ***MUST*** derive from EO
 eoPop<Indi >&  make_pop(eoParser& _parser, eoState& _state, eoInit<Indi> & _init){
   return do_make_pop(_parser, _state, _init);
 }
+
+
+
+\INSERT_FINALIZATION_FUNCTION
+
+void EASEAFinal(eoPop<Indi>& pop){
+  AESAEFinalFunction(pop);
+}
+
+
 
 // the stopping criterion
 #include "do/make_continue.h"
@@ -266,6 +278,8 @@ try  {
 
   cout << "Best individual in final population\n";
   cout << pop.best_element() << endl;
+
+  EASEAFinal(pop);
 
   }
   catch(exception& e)
@@ -930,10 +944,10 @@ SOURCES = EASEA.cpp \
 ALL = EASEA EASEA.opt
 
 EASEA : $(SOURCES)
-	c++ -g -I. -I$(DIR_EO)/src -o $@ EASEA.cpp $(LIB_EO) -lm -Wno-deprecated 
+	c++ -g -I. -I$(DIR_EO)/src -o $@ EASEA.cpp $(LIB_EO) -lm -Wno-deprecated -fpermissive
 
 EASEA.opt : $(SOURCES)
-	c++ -O4 -I. -I$(DIR_EO)/src -o $@ EASEA.cpp $(LIB_EO) -lm -Wno-deprecated 
+	c++ -O4 -I. -I$(DIR_EO)/src -o $@ EASEA.cpp $(LIB_EO) -lm -Wno-deprecated -fpermissive
 
 all : $(ALL)
 
