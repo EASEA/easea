@@ -154,7 +154,7 @@ void CSymbol::print(FILE *fp){
                 fprintf(fp,"    if ((%s)&&(%s!=EASEA_Var.%s)) return gaFalse;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName, pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->sName);
               }                                               
             }
-            if (TARGET==EO || TARGET==CUDA){
+            if (TARGET==EO || TARGET==CUDA || TARGET==STD){
               if (pSym->Object->ObjectType==oObject)
                 fprintf(fp,"    if (%s!=EASEA_Var.%s) return false;\n",pSym->Object->sName,pSym->Object->sName);
               if (pSym->Object->ObjectType==oArray){
@@ -168,7 +168,7 @@ void CSymbol::print(FILE *fp){
             }
           }
     if (TARGET==GALIB)  fprintf(fp,"  return gaTrue;\n  }\n\n"); // operator==
-    if (TARGET==EO || TARGET==CUDA)  fprintf(fp,"  return true;\n  }\n\n"); // operator==
+    if (TARGET==EO || TARGET==CUDA || TARGET==STD)  fprintf(fp,"  return true;\n  }\n\n"); // operator==
 
     fprintf(fp,"  bool operator!=(%s &EASEA_Var) const {return !(*this==EASEA_Var);} // operator!=\n\n",sName); // operator!=
 
@@ -329,7 +329,7 @@ void CSymbol::printClasses(FILE *fp){
 void CSymbol::printUC(FILE* fp){
 
   DEBUG_PRT("print user classes definitions");
-  if (strcmp(sName,"Genome")&&(TARGET==CUDA)){   // If we are printing a user class other than the genome
+  if (strcmp(sName,"Genome") && (TARGET==CUDA || TARGET==STD)){   // If we are printing a user class other than the genome
     fprintf(fp,"\nclass %s;\n",sName); // class  header
   }
   DEBUG_PRT("%s",sName);

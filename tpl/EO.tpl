@@ -50,7 +50,6 @@ inline float random(float b1=0, float b2=1){
 
 \ANALYSE_PARAMETERS
 \INSERT_USER_DECLARATIONS
-\INSERT_INITIALISATION_FUNCTION 
 
 
 // include here whatever specific files for your representation
@@ -74,6 +73,7 @@ typedef \MINIMAXI MyFitT ;  // type of fitness
 typedef EASEAGenome<MyFitT> Indi;      // ***MUST*** derive from EO 
 
 \INSERT_USER_FUNCTIONS
+\INSERT_INITIALISATION_FUNCTION 
 
 /** definition of evaluation: 
  * class EASEAEvalFunc MUST derive from eoEvalFunc<EASEAGenome>

@@ -22,6 +22,7 @@ Centre de Mathématiques Appliquées
 #define EO 2
 #define DREAM 3
 #define CUDA 4
+#define STD 5
 #define UNIX 1
 #define WINDOWS 2
 #define UNKNOWN_OS 3

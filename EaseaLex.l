@@ -29,6 +29,11 @@ Centre de Mathématiques Appliquées
     strcat(selectorName,"Tournament(globalRandomGenerator)");
   else if( mystricmp("dettour",sSELECTOR)==0 )
     strcat(selectorName,"Tournament(globalRandomGenerator)");
+  else if( mystricmp("Sequential",sSELECTOR)==0 )
+    strcat(selectorName,"Deterministic()");
+  else if( mystricmp("Random",sSELECTOR)==0 )
+    strcat(selectorName,"Random(globalRandomGenerator)");
+
   else return NULL;
   
   char* ret = (char*)malloc((strlen(selectorName)+1)*sizeof(char));
@@ -51,7 +56,7 @@ Centre de Mathématiques Appliquées
 %start COPY_EO_INITIALISER 
 %start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
-%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION GET_METHODS
+%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION GET_METHODS COPY_MAKEFILE_OPTION
 
  // lexical analyser name and class definition
 %name CEASEALexer {
@@ -62,7 +67,7 @@ Centre de Mathématiques Appliquées
   bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
   bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationFunction;
   bool bCatchNextSemiColon,bWaitingToClosePopulation, bMethodsInGenome, bFinalizationFunction;
-  bool bWithinCUDA_Initializer;
+  bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION;
   CSymbol *pASymbol;
 
  public:
@@ -77,7 +82,7 @@ Centre de Mathématiques Appliquées
   bSymbolInserted=bDoubleQuotes=bWithinDisplayFunction=bWithinInitialiser=bWithinMutator=bWithinXover=0;
   bWaitingForSemiColon=bFinishNB_GEN=bFinishMINIMISE=bFinishMINIMIZE=bGenerationFunction=0;
   bCatchNextSemiColon,bWaitingToClosePopulation=bMethodsInGenome=0;
-  bWithinCUDA_Initializer=0;
+  bWithinCUDA_Initializer=0, bWithinMAKEFILEOPTION;
 }
 
 // macros
@@ -109,6 +114,7 @@ exponent  ([Ee][+-]?[0-9]+)
   strcpy(sFileName, sRAW_PROJECT_NAME);
   switch (TARGET) {
   case DREAM : strcat(sFileName,".java"); break;
+  case STD :
   case CUDA : strcat(sFileName,".cpp"); break;
   default : strcat(sFileName,".cpp");
   } 
@@ -337,6 +343,15 @@ exponent  ([Ee][+-]?[0-9]+)
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_DISPLAY;   
  }
+
+
+<TEMPLATE_ANALYSIS>"\\INSERT_MAKEFILE_OPTION" {
+  if( bVERBOSE ) printf("Inserting user LDFLAGS.\n");
+  yyreset();
+  yyin = fpGenomeFile;
+  BEGIN COPY_MAKEFILE_OPTION;
+ }
+
 <TEMPLATE_ANALYSIS>"\\WRITE"  {
   CListItem<CSymbol*> *pSym;
   if (!bDisplayFunction){
@@ -402,7 +417,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_EO_INITIALISER"  {        
   yyreset();
   bWithinEO_Function=1;
-  if( TARGET==CUDA ) bWithinCUDA_Initializer = 1;
+  if( TARGET==CUDA || TARGET==STD) bWithinCUDA_Initializer = 1;
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_EO_INITIALISER;                               // not implemented as a function !
  }
@@ -441,7 +456,12 @@ exponent  ([Ee][+-]?[0-9]+)
   BEGIN PARAMETERS_ANALYSIS;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_GEN_FCT_CALL"  {
-  if (bGenerationFunction) fprintf(fpOutputFile,"\n    EASEAGenerationFunction(ga);\n");
+  if (bGenerationFunction) {
+    if( TARGET==CUDA || TARGET==STD ){
+      fprintf(fpOutputFile,"\n\tEASEAGenerationFunction(this);");
+    }
+    else fprintf(fpOutputFile,"\n    EASEAGenerationFunction(ga);\n");
+  }
  }        
 <TEMPLATE_ANALYSIS>"\\INSERT_INIT_FCT_CALL"  {
   if (bInitFunction) fprintf(fpOutputFile,"\n  EASEAInitFunction(argc, argv);\n");
@@ -457,11 +477,11 @@ exponent  ([Ee][+-]?[0-9]+)
  }        
 
 <TEMPLATE_ANALYSIS>"\\SELECTOR"  {
-  if( TARGET==CUDA ){
+  if( TARGET==CUDA || TARGET==STD){
     DEBUG_PRT("Selector is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sSELECTOR);
     if( !selectorClass ){
-      fprintf(stderr,"Error %d : selection operator %s doesn't exist in CUDA template\n",yylineno,sSELECTOR);
+      fprintf(stderr,"Error %d : selection operator %s doesn't exist in CUDA/STD template\n",yylineno,sSELECTOR);
       return -1;
     }    
     DEBUG_PRT("Created class is %s",selectorClass);
@@ -475,7 +495,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\OFF_SIZE"  {fprintf(fpOutputFile,"%d",nOFF_SIZE);}
 <TEMPLATE_ANALYSIS>"\\ELITE_SIZE"  {
   fprintf(fpOutputFile,"%d",nELITE);
-  DEBUG_PRT("elitism is %d, elite size is %d",bELITISM, nELITE);
+  //DEBUG_PRT("elitism is %d, elite size is %d",bELITISM, nELITE);
  }
 
 <TEMPLATE_ANALYSIS>"\\RED_PAR"  {fprintf(fpOutputFile,"%s",sRED_PAR);}
@@ -483,11 +503,11 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\RED_OFF"  {fprintf(fpOutputFile,"%s",sRED_OFF);}
 <TEMPLATE_ANALYSIS>"\\RED_OFF_PRM"  {fprintf(fpOutputFile,"%s",sRED_OFF_PRM);}
 <TEMPLATE_ANALYSIS>"\\RED_FINAL"  {
-  if( TARGET==CUDA ){
+  if( TARGET==CUDA || TARGET==STD){
     DEBUG_PRT("Replacement selector is \"%s\" | Goal is %s",sRED_FINAL,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sRED_FINAL);
     if( !selectorClass ){
-      fprintf(stderr,"Error %d : replacement operator %s doesn't exist in CUDA template\n",yylineno,sRED_FINAL);
+      fprintf(stderr,"Error %d : replacement operator %s doesn't exist in CUDA/TPL template\n",yylineno,sRED_FINAL);
       return -1;
     }    
     DEBUG_PRT("Created class is %s",selectorClass);
@@ -524,6 +544,8 @@ exponent  ([Ee][+-]?[0-9]+)
       else fprintf(fpOutputFile,"  ga.elitist(gaFalse);\n");
     break;
   case EO :  fprintf(fpOutputFile,"%d",bELITISM);
+    break;
+  case STD:
   case CUDA: fprintf(fpOutputFile,"%d",bELITISM);
   }                                 }
 <TEMPLATE_ANALYSIS>"\\IMMIG_SEL" {fprintf(fpOutputFile,"%s",sIMMIG_SEL);}
@@ -567,7 +589,10 @@ exponent  ([Ee][+-]?[0-9]+)
   char sFileName[1000];
   fclose(fpOutputFile);
   strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Individual.cu");
+  if( TARGET==CUDA )
+    strcat(sFileName,"Individual.cu");
+  else if( TARGET==STD )
+    strcat(sFileName,"Individual.cpp");
   fpOutputFile=fopen(sFileName,"w");    
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  }
@@ -808,7 +833,7 @@ exponent  ([Ee][+-]?[0-9]+)
       printf ("%s @%s.prm\n\n",sPROJECT_NAME,sPROJECT_NAME);
     } }
   printf ("Have a nice compile time.\n");
-  if (TARGET==EO || TARGET==CUDA) fprintf(fpOutputFile,"\n# That's all folks ! \n");
+  if (TARGET==EO || TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"\n# That's all folks ! \n");
   else fprintf(fpOutputFile,"\n// That's all folks ! \n");
   fflush(fpOutputFile);
   fclose(fpOutputFile);
@@ -890,8 +915,9 @@ exponent  ([Ee][+-]?[0-9]+)
   case EO:
     fprintf (fpOutputFile,"// Finalization function\n\nvoid EASEAFinalFunction(eoPop<Indi>& population){");
     break;
+  case STD:
   case CUDA:
-    fprintf (fpOutputFile,"// Finalization function\n\nvoid EASEAFinalization(Population* population){");
+    fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(Population* population){");
     break;
   default:
     fprintf (stderr," Warning this template doesn't support finalization function ");
@@ -914,9 +940,14 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <COPY_GENERATION_FUNCTION>"\\At"[ \t\n]+"each"[ \t\n]+"new"[ \t\n]+"generation"[ \t\n]*":" {
+  if( TARGET==GALIB){
   fprintf (fpOutputFile,"// Function called at each new generation\n\nvoid EASEAGenerationFunction(GAGeneticAlgorithm & g){\n");
   fprintf(fpOutputFile,"  const GAPopulation *pPopulation;\n",sPROJECT_NAME);
   fprintf(fpOutputFile,"  pPopulation=&(g.population());  // to circumvent a bug in GALib\n",sPROJECT_NAME);
+  }
+  else if(TARGET==CUDA || TARGET==STD){
+    fprintf (fpOutputFile,"// Function called at each new generation\nvoid EASEAGenerationFunction(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
+  }
   bFunction=1; bGenerationFunction=1;
   BEGIN COPY_USER_GENERATION;
  }
@@ -989,10 +1020,10 @@ exponent  ([Ee][+-]?[0-9]+)
  } // local random name 
 <COPY>"random"  {
   if (TARGET==DREAM) fprintf(fpOutputFile,"%s.random",sPROJECT_NAME);
-  else if( TARGET==CUDA ) fprintf(fpOutputFile,"globalRandomGenerator->random");
+  else if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"globalRandomGenerator->random");
   else fprintf(fpOutputFile,"random");}
 <COPY>"Genome" {
-  if (bWithinEO_Function && TARGET!=CUDA) fprintf(fpOutputFile,"_genotype");
+  if (bWithinEO_Function && TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"_genotype");
   else if(bWithinEO_Function && bWithinCUDA_Initializer )fprintf(fpOutputFile,"(*this)");
   else fprintf(fpOutputFile,"Genome");} // local genome name
 <COPY>"identicalGenome"  {fprintf(fpOutputFile,"genome._evaluated");} // local name
@@ -1005,22 +1036,24 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY>"GenomeClass::"  {fprintf(fpOutputFile,"template <class fitT> %sGenome<fitT>::",sPROJECT_NAME);}
 <COPY>"GenomeClass"  {
   if (TARGET==EO) fprintf(fpOutputFile,"Indi");
-  else if( TARGET==CUDA ) fprintf(fpOutputFile,"Individual");
+  else if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"Individual");
   else fprintf(fpOutputFile,"%sGenome",sPROJECT_NAME);} // local name
 <COPY>"population" {
-  if( TARGET == CUDA && bFinalizationFunction ){
+  if( (TARGET == CUDA || TARGET==STD) && bFinalizationFunction ){
     fprintf(fpOutputFile,"(*population)");
   }
   else fprintf(fpOutputFile,"population");
  }
 <COPY>"\\end"  {
-  if (bFunction==1) {
+  if (bFunction==1 && bWithinCUDA_Initializer==0) {
     fprintf (fpOutputFile,"}\n"); 
     bFunction=0;
+    bWithinCUDA_Initializer=0;
   }
   bWithinEO_Function=0;
   rewind(fpGenomeFile); 
-  yyin = fpTemplateFile; BEGIN TEMPLATE_ANALYSIS;} // Back to the template file
+  yyin = fpTemplateFile; 
+  BEGIN TEMPLATE_ANALYSIS;} // Back to the template file
 <COPY>.|\n {putc(yytext[0],fpOutputFile);}                                      
 
 // Looking for an identifier
@@ -1115,13 +1148,54 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 <COPY_DISPLAY>.|\n {}                                      
 
+<COPY_MAKEFILE_OPTION>"\\User"[ \t\n]+[Mm]"akefile"[ \t\n]+"options"[ \t\n]*":" {
+  DEBUG_PRT("LDFLAGS is beg: %s",yytext); 
+  bWithinMAKEFILEOPTION=1;
+  return MAKEFILE_OPTION;
+ }
+
+
+//****************************************
+//  Looks for Makefile options (like 
+//  LDFLAGS+= or CPPFLAGS...)
+//****************************************
+<COPY_MAKEFILE_OPTION>"\\end" {
+  if( bWithinMAKEFILEOPTION ){
+    DEBUG_PRT("end of makefile options");
+    yyin = fpTemplateFile;
+    bWithinMAKEFILEOPTION = 0;
+    BEGIN TEMPLATE_ANALYSIS;
+    return END_OF_FUNCTION;
+  }
+ }
+
+<COPY_MAKEFILE_OPTION>.|\n {
+  if( bWithinMAKEFILEOPTION ){
+    putc(yytext[0],fpOutputFile);
+    }
+ }
+
+<COPY_MAKEFILE_OPTION>\n {
+  if( bWithinMAKEFILEOPTION );
+ }
+
+<COPY_MAKEFILE_OPTION><<EOF>> { 
+  DEBUG_PRT("No makefile options defined.");
+
+  yyin = fpTemplateFile;
+  bWithinMAKEFILEOPTION = 0;
+  BEGIN TEMPLATE_ANALYSIS;
+
+  return MAKEFILE_OPTION;
+ }
+
 //****************************************
 //  Looks for standard and user functions in the .ez file
 //****************************************
-
 <COPY_INITIALISER>"\\GenomeClass::initiali"[sz]"er"[ \t\n]*":" {
   bWithinInitialiser=1;
   BEGIN COPY_USER_FUNCTION;
+  BEGIN TEMPLATE_ANALYSIS;
   return USER_CTOR;
  }
 <COPY_INITIALISER>.|\n {}                                      
@@ -1159,17 +1233,28 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_USER_GENERATION>"pPopulation"[ \t\n]*"[" {bWaitingToClosePopulation=true;
   switch (TARGET) {
   case EO: fprintf(fpOutputFile,"pPopulation ["); break;
-  case GALIB: fprintf(fpOutputFile,"((%sGenome *)&(pPopulation->individual(",sPROJECT_NAME);
+  case GALIB: 
+    fprintf(fpOutputFile,"((%sGenome *)&(pPopulation->individual(",sPROJECT_NAME); 
+    break;
+  case CUDA:
+  case STD:
+    fprintf(fpOutputFile,"(*evolutionaryAlgorithm->getPopulation())");
   }
  }
 <COPY_USER_GENERATION>"]" {if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
   else {fprintf(fpOutputFile,")))"); bWaitingToClosePopulation=false;}}
 
 <COPY_USER_GENERATION>"currentGeneration" |
-<COPY_USER_GENERATION>"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
+<COPY_USER_GENERATION>"currentGeneration"/[ \t\n]*"==" {
+  if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
     case GALIB : fprintf(fpOutputFile,"g.generation()"); break;
-    case EO : fprintf(fpOutputFile,"generationCounter.value()");
+    case EO : 
+      fprintf(fpOutputFile,"generationCounter.value()"); break;
+    case CUDA:
+    case STD:
+      fprintf(fpOutputFile,"(evolutionaryAlgorithm->getCurrentGeneration())");
+      break;
     }} // local genome name
 <COPY_USER_GENERATION>"NB_GEN" |
 <COPY_USER_GENERATION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
@@ -1295,7 +1380,10 @@ exponent  ([Ee][+-]?[0-9]+)
     else fprintf(fpOutputFile,"));");
   }
   else fprintf(fpOutputFile,";");}
-
+<COPY_USER_GENERATION>"evoluationaryAlgorithm." | 
+<COPY_USER_GENERATION>"ea." {
+  fprintf(fpOutputFile,"(*evoluationaryAlgorithm).");
+ }
 <COPY_USER_GENERATION>.|\n {putc(yytext[0],fpOutputFile);}                                      
 
 //****************************************
@@ -1315,7 +1403,7 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bWithinDisplayFunction) fprintf(fpOutputFile,"(*this)");
   else if ((TARGET==EO)&&(bWithinInitialiser)) fprintf(fpOutputFile, "(*genome)");
   
-  else if ((TARGET==CUDA) && ((bWithinEvaluator) || bWithinMutator)) fprintf(fpOutputFile, "(*this)");
+  else if ((TARGET==CUDA || TARGET==STD) && ((bWithinEvaluator) || bWithinMutator)) fprintf(fpOutputFile, "(*this)");
 
   else if ((TARGET==EO)&&(bWithinMutator)) fprintf(fpOutputFile, "_genotype");
   else fprintf(fpOutputFile,"genome");} // local genome name
@@ -1371,7 +1459,7 @@ exponent  ([Ee][+-]?[0-9]+)
   if (TARGET==DREAM) fprintf(fpOutputFile,"Math.random()<");} // local random name
 <COPY_USER_FUNCTION>"random"  {
   if (TARGET==DREAM) fprintf(fpOutputFile,"%s.random",sPROJECT_NAME);
-  else if( TARGET==CUDA ) fprintf(fpOutputFile,"rg->random");
+  else if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"rg->random");
   else fprintf(fpOutputFile,"random");}
 <COPY_USER_FUNCTION>"child1"  {if ((bWithinXover)&&(TARGET==GALIB)) fprintf(fpOutputFile, "(*pBro)");
   else fprintf(fpOutputFile,"child1");
@@ -1390,7 +1478,7 @@ exponent  ([Ee][+-]?[0-9]+)
     if (TARGET==GALIB) fprintf(fpOutputFile,"EZ_EVAL+=(double)(clock()-EZ_t1);\n  return (float)");
     else if (TARGET==EO)  {fprintf(fpOutputFile,"genome.fitness(");bCatchNextSemiColon=true;}// changes function type// changes function type
     else if (TARGET==DREAM) {fprintf(fpOutputFile,"infoHabitant.setFitness(new Double(");bCatchNextSemiColon=true;}// changes function type
-    else if( TARGET==CUDA ) {
+    else if( TARGET==CUDA || TARGET==STD) {
       fprintf(fpOutputFile,"return fitness = "); 
       bCatchNextSemiColon=false;
     }
@@ -1548,15 +1636,18 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (bVERBOSE) printf("\n");
   
   if (TARGET==0) {
-    printf("\nPlease select a target library (DREAM, EO, GALib or CUDA): ");
-    scanf("%s",sTemp);
-    if (!mystricmp(sTemp,"eo")) TARGET=EO;
-    else if (!mystricmp(sTemp,"galib")) TARGET=GALIB;
-    else if (!mystricmp(sTemp,"dream")) TARGET=DREAM;
-    else if (!mystricmp(sTemp,"cuda")) TARGET=CUDA;
-    else return 0;
+/*     printf("\nPlease select a target library (DREAM, EO, GALib STD or CUDA): "); */
+/*     scanf("%s",sTemp); */
+/*     if (!mystricmp(sTemp,"eo")) TARGET=EO; */
+/*     else if (!mystricmp(sTemp,"galib")) TARGET=GALIB; */
+/*     else if (!mystricmp(sTemp,"dream")) TARGET=DREAM; */
+/*     else if (!mystricmp(sTemp,"cuda")) TARGET=CUDA; */
+/*     else if (!mystricmp(sTemp,"std")) TARGET=STD; */
+/*     else return 0; */
+    TARGET = STD;
   }
-                                                                           
+
+  char* sEZ_PATH = "./tpl/";
   /////////////////////////////////////////////////////////  
   //strcpy(sTemp,"e:\\lutton\\easea\\debug");pour tester sous windows
   if ((sEZ_PATH==NULL)||(sEZ_PATH[0]==0)) {
@@ -1564,14 +1655,14 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       printf("\n\nHmmm, it looks like you are running EASEA without GUIDE for the first time.\n");
       printf("Please, add the path of the installation directory to the PATH variable and\n");
       printf("into the \"EZ_PATH\" environment variable, so that EASEA knows where to look for\n");
-      printf("its template files.\n");                                                           
+      printf("its template files.\n");
       exit(1);
     }
     strcpy(sEZ_PATH,getenv("EZ_PATH"));
   }
   
   switch (OPERATING_SYSTEM) {
-  case UNIX : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '/') strcat (sEZ_PATH,"/"); break;
+  case UNIX : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '/') strcat (sEZ_PATH,"./"); break;
   case WINDOWS : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '\\') strcat (sEZ_PATH,"\\"); break;
   case UNKNOWN_OS : fprintf(fpOutputFile,"UNKNOWN_OS"); break;
   }
@@ -1606,6 +1697,13 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       exit(1);
     } }
 
+  if (TARGET==STD){
+    strcat(sTemp,"STD.tpl");
+    if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
+      fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
+      fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
+      exit(1);
+    } }
 
   if (TARGET==EO){
     if ((sEO_DIR==NULL)||(sEO_DIR[0]==0)) {
