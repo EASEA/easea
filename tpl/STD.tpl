@@ -13,8 +13,11 @@ RandomGenerator* globalRandomGenerator;
 
 int main(int argc, char** argv){
 
-  size_t parentPopulationSize = \POP_SIZE;
-  size_t offspringPopulationSize = \OFF_SIZE;
+
+  parseArguments("EASEA.prm",argc,argv);
+
+  size_t parentPopulationSize = setVariable("popSize",\POP_SIZE);
+  size_t offspringPopulationSize = setVariable("popSize",\OFF_SIZE);
   float pCrossover = \XOVER_PROB;
   float pMutation = \MUT_PROB;
   float pMutationPerGene = 0.05;
@@ -26,8 +29,7 @@ int main(int argc, char** argv){
   float selectionPressure = \SELECT_PRM;
   float replacementPressure = \RED_FINAL_PRM;
 
-
-  \INSERT_INIT_FCT_CALL
+  EASEAInit(argc,argv);
     
   EvolutionaryAlgorithm ea(parentPopulationSize,offspringPopulationSize,selectionPressure,replacementPressure,
 			   selectionOperator,replacementOperator,pCrossover, pMutation, pMutationPerGene);
@@ -36,10 +38,6 @@ int main(int argc, char** argv){
   ea.addStoppingCriterion(sc);
   Population* pop = ea.getPopulation();
 
-  //pop->initializeParentPopulation();
-  //pop->evaluateParentPopulation();
-  
-  //cout << *pop;
 
   ea.runEvolutionaryLoop();
 
@@ -71,6 +69,11 @@ extern RandomGenerator* globalRandomGenerator;
 void EASEAFinal(Population* pop){
   \INSERT_FINALIZATION_FCT_CALL
 }
+
+void EASEAInit(int argc, char** argv){
+  \INSERT_INIT_FCT_CALL
+}
+
 
 using namespace std;
 
@@ -280,7 +283,7 @@ using namespace std;
 
 \INSERT_USER_CLASSES_DEFINITIONS
 
-void EASEAInitFunction(int argc, char *argv[]);
+void EASEAInit(int argc, char *argv[]);
 void EASEAFinal(Population* population);
 void EASEAFinalization(Population* population);
 
@@ -357,6 +360,9 @@ private:
 #include <iostream>
 #include <values.h>
 #include <string.h>
+#include <boost/program_options.hpp>
+#include <boost/program_options/errors.hpp>
+
 
 RandomGenerator::RandomGenerator(unsigned int seed){
   srand(seed);
@@ -939,6 +945,146 @@ float MinRandom::getExtremum(){
   return -FLT_MAX;
 }
 
+namespace po = boost::program_options;
+
+
+po::variables_map vm;
+po::variables_map vm_file;
+
+using namespace std;
+
+string setVariable(string argumentName, string defaultValue, po::variables_map vm, po::variables_map vm_file){
+  string ret;
+
+  if( vm.count(argumentName) ){
+    ret = vm[argumentName].as<string>();
+    cout << argumentName << " is declared in user command line as "<< ret << endl;
+  }
+  else if( vm_file.count(argumentName) ){
+    ret = vm_file[argumentName].as<string>();
+    cout <<  argumentName << " is declared configuration file as "<< ret << endl;
+  }
+  else {
+    ret = defaultValue;
+    cout << argumentName << " is not declared, default value is "<< ret<< endl;
+  }
+  return ret;
+}
+
+int setVariable(string argumentName, int defaultValue, po::variables_map vm, po::variables_map vm_file ){
+  int ret;
+
+  if( vm.count(argumentName) ){
+    ret = vm[argumentName].as<int>();
+    cout << argumentName << " is declared in user command line as "<< ret << endl;
+  }
+  else if( vm_file.count(argumentName) ){
+    ret = vm_file[argumentName].as<int>();
+    cout <<  argumentName << " is declared configuration file as "<< ret << endl;
+  }
+  else {
+    ret = defaultValue;
+    cout << argumentName << " is not declared, default value is "<< ret<< endl;
+  }
+  return ret;
+}
+
+
+int loadParametersFile(const string& filename, char*** outputContainer){
+
+  FILE* paramFile = fopen(filename.c_str(),"r");
+  char buffer[512];
+  vector<char*> tmpContainer;
+  
+  char* padding = (char*)malloc(sizeof(char));
+  padding[0] = 0;
+
+  tmpContainer.push_back(padding);
+  
+  while( fgets(buffer,512,paramFile)){
+    for( size_t i=0 ; i<512 ; i++ )
+      if( buffer[i] == '#' || buffer[i] == '\n' || buffer[i] == '\0' || buffer[i]==' '){
+	buffer[i] = '\0';
+      } 
+    int str_len;
+    if( (str_len = strlen(buffer)) ){
+      cout << "line : " <<buffer << endl;
+      char* nLine = (char*)malloc(sizeof(char)*(str_len+1));
+      strcpy(nLine,buffer);
+      tmpContainer.push_back(nLine);
+    }    
+  }
+
+  (*outputContainer) = (char**)malloc(sizeof(char*)*tmpContainer.size());
+ 
+  for ( size_t i=0 ; i<tmpContainer.size(); i++)
+    (*outputContainer)[i] = tmpContainer.at(i);
+
+  fclose(paramFile);
+  return tmpContainer.size();
+}
+
+
+void parseArguments(const char* parametersFileName, int ac, char** av, 
+		    po::variables_map& vm, po::variables_map& vm_file){
+
+  char** argv;
+  int argc = loadParametersFile(parametersFileName,&argv);
+  
+  po::options_description desc("Allowed options ");
+  desc.add_options()
+    ("help", "produce help message")
+    ("compression", po::value<int>(), "set compression level")
+    ("seed", po::value<int>(), "set the global seed of the pseudo random generator")
+    ("popSize",po::value<int>(),"set the population size")
+    ("nbOffspring",po::value<int>(),"set the offspring population size")
+    ("elite",po::value<int>(),"Nb of elite parents (absolute)")
+    ("eliteType",po::value<int>(),"Strong (1) or weak (1)")
+    ("surviveParents",po::value<int>()," Nb of surviving parents (absolute)")
+    ("surviveOffsprings",po::value<int>()," Nb of surviving offsprings (absolute)")
+    ("u1",po::value<string>(),"User defined parameter 1")
+    ("u2",po::value<string>(),"User defined parameter 2")
+    ("u3",po::value<string>(),"User defined parameter 3")
+    ("u4",po::value<string>(),"User defined parameter 4")
+    ;
+    
+  try{
+    po::store(po::parse_command_line(ac, av, desc,0), vm);
+    po::store(po::parse_command_line(argc, argv, desc,0), vm_file);
+  }
+  catch(po::unknown_option& e){
+    cerr << "Unknown option  : " << e.what() << endl;    
+    cout << desc << endl;
+    exit(1);
+  }
+  
+  po::notify(vm);    
+  po::notify(vm_file);    
+
+  if (vm.count("help")) {
+    cout << desc << "\n";
+    exit(1);
+  }
+ 
+}
+
+void parseArguments(const char* parametersFileName, int ac, char** av){
+  parseArguments(parametersFileName,ac,av,vm,vm_file);
+}
+
+
+int setVariable(const string optionName, int defaultValue){
+  return setVariable(optionName,defaultValue,vm,vm_file);
+}
+
+string setVariable(const string optionName, string defaultValue){
+  return setVariable(optionName,defaultValue,vm,vm_file);
+}
+
+
+
+
+
 
 
 
@@ -1167,7 +1313,14 @@ class Population {
 };
 
 
+void parseArguments(const char* parametersFileName, int ac, char** av);
+int setVariable(const std::string optionName, int defaultValue);
+std::string setVariable(const std::string optionName, std::string defaultValue);
+
+
+
 #endif
+
 
 
 \START_CUDA_MAKEFILE_TPL
@@ -1175,6 +1328,7 @@ class Population {
 NVCC= nvcc
 CPPC= g++
 CXXFLAGS+=-g
+LDFLAGS=-lboost_program_options
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
@@ -1200,5 +1354,28 @@ easeaclean: clean
 	rm -f Makefile $(SRC) $(HDR) EASEA.mak
 clean:
 	rm -f $(OBJ) $(BIN)
+
+\START_EO_PARAM_TPL#****************************************
+#                                         
+#  EASEA.prm
+#                                         
+#  Parameter file generated by AESAE-EO v0.7b
+#                                         
+#***************************************
+--seed=0   # -S : Random number seed. It is possible to give a specific seed.
+
+######    Evolution Engine    ######
+--popSize=\POP_SIZE # -P : Population Size
+--nbOffspring=\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
+
+######    Evolution Engine / Replacement    ######
+--elite=\ELITE_SIZE  # Nb of elite parents (percentage or absolute)
+--eliteType=\ELITISM # Strong (true) or weak (false) elitism (set elite to 0 for none)
+--surviveParents=\SURV_PAR_SIZE # Nb of surviving parents (percentage or absolute)
+# --reduceParents=Ranking # Parents reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
+--surviveOffspring=\SURV_OFF_SIZE  # Nb of surviving offspring (percentage or absolute)
+# --reduceOffspring=Roulette # Offspring reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
+# --reduceFinal=DetTour(2) # Final reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
+
 
 \TEMPLATE_END

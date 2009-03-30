@@ -164,27 +164,31 @@ double gauss()
 	 }	      
 \end
 \Initialisation function:
-  if(argc>1 ){
-    if((!(strcmp(argv[1],"Sphere")))) Fitness = Sphere; 
-    if((!(strcmp(argv[1],"AckleyPath")))) Fitness = AckleyPath; 
-    if((!(strcmp(argv[1],"Easom")))) Fitness = Easom; 
-    if((!(strcmp(argv[1],"Griewangk")))) Fitness = Griewangk; 
-    if((!(strcmp(argv[1],"Rastrigin")))) Fitness = Rastrigin; 
-    if((!(strcmp(argv[1],"Rosenbrock")))) Fitness = Rosenbrock; 
-    if((!(strcmp(argv[1],"Schwefel")))) Fitness = Schwefel; 
-    if((!(strcmp(argv[1],"Weierstrass")))) Fitness = Weierstrass; 
+/*   if(argc>1 ){ */
+/*     if((!(strcmp(argv[1],"Sphere")))) Fitness = Sphere;  */
+/*     if((!(strcmp(argv[1],"AckleyPath")))) Fitness = AckleyPath;  */
+/*     if((!(strcmp(argv[1],"Easom")))) Fitness = Easom;  */
+/*     if((!(strcmp(argv[1],"Griewangk")))) Fitness = Griewangk;  */
+/*     if((!(strcmp(argv[1],"Rastrigin")))) Fitness = Rastrigin;  */
+/*     if((!(strcmp(argv[1],"Rosenbrock")))) Fitness = Rosenbrock;  */
+/*     if((!(strcmp(argv[1],"Schwefel")))) Fitness = Schwefel;  */
+/*     if((!(strcmp(argv[1],"Weierstrass")))) Fitness = Weierstrass;  */
     
-    if(argc>2) n = atoi(argv[2]);
-  }
-  else
-    Fitness = Weierstrass;
+/*     if(argc>2) n = atoi(argv[2]); */
+/*   } */
+/*   else */
+/*     Fitness = Weierstrass; */
     
-  n=MIN(n, SIZE);
+/*   n=MIN(n, SIZE); */
 
-  std::cout<<"n: "<<n<<std::endl;
+  std::cout<<"*************  n: "<<n<<std::endl;
   // pour l'impression dans le fichier de resultats
-  double MinTheo = 0.;
+/*   double MinTheo = 0.; */
   //  printf("%s_T_ad  n= %s  MinTheo= %f ",argv[1],argv[2],MinTheo);
+\end
+
+\Finalization function:
+cout << "finalization function called" << endl;
 \end
 
 \User classes :
@@ -243,7 +247,7 @@ CPPFLAGS+=
  Number of generations : 100     // NB_GEN
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
-  Population size : 100     // POP_SIZE
+  Population size : 10     // POP_SIZE
   Genitors selector: Tournament 2
   Final reduce: Tournament 2
 
