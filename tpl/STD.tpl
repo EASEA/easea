@@ -28,11 +28,13 @@ int main(int argc, char** argv){
   SelectionOperator* replacementOperator = new \RED_FINAL;
   float selectionPressure = \SELECT_PRM;
   float replacementPressure = \RED_FINAL_PRM;
+  string outputfile = setVariable("outputfile","");
+  string inputfile = setVariable("inputfile","");
 
   EASEAInit(argc,argv);
     
   EvolutionaryAlgorithm ea(parentPopulationSize,offspringPopulationSize,selectionPressure,replacementPressure,
-			   selectionOperator,replacementOperator,pCrossover, pMutation, pMutationPerGene);
+			   selectionOperator,replacementOperator,pCrossover, pMutation, pMutationPerGene,outputfile,inputfile);
 
   StoppingCriterion* sc = new GenerationalCriterion(&ea,\NB_GEN);
   ea.addStoppingCriterion(sc);
@@ -54,6 +56,7 @@ int main(int argc, char** argv){
 #include "EASEAIndividual.hpp"
 #include "EASEAUserClasses.hpp"
 #include <string.h>
+#include <fstream>
 
 extern RandomGenerator* globalRandomGenerator;
 
@@ -120,7 +123,7 @@ Individual* Individual::crossover(Individual** ps){
   Individual parent2(*ps[0]);
   Individual child1(*this);
 
-  DEBUG_PRT("Xover");
+  //DEBUG_PRT("Xover");
 /*   cout << "p1 : " << parent1 << endl; */
 /*   cout << "p2 : " << parent2 << endl; */
 
@@ -199,7 +202,7 @@ EvolutionaryAlgorithm::EvolutionaryAlgorithm( size_t parentPopulationSize,
 					      float selectionPressure, float replacementPressure,
 					      SelectionOperator* selectionOperator, SelectionOperator* replacementOperator,
 					      float pCrossover, float pMutation, 
-					      float pMutationPerGene){
+					      float pMutationPerGene, string& outputfile, string& inputfile){
 
   RandomGenerator* rg = globalRandomGenerator;
 
@@ -217,6 +220,17 @@ EvolutionaryAlgorithm::EvolutionaryAlgorithm( size_t parentPopulationSize,
   this->reduceParents = 0;
   this->reduceOffsprings = 0;
 
+  if( outputfile.length() )
+    this->outputfile = new string(outputfile);
+  else
+    this->outputfile = NULL;
+
+  if( inputfile.length() )
+    this->inputfile = new std::string(inputfile);
+  else
+    this->inputfile = NULL;
+  
+
 
 }
 
@@ -225,6 +239,19 @@ void EvolutionaryAlgorithm::addStoppingCriterion(StoppingCriterion* sc){
 }
 
 void EvolutionaryAlgorithm::runEvolutionaryLoop(){
+  std::vector<Individual*> tmpVect;
+
+  if( inputfile ){
+    DEBUG_PRT("Loading initial population from file : %s",inputfile->c_str());
+    std::ifstream ifs("essai.out");
+    DEBUG_PRT("parent population size in ea %d",population->parentPopulationSize);
+    //population->parents = new Individual*[population->parentPopulationSize];
+    boost::archive::text_iarchive ia(ifs);
+
+    ia >> *population;
+    population->syncInVector();
+    //ia >> *population;
+  }
 
   std::cout << "Parent's population initializing "<< std::endl;
   this->population->initializeParentPopulation();  
@@ -252,6 +279,16 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   population->sortParentPopulation();
   std::cout << *population << std::endl;
   std::cout << "Generation : " << currentGeneration << std::endl;
+
+  if( outputfile ){
+    DEBUG_PRT("Dumping final population to file : %s",outputfile->c_str());
+    std::ofstream ofs(outputfile->c_str());
+    boost::archive::text_oarchive oa(ofs);
+    population->syncOutVector();
+    oa << *population ;
+    
+  }
+
 }
 
 
@@ -280,6 +317,9 @@ using namespace std;
 #define __INDIVIDUAL
 #include "EASEATools.hpp"
 #include <iostream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+
 
 \INSERT_USER_CLASSES_DEFINITIONS
 
@@ -307,9 +347,19 @@ class Individual{
   
   size_t mutate(float pMutationPerGene);
 
-
   friend std::ostream& operator << (std::ostream& O, const Individual& B) ;
   static void initRandomGenerator(RandomGenerator* rg){ Individual::rg = rg;}
+
+ private:
+  friend class boost::serialization::access;
+  template <class Archive> void serialize(Archive& ar, const unsigned int version){
+
+    ar & fitness;
+    DEBUG_PRT("(de)serialization of %f fitness",fitness);
+    ar & valid;
+    DEBUG_PRT("(de)serialization of %d valid",valid);
+    \GENOME_SERIAL
+  }
 
   
 };
@@ -327,11 +377,9 @@ public:
 			 float selectionPressure, float replacementPressure,
 			 SelectionOperator* selectionOperator, SelectionOperator* replacementOperator,
 			 float pCrossover, float pMutation, 
-			 float pMutationPerGene);
+			 float pMutationPerGene, std::string& outputfile, std::string& inputfile);
 
   size_t* getCurrentGenerationPtr(){ return &currentGeneration;}
-
-
   void addStoppingCriterion(StoppingCriterion* sc);
   void runEvolutionaryLoop();
   bool allCriteria();
@@ -343,6 +391,9 @@ private:
   size_t reduceParents;
   size_t reduceOffsprings;
   std::vector<StoppingCriterion*> stoppingCriteria;
+
+  std::string* outputfile;
+  std::string* inputfile;
 };
 
 
@@ -394,7 +445,7 @@ bool RandomGenerator::tossCoin(float bias){
 int RandomGenerator::randInt(int min, int max){
 
   int rValue = (((float)rand()/RAND_MAX))*(max-min);
-  DEBUG_PRT("Int Random Value : %d",min+rValue);
+  //DEBUG_PRT("Int Random Value : %d",min+rValue);
   return rValue+min;
 
 }
@@ -405,7 +456,7 @@ int RandomGenerator::random(int min, int max){
 
 float RandomGenerator::randFloat(float min, float max){
   float rValue = (((float)rand()/RAND_MAX))*(max-min);
-  DEBUG_PRT("Float Random Value : %f",min+rValue);
+  //DEBUG_PRT("Float Random Value : %f",min+rValue);
   return rValue+min;
 }
 
@@ -571,6 +622,8 @@ float Population::selectionPressure;
 float Population::replacementPressure;
 
 
+Population::Population(){
+}
 
 Population::Population(size_t parentPopulationSize, size_t offspringPopulationSize,
 		       float pCrossover, float pMutation, float pMutationPerGene,
@@ -594,6 +647,20 @@ Population::Population(size_t parentPopulationSize, size_t offspringPopulationSi
 
 }
 
+void Population::syncInVector(){
+  for( size_t i = 0 ; i<actualParentPopulationSize ; i++ ){
+    parents[i] = pop_vect.at(i);
+  }
+}
+
+void Population::syncOutVector(){
+  pop_vect.clear();
+  for( size_t i = 0 ; i<actualParentPopulationSize ; i++ ){
+    pop_vect.push_back(parents[i]);
+  }
+  DEBUG_PRT("Size of outVector",pop_vect.size());
+}
+
 Population::~Population(){
   for( size_t i=0 ; i<actualOffspringPopulationSize ; i++ ) delete(offsprings[i]);
   for( size_t i=0 ; i<actualParentPopulationSize ; i++ )    delete(parents[i]);
@@ -614,7 +681,8 @@ void Population::initPopulation(SelectionOperator* selectionOperator,
 
 void Population::initializeParentPopulation(){
 
-  for( size_t i=0 ; i<parentPopulationSize ; i++ )
+  DEBUG_PRT("Creation of %d/%d parents (other could have been loaded from input file)",parentPopulationSize-actualParentPopulationSize,parentPopulationSize);
+  for( size_t i=actualParentPopulationSize ; i<parentPopulationSize ; i++ )
     parents[i] = new Individual();
 
   actualParentPopulationSize = parentPopulationSize;
@@ -1042,6 +1110,8 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
     ("eliteType",po::value<int>(),"Strong (1) or weak (1)")
     ("surviveParents",po::value<int>()," Nb of surviving parents (absolute)")
     ("surviveOffsprings",po::value<int>()," Nb of surviving offsprings (absolute)")
+    ("outputfile",po::value<string>(),"Set an output file for the final population (default : none)")
+    ("inputfile",po::value<string>(),"Set an input file for the initial population (default : none)")
     ("u1",po::value<string>(),"User defined parameter 1")
     ("u2",po::value<string>(),"User defined parameter 2")
     ("u3",po::value<string>(),"User defined parameter 3")
@@ -1094,6 +1164,10 @@ string setVariable(const string optionName, string defaultValue){
 #include <stdlib.h>
 #include <vector>
 #include <iostream>
+#include <boost/archive/text_oarchive.hpp> //for serialization (dumping)
+#include <boost/archive/text_iarchive.hpp> //for serialization (loading)
+#include <boost/serialization/vector.hpp>
+
 class EvolutionaryAlgorithm;
 class Individual;
 class Population;
@@ -1243,7 +1317,7 @@ class MinRandom : public SelectionOperator{
 
 class Population {
   
- private:
+ public:
   
   float pCrossover;
   float pMutation;
@@ -1262,9 +1336,10 @@ class Population {
   static SelectionOperator* replacementOperator;
 
   RandomGenerator* rg;
+  std::vector<Individual*> pop_vect;
 
  public:
-
+  Population();
   Population(size_t parentPopulationSize, size_t offspringPopulationSize, 
 	     float pCrossover, float pMutation, float pMutationPerGene, RandomGenerator* rg);
   virtual ~Population();
@@ -1310,8 +1385,28 @@ class Population {
   static Individual** reducePopulation(Individual** population, size_t populationSize,
 				       Individual** reducedPopulation, size_t obSize,
 				       SelectionOperator* replacementOperator);
+  void syncOutVector();
+  void syncInVector();
+
+ private:
+  friend class boost::serialization::access;
+  template <class Archive> void serialize(Archive& ar, const unsigned int version){
+
+    ar & actualParentPopulationSize;
+    DEBUG_PRT("(de)serialization of %d parents",actualParentPopulationSize);
+    ar & pop_vect;
+    DEBUG_PRT("(de)serialization of %d offspring",actualOffspringPopulationSize);
+  }
 };
 
+/* namespace boost{ */
+/*   namespace serialization{ */
+/*     template<class Archive> */
+/*       void serialize(Archive & ar,std::vector<Individual*> population, const unsigned int version){ */
+/*       ar & population; */
+/*     } */
+/*   } */
+/* } */
 
 void parseArguments(const char* parametersFileName, int ac, char** av);
 int setVariable(const std::string optionName, int defaultValue);
@@ -1328,7 +1423,7 @@ std::string setVariable(const std::string optionName, std::string defaultValue);
 NVCC= nvcc
 CPPC= g++
 CXXFLAGS+=-g
-LDFLAGS=-lboost_program_options
+LDFLAGS=-lboost_program_options -lboost_serialization
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS

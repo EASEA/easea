@@ -178,6 +178,18 @@ exponent  ([Ee][+-]?[0-9]+)
     }
   }
  }
+
+
+<TEMPLATE_ANALYSIS>"\\GENOME_SERIAL"  {
+  CListItem<CSymbol*> *pSym;
+  if (bVERBOSE) printf ("Inserting default genome serializer.\n");
+  pGENOME->pSymbolList->reset();
+  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
+    DEBUG_PRT("found new symbol %s",pSym->Object->sName);
+    fprintf(fpOutputFile," ar & %s;\n",pSym->Object->sName);
+  }
+ }
+
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME"  {        
   if (pGENOME->sString) {
     if (bVERBOSE) printf ("Inserting Methods into Genome Class.\n");
