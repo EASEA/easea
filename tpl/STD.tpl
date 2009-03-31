@@ -272,7 +272,33 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     population->reduceTotalPopulation();
     
     currentGeneration += 1;
+
+    currentAverageFitness=0.0;
+    currentSTDEV=0.0;
+    //Calcul de la moyenne et de l'ecart type
+    for(int i=0; i<population->parentPopulationSize; i++){
+	currentAverageFitness+=population->parents[i]->getFitness();
+	if(currentGeneration== 1 && i==0)
+		population->Best=population->parents[i];
+	else{
+		if(population->parents[i]->getFitness()<population->Best->getFitness())
+			population->Best=population->parents[i];
+	}
+    }
+    currentAverageFitness/=population->parentPopulationSize;
+    for(int i=0; i<population->parentPopulationSize; i++){
+	currentSTDEV+=(population->parents[i]->getFitness()-currentAverageFitness)*(population->parents[i]->getFitness()-currentAverageFitness);
+    }
+    currentSTDEV/=population->parentPopulationSize;
+    currentSTDEV=sqrt(currentSTDEV);
     
+    //Affichage
+    if(currentGeneration==1){
+	printf("GEN\tTIME\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
+	printf("%d\t%d\t%d\t%f\t%f\t%f\n",currentGeneration,0,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+}
+else
+	printf("%d\t%d\t%d\t%f\t%f\t%f\n",currentGeneration,0,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 
     \INSERT_GEN_FCT_CALL    
   }  
@@ -386,6 +412,8 @@ public:
   Population* getPopulation(){ return population;}
   size_t getCurrentGeneration() { return currentGeneration;}
 public:
+  float currentAverageFitness;
+  float currentSTDEV;
   size_t currentGeneration;
   Population* population;
   size_t reduceParents;
@@ -644,7 +672,7 @@ Population::Population(size_t parentPopulationSize, size_t offspringPopulationSi
 
   this->rg = rg;
 
-
+  this->currentEvaluationNb = 0;
 }
 
 void Population::syncInVector(){
@@ -695,6 +723,7 @@ void Population::initializeParentPopulation(){
 void Population::evaluatePopulation(Individual** population, size_t populationSize){
   for( size_t i=0 ; i < populationSize ; i++ )
     population[i]->evaluate();
+  currentEvaluationNb += populationSize;
 }
 
 
@@ -1322,6 +1351,8 @@ class Population {
   float pCrossover;
   float pMutation;
   float pMutationPerGene;
+
+  Individual* Best;
   
   Individual** parents;
   Individual** offsprings;
@@ -1335,6 +1366,7 @@ class Population {
   static SelectionOperator* selectionOperator;
   static SelectionOperator* replacementOperator;
 
+  size_t currentEvaluationNb;
   RandomGenerator* rg;
   std::vector<Individual*> pop_vect;
 

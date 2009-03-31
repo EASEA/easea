@@ -27,7 +27,7 @@ realclean: clean
 
 
 EaseaParse.cpp: EaseaParse.y
-	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d
+	wine /home/maitre/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d
 
 EaseaLex.cpp: EaseaLex.l
-	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i
+	wine /home/maitre/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i
