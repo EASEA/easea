@@ -273,8 +273,8 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     
     currentGeneration += 1;
     
-    \INSERT_GEN_FCT_CALL
-    
+
+    \INSERT_GEN_FCT_CALL    
   }  
   population->sortParentPopulation();
   std::cout << *population << std::endl;
@@ -385,7 +385,7 @@ public:
   bool allCriteria();
   Population* getPopulation(){ return population;}
   size_t getCurrentGeneration() { return currentGeneration;}
-private:
+public:
   size_t currentGeneration;
   Population* population;
   size_t reduceParents;
