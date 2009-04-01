@@ -52,6 +52,8 @@ int main(int argc, char** argv){
   delete pop;
   delete sc;
 
+
+
   return 0;
 }
 
@@ -61,6 +63,8 @@ int main(int argc, char** argv){
 #include "EASEAUserClasses.hpp"
 #include <string.h>
 #include <fstream>
+
+#define STD_TPL
 
 extern RandomGenerator* globalRandomGenerator;
 
@@ -245,17 +249,17 @@ void EvolutionaryAlgorithm::addStoppingCriterion(StoppingCriterion* sc){
 void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   std::vector<Individual*> tmpVect;
 
-  if( inputfile ){
-    DEBUG_PRT("Loading initial population from file : %s",inputfile->c_str());
-    std::ifstream ifs("essai.out");
-    DEBUG_PRT("parent population size in ea %d",population->parentPopulationSize);
-    //population->parents = new Individual*[population->parentPopulationSize];
-    boost::archive::text_iarchive ia(ifs);
+/*   if( inputfile ){ */
+/*     DEBUG_PRT("Loading initial population from file : %s",inputfile->c_str()); */
+/*     std::ifstream ifs("essai.out"); */
+/*     DEBUG_PRT("parent population size in ea %d",population->parentPopulationSize); */
+/*     //population->parents = new Individual*[population->parentPopulationSize]; */
+/*     boost::archive::text_iarchive ia(ifs); */
 
-    ia >> *population;
-    population->syncInVector();
-    //ia >> *population;
-  }
+/*     //ia >> *population; */
+/*     population->syncInVector(); */
+/*     //ia >> *population; */
+/*   } */
 
   std::cout << "Parent's population initializing "<< std::endl;
   this->population->initializeParentPopulation();  
@@ -275,7 +279,7 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     
     population->reduceTotalPopulation();
     
-    currentGeneration += 1;
+
 
     currentAverageFitness=0.0;
     currentSTDEV=0.0;
@@ -283,48 +287,54 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     showPopulationStats();
      
     \INSERT_GEN_FCT_CALL    
+    currentGeneration += 1;
   }  
   population->sortParentPopulation();
   //std::cout << *population << std::endl;
   std::cout << "Generation : " << currentGeneration << std::endl;
 
-  if( outputfile ){
-    DEBUG_PRT("Dumping final population to file : %s",outputfile->c_str());
-    std::ofstream ofs(outputfile->c_str());
-    boost::archive::text_oarchive oa(ofs);
-    population->syncOutVector();
-    oa << *population ;
+/*   if( outputfile ){ */
+/*     DEBUG_PRT("Dumping final population to file : %s",outputfile->c_str()); */
+/*     std::ofstream ofs(outputfile->c_str()); */
+/*     boost::archive::text_oarchive oa(ofs); */
+/*     population->syncOutVector(); */
+/*     oa << *population ; */
     
-  }
+/*   } */
 
 }
 
 
 void EvolutionaryAlgorithm::showPopulationStats(){
-   //Calcul de la moyenne et de l'ecart type
-    for(int i=0; i<population->parentPopulationSize; i++){
-	currentAverageFitness+=population->parents[i]->getFitness();
-	if(currentGeneration== 1 && i==0)
-		population->Best=population->parents[i];
-	else{
-		if(population->parents[i]->getFitness()<population->Best->getFitness())
-			population->Best=population->parents[i];
-	}
-    }
-    currentAverageFitness/=population->parentPopulationSize;
-    for(int i=0; i<population->parentPopulationSize; i++){
-	currentSTDEV+=(population->parents[i]->getFitness()-currentAverageFitness)*(population->parents[i]->getFitness()-currentAverageFitness);
-    }
-    currentSTDEV/=population->parentPopulationSize;
-    currentSTDEV=sqrt(currentSTDEV);
-    
-    //Affichage
-    if(currentGeneration==1){
-      printf("GEN\tTIME\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
-      printf("%d\t%d\t%d\t%f\t%f\t%f\n",currentGeneration,0,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
-    }
-    else
-      printf("%d\t%d\t%d\t%f\t%f\t%f\n",currentGeneration,0,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+  //Calcul de la moyenne et de l'ecart type
+  if( currentGeneration == 0 )
+    population->Best=population->parents[0];
+
+  for(int i=0; i<population->parentPopulationSize; i++){
+    currentAverageFitness+=population->parents[i]->getFitness();
+#if \MINIMAXI
+    if(population->parents[i]->getFitness()>population->Best->getFitness())
+#else
+    if(population->parents[i]->getFitness()<population->Best->getFitness())
+#endif
+      population->Best=population->parents[i];
+  }
+
+  currentAverageFitness/=population->parentPopulationSize;
+
+  for(int i=0; i<population->parentPopulationSize; i++){
+    currentSTDEV+=(population->parents[i]->getFitness()-currentAverageFitness)*(population->parents[i]->getFitness()-currentAverageFitness);
+  }
+  currentSTDEV/=population->parentPopulationSize;
+  currentSTDEV=sqrt(currentSTDEV);
+  
+  //Affichage
+  if(currentGeneration==1){
+    printf("GEN\tTIME\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
+    printf("%d\t%d\t%d\t%f\t%f\t%f\n",currentGeneration,0,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+  }
+  else
+    printf("%d\t%d\t%d\t%f\t%f\t%f\n",currentGeneration,0,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 }
 
 bool EvolutionaryAlgorithm::allCriteria(){

@@ -543,10 +543,16 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\STEADYSTATE"  {if ((fREPL_PERC==0)||(!strcmp(sREPLACEMENT,"Incremental"))||(!strcmp(sREPLACEMENT,"Simple")))
      fprintf(fpOutputFile,"// undefined ");}
 <TEMPLATE_ANALYSIS>"\\COMMENT"  {if (mystricmp(sREPLACEMENT,"SSGA")) fprintf(fpOutputFile,"//");}
-<TEMPLATE_ANALYSIS>"\\MINIMAXI"  {switch (TARGET) { case GALIB : fprintf(fpOutputFile,"%d",nMINIMISE? -1:1); break;
+<TEMPLATE_ANALYSIS>"\\MINIMAXI"  {
+  switch (TARGET) { 
+  case GALIB : fprintf(fpOutputFile,"%d",nMINIMISE? -1:1); break;
   case EO : fprintf(fpOutputFile,"%s",nMINIMISE? "eoMinimizingFitness" : "eoMaximizingFitness"); break;
   case DREAM : fprintf(fpOutputFile,"%s",nMINIMISE? "false" : "true"); break;
-  }                                  }
+    
+  case STD:
+  case CUDA: fprintf(fpOutputFile,"%s",(nMINIMISE? "false" : "true")); break;
+  }
+ }
 <TEMPLATE_ANALYSIS>"\\ELITIST_REPLACE_NAME"  {if (TARGET==EO) {if (bELITISM) fprintf(fpOutputFile,"standardR");
     else fprintf(fpOutputFile,"r");}}
 <TEMPLATE_ANALYSIS>"\\ELITISM"  {

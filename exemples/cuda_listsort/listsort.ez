@@ -44,7 +44,7 @@ void cross(GenomeClass *pChild, GenomeClass *pParent, int locus){
 
 \Finalization function:
  std::cout << "fonction de finalization svp" << std::endl;
- std::cout << population ;
+ // std::cout << population ;
 \end
 
 \GenomeClass::initialiser:
