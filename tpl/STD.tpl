@@ -51,7 +51,9 @@ int main(int argc, char** argv){
 
   delete pop;
   delete sc;
-
+  delete selectionOperator;
+  delete replacementOperator;
+  delete globalRandomGenerator;
 
 
   return 0;
@@ -63,6 +65,7 @@ int main(int argc, char** argv){
 #include "EASEAUserClasses.hpp"
 #include <string.h>
 #include <fstream>
+#include <sys/time.h>
 
 #define STD_TPL
 
@@ -264,9 +267,11 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   std::cout << "Parent's population initializing "<< std::endl;
   this->population->initializeParentPopulation();  
   std::cout << *population << std::endl;
+
+  struct timeval begin;
+  gettimeofday(&begin,NULL);
   
   while( this->allCriteria() == false ){    
-
 
     population->produceOffspringPopulation();
     population->evaluateOffspringPopulation();
@@ -278,15 +283,10 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
       population->reduceOffspringPopulation(reduceOffsprings);
     
     population->reduceTotalPopulation();
-    
-
-
-    currentAverageFitness=0.0;
-    currentSTDEV=0.0;
-
-    showPopulationStats();
      
     \INSERT_GEN_FCT_CALL    
+
+     showPopulationStats(begin);
     currentGeneration += 1;
   }  
   population->sortParentPopulation();
@@ -305,12 +305,15 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
 }
 
 
-void EvolutionaryAlgorithm::showPopulationStats(){
-  //Calcul de la moyenne et de l'ecart type
-  if( currentGeneration == 0 )
-    population->Best=population->parents[0];
+void EvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
-  for(int i=0; i<population->parentPopulationSize; i++){
+  float currentAverageFitness=0.0;
+  float currentSTDEV=0.0;
+
+  //Calcul de la moyenne et de l'ecart type
+  population->Best=population->parents[0];
+
+  for(size_t i=0; i<population->parentPopulationSize; i++){
     currentAverageFitness+=population->parents[i]->getFitness();
 #if \MINIMAXI
     if(population->parents[i]->getFitness()>population->Best->getFitness())
@@ -322,19 +325,22 @@ void EvolutionaryAlgorithm::showPopulationStats(){
 
   currentAverageFitness/=population->parentPopulationSize;
 
-  for(int i=0; i<population->parentPopulationSize; i++){
+  for(size_t i=0; i<population->parentPopulationSize; i++){
     currentSTDEV+=(population->parents[i]->getFitness()-currentAverageFitness)*(population->parents[i]->getFitness()-currentAverageFitness);
   }
   currentSTDEV/=population->parentPopulationSize;
   currentSTDEV=sqrt(currentSTDEV);
   
   //Affichage
-  if(currentGeneration==1){
+  if(currentGeneration==0)
     printf("GEN\tTIME\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
-    printf("%d\t%d\t%d\t%f\t%f\t%f\n",currentGeneration,0,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
-  }
-  else
-    printf("%d\t%d\t%d\t%f\t%f\t%f\n",currentGeneration,0,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+
+  
+  struct timeval end, res;
+  gettimeofday(&end,0);
+  timersub(&end,&beginTime,&res);
+  printf("%lu\t%d.%06d\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,
+	 population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 }
 
 bool EvolutionaryAlgorithm::allCriteria(){
@@ -431,13 +437,13 @@ public:
   Population* getPopulation(){ return population;}
   size_t getCurrentGeneration() { return currentGeneration;}
 public:
-  float currentAverageFitness;
-  float currentSTDEV;
   size_t currentGeneration;
   Population* population;
   size_t reduceParents;
   size_t reduceOffsprings;
-  void showPopulationStats();
+  //void showPopulationStats();
+  void showPopulationStats(struct timeval beginTime);
+  
 
   std::vector<StoppingCriterion*> stoppingCriteria;
 
@@ -767,7 +773,7 @@ void Population::evaluateOffspringPopulation(){
    
 
  */
-Individual** Population::reducePopulation(Individual** population, size_t populationSize,
+void Population::reducePopulation(Individual** population, size_t populationSize,
 					  Individual** reducedPopulation, size_t obSize,
 					  SelectionOperator* replacementOperator){
   
@@ -944,11 +950,11 @@ void Population::produceOffspringPopulation(){
    @ARG outPopulationSize the size of the output population
    
 */
-  void Population::elitism(size_t elitismSize, Individual** population, size_t populationSize, 
+void Population::elitism(size_t elitismSize, Individual** population, size_t populationSize, 
 			 Individual** outPopulation, size_t outPopulationSize){
   
-  float bestFitness;
-  size_t bestIndividual;
+  float bestFitness = population[0]->getFitness();
+  size_t bestIndividual = 0;
   
   if( elitismSize >= 5 )DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%d)",elitismSize);
   
@@ -957,7 +963,11 @@ void Population::produceOffspringPopulation(){
     bestFitness = replacementOperator->getExtremum();
     bestIndividual = 0;
     for( size_t j=0 ; j<populationSize-i ; j++ ){
+#if \MINIMAXI
       if( bestFitness < population[j]->getFitness() ){
+#else
+      if( bestFitness > population[j]->getFitness() ){
+#endif
 	bestFitness = population[j]->getFitness();
 	bestIndividual = j;
       }
@@ -986,7 +996,7 @@ std::ostream& operator << (std::ostream& O, const Population& B)
     parentPopulationSize << std::endl;
   
   for( size_t i=0 ; i<realParentPopulationSize ; i++){
-    O << "\t\t" << *B.parents[i] << std::endl;
+    O << "\t\t" << *B.parents[i] ;
   } 
 
   O << "\t Offspring size : "<< realOffspringPopulationSize << "/" << 
@@ -1040,7 +1050,7 @@ void MaxRandom::initialize(Individual** population, float selectionPressure, siz
 }
 
 size_t MaxRandom::selectNext(size_t populationSize){
-  rg->random(0,populationSize-1);
+  return rg->random(0,populationSize-1);
 }
 
 float MaxRandom::getExtremum(){
@@ -1056,7 +1066,7 @@ void MinRandom::initialize(Individual** population, float selectionPressure, siz
 }
 
 size_t MinRandom::selectNext(size_t populationSize){
-  rg->random(0,populationSize-1);
+  return rg->random(0,populationSize-1);
 }
 
 float MinRandom::getExtremum(){
@@ -1123,6 +1133,7 @@ int loadParametersFile(const string& filename, char*** outputContainer){
     for( size_t i=0 ; i<512 ; i++ )
       if( buffer[i] == '#' || buffer[i] == '\n' || buffer[i] == '\0' || buffer[i]==' '){
 	buffer[i] = '\0';
+	break;
       } 
     int str_len;
     if( (str_len = strlen(buffer)) ){
@@ -1186,6 +1197,10 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
     cout << desc << "\n";
     exit(1);
   }
+
+  for( int i = 0 ; i<argc ; i++ )
+    free(argv[i]);
+  free(argv);
  
 }
 
@@ -1436,7 +1451,7 @@ class Population {
     this->actualParentPopulationSize = actualParentPopulationSize;
   }
 
-  static Individual** reducePopulation(Individual** population, size_t populationSize,
+  static void reducePopulation(Individual** population, size_t populationSize,
 				       Individual** reducedPopulation, size_t obSize,
 				       SelectionOperator* replacementOperator);
   void syncOutVector();
@@ -1476,7 +1491,7 @@ std::string setVariable(const std::string optionName, std::string defaultValue);
 
 NVCC= nvcc
 CPPC= g++
-CXXFLAGS+=-g
+CXXFLAGS+=-g -Wall 
 LDFLAGS=-lboost_program_options -lboost_serialization
 
 #USER MAKEFILE OPTIONS :

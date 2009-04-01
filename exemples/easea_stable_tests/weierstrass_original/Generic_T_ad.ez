@@ -17,7 +17,7 @@ __________________________________________________________*/
 #define PI 3.141592654
 
  
-float pMutPerGene=1.;
+float pMutPerGene=0.1;
 int    n = 10;
 
 double (*Fitness)(double *, int);   // pointeur sur la fonction de fitness designee dans argv[1]
@@ -209,7 +209,7 @@ GenomeClass {
 			  for (int i=0; i<n; i++)
   {
      double alpha = (double)globalRandomGenerator->getRandomIntMax(1.); // barycentric crossover
-     if (&child1) child1.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
+     child1.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
      //if (&child2) child2.x[i] = alpha*parent2.x[i] + (1.-alpha)*parent1.x[i];
   }
 \end
@@ -256,6 +256,7 @@ CPPFLAGS+=
 		   //Replacement strategy : Plus    // Comma, SteadyState, Generational
 		   //  Discarding operator : Worst    // Best, Tournament, Parent, Random
   Evaluator goal : Minimise      // Maximise
-  Elitism : On                   // Off
+  Elitism: Strong
+  Elite: 1
 \end
 	
