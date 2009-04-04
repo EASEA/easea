@@ -1,6 +1,6 @@
 EXEC = main.out
-CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g
-CPPC = g++
+CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated
+CPPC = g++ 
 LDFLAGS = 
 
 

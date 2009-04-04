@@ -18,7 +18,8 @@ __________________________________________________________*/
 
  
 float pMutPerGene=0.1;
-int    n = 10;
+#define N_LIM 10
+int n = N_LIM;
 
 double (*Fitness)(double *, int);   // pointeur sur la fonction de fitness designee dans argv[1]
 double Sphere(double *, int);
@@ -26,9 +27,9 @@ double AckleyPath(double *, int);
 double Easom(double *, int);
 double Griewangk(double *, int);
 double Rastrigin(double *, int);
-double Rosenbrock(double *, int);
-double Schwefel(double *, int);
-double Weierstrass(double *, int);
+float Rosenbrock(float *, int);
+float Schwefel(float *, int);
+float Weierstrass(float *, int);
 
 \end
 
@@ -36,66 +37,66 @@ double Weierstrass(double *, int);
 //fitness function
 #include <math.h>
 
-inline double Sphere(double x[SIZE], int n) // Ex-DeJong function 1
+inline float Sphere(float x[SIZE], int n) // Ex-DeJong function 1
 {
-   double ret = 0;
+   float ret = 0;
     	for (int i = 0;i<n; i++) ret += x[ i ] * x[ i ];
       	return ret;
 }
 
-inline double AckleyPath(double x[SIZE], int n)
+inline float AckleyPath(float x[SIZE], int n)
 {
     //Parameters
-    double a = 20.; 
-    double b = 0.2; 
-    double c = 2*PI;
-    double Scale = 32.768; // pour matcher avec les limites [-1,1]
+    float a = 20.; 
+    float b = 0.2; 
+    float c = 2*PI;
+    float Scale = 32.768; // pour matcher avec les limites [-1,1]
  
     //Function computation
-    double sum_x2 = 0.0;
-    double sum_cos_cx = 0.0;
+    float sum_x2 = 0.0;
+    float sum_cos_cx = 0.0;
     for (int i=0; i<n; i++) {
 		sum_x2 += Scale*Scale*x[i]*x[i];
     		sum_cos_cx += cos(c*Scale*x[i]);
 		}
-    double res = -a * exp( -b * sqrt( 1/(double)n * sum_x2) ) - exp( 1/(double)n * sum_cos_cx ) + a + exp(1);
+    float res = -a * exp( -b * sqrt( 1/(float)n * sum_x2) ) - exp( 1/(float)n * sum_cos_cx ) + a + exp(1);
     return res;
 }
-inline double Easom(double x[SIZE], int n) 
+inline float Easom(float x[SIZE], int n) 
 {
-    double res = 1.;
+    float res = 1.;
     //function computation
     for (int i=0; i<n; i++) 
 	res *= cos(100.*x[i])*exp(-(100.*x[i]-PI)*(100.*x[i]-PI)); 
     return (1.-res); // pour avoir un minimum a 0.
 }
-inline double Griewangk(double x[SIZE], int n) 
+inline float Griewangk(float x[SIZE], int n) 
 {
-   double res, sum = 0., prod =1.;
-   double Scale = 600.; // pour matcher avec les limites [-1,1]
+   float res, sum = 0., prod =1.;
+   float Scale = 600.; // pour matcher avec les limites [-1,1]
  
 	for (int i=1; i<=n; i++) {
-		prod *= cos( Scale*x[i]/sqrt( (double)i ) );
+		prod *= cos( Scale*x[i]/sqrt( (float)i ) );
     		sum += (Scale*Scale*x[i]*x[i]/4000.);
 		}
   	res = sum - prod + 1.;
     	return res;
 }
 
-inline double Rastrigin(double x[SIZE], int n)
+inline float Rastrigin(float x[SIZE], int n)
 {
-   double res = 0.;
-   double Scale = 5.12; // pour matcher avec les limites [-1,1]
+   float res = 0.;
+   float Scale = 5.12; // pour matcher avec les limites [-1,1]
 
    for (int i = 0;i<n; i++) 
 	res += ((Scale*Scale*x[i]*x[i])-10*cos( 2*PI*Scale*x[i]));
    return (10.*n + res);
 }
 
-inline double Rosenbrock(double x[SIZE], int n)
+inline float Rosenbrock(float x[SIZE], int n)
 {
-   double res = 0.;
-   double Scale = 2.048; // pour matcher avec les limites [-1,1]
+   float res = 0.;
+   float Scale = 2.048; // pour matcher avec les limites [-1,1]
 
    for (int i = 0;i<n; i++) 
     	res += 100.*((Scale*x[i+1] - Scale*Scale*x[i]*x[i])*(Scale*x[i+1] 
@@ -103,40 +104,40 @@ inline double Rosenbrock(double x[SIZE], int n)
    return (res);
 }
 
-inline double Schwefel(double x[SIZE], int n)
+inline float Schwefel(float x[SIZE], int n)
 {
-   double res = 0.;
-   double Scale = 500.; // pour matcher avec les limites [-1,1]
+   float res = 0.;
+   float Scale = 500.; // pour matcher avec les limites [-1,1]
 
    for (int i = 0;i<n; i++) 
     	res += (-Scale*x[i]*sin( sqrt(Abs(Scale*x[i]))));
-   return ((double)n*418.9829 + res);
+   return ((float)n*418.9829 + res);
 }
 
-inline double Weierstrass(double x[SIZE], int n)  // Weierstrass multimidmensionnel h = 0.25
+__device__ __host__ inline float Weierstrass(float x[SIZE], int n)  // Weierstrass multimidmensionnel h = 0.25
 {
-   double res = 0.;
-   double val[SIZE];
-   double b=2.;
-   double h = 0.25;
+   float res = 0.;
+   float val[SIZE];
+   float b=2.;
+   float h = 0.25;
 
    for (int i = 0;i<n; i++) {
 	val[i] = 0.;
     	for (int k=0;k<ITER;k++)
-		val[i] += pow(b,-(double)k*h) * sin(pow(b,(double)k)*x[i]);
+		val[i] += pow(b,-(float)k*h) * sin(pow(b,(float)k)*x[i]);
 	res += Abs(val[i]);
 	}
    return (res);
 } 
 
-double gauss()
+float gauss()
 /* Generates a normally distributed random value with variance 1 and 0 mean.
     Algorithm based on "gasdev" from Numerical recipes' pg. 203. */
 {
   int iset = 0;
-  double gset = 0.0;
-  double v1 = 0.0, v2 = 0.0, r = 0.0;
-  double factor = 0.0;
+  float gset = 0.0;
+  float v1 = 0.0, v2 = 0.0, r = 0.0;
+  float factor = 0.0;
 
   if (iset) {
         iset = 0;
@@ -144,8 +145,8 @@ double gauss()
       	}
   else {    
         do {
-            v1 = (double)globalRandomGenerator->randFloat(0.,1.) * 2.0 - 1.0;
-            v2 = (double)globalRandomGenerator->randFloat(0.,1.) * 2.0 - 1.0;
+            v1 = (float)globalRandomGenerator->randFloat(0.,1.) * 2.0 - 1.0;
+            v2 = (float)globalRandomGenerator->randFloat(0.,1.) * 2.0 - 1.0;
             r = v1 * v1 + v2 * v2;
 	                }
         while (r > 1.0);
@@ -183,7 +184,7 @@ double gauss()
 
   std::cout<<"*************  n: "<<n<<std::endl;
   // pour l'impression dans le fichier de resultats
-/*   double MinTheo = 0.; */
+/*   float MinTheo = 0.; */
   //  printf("%s_T_ad  n= %s  MinTheo= %f ",argv[1],argv[2],MinTheo);
 \end
 
@@ -193,22 +194,22 @@ cout << "finalization function called" << endl;
 
 \User classes :
 GenomeClass { 
-	double x[SIZE];
-	double sigma[SIZE]; // auto-adaptative mutation parameter
+	float x[SIZE];
+	float sigma[SIZE]; // auto-adaptative mutation parameter
 	}
 \end
 
 \GenomeClass::initialiser : // "initializer" is also accepted
   for(int i=0; i<n; i++ ) {
-     	Genome.x[i] = (double)random(X_MIN,X_MAX);
-	Genome.sigma[i]=(double)random(0.,0.5);
+     	Genome.x[i] = (float)random(X_MIN,X_MAX);
+	Genome.sigma[i]=(float)random(0.,0.5);
 	}
 \end
 
 \GenomeClass::crossover :
-			  for (int i=0; i<n; i++)
+  for (int i=0; i<n; i++)
   {
-     double alpha = (double)globalRandomGenerator->getRandomIntMax(1.); // barycentric crossover
+     float alpha = (float)globalRandomGenerator->getRandomIntMax(1.); // barycentric crossover
      child1.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
      //if (&child2) child2.x[i] = alpha*parent2.x[i] + (1.-alpha)*parent1.x[i];
   }
@@ -216,15 +217,15 @@ GenomeClass {
 
 \GenomeClass::mutator : // Must return the number of mutations
   int NbMut=0;
-  double pond = 1./sqrt((double)n);
+  float pond = 1./sqrt((float)n);
 
     for (int i=0; i<n; i++)
     if (tossCoin(pMutPerGene)){
     	NbMut++;
-       	Genome.sigma[i] = Genome.sigma[i] * exp(SIGMA*pond*(double)gauss());
+       	Genome.sigma[i] = Genome.sigma[i] * exp(SIGMA*pond*(float)gauss());
        	Genome.sigma[i] = MIN(0.5,Genome.sigma[0]);              
        	Genome.sigma[i] = MAX(0.,Genome.sigma[0]);
-       	Genome.x[i] += Genome.sigma[i]*(double)gauss();
+       	Genome.x[i] += Genome.sigma[i]*(float)gauss();
        	Genome.x[i] = MIN(X_MAX,Genome.x[i]);              // pour eviter les depassements
        	Genome.x[i] = MAX(X_MIN,Genome.x[i]);
     	}
@@ -232,10 +233,10 @@ return NbMut;
 \end
 
 \GenomeClass::evaluator : // Returns the score
-  double Score= 0.0;
-  double Point[SIZE];
-  for (int i=0; i<n; i++) Point[i] = Genome.x[i];
-  Score= Weierstrass(Point, n);         
+  float Score= 0.0;
+  float Point[SIZE];
+  for (int i=0; i<N_LIM; i++) Point[i] = Genome.x[i];
+  Score= Weierstrass(Point, N_LIM);         
   return Score;
 \end
 

@@ -67,7 +67,7 @@ Centre de Mathématiques Appliquées
   bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
   bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationFunction;
   bool bCatchNextSemiColon,bWaitingToClosePopulation, bMethodsInGenome, bFinalizationFunction;
-  bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION;
+  bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION, bWithinCUDA_Evaluator;
   CSymbol *pASymbol;
 
  public:
@@ -82,7 +82,7 @@ Centre de Mathématiques Appliquées
   bSymbolInserted=bDoubleQuotes=bWithinDisplayFunction=bWithinInitialiser=bWithinMutator=bWithinXover=0;
   bWaitingForSemiColon=bFinishNB_GEN=bFinishMINIMISE=bFinishMINIMIZE=bGenerationFunction=0;
   bCatchNextSemiColon,bWaitingToClosePopulation=bMethodsInGenome=0;
-  bWithinCUDA_Initializer=0, bWithinMAKEFILEOPTION;
+  bWithinCUDA_Initializer=bWithinMAKEFILEOPTION =bWithinCUDA_Evaluator=0;
 }
 
 // macros
@@ -178,6 +178,68 @@ exponent  ([Ee][+-]?[0-9]+)
     }
   }
  }
+
+<TEMPLATE_ANALYSIS>"\\GENOME_SIZE" {
+
+  CListItem<CSymbol*> *pSym;
+  if (bVERBOSE) printf ("Inserting default genome size calculator.\n");
+  pGENOME->pSymbolList->reset();
+  size_t size_of_genome=0;
+  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
+/*     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static */
+/*     if ((pSym->Object->ObjectType==oArray)&&(TARGET==DREAM)) */
+/*       fprintf(fpOutputFile,"    %s = new %s[%d];\n",pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->nSize/pSym->Object->pType->nSize); */
+/*     if (pSym->Object->ObjectType==oPointer){ */
+/*       if (TARGET==DREAM) fprintf(fpOutputFile,"    %s=null;\n",pSym->Object->sName); */
+/*       else fprintf(fpOutputFile,"    %s=NULL;\n",pSym->Object->sName); */
+/*     } */
+    DEBUG_PRT("%s has size : %lu",pSym->Object->sName,pSym->Object->nSize);
+    size_of_genome+=pSym->Object->nSize;
+  }
+  fprintf(fpOutputFile,"%d",size_of_genome);
+  DEBUG_PRT("Total genome size is %lu",size_of_genome);
+ }
+
+<TEMPLATE_ANALYSIS>"\\COPY_CUDA_BUFFER" {
+  CListItem<CSymbol*> *pSym;
+  if (bVERBOSE) printf ("Inserting default genome constructor.\n");
+  pGENOME->pSymbolList->reset();
+
+  fprintf(fpOutputFile,"\tmemcpy(GENOME_ACCESS(id,buffer),this,Individual::sizeOfGenome);");
+
+  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
+    if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
+    if ((pSym->Object->ObjectType==oArray)&&(TARGET==DREAM))
+      fprintf(fpOutputFile,"    %s = new %s[%d];\n",pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
+    if (pSym->Object->ObjectType==oPointer){
+      if (TARGET==DREAM) fprintf(fpOutputFile,"    %s=null;\n",pSym->Object->sName);
+      else fprintf(fpOutputFile,"    %s=NULL;\n",pSym->Object->sName);
+    }
+  }
+  
+ }
+
+/* <TEMPLATE_ANALYSIS>"\\GENOME_CUDA_MOTION" { */
+/*   if (bVERBOSE) printf ("Inserting default genome cuda motion function.\n"); */
+  
+/*   CListItem<CSymbol*> *pSym; */
+/*   if (bVERBOSE) printf ("Creating default copy constructor.\n"); */
+/*   fprintf (fpOutputFile,"// Memberwise copy\n");              */
+/*   pGENOME->pSymbolList->reset(); */
+/*   while (pSym=pGENOME->pSymbolList->walkToNextItem()){ */
+/*     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static */
+/*     if (pSym->Object->ObjectType==oObject) */
+/*       fprintf(fpOutputFile,"    %s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName); */
+/*     if (pSym->Object->ObjectType==oPointer) */
+/*       fprintf(fpOutputFile,"    %s=(genome.%s ? new %s(*(genome.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName); */
+/*     if (pSym->Object->ObjectType==oArray){ */
+/* /\*       fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize); *\/ */
+/* /\*       fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName); *\/ */
+      
+/*     } */
+/*   } */
+/*  } */
+
 
 
 <TEMPLATE_ANALYSIS>"\\GENOME_SERIAL"  {
@@ -462,6 +524,14 @@ exponent  ([Ee][+-]?[0-9]+)
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_EVALUATOR;   
  }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_CUDA_EVALUATOR"  {        
+  yyreset();
+  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  bWithinCUDA_Evaluator = 1;
+  BEGIN COPY_EVALUATOR;
+ }
+
 <TEMPLATE_ANALYSIS>"\\ANALYSE_PARAMETERS"  {        
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
@@ -1421,7 +1491,10 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bWithinDisplayFunction) fprintf(fpOutputFile,"(*this)");
   else if ((TARGET==EO)&&(bWithinInitialiser)) fprintf(fpOutputFile, "(*genome)");
   
-  else if ((TARGET==CUDA || TARGET==STD) && ((bWithinEvaluator) || bWithinMutator)) fprintf(fpOutputFile, "(*this)");
+  else if ((TARGET==CUDA || TARGET==STD) && ((bWithinEvaluator) || bWithinMutator)) 
+    if( bWithinCUDA_Evaluator)
+      fprintf(fpOutputFile, "(*INDIVIDUAL_ACCESS(devBuffer,id))");
+    else fprintf(fpOutputFile, "(*this)");
 
   else if ((TARGET==EO)&&(bWithinMutator)) fprintf(fpOutputFile, "_genotype");
   else fprintf(fpOutputFile,"genome");} // local genome name
@@ -1497,7 +1570,12 @@ exponent  ([Ee][+-]?[0-9]+)
     else if (TARGET==EO)  {fprintf(fpOutputFile,"genome.fitness(");bCatchNextSemiColon=true;}// changes function type// changes function type
     else if (TARGET==DREAM) {fprintf(fpOutputFile,"infoHabitant.setFitness(new Double(");bCatchNextSemiColon=true;}// changes function type
     else if( TARGET==CUDA || TARGET==STD) {
-      fprintf(fpOutputFile,"return fitness = "); 
+      if( bWithinCUDA_Evaluator ){
+	fprintf(fpOutputFile,"return "); 
+	bWithinCUDA_Evaluator = 0;
+      }
+      else
+	fprintf(fpOutputFile,"return fitness = "); 
       bCatchNextSemiColon=false;
     }
     bWithinEvaluator=0;
