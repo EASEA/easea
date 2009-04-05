@@ -92,6 +92,54 @@ void CSymbol::print(FILE *fp){
         fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
     }
 
+
+    if( TARGET==CUDA ){ // here we we are generating function to copy objects from host memory to gpu's.
+      bool isFlatClass = true;
+      pSymbolList->reset();
+      while (pSym=pSymbolList->walkToNextItem()){
+	DEBUG_PRT("analyse flat %s",pSym->Object->pType->sName);
+	if( (pSym->Object->ObjectType == oPointer) ){  //|| (pSym->Object->pType->ObjectType == oObject) ){
+	  isFlatClass = false;
+	  break;
+	}
+      }
+
+
+      DEBUG_PRT("Does %s flat class : %s",sName,(isFlatClass?"yes":"no"));
+      pSymbolList->reset();      
+      fprintf(fp,"  %s* cudaSendToGpu%s(){\n",sName,sName);
+      fprintf(fp,"    %s* ret=NULL;\n",sName);
+      if( isFlatClass ){
+	fprintf(fp,"    cudaMalloc((void**)&ret,sizeof(%s));\n",sName);
+	fprintf(fp,"    cudaMemcpy(ret,this,sizeof(%s),cudaMemcpyHostToDevice);\n",sName);
+	fprintf(fp,"    return ret;\n");	
+      }
+      else{
+	fprintf(fp,"    %s tmp;\n",sName);
+	fprintf(fp,"    memcpy(&tmp,this,sizeof(%s));\n",sName);
+	while (pSym=pSymbolList->walkToNextItem()){
+	  if( (pSym->Object->ObjectType == oPointer) ){  //|| (pSym->Object->pType->ObjectType == oObject) ){
+	    fprintf(fp,"    tmp.%s=this->%s->cudaSendToGpu%s();\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName);
+	  }
+	}
+	fprintf(fp,"    cudaMalloc((void**)&ret,sizeof(%s));\n",sName);
+	fprintf(fp,"    cudaMemcpy(ret,&tmp,sizeof(%s),cudaMemcpyHostToDevice);\n",sName);
+	fprintf(fp,"    return ret;\n");
+      }
+      fprintf(fp,"  }\n\n");
+
+      
+      fprintf(fp,"  void cudaGetFromGpu%s(%s* dev_ptr){\n",sName,sName);
+      fprintf(fp,"    %s* ret=NULL;\n",sName); 	
+      if( isFlatClass ){
+	fprintf(fp,"    ret = (%s*)malloc(sizeof(%s));\n",sName,sName);
+	fprintf(fp,"    cudaMemcpy(ret,dev_ptr,sizeof(%s),cudaMemcpyDeviceToHost);\n",sName);
+	while (pSym=pSymbolList->walkToNextItem())
+	  fprintf(fp,"    this->%s=ret->%s;\n",pSym->Object->sName,pSym->Object->sName);      
+      fprintf(fp,"  }\n\n");
+      }
+    }
+    
     fprintf(fp,"  %s(){  // Constructor\n",sName); // constructor
           pSymbolList->reset(); // in which we initialise all pointers to NULL
           while (pSym=pSymbolList->walkToNextItem())
@@ -342,7 +390,7 @@ void CSymbol::printUserClasses(FILE *fp){
   if (bAlreadyPrinted) return;
   bAlreadyPrinted=true;  
   while (pSym=pSymbolList->walkToNextItem()){
-    if (pSym->Object->pType->ObjectType==oUserClass)
+    if ((pSym->Object->pType->ObjectType==oUserClass))
 	pSym->Object->pType->printUC(fp);
   }
 }
@@ -377,7 +425,7 @@ void CSymbol::printAllSymbols(FILE *fp, char *sCompleteName, EObjectType FatherT
         strcat(sNewCompleteName,"[");
         sprintf(s,"%d",pSym->Object->nSize/pSym->Object->pType->nSize);
         strcat(sNewCompleteName,s);
-        strcat(sNewCompleteName,"]");
+         strcat(sNewCompleteName,"]");
       }
       fprintf(fp,"%s\n",sNewCompleteName);
       strcpy(sNewCompleteName, sCompleteName);

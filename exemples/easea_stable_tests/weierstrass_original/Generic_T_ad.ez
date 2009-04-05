@@ -31,6 +31,11 @@ float Rosenbrock(float *, int);
 float Schwefel(float *, int);
 float Weierstrass(float *, int);
 
+EvalCounter* d_counter;
+struct gpuOptions{
+  EvalCounter* counter;
+};
+
 \end
 
 \User functions:
@@ -165,38 +170,35 @@ float gauss()
 	 }	      
 \end
 \Initialisation function:
-/*   if(argc>1 ){ */
-/*     if((!(strcmp(argv[1],"Sphere")))) Fitness = Sphere;  */
-/*     if((!(strcmp(argv[1],"AckleyPath")))) Fitness = AckleyPath;  */
-/*     if((!(strcmp(argv[1],"Easom")))) Fitness = Easom;  */
-/*     if((!(strcmp(argv[1],"Griewangk")))) Fitness = Griewangk;  */
-/*     if((!(strcmp(argv[1],"Rastrigin")))) Fitness = Rastrigin;  */
-/*     if((!(strcmp(argv[1],"Rosenbrock")))) Fitness = Rosenbrock;  */
-/*     if((!(strcmp(argv[1],"Schwefel")))) Fitness = Schwefel;  */
-/*     if((!(strcmp(argv[1],"Weierstrass")))) Fitness = Weierstrass;  */
-    
-/*     if(argc>2) n = atoi(argv[2]); */
-/*   } */
-/*   else */
-/*     Fitness = Weierstrass; */
-    
-/*   n=MIN(n, SIZE); */
 
   std::cout<<"*************  n: "<<n<<std::endl;
-  // pour l'impression dans le fichier de resultats
-/*   float MinTheo = 0.; */
-  //  printf("%s_T_ad  n= %s  MinTheo= %f ",argv[1],argv[2],MinTheo);
+EvalCounter counter;
+counter.a = 0;
+d_counter = counter.cudaSendToGpuEvalCounter();
+initOpts.counter=d_counter;
+
 \end
 
 \Finalization function:
 cout << "finalization function called" << endl;
+EvalCounter counter;
+counter.cudaGetFromGpuEvalCounter(d_counter);
+cout << counter << endl;
 \end
 
 \User classes :
+EvalCounter {
+  int a;
+}
+
+TestClass1 {
+  int a;
+  float b;
+}
 GenomeClass { 
-	float x[SIZE];
-	float sigma[SIZE]; // auto-adaptative mutation parameter
-	}
+  float x[SIZE];
+  float sigma[SIZE]; // auto-adaptative mutation parameter
+}
 \end
 
 \GenomeClass::initialiser : // "initializer" is also accepted
@@ -237,6 +239,7 @@ return NbMut;
   float Point[SIZE];
   for (int i=0; i<N_LIM; i++) Point[i] = Genome.x[i];
   Score= Weierstrass(Point, N_LIM);         
+  initOpts.counter->a+=2;
   return Score;
 \end
 

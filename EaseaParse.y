@@ -16,7 +16,9 @@ Centre de Mathématiques Appliquées
 CSymbol *pCURRENT_CLASS;
 CSymbol *pCURRENT_TYPE;
 CSymbol *pGENOME;
+CSymbol* pCLASSES[128];
 char sRAW_PROJECT_NAME[1000];
+int nClasses_nb = 0;
 char sPROJECT_NAME[1000];
 char sLOWER_CASE_PROJECT_NAME[1000];
 char sEZ_FILE_NAME[1000];
@@ -214,15 +216,15 @@ GenomeAnalysis
 
 ClassDeclarationsSection
   : CLASSES {
-      if (bVERBOSE) printf("Declaration of user classes :\n\n");} 
+    if (bVERBOSE) printf("Declaration of user classes :\n\n");} 
     ClassDeclarations
   | CLASSES {
       if (bVERBOSE) printf("No user class declaration found other than GenomeClass.\n");} 
   ;
   
 ClassDeclarations
-  : ClassDeclaration
-  | ClassDeclarations ClassDeclaration
+: ClassDeclaration 
+| ClassDeclarations ClassDeclaration
   ;
   
 ClassDeclaration
@@ -230,9 +232,12 @@ ClassDeclaration
       pCURRENT_CLASS=SymbolTable.insert($1);  
       pCURRENT_CLASS->pSymbolList=new CLList<CSymbol *>();
       $1->ObjectType=oUserClass;
+      DEBUG_PRT("Yacc Symbol declaration %s %d",$1->sName,$1->nSize);
+      pCLASSES[nClasses_nb++] = $1;
     }
   '{' VariablesDeclarations '}' {
       if (bVERBOSE) printf("Class %s declared for %d bytes.\n\n",$1->sName,$1->nSize);
+      DEBUG_PRT("Yacc variable declaration %s %d",$1->sName,$1->nSize);
     }                       
   ;
 
@@ -378,6 +383,7 @@ BaseConstructorParameter
   
 GenomeDeclarationSection
   : GENOME {
+    DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName);
       if (bVERBOSE) printf ("\nGenome declaration analysis :\n\n");
       pGENOME=new CSymbol("Genome");
       pCURRENT_CLASS=SymbolTable.insert(pGENOME);  
@@ -386,7 +392,7 @@ GenomeDeclarationSection
       pGENOME->ObjectQualifier=0;
       pGENOME->sString=NULL;
     }
-    '{' VariablesDeclarations '}' {}
+'{' VariablesDeclarations '}' {}
   ;
 
 //GenomeMethodsDeclaration

@@ -14,6 +14,9 @@ Centre de Mathématiques Appliquées
 #include <unistd.h>
 #include "debug.h"
 
+  size_t genomeSize;
+  bool genomeSizeValidity=false;
+
 // local functions
   char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
 
@@ -161,8 +164,23 @@ exponent  ([Ee][+-]?[0-9]+)
   CListItem<CSymbol*> *pSym;
   pGENOME->pSymbolList->reset();
   while (pSym=pGENOME->pSymbolList->walkToNextItem())
-    if ((pSym->Object->pType->ObjectType==oUserClass)&&(!pSym->Object->pType->bAlreadyPrinted))
+    if ((pSym->Object->pType->ObjectType==oUserClass)&&(!pSym->Object->pType->bAlreadyPrinted)){
+      DEBUG_PRT("%p",pSym->Object->pType);
       pSym->Object->pType->printClasses(fpOutputFile);
+    }
+
+
+  if( TARGET == CUDA ){
+    DEBUG_PRT("User classes are :");
+    for( int i = nClasses_nb-1 ; i>=0 ; i-- ){
+      DEBUG_PRT(" %s, %p ,%d| ",pCLASSES[i]->sName,pCLASSES[i],pCLASSES[i]->bAlreadyPrinted);
+      if( !pCLASSES[i]->bAlreadyPrinted ){
+	fprintf(fpOutputFile,"// User class not refereced by the Genome");
+	pCLASSES[i]->printClasses(fpOutputFile);
+      }
+    }
+    DEBUG_PRT("\n");
+  }
  }
 <TEMPLATE_ANALYSIS>"\\GENOME_CTOR"  {
   CListItem<CSymbol*> *pSym;
@@ -180,24 +198,23 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <TEMPLATE_ANALYSIS>"\\GENOME_SIZE" {
-
-  CListItem<CSymbol*> *pSym;
-  if (bVERBOSE) printf ("Inserting default genome size calculator.\n");
-  pGENOME->pSymbolList->reset();
   size_t size_of_genome=0;
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-/*     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static */
-/*     if ((pSym->Object->ObjectType==oArray)&&(TARGET==DREAM)) */
-/*       fprintf(fpOutputFile,"    %s = new %s[%d];\n",pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->nSize/pSym->Object->pType->nSize); */
-/*     if (pSym->Object->ObjectType==oPointer){ */
-/*       if (TARGET==DREAM) fprintf(fpOutputFile,"    %s=null;\n",pSym->Object->sName); */
-/*       else fprintf(fpOutputFile,"    %s=NULL;\n",pSym->Object->sName); */
-/*     } */
-    DEBUG_PRT("%s has size : %lu",pSym->Object->sName,pSym->Object->nSize);
-    size_of_genome+=pSym->Object->nSize;
+  if (bVERBOSE) printf ("Inserting default genome size.\n");
+  if( !genomeSizeValidity ){
+    if (bVERBOSE) printf ("\tComputing default genome size.\n");  
+    CListItem<CSymbol*> *pSym;
+    pGENOME->pSymbolList->reset();
+    while (pSym=pGENOME->pSymbolList->walkToNextItem()){
+      DEBUG_PRT("%s has size : %lu",pSym->Object->sName,pSym->Object->nSize);
+      size_of_genome+=pSym->Object->nSize;
+    }
+    DEBUG_PRT("Total genome size is %lu",size_of_genome); 
+    genomeSizeValidity=true;
+  }
+  else{
+    size_of_genome = genomeSize;
   }
   fprintf(fpOutputFile,"%d",size_of_genome);
-  DEBUG_PRT("Total genome size is %lu",size_of_genome);
  }
 
 <TEMPLATE_ANALYSIS>"\\COPY_CUDA_BUFFER" {
@@ -1088,6 +1105,13 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY>"MINIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE");
   else fprintf(fpOutputFile,"EZ_MINIMIZE");} // local genome name
 
+<COPY>"__device__" |
+<COPY>"__host__" {
+  if( TARGET==CUDA ){
+    fprintf(fpOutputFile,"%s",yytext);
+  }
+ }
+
 <COPY>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);}
 <COPY>"NB_GEN"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"POP_SIZE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
@@ -1224,6 +1248,8 @@ exponent  ([Ee][+-]?[0-9]+)
 //****************************************
 
 <COPY_DISPLAY>"\\GenomeClass::display"[ \t\n]*":" { 
+  /*  DEBUG_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
+  /*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
   bDisplayFunction=bWithinDisplayFunction=1;
   BEGIN COPY_USER_FUNCTION;
  }
@@ -1595,7 +1621,9 @@ exponent  ([Ee][+-]?[0-9]+)
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
   bWithinInitialiser=bWithinXover=bWithinMutator=bWithinEvaluator=0;
-  if (bWithinDisplayFunction) bWithinDisplayFunction=0; // display function
+  if (bWithinDisplayFunction){
+    bWithinDisplayFunction=0; // display function
+  }
   else return END_OF_FUNCTION;} // Back to the template file
 <COPY_USER_FUNCTION>.|\n {putc(yytext[0],fpOutputFile);}                                      
 

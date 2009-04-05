@@ -29,7 +29,8 @@ Centre de Mathématiques Appliquées
 #define YYTEXT_SIZE 10000
 class CSymbol;
 
-extern CSymbol *pCURRENT_CLASS, *pCURRENT_TYPE, *pGENOME;
+extern CSymbol *pCURRENT_CLASS, *pCURRENT_TYPE, *pGENOME, *pCLASSES[128];
+extern int nClasses_nb;
 
 extern   FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile, *fpExplodedGenomeFile;  
 extern char sRAW_PROJECT_NAME[], sPROJECT_NAME[], sEO_DIR[], sEZ_PATH[], sEZ_FILE_NAME[];

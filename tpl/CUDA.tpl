@@ -73,6 +73,8 @@ int main(int argc, char** argv){
 extern RandomGenerator* globalRandomGenerator;
 
 \INSERT_USER_DECLARATIONS
+struct gpuOptions initOpts;
+
 \ANALYSE_USER_CLASSES
 
 \INSERT_USER_FUNCTIONS
@@ -80,6 +82,9 @@ extern RandomGenerator* globalRandomGenerator;
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 \INSERT_GENERATION_FUNCTION
+
+
+
 
 void EASEAFinal(Population* pop){
   \INSERT_FINALIZATION_FCT_CALL
@@ -119,24 +124,25 @@ float Individual::evaluate(){
 /**
    This function allows to acces to the Individual stored in cudaBuffer as a standard
    individual.
+   @TODO This should be a macro, at this time it is a function for debuging purpose
 */
 __device__ __host__ inline Individual* INDIVIDUAL_ACCESS(void* buffer,size_t id){
   return ((Individual*)(((char*)buffer)+(\GENOME_SIZE+sizeof(void*))*id));
 }
 
 
-__device__ float cudaEvaluate(void* devBuffer, size_t id){
+__device__ float cudaEvaluate(void* devBuffer, size_t id, struct gpuOptions initOpts){
   \INSERT_CUDA_EVALUATOR
 }
 
 
 
 
-void Individual::copyToCudaBuffer(void* buffer, size_t id){
+inline void Individual::copyToCudaBuffer(void* buffer, size_t id){
   
-  DEBUG_PRT("%p\n",(char*)this+sizeof(Individual*));
-  DEBUG_PRT("%p\n",&this->sigma);
-  DEBUG_PRT("%lu\n",id);
+/*   DEBUG_PRT("%p\n",(char*)this+sizeof(Individual*)); */
+/*   DEBUG_PRT("%p\n",&this->sigma); */
+/*   DEBUG_PRT("%lu\n",id); */
   
   memcpy(((char*)buffer)+(\GENOME_SIZE+sizeof(Individual*))*id,((char*)this),\GENOME_SIZE+sizeof(Individual*));
   
@@ -276,16 +282,29 @@ EvolutionaryAlgorithm::EvolutionaryAlgorithm( size_t parentPopulationSize,
 
 // do the repartition of data accross threads
 __global__ void 
-cudaEvaluatePopulation(void* d_population, size_t popSize, float* d_fitnesses){
+cudaEvaluatePopulation(void* d_population, size_t popSize, float* d_fitnesses, struct gpuOptions initOpts){
 
   size_t id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
 
   // escaping for the last block
   if(blockIdx.x == (gridDim.x-1)) if( id >= popSize ) return;
 
-  void* indiv = ((char*)d_population)+id*(\GENOME_SIZE+sizeof(Individual*)); // compute the offset of the current individual
+  //void* indiv = ((char*)d_population)+id*(\GENOME_SIZE+sizeof(Individual*)); // compute the offset of the current individual
 
-  d_fitnesses[id] = cudaEvaluate(indiv,id);
+  d_fitnesses[id] = cudaEvaluate(d_population,id,initOpts);
+
+
+/*   if( blockIdx.x == 0){ */
+/*   for( size_t i = 0 ; i<popSize ; i++ ){ */
+/*     printf("%d : \n\t",i); */
+/*     for( size_t j=0 ; j<10 ; j++ ) */
+/*       printf("%f | ",INDIVIDUAL_ACCESS(d_population,i)->x[j]); */
+/*     printf("\n\t"); */
+/*     for( size_t j=0 ; j<10 ; j++ ) */
+/*       printf("%f | ",INDIVIDUAL_ACCESS(d_population,i)->sigma[j]); */
+/*     printf("\n"); */
+/*   } */
+/*   } */
 
 }
 
@@ -314,6 +333,8 @@ repartition(size_t popSize, size_t* nbBlock, size_t* nbThreadPB, size_t* nbThrea
 	    size_t nbMP, size_t maxBlockSize){
   
   (*nbThreadLB) = 0;
+  
+  DEBUG_PRT("repartition : %d",popSize);
   
   if( ((float)popSize / (float)nbMP) <= maxBlockSize ){
     //la population repartie sur les MP tient dans une bloc par MP
@@ -354,36 +375,119 @@ repartition(size_t popSize, size_t* nbBlock, size_t* nbThreadPB, size_t* nbThrea
 }
 
 
+/**
+   Allocate buffer for populationSize individuals and fitnesses
+   compute the repartition
+ */
+void EvolutionaryAlgorithm::cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid, void** allocatedDeviceBuffer,
+						   float** deviceFitness){
 
-void EvolutionaryAlgorithm::cudaEvaluate(void* buffer, size_t actualPopulationSize){
+  size_t nbThreadPB, nbThreadLB, nbBlock;
+  cudaError_t lastError;
+
+  lastError = cudaMalloc(allocatedDeviceBuffer,populationSize*(\GENOME_SIZE+sizeof(Individual*)));
+  DEBUG_PRT("Population buffer allocation : %s",cudaGetErrorString(lastError));
+  lastError = cudaMalloc(((void**)deviceFitness),populationSize*sizeof(float));
+  DEBUG_PRT("Fitness buffer allocation : %s",cudaGetErrorString(lastError));
+  
+  if( !repartition(populationSize, &nbBlock, &nbThreadPB, &nbThreadLB,16, 192))
+    exit( -1 );
+
+  DEBUG_PRT("repartition is \n\tnbBlock %lu \n\tnbThreadPB %lu \n\tnbThreadLD %lu",nbBlock,nbThreadPB,nbThreadLB); 
+
+  if( nbThreadLB!=0 )
+    dimGrid->x = (nbBlock+1);
+  else
+    dimGrid->x = (nbBlock);
+
+  dimBlock->x = nbThreadPB;
+
+
+#ifdef DEBUG
+  cout << "Number of grid : " << dimGrid->x << endl;
+  cout << "Number of block : " << dimBlock->x << endl;
+#endif
+
+}
+
+
+void EvolutionaryAlgorithm::cudaOffspringEvaluate(void* d_offspringPopulation, float* d_fitnesses, dim3 dimBlock, dim3 dimGrid){
+  cudaError_t lastError;
+  size_t actualPopulationSize = this->population->actualOffspringPopulationSize;
   float* fitnesses = new float[actualPopulationSize];
+
+  
+  lastError = cudaMemcpy(d_offspringPopulation,population->cudaOffspringBuffer,(\GENOME_SIZE+sizeof(Individual*))*actualPopulationSize,
+			 cudaMemcpyHostToDevice);
+  DEBUG_PRT("Parent population buffer copy : %s",cudaGetErrorString(lastError));
+
+  cudaEvaluatePopulation<<< dimGrid, dimBlock>>>(d_offspringPopulation,actualPopulationSize,d_fitnesses,initOpts);
+  lastError = cudaGetLastError();
+  DEBUG_PRT("Kernel execution : %s",cudaGetErrorString(lastError));
+
+  lastError = cudaMemcpy(fitnesses,d_fitnesses,actualPopulationSize*sizeof(float),cudaMemcpyDeviceToHost);
+  DEBUG_PRT("Offspring's fitnesses gathering : %s",cudaGetErrorString(lastError));
+
+
+#ifdef COMPARE_HOST_DEVICE
+  population->evaluateOffspringPopulation();
+#endif
+
+  for( size_t i=0 ; i<actualPopulationSize ; i++ ){
+#ifdef COMPARE_HOST_DEVICE
+    printf("Difference for individual %lu is : %f\n",i,(population->offsprings[i]->getFitness()-fitnesses[i])/population->offsprings[i]->getFitness());
+#else
+    printf("%lu : %f\n",i,fitnesses[i]);
+    population->offsprings[i]->fitness = fitnesses[i];
+    population->offsprings[i]->valid = true;
+#endif
+  }
+  
+}
+
+/**
+   Evaluate parent population on the GPU. This is special because this evaluation occures
+   only one time. Buffers are allocated and freed here.
+ */
+void EvolutionaryAlgorithm::cudaParentEvaluate(){
+  float* fitnesses = new float[this->population->actualParentPopulationSize];
   void* allocatedDeviceBuffer;
   float* deviceFitness;
   cudaError_t lastError;
-  lastError = cudaMalloc(&allocatedDeviceBuffer,actualPopulationSize*(\GENOME_SIZE+sizeof(Individual*)));
-  DEBUG_PRT("%s",cudaGetErrorString(lastError));
-  lastError = cudaMalloc(((void**)&deviceFitness),actualPopulationSize*sizeof(float));
-  DEBUG_PRT("%s",cudaGetErrorString(lastError));
-  
-  size_t nbBlock,nbThreadLB,nbThreadPB;
+  dim3 dimBlock, dimGrid;
+  size_t actualPopulationSize = this->population->actualParentPopulationSize;
+
+  cudaPreliminaryProcess(actualPopulationSize,&dimBlock,&dimGrid,&allocatedDeviceBuffer,&deviceFitness);
     
   //compute the repartition over MP and SP
-  repartition(actualPopulationSize, &nbBlock, &nbThreadPB, &nbThreadLB,16, 192);
-  dim3 dimBlock(nbThreadPB);
-  
-  
-  dim3 dimGrid;
-  if( nbThreadLB )
-    dimGrid.x = (nbBlock+1);
-  else
-    dimGrid.x = (nbBlock);
+  lastError = cudaMemcpy(allocatedDeviceBuffer,this->population->cudaParentBuffer,(\GENOME_SIZE+sizeof(Individual*))*actualPopulationSize,
+			 cudaMemcpyHostToDevice);
+  DEBUG_PRT("Parent population buffer copy : %s",cudaGetErrorString(lastError));
 
 
-  cudaEvaluatePopulation<<< dimGrid, dimBlock>>>(allocatedDeviceBuffer,actualPopulationSize,deviceFitness);
+  cudaEvaluatePopulation<<< dimGrid, dimBlock>>>(allocatedDeviceBuffer,actualPopulationSize,deviceFitness,initOpts);
   lastError = cudaGetLastError();
-  DEBUG_PRT("%s",cudaGetErrorString(lastError));
-  
-  
+  DEBUG_PRT("Kernel execution : %s",cudaGetErrorString(lastError));
+ 
+  lastError = cudaMemcpy(fitnesses,deviceFitness,actualPopulationSize*sizeof(float),cudaMemcpyDeviceToHost);
+  DEBUG_PRT("Parent's fitnesses gathering : %s",cudaGetErrorString(lastError));
+
+  cudaFree(deviceFitness);
+  cudaFree(allocatedDeviceBuffer);
+
+#ifdef COMPARE_HOST_DEVICE
+  population->evaluateParentPopulation();
+#endif
+
+  for( size_t i=0 ; i<actualPopulationSize ; i++ ){
+#ifdef COMPARE_HOST_DEVICE
+    printf("Difference for individual %lu is : %f\n",i,(population->parents[i]->getFitness()-fitnesses[i])/population->parents[i]->getFitness());
+#else
+    printf("%lu : %f\n",i,fitnesses[i]);
+    population->parents[i]->fitness = fitnesses[i];
+    population->parents[i]->valid = true;
+#endif
+  }
 }
 
 void EvolutionaryAlgorithm::addStoppingCriterion(StoppingCriterion* sc){
@@ -406,8 +510,8 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
 /*   } */
 
   std::cout << "Parent's population initializing "<< std::endl;
-  this->population->initializeCudaParentPopulation();  
-  cudaEvaluate(population->cudaParentBuffer,population->actualParentPopulationSize);
+  this->population->initializeCudaParentPopulation();
+  cudaParentEvaluate();
 
   std::cout << *population << std::endl;
 
@@ -421,13 +525,22 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   accuEval.tv_usec = 0;
 
 
+  void* d_offspringPopulation;
+  float* d_fitnesses;
+  dim3 dimBlock, dimGrid;
+
+  cudaPreliminaryProcess(this->population->offspringPopulationSize,&dimBlock,&dimGrid,&d_offspringPopulation,&d_fitnesses);
   
   while( this->allCriteria() == false ){    
 
     population->produceOffspringPopulation();
 
+
     TIME_ST(eval);
-    population->evaluateOffspringPopulation();
+    for( size_t i=0 ; i<this->population->actualOffspringPopulationSize ; i++ )
+      this->population->offsprings[i]->copyToCudaBuffer(this->population->cudaOffspringBuffer,i); 
+
+    cudaOffspringEvaluate(d_offspringPopulation,d_fitnesses,dimBlock,dimGrid);
     TIME_END(eval);
 
     SHOW_TIME(eval);
@@ -462,6 +575,8 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     
 /*   } */
 
+  cudaFree(d_offspringPopulation);
+  cudaFree(d_fitnesses);
 }
 
 
@@ -528,6 +643,7 @@ using namespace std;
 #define __INDIVIDUAL
 #include "EASEATools.hpp"
 #include <iostream>
+#include <vector_types.h>
 /* #include <boost/archive/text_oarchive.hpp> */
 /* #include <boost/archive/text_iarchive.hpp> */
 
@@ -598,7 +714,11 @@ public:
   bool allCriteria();
   Population* getPopulation(){ return population;}
   size_t getCurrentGeneration() { return currentGeneration;}
-  void cudaEvaluate(void* buffer, size_t actualPopulationSize);
+  void cudaParentEvaluate();
+  void cudaOffspringEvaluate(void* d_offspringPopulation, float* fitnesses, dim3 dimBlock, dim3 dimGrid);
+  void cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid, void** allocatedDeviceBuffer,
+						     float** deviceFitness);
+  
 
 public:
   size_t currentGeneration;
@@ -1109,12 +1229,12 @@ void Population::produceOffspringPopulation(){
   selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
 
   for( size_t i=0 ; i<offspringPopulationSize ; i++ ){
-    size_t index = selectionOperator->selectNext(offspringPopulationSize);
+    size_t index = selectionOperator->selectNext(parentPopulationSize);
     p1 = parents[index];
     
     if( rg->tossCoin(pCrossover) ){
       for( size_t j=0 ; j<crossoverArrity-1 ; j++ ){
-	index = selectionOperator->selectNext(offspringPopulationSize);
+	index = selectionOperator->selectNext(parentPopulationSize);
 	ps[j] = parents[index];
       }
       child = p1->crossover(ps);
@@ -1728,6 +1848,7 @@ LDFLAGS=-lboost_program_options -lboost_serialization
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 CPPFLAGS+=-DDEBUG
+NVFLAGS+=-DCOMPARE_HOST_DEVICE --device-emulation
 
 EASEA_SRC= EASEATools.cpp EASEAIndividual.cpp
 EASEA_MAIN_HDR= EASEA.cpp
