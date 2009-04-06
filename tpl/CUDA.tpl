@@ -437,7 +437,7 @@ void EvolutionaryAlgorithm::cudaOffspringEvaluate(void* d_offspringPopulation, f
 #ifdef COMPARE_HOST_DEVICE
     printf("Difference for individual %lu is : %f\n",i,(population->offsprings[i]->getFitness()-fitnesses[i])/population->offsprings[i]->getFitness());
 #else
-    printf("%lu : %f\n",i,fitnesses[i]);
+    DEBUG_PRT("%lu : %f\n",i,fitnesses[i]);
     population->offsprings[i]->fitness = fitnesses[i];
     population->offsprings[i]->valid = true;
 #endif
@@ -1848,7 +1848,8 @@ LDFLAGS=-lboost_program_options -lboost_serialization
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 CPPFLAGS+=-DDEBUG
-NVFLAGS+=-DCOMPARE_HOST_DEVICE --device-emulation
+NVFLAGS+=-DCOMPARE_HOST_DEVICE
+
 
 EASEA_SRC= EASEATools.cpp EASEAIndividual.cpp
 EASEA_MAIN_HDR= EASEA.cpp

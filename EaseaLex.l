@@ -1248,8 +1248,8 @@ exponent  ([Ee][+-]?[0-9]+)
 //****************************************
 
 <COPY_DISPLAY>"\\GenomeClass::display"[ \t\n]*":" { 
-  /*  DEBUG_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
-  /*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
+/*   DEBUG_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
+/*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
   bDisplayFunction=bWithinDisplayFunction=1;
   BEGIN COPY_USER_FUNCTION;
  }
