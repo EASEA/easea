@@ -390,7 +390,7 @@ void EvolutionaryAlgorithm::cudaPreliminaryProcess(size_t populationSize, dim3* 
   lastError = cudaMalloc(((void**)deviceFitness),populationSize*sizeof(float));
   DEBUG_PRT("Fitness buffer allocation : %s",cudaGetErrorString(lastError));
   
-  if( !repartition(populationSize, &nbBlock, &nbThreadPB, &nbThreadLB,16, 192))
+  if( !repartition(populationSize, &nbBlock, &nbThreadPB, &nbThreadLB,30, 240))
     exit( -1 );
 
   DEBUG_PRT("repartition is \n\tnbBlock %lu \n\tnbThreadPB %lu \n\tnbThreadLD %lu",nbBlock,nbThreadPB,nbThreadLB); 
@@ -435,7 +435,11 @@ void EvolutionaryAlgorithm::cudaOffspringEvaluate(void* d_offspringPopulation, f
 
   for( size_t i=0 ; i<actualPopulationSize ; i++ ){
 #ifdef COMPARE_HOST_DEVICE
-    printf("Difference for individual %lu is : %f\n",i,(population->offsprings[i]->getFitness()-fitnesses[i])/population->offsprings[i]->getFitness());
+    float error = (population->offsprings[i]->getFitness()-fitnesses[i])/population->offsprings[i]->getFitness();
+    printf("Difference for individual %lu is : %f %f|%f\n",i,error, population->offsprings[i]->getFitness(),fitnesses[i]);
+    if( error > 0.2 )
+      exit(-1);
+
 #else
     DEBUG_PRT("%lu : %f\n",i,fitnesses[i]);
     population->offsprings[i]->fitness = fitnesses[i];
@@ -466,7 +470,7 @@ void EvolutionaryAlgorithm::cudaParentEvaluate(){
 
 
   cudaEvaluatePopulation<<< dimGrid, dimBlock>>>(allocatedDeviceBuffer,actualPopulationSize,deviceFitness,initOpts);
-  lastError = cudaGetLastError();
+  lastError = cudaThreadSynchronize();
   DEBUG_PRT("Kernel execution : %s",cudaGetErrorString(lastError));
  
   lastError = cudaMemcpy(fitnesses,deviceFitness,actualPopulationSize*sizeof(float),cudaMemcpyDeviceToHost);
@@ -481,9 +485,13 @@ void EvolutionaryAlgorithm::cudaParentEvaluate(){
 
   for( size_t i=0 ; i<actualPopulationSize ; i++ ){
 #ifdef COMPARE_HOST_DEVICE
-    printf("Difference for individual %lu is : %f\n",i,(population->parents[i]->getFitness()-fitnesses[i])/population->parents[i]->getFitness());
+    float error = (population->parents[i]->getFitness()-fitnesses[i])/population->parents[i]->getFitness();
+    printf("Difference for individual %lu is : %f %f|%f\n",i,error,
+	   population->parents[i]->getFitness(), fitnesses[i]);
+    if( error > 0.2 )
+      exit(-1);
 #else
-    printf("%lu : %f\n",i,fitnesses[i]);
+    DEBUG_PRT("%lu : %f\n",i,fitnesses[i]);
     population->parents[i]->fitness = fitnesses[i];
     population->parents[i]->valid = true;
 #endif
@@ -513,9 +521,9 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   this->population->initializeCudaParentPopulation();
   cudaParentEvaluate();
 
-  std::cout << *population << std::endl;
+//  std::cout << *population << std::endl;
 
-  DEBUG_PRT("Genome size is %lu",Individual::sizeOfGenome);
+  DEBUG_PRT("Genome size is %lu",\GENOME_SIZE);
 
 
   DECLARE_TIME(eval);
@@ -543,7 +551,8 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     cudaOffspringEvaluate(d_offspringPopulation,d_fitnesses,dimBlock,dimGrid);
     TIME_END(eval);
 
-    SHOW_TIME(eval);
+    COMPUTE_TIME(eval);
+    //SHOW_TIME(eval);
     timeradd(&accuEval,&eval_res,&accuEval);
 
     
@@ -558,7 +567,7 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
      
     \INSERT_GEN_FCT_CALL    
 
-     showPopulationStats(begin);
+    showPopulationStats(begin);
     currentGeneration += 1;
   }  
   population->sortParentPopulation();
@@ -1635,7 +1644,6 @@ public:
   int random(int min, int max);
   float random(float min, float max);
   double random(double min, double max);
-
 };
 
 
@@ -1847,8 +1855,8 @@ LDFLAGS=-lboost_program_options -lboost_serialization
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
-CPPFLAGS+=-DDEBUG
-NVFLAGS+=-DCOMPARE_HOST_DEVICE
+CPPFLAGS+=
+NVFLAGS+=
 
 
 EASEA_SRC= EASEATools.cpp EASEAIndividual.cpp

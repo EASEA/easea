@@ -209,6 +209,7 @@ exponent  ([Ee][+-]?[0-9]+)
       size_of_genome+=pSym->Object->nSize;
     }
     DEBUG_PRT("Total genome size is %lu",size_of_genome); 
+    genomeSize = size_of_genome;
     genomeSizeValidity=true;
   }
   else{

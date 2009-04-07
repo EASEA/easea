@@ -33,7 +33,6 @@ struct gpuOptions{
 //fitness function
 #include <math.h>
 
-
 __device__ __host__ inline float Weierstrass(float x[SIZE], int n)  // Weierstrass multimidmensionnel h = 0.25
 {
    float res = 0.;
@@ -65,8 +64,8 @@ float gauss()
       	}
   else {    
         do {
-            v1 = (float)globalRandomGenerator->randFloat(0.,1.) * 2.0 - 1.0;
-            v2 = (float)globalRandomGenerator->randFloat(0.,1.) * 2.0 - 1.0;
+            v1 = (float)random(0.,1.) * 2.0 - 1.0;
+            v2 = (float)random(0.,1.) * 2.0 - 1.0;
             r = v1 * v1 + v2 * v2;
 	                }
         while (r > 1.0);
@@ -79,27 +78,27 @@ float gauss()
 \end
 
 \GenomeClass::display:
-	 for( size_t i=0 ; i<SIZE ; i++){
-	      //     cout << Genome.x[i] << ":" << Genome.sigma[i] << "|";
-	      printf("%.02f:%.02f|",Genome.x[i],Genome.sigma[i]);
-	 }	      
+/* 	 for( size_t i=0 ; i<SIZE ; i++){ */
+/* 	      //     cout << Genome.x[i] << ":" << Genome.sigma[i] << "|"; */
+/* 	      printf("%.02f:%.02f|",Genome.x[i],Genome.sigma[i]); */
+/* 	 }	       */
 \end
 \Initialisation function:
 
   std::cout<<"*************  n: "<<n<<std::endl;
-EvalCounter counter;
-counter.a = 0;
-d_counter = counter.cudaSendToGpuEvalCounter();
-initOpts.counter=d_counter;
+/* EvalCounter counter; */
+/* counter.a = 0; */
+/* d_counter = counter.cudaSendToGpuEvalCounter(); */
+/* initOpts.counter=d_counter; */
 
 \end
 
 \Finalization function:
 {
   cout << "finalization function called" << endl;
-  EvalCounter counter;
-  counter.cudaGetFromGpuEvalCounter(d_counter);
-  cout << counter << endl;
+/*   EvalCounter counter; */
+/*   counter.cudaGetFromGpuEvalCounter(d_counter); */
+/*   cout << counter << endl; */
 }
 \end
 
@@ -124,7 +123,7 @@ GenomeClass {
 \GenomeClass::crossover :
   for (int i=0; i<n; i++)
   {
-     float alpha = (float)globalRandomGenerator->getRandomIntMax(1.); // barycentric crossover
+    float alpha = (float)random(0.,1.); // barycentric crossover
      child1.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
   }
 \end
