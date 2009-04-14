@@ -831,7 +831,9 @@ exponent  ([Ee][+-]?[0-9]+)
     }
   if( fileNameLength != -1 ){
     // add "Makefile" at the end of path
-    char* cdn = get_current_dir_name();
+    //char* cdn = get_current_dir_name();
+    char cdn[4096]; 
+    getcwd(cdn,4096);
     size_t cdnLength = strlen(cdn);
     strcpy(sFullFileName,cdn);
     strcat(sFullFileName,"/\0");

@@ -916,12 +916,12 @@ void Population::produceOffspringPopulation(){
   selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
 
   for( size_t i=0 ; i<offspringPopulationSize ; i++ ){
-    size_t index = selectionOperator->selectNext(offspringPopulationSize);
+    size_t index = selectionOperator->selectNext(parentPopulationSize);
     p1 = parents[index];
     
     if( rg->tossCoin(pCrossover) ){
       for( size_t j=0 ; j<crossoverArrity-1 ; j++ ){
-	index = selectionOperator->selectNext(offspringPopulationSize);
+	index = selectionOperator->selectNext(parentPopulationSize);
 	ps[j] = parents[index];
       }
       child = p1->crossover(ps);

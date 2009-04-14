@@ -68,7 +68,7 @@ int main(int argc, char** argv){
 #include <sys/time.h>
 #include "EASEATools.hpp"
 
-#define STD_TPL
+#define CUDA_TPL
 
 extern RandomGenerator* globalRandomGenerator;
 
@@ -1856,7 +1856,7 @@ LDFLAGS=-lboost_program_options -lboost_serialization
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 CPPFLAGS+=
-NVFLAGS+=
+NVCCFLAGS+=
 
 
 EASEA_SRC= EASEATools.cpp EASEAIndividual.cpp
@@ -1878,7 +1878,7 @@ $(BIN):$(OBJ)
 	$(NVCC) $^ -o $@ $(LDFLAGS) 
 
 %.o:%.cu
-	$(NVCC) $(NVFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -Wall
+	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -Wall
 
 easeaclean: clean
 	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) 
