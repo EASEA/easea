@@ -401,13 +401,8 @@ void EvolutionaryAlgorithm::cudaPreliminaryProcess(size_t populationSize, dim3* 
     dimGrid->x = (nbBlock);
 
   dimBlock->x = nbThreadPB;
-
-
-#ifdef DEBUG
   cout << "Number of grid : " << dimGrid->x << endl;
   cout << "Number of block : " << dimBlock->x << endl;
-#endif
-
 }
 
 

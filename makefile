@@ -8,6 +8,11 @@ $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.so
 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
 
 
+$(EXEC)_bin:EaseaSym.o EaseaParse.o EaseaLex.o 
+	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@ -lalex
+
+
+
 EaseaParse.o: EaseaParse.cpp EaseaLex.cpp	
 	$(CPPC) $(CPPFLAGS) $< -o $@ -c
 
@@ -19,11 +24,11 @@ alexyacc/libalex.so:alexyacc/*.cpp
 	cd alexyacc && make libalex.so
 
 clean:
-	rm -f *.o $(EXEC)
+	rm -f *.o $(EXEC) $(EXEC)_bin
 	cd alexyacc && make clean
 
-realclean: clean
-	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
+# realclean: clean
+# 	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
 
 
 EaseaParse.cpp: EaseaParse.y

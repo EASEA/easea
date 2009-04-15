@@ -1774,18 +1774,13 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
     TARGET = STD;
   }
 
-  char* sEZ_PATH = "./tpl/";
   /////////////////////////////////////////////////////////  
   //strcpy(sTemp,"e:\\lutton\\easea\\debug");pour tester sous windows
   if ((sEZ_PATH==NULL)||(sEZ_PATH[0]==0)) {
     if (getenv("EZ_PATH")==NULL){
-      printf("\n\nHmmm, it looks like you are running EASEA without GUIDE for the first time.\n");
-      printf("Please, add the path of the installation directory to the PATH variable and\n");
-      printf("into the \"EZ_PATH\" environment variable, so that EASEA knows where to look for\n");
-      printf("its template files.\n");
-      exit(1);
-    }
-    strcpy(sEZ_PATH,getenv("EZ_PATH"));
+      strcpy(sEZ_PATH,"./tpl/");	
+    }else
+      strcpy(sEZ_PATH,getenv("EZ_PATH"));
   }
   
   switch (OPERATING_SYSTEM) {
