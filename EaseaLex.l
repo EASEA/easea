@@ -1820,7 +1820,10 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
     } }
 
   if (TARGET==STD){
-    strcat(sTemp,"STD.tpl");
+    if(TARGET_FLAVOR == STD_FLAVOR_SO)
+      strcat(sTemp,"STD.tpl");
+    else
+      strcat(sTemp,"STD_MO.tpl");
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
       fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
       fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");

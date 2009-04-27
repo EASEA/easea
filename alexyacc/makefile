@@ -10,6 +10,11 @@ yycunput.o yycuoflw.o yycwipe.o yycwork.o yycwrap.o
 CPPC = g++
 CPPFLAGS = -Iinclude/
 LIB_NAME=libalex.so
+STATIC_LIB_NAME = libalex.a
+
+$(STATIC_LIB_NAME): $(OBJS)
+	ar -r $@ $(OBJS) && ranlib $@
+
 
 $(LIB_NAME): $(OBJS)
 	$(CPPC) -shared -o $@ $^

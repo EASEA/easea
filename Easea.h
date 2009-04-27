@@ -23,6 +23,12 @@ Centre de Mathématiques Appliquées
 #define DREAM 3
 #define CUDA 4
 #define STD 5
+
+#define STD_FLAVOR_SO 0
+#define STD_FLAVOR_MO 1
+#define CUDA_FLAVOR_SO 0
+#define CUDA_FLAVOR_MO 0
+
 #define UNIX 1
 #define WINDOWS 2
 #define UNKNOWN_OS 3
@@ -46,6 +52,7 @@ extern char sMIG_SEL[], sMIGRATOR[], sIMMIG_SEL[],sMIG_TARGET_SELECTOR[];
 
 extern int nWARNINGS, nERRORS;
 extern int TARGET, OPERATING_SYSTEM;
+extern int TARGET_FLAVOR;
 
 // Prototypes
 extern int mystricmp(char *, char *);

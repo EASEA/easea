@@ -24,7 +24,7 @@ char sLOWER_CASE_PROJECT_NAME[1000];
 char sEZ_FILE_NAME[1000];
 char sEO_DIR[1000];
 char sEZ_PATH[1000];
-int TARGET;
+int TARGET,TARGET_FLAVOR;
 int OPERATING_SYSTEM;
 int nWARNINGS=0;
 int nERRORS=0;
@@ -1327,7 +1327,14 @@ int main(int argc, char *argv[]){
     else if (!mystricmp(sTemp,"galib"))  TARGET=GALIB;
     else if (!mystricmp(sTemp,"dream"))  TARGET=DREAM;
     else if (!mystricmp(sTemp,"cuda"))  TARGET=CUDA;
-    else if (!mystricmp(sTemp,"std"))  TARGET=STD;
+    else if (!mystricmp(sTemp,"std"))  {
+      TARGET=STD;
+      TARGET_FLAVOR = STD_FLAVOR_SO;
+    }
+    else if (!mystricmp(sTemp,"std_mo")) {
+      TARGET=STD;
+      TARGET_FLAVOR = STD_FLAVOR_MO;
+    }
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
     else if (!mystricmp(sTemp,"path"))  {
       if (argv[++nParamNb][0]=='"') {
