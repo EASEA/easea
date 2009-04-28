@@ -256,6 +256,7 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
 
   std::cout << "Parent's population initializing "<< std::endl;
   this->population->initializeParentPopulation();  
+  population->evaluateMoPopulation();  
   std::cout << *population << std::endl;
 
   struct timeval begin;
