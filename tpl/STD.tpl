@@ -79,6 +79,7 @@ extern RandomGenerator* globalRandomGenerator;
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 \INSERT_GENERATION_FUNCTION
+\INSERT_BOUND_CHECKING
 
 void EASEAFinal(Population* pop){
   \INSERT_FINALIZATION_FCT_CALL
@@ -252,17 +253,6 @@ void EvolutionaryAlgorithm::addStoppingCriterion(StoppingCriterion* sc){
 void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   std::vector<Individual*> tmpVect;
 
-/*   if( inputfile ){ */
-/*     DEBUG_PRT("Loading initial population from file : %s",inputfile->c_str()); */
-/*     std::ifstream ifs("essai.out"); */
-/*     DEBUG_PRT("parent population size in ea %d",population->parentPopulationSize); */
-/*     //population->parents = new Individual*[population->parentPopulationSize]; */
-/*     boost::archive::text_iarchive ia(ifs); */
-
-/*     //ia >> *population; */
-/*     population->syncInVector(); */
-/*     //ia >> *population; */
-/*   } */
 
   std::cout << "Parent's population initializing "<< std::endl;
   this->population->initializeParentPopulation();  
@@ -274,6 +264,7 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   while( this->allCriteria() == false ){    
 
     population->produceOffspringPopulation();
+    \INSERT_BOUND_CHECKING_FCT_CALL
     population->evaluateOffspringPopulation();
     
     if(reduceParents)
@@ -293,14 +284,6 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   //std::cout << *population << std::endl;
   std::cout << "Generation : " << currentGeneration << std::endl;
 
-/*   if( outputfile ){ */
-/*     DEBUG_PRT("Dumping final population to file : %s",outputfile->c_str()); */
-/*     std::ofstream ofs(outputfile->c_str()); */
-/*     boost::archive::text_oarchive oa(ofs); */
-/*     population->syncOutVector(); */
-/*     oa << *population ; */
-    
-/*   } */
 
 }
 
@@ -333,8 +316,9 @@ void EvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   
   //Affichage
   if(currentGeneration==0)
-    printf("GEN\tTIME\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
+    printf("GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
 
+  assert( currentSTDEV == currentSTDEV );
   
   struct timeval end, res;
   gettimeofday(&end,0);

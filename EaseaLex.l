@@ -59,7 +59,7 @@ Centre de Mathématiques Appliquées
 %start COPY_EO_INITIALISER 
 %start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
-%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION GET_METHODS COPY_MAKEFILE_OPTION
+%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION
 
  // lexical analyser name and class definition
 %name CEASEALexer {
@@ -70,7 +70,7 @@ Centre de Mathématiques Appliquées
   bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
   bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationFunction;
   bool bCatchNextSemiColon,bWaitingToClosePopulation, bMethodsInGenome, bFinalizationFunction;
-  bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION, bWithinCUDA_Evaluator;
+  bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION, bWithinCUDA_Evaluator, bBoundCheckingFunction;
   CSymbol *pASymbol;
 
  public:
@@ -85,7 +85,7 @@ Centre de Mathématiques Appliquées
   bSymbolInserted=bDoubleQuotes=bWithinDisplayFunction=bWithinInitialiser=bWithinMutator=bWithinXover=0;
   bWaitingForSemiColon=bFinishNB_GEN=bFinishMINIMISE=bFinishMINIMIZE=bGenerationFunction=0;
   bCatchNextSemiColon,bWaitingToClosePopulation=bMethodsInGenome=0;
-  bWithinCUDA_Initializer=bWithinMAKEFILEOPTION =bWithinCUDA_Evaluator=0;
+  bBoundCheckingFunction = bWithinCUDA_Initializer=bWithinMAKEFILEOPTION =bWithinCUDA_Evaluator=0;
 }
 
 // macros
@@ -152,6 +152,15 @@ exponent  ([Ee][+-]?[0-9]+)
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_GENERATION_FUNCTION;
  }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING"  {
+  if (bVERBOSE) printf ("Inserting Bound Checking function.\n");
+  yyreset();
+  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  BEGIN COPY_BOUND_CHECKING_FUNCTION;
+ }
+
+
 <TEMPLATE_ANALYSIS>"\\ANALYSE_USER_CLASSES"  {
   if (bVERBOSE) printf ("Analysing user classes.\n");
   yyreset();
@@ -563,6 +572,15 @@ exponent  ([Ee][+-]?[0-9]+)
     else fprintf(fpOutputFile,"\n    EASEAGenerationFunction(ga);\n");
   }
  }        
+
+<TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING_FCT_CALL"  {
+  if (bBoundCheckingFunction) {
+    if( TARGET==CUDA || TARGET==STD ){
+      fprintf(fpOutputFile,"\n\tEASEABoundChecking(this);");
+    }
+  }
+ }        
+
 <TEMPLATE_ANALYSIS>"\\INSERT_INIT_FCT_CALL"  {
   if (bInitFunction) fprintf(fpOutputFile,"\n  EASEAInitFunction(argc, argv);\n");
  }
@@ -1068,6 +1086,26 @@ exponent  ([Ee][+-]?[0-9]+)
   bNotFinishedYet=1;
  }
 <COPY_GENERATION_FUNCTION>.|\n {}                                      
+
+
+<COPY_BOUND_CHECKING_FUNCTION>"\\Bound"[ \t\n]+"checking"[ \t\n]*":" {
+  if(TARGET==CUDA || TARGET==STD){
+    fprintf (fpOutputFile,"void EASEABoundChecking(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
+  }
+  bFunction=1; bBoundCheckingFunction=1;
+  BEGIN COPY_USER_GENERATION;
+ }
+<COPY_BOUND_CHECKING_FUNCTION><<EOF>> {bGenerationFunction=0; // No Generation function was found in the .ez file
+  if (bVERBOSE) printf("*** No bound checking function was found. ***\n");
+  fprintf(fpOutputFile,"\n// No Bound checking function.\n");
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  BEGIN TEMPLATE_ANALYSIS;
+  bNotFinishedYet=1;
+ }
+<COPY_BOUND_CHECKING_FUNCTION>.|\n {}                                      
+
+
 
 <ANALYSE_USER_CLASSES>"\\User"[ \t\n]+"classes"[ \t\n]*":" {
   BEGIN GENOME_ANALYSIS; return CLASSES;}
