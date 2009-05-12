@@ -1326,7 +1326,15 @@ int main(int argc, char *argv[]){
     if (!mystricmp(sTemp,"eo"))  TARGET=EO;
     else if (!mystricmp(sTemp,"galib"))  TARGET=GALIB;
     else if (!mystricmp(sTemp,"dream"))  TARGET=DREAM;
-    else if (!mystricmp(sTemp,"cuda"))  TARGET=CUDA;
+    else if (!mystricmp(sTemp,"cuda")){
+      TARGET=CUDA;
+      TARGET_FLAVOR = CUDA_FLAVOR_SO;
+    }
+    else if( !mystricmp(sTemp,"cuda_mo") ){
+      TARGET=CUDA;
+      TARGET_FLAVOR = CUDA_FLAVOR_MO;
+    }
+
     else if (!mystricmp(sTemp,"std"))  {
       TARGET=STD;
       TARGET_FLAVOR = STD_FLAVOR_SO;
@@ -1335,6 +1343,7 @@ int main(int argc, char *argv[]){
       TARGET=STD;
       TARGET_FLAVOR = STD_FLAVOR_MO;
     }
+
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
     else if (!mystricmp(sTemp,"path"))  {
       if (argv[++nParamNb][0]=='"') {

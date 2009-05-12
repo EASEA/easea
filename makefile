@@ -60,6 +60,9 @@ clean:
 	rm -f *.o $(EXEC) $(EXEC)_bin
 	cd alexyacc && make clean
 
+install:$(EXEC)
+	sudo cp $< /usr/bin/easea
+
 # realclean: clean
 # 	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
 

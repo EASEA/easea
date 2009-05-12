@@ -1,5 +1,6 @@
 \TEMPLATE_START/**
- This is program entry for CUDA template for EASEA
+ This is program entry for multi-objective 
+ CUDA template for EASEA
 
 */
 \ANALYSE_PARAMETERS
@@ -66,12 +67,15 @@ int main(int argc, char** argv){
 #include <string.h>
 #include <fstream>
 #include <sys/time.h>
+#include "EASEATools.hpp"
 
-#define STD_TPL
+#define CUDA_TPL
 
 extern RandomGenerator* globalRandomGenerator;
 
 \INSERT_USER_DECLARATIONS
+struct gpuOptions initOpts;
+
 \ANALYSE_USER_CLASSES
 
 \INSERT_USER_FUNCTIONS
@@ -80,6 +84,8 @@ extern RandomGenerator* globalRandomGenerator;
 \INSERT_FINALIZATION_FUNCTION
 \INSERT_GENERATION_FUNCTION
 \INSERT_BOUND_CHECKING
+
+
 
 void EASEAFinal(Population* pop){
   \INSERT_FINALIZATION_FCT_CALL
@@ -113,6 +119,34 @@ float Individual::evaluate(){
     valid = true;
     \INSERT_EVALUATOR
   } 
+}
+
+
+/**
+   This function allows to acces to the Individual stored in cudaBuffer as a standard
+   individual.
+   @TODO This should be a macro, at this time it is a function for debuging purpose
+*/
+__device__ __host__ inline Individual* INDIVIDUAL_ACCESS(void* buffer,size_t id){
+  return ((Individual*)(((char*)buffer)+(\GENOME_SIZE+sizeof(void*))*id));
+}
+
+
+__device__ float cudaEvaluate(void* devBuffer, size_t id, struct gpuOptions initOpts, float f[2]){
+  \INSERT_CUDA_EVALUATOR
+}
+
+
+
+
+inline void Individual::copyToCudaBuffer(void* buffer, size_t id){
+  
+/*   DEBUG_PRT("%p\n",(char*)this+sizeof(Individual*)); */
+/*   DEBUG_PRT("%p\n",&this->sigma); */
+/*   DEBUG_PRT("%lu\n",id); */
+  
+  memcpy(((char*)buffer)+(\GENOME_SIZE+sizeof(Individual*))*id,((char*)this),\GENOME_SIZE+sizeof(Individual*));
+  
 }
 
 Individual::Individual(const Individual& genome){
@@ -169,12 +203,13 @@ std::ostream& operator << (std::ostream& O, const Individual& B)
 
 size_t Individual::mutate( float pMutationPerGene ){
   this->valid=false;
-
-
   // ********************
   // Problem specific part
   \INSERT_MUTATOR  
 }
+
+
+size_t Individual::sizeOfGenome=\GENOME_SIZE;
 
 /* ****************************************
    EvolutionaryAlgorithm class
@@ -246,6 +281,204 @@ EvolutionaryAlgorithm::EvolutionaryAlgorithm( size_t parentPopulationSize,
 
 }
 
+// do the repartition of data accross threads
+__global__ void 
+cudaEvaluatePopulation(void* d_population, size_t popSize, float* d_fitnesses, struct gpuOptions initOpts){
+
+  size_t id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
+
+  // escaping for the last block
+  if(blockIdx.x == (gridDim.x-1)) if( id >= popSize ) return;
+
+  //void* indiv = ((char*)d_population)+id*(\GENOME_SIZE+sizeof(Individual*)); // compute the offset of the current individual
+  cudaEvaluate(d_population,id,initOpts,d_fitnesses+2*id);
+}
+
+
+#define NB_MP 16
+inline size_t
+partieEntiereSup(float E){
+  int fl = floor(E);
+  if( fl == E )
+    return E;
+  else
+    return floor(E)+1;
+}
+
+inline int 
+puissanceDeuxSup(float n){
+  int tmp = 2;
+  while(tmp<n)tmp*=2;
+  return tmp;
+}
+
+
+
+bool
+repartition(size_t popSize, size_t* nbBlock, size_t* nbThreadPB, size_t* nbThreadLB, 
+	    size_t nbMP, size_t maxBlockSize){
+  
+  (*nbThreadLB) = 0;
+  
+  DEBUG_PRT("repartition : %d",popSize);
+  
+  if( ((float)popSize / (float)nbMP) <= maxBlockSize ){
+    //la population repartie sur les MP tient dans une bloc par MP
+    (*nbThreadPB) = partieEntiereSup( (float)popSize/(float)nbMP);
+    (*nbBlock) = popSize/(*nbThreadPB);
+    if( popSize%nbMP != 0 ){
+      //on fait MP-1 block de equivalent et un plus petit
+      (*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
+    }
+  }
+  else{
+    //la population est trop grande pour etre repartie sur les MP
+    //directement
+    //(*nbBlock) = partieEntiereSup( (float)popSize/((float)maxBlockSize*NB_MP));
+    (*nbBlock) = puissanceDeuxSup( (float)popSize/((float)maxBlockSize*NB_MP));
+    (*nbBlock) *= NB_MP;
+    (*nbThreadPB) = popSize/(*nbBlock);
+    if( popSize%maxBlockSize!=0){
+      (*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
+      
+      // Le rest est trop grand pour etre place dans un seul block (c'est possible uniquement qd 
+      // le nombre de block depasse maxBlockSize 
+      while( (*nbThreadLB) > maxBlockSize ){
+	//on augmente le nombre de blocs principaux jusqu'a ce que nbthreadLB retombe en dessous de maxBlockSize
+	//(*nbBlock) += nbMP;
+	(*nbBlock) *= 2;
+ 	(*nbThreadPB) = popSize/(*nbBlock);
+	(*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
+      }
+    }
+  }
+  
+  if((((*nbBlock)*(*nbThreadPB) + (*nbThreadLB))  == popSize) 
+     && ((*nbThreadLB) <= maxBlockSize) && ((*nbThreadPB) <= maxBlockSize))
+    return true;
+  else 
+    return false;
+}
+
+
+/**
+   Allocate buffer for populationSize individuals and fitnesses
+   compute the repartition
+ */
+void EvolutionaryAlgorithm::cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid, void** allocatedDeviceBuffer,
+						   float** deviceFitness){
+
+  size_t nbThreadPB, nbThreadLB, nbBlock;
+  cudaError_t lastError;
+
+  lastError = cudaMalloc(allocatedDeviceBuffer,populationSize*(\GENOME_SIZE+sizeof(Individual*)));
+  DEBUG_PRT("Population buffer allocation : %s",cudaGetErrorString(lastError));
+  lastError = cudaMalloc(((void**)deviceFitness),NB_OBJECTIVE*populationSize*sizeof(float));
+  DEBUG_PRT("Fitness buffer allocation : %s",cudaGetErrorString(lastError));
+  
+  if( !repartition(populationSize, &nbBlock, &nbThreadPB, &nbThreadLB,30, 240))
+    exit( -1 );
+
+  DEBUG_PRT("repartition is \n\tnbBlock %lu \n\tnbThreadPB %lu \n\tnbThreadLD %lu",nbBlock,nbThreadPB,nbThreadLB); 
+
+  if( nbThreadLB!=0 )
+    dimGrid->x = (nbBlock+1);
+  else
+    dimGrid->x = (nbBlock);
+
+  dimBlock->x = nbThreadPB;
+  cout << "Number of grid : " << dimGrid->x << endl;
+  cout << "Number of block : " << dimBlock->x << endl;
+}
+
+
+void EvolutionaryAlgorithm::cudaOffspringEvaluate(void* d_offspringPopulation, float* d_fitnesses, dim3 dimBlock, dim3 dimGrid){
+  cudaError_t lastError;
+  size_t actualPopulationSize = this->population->actualOffspringPopulationSize;
+  float* fitnesses = new float[actualPopulationSize*NB_OBJECTIVE];
+
+  
+  lastError = cudaMemcpy(d_offspringPopulation,population->cudaOffspringBuffer,(\GENOME_SIZE+sizeof(Individual*))*actualPopulationSize,
+			 cudaMemcpyHostToDevice);
+  DEBUG_PRT("Parent population buffer copy : %s",cudaGetErrorString(lastError));
+
+  cudaEvaluatePopulation<<< dimGrid, dimBlock>>>(d_offspringPopulation,actualPopulationSize,d_fitnesses,initOpts);
+  lastError = cudaGetLastError();
+  DEBUG_PRT("Kernel execution : %s",cudaGetErrorString(lastError));
+
+  lastError = cudaMemcpy(fitnesses,d_fitnesses,actualPopulationSize*NB_OBJECTIVE*sizeof(float),cudaMemcpyDeviceToHost);
+  DEBUG_PRT("Offspring's fitnesses gathering : %s",cudaGetErrorString(lastError));
+
+
+/* #ifdef COMPARE_HOST_DEVICE */
+/*   population->evaluateOffspringPopulation(); */
+/* #endif */
+
+  for( size_t i=0 ; i<actualPopulationSize ; i++ ){
+/* #ifdef COMPARE_HOST_DEVICE */
+/*     float error = (population->offsprings[i]->getFitness()-fitnesses[i])/population->offsprings[i]->getFitness(); */
+/*     printf("Difference for individual %lu is : %f %f|%f\n",i,error, population->offsprings[i]->getFitness(),fitnesses[i]); */
+/*     if( error > 0.2 ) */
+/*       exit(-1); */
+
+/* #else */
+    population->offsprings[i]->f1 = fitnesses[i*NB_OBJECTIVE];
+    population->offsprings[i]->f2 = fitnesses[i*NB_OBJECTIVE+1];
+    population->offsprings[i]->valid = true;
+/* #endif */
+  }
+  
+}
+
+/**
+   Evaluate parent population on the GPU. This is special because this evaluation occures
+   only one time. Buffers are allocated and freed here.
+ */
+void EvolutionaryAlgorithm::cudaParentEvaluate(){
+  float* fitnesses = new float[this->population->actualParentPopulationSize*NB_OBJECTIVE];
+  void* allocatedDeviceBuffer;
+  float* deviceFitness;
+  cudaError_t lastError;
+  dim3 dimBlock, dimGrid;
+  size_t actualPopulationSize = this->population->actualParentPopulationSize;
+
+  cudaPreliminaryProcess(actualPopulationSize,&dimBlock,&dimGrid,&allocatedDeviceBuffer,&deviceFitness);
+    
+  //compute the repartition over MP and SP
+  lastError = cudaMemcpy(allocatedDeviceBuffer,this->population->cudaParentBuffer,(\GENOME_SIZE+sizeof(Individual*))*actualPopulationSize,
+			 cudaMemcpyHostToDevice);
+  DEBUG_PRT("Parent population buffer copy : %s",cudaGetErrorString(lastError));
+
+
+  cudaEvaluatePopulation<<< dimGrid, dimBlock>>>(allocatedDeviceBuffer,actualPopulationSize,deviceFitness,initOpts);
+  lastError = cudaThreadSynchronize();
+  DEBUG_PRT("Kernel execution : %s",cudaGetErrorString(lastError));
+ 
+  lastError = cudaMemcpy(fitnesses,deviceFitness,actualPopulationSize*NB_OBJECTIVE*sizeof(float),cudaMemcpyDeviceToHost);
+  DEBUG_PRT("Parent's fitnesses gathering : %s",cudaGetErrorString(lastError));
+
+  cudaFree(deviceFitness);
+  cudaFree(allocatedDeviceBuffer);
+
+/* #ifdef COMPARE_HOST_DEVICE */
+/*   population->evaluateParentPopulation(); */
+/* #endif */
+
+  for( size_t i=0 ; i<actualPopulationSize ; i++ ){
+/* #ifdef COMPARE_HOST_DEVICE */
+/*     float error = (population->parents[i]->getFitness()-fitnesses[i])/population->parents[i]->getFitness(); */
+/*     printf("Difference for individual %lu is : %f %f|%f\n",i,error, */
+/* 	   population->parents[i]->getFitness(), fitnesses[i]); */
+/*     if( error > 0.2 ) */
+/*       exit(-1); */
+/* #else */
+    population->parents[i]->f1 = fitnesses[i*NB_OBJECTIVE];
+    population->parents[i]->f2 = fitnesses[i*NB_OBJECTIVE+1];
+    population->parents[i]->valid = true;
+/* #endif */
+  }
+}
+
 void EvolutionaryAlgorithm::addStoppingCriterion(StoppingCriterion* sc){
   this->stoppingCriteria.push_back(sc);
 }
@@ -255,18 +488,45 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
 
 
   std::cout << "Parent's population initializing "<< std::endl;
-  this->population->initializeParentPopulation();  
+  this->population->initializeCudaParentPopulation();
+  cudaParentEvaluate();
+  population->evaluateMoPopulation();
   std::cout << *population << std::endl;
 
-  struct timeval begin;
+
+  DECLARE_TIME(eval);
+  struct timeval begin,accuEval;
   gettimeofday(&begin,NULL);
+  accuEval.tv_sec = 0;
+  accuEval.tv_usec = 0;
+
+
+  void* d_offspringPopulation;
+  float* d_fitnesses;
+  dim3 dimBlock, dimGrid;
+
+  cudaPreliminaryProcess(this->population->offspringPopulationSize,&dimBlock,&dimGrid,&d_offspringPopulation,&d_fitnesses);
   
   while( this->allCriteria() == false ){    
 
     population->produceOffspringPopulation();
     \INSERT_BOUND_CHECKING_FCT_CALL
-    population->evaluateOffspringPopulation();
+
+    TIME_ST(eval);
+    for( size_t i=0 ; i<this->population->actualOffspringPopulationSize ; i++ )
+      this->population->offsprings[i]->copyToCudaBuffer(this->population->cudaOffspringBuffer,i); 
+
+    cudaOffspringEvaluate(d_offspringPopulation,d_fitnesses,dimBlock,dimGrid);
+    TIME_END(eval);
     
+
+    population->evaluateMoPopulation();
+
+
+    COMPUTE_TIME(eval);
+    //SHOW_TIME(eval);
+    timeradd(&accuEval,&eval_res,&accuEval);
+
     if(reduceParents)
       population->reduceParentPopulation(reduceParents);
     
@@ -277,14 +537,18 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
      
     \INSERT_GEN_FCT_CALL    
 
-     showPopulationStats(begin);
+    showPopulationStats(begin);
     currentGeneration += 1;
   }  
   population->sortParentPopulation();
-  //std::cout << *population << std::endl;
+  std::cout << *population << std::endl;
+  std::cout << *population->parents[0] << std::endl;
+  
   std::cout << "Generation : " << currentGeneration << std::endl;
+  SHOW_SIMPLE_TIME(accuEval);
 
-
+  cudaFree(d_offspringPopulation);
+  cudaFree(d_fitnesses);
 }
 
 
@@ -316,14 +580,13 @@ void EvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   
   //Affichage
   if(currentGeneration==0)
-    printf("GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
+    printf("GEN\tTIME\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
 
-    //  assert( currentSTDEV == currentSTDEV );
   
   struct timeval end, res;
   gettimeofday(&end,0);
   timersub(&end,&beginTime,&res);
-  printf("%lu\t%d.%06d\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,
+  printf("%lu\t%lu.%06lu\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,
 	 population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 }
 
@@ -352,9 +615,11 @@ using namespace std;
 #define __INDIVIDUAL
 #include "EASEATools.hpp"
 #include <iostream>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
+#include <vector_types.h>
+/* #include <boost/archive/text_oarchive.hpp> */
+/* #include <boost/archive/text_iarchive.hpp> */
 
+#define NB_OBJECTIVE 2
 
 \INSERT_USER_CLASSES_DEFINITIONS
 
@@ -370,6 +635,8 @@ class Individual{
   float fitness;
   static RandomGenerator* rg;
 
+  float f1,f2; // this is fitness for dual-objective implementation
+
  public:
   Individual();
   Individual(const Individual& indiv);
@@ -381,20 +648,22 @@ class Individual{
   void printOn(std::ostream& O) const;
   
   size_t mutate(float pMutationPerGene);
+  void copyToCudaBuffer(void* buffer, size_t id);
 
   friend std::ostream& operator << (std::ostream& O, const Individual& B) ;
   static void initRandomGenerator(RandomGenerator* rg){ Individual::rg = rg;}
+  static size_t sizeOfGenome;
 
- private:
-  friend class boost::serialization::access;
-  template <class Archive> void serialize(Archive& ar, const unsigned int version){
+/*  private: */
+/*   friend class boost::serialization::access; */
+/*   template <class Archive> void serialize(Archive& ar, const unsigned int version){ */
 
-    ar & fitness;
-    DEBUG_PRT("(de)serialization of %f fitness",fitness);
-    ar & valid;
-    DEBUG_PRT("(de)serialization of %d valid",valid);
-    \GENOME_SERIAL
-  }
+/*     ar & fitness; */
+/*     DEBUG_PRT("(de)serialization of %f fitness",fitness); */
+/*     ar & valid; */
+/*     DEBUG_PRT("(de)serialization of %d valid",valid); */
+/*     \GENOME_SERIAL */
+/*   } */
 
   
 };
@@ -420,6 +689,12 @@ public:
   bool allCriteria();
   Population* getPopulation(){ return population;}
   size_t getCurrentGeneration() { return currentGeneration;}
+  void cudaParentEvaluate();
+  void cudaOffspringEvaluate(void* d_offspringPopulation, float* fitnesses, dim3 dimBlock, dim3 dimGrid);
+  void cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid, void** allocatedDeviceBuffer,
+						     float** deviceFitness);
+  
+
 public:
   size_t currentGeneration;
   Population* population;
@@ -684,6 +959,10 @@ Population::Population(size_t parentPopulationSize, size_t offspringPopulationSi
   this->rg = rg;
 
   this->currentEvaluationNb = 0;
+
+  this->cudaParentBuffer = (void*)malloc((\GENOME_SIZE+sizeof(Individual*))*parentPopulationSize);
+  this->cudaOffspringBuffer = (void*)malloc((\GENOME_SIZE+sizeof(Individual*))*offspringPopulationSize);
+
 }
 
 void Population::syncInVector(){
@@ -697,7 +976,7 @@ void Population::syncOutVector(){
   for( size_t i = 0 ; i<actualParentPopulationSize ; i++ ){
     pop_vect.push_back(parents[i]);
   }
-  DEBUG_PRT("Size of outVector",pop_vect.size());
+  DEBUG_PRT("Size of outVector %lu",pop_vect.size());
 }
 
 Population::~Population(){
@@ -706,6 +985,9 @@ Population::~Population(){
 
   delete[](this->parents);
   delete[](this->offsprings);
+
+  free(cudaParentBuffer);
+  free(cudaOffspringBuffer);
 }
 
 void Population::initPopulation(SelectionOperator* selectionOperator, 
@@ -720,7 +1002,7 @@ void Population::initPopulation(SelectionOperator* selectionOperator,
 
 void Population::initializeParentPopulation(){
 
-  DEBUG_PRT("Creation of %d/%d parents (other could have been loaded from input file)",parentPopulationSize-actualParentPopulationSize,parentPopulationSize);
+  DEBUG_PRT("Creation of %lu/%lu parents (other could have been loaded from input file)",parentPopulationSize-actualParentPopulationSize,parentPopulationSize);
   for( size_t i=actualParentPopulationSize ; i<parentPopulationSize ; i++ )
     parents[i] = new Individual();
 
@@ -728,6 +1010,28 @@ void Population::initializeParentPopulation(){
   actualOffspringPopulationSize = 0;
   
   evaluateParentPopulation();
+}
+
+
+/**
+   Initialize parent population for CUDA template.
+   i.e. create new individuals, copy them to the cuda parent's buffer
+   but don't evaluate them.
+ */
+void Population::initializeCudaParentPopulation(){
+
+  DEBUG_PRT("Creation of %lu/%lu parents (other could have been loaded from input file)",parentPopulationSize-actualParentPopulationSize,parentPopulationSize);
+  for( size_t i=actualParentPopulationSize ; i<parentPopulationSize ; i++ )
+    parents[i] = new Individual();
+
+  actualParentPopulationSize = parentPopulationSize;
+  actualOffspringPopulationSize = 0;
+  
+  // Copy parent population in the cuda buffer.
+  for( size_t i=0 ; i<actualParentPopulationSize ; i++ ){
+    parents[i]->copyToCudaBuffer(cudaParentBuffer,i); 
+  }
+
 }
 
 
@@ -746,6 +1050,178 @@ void Population::evaluateParentPopulation(){
 void Population::evaluateOffspringPopulation(){
   evaluatePopulation(offsprings,offspringPopulationSize);
 }
+
+
+/**
+   Strong dominance
+ */
+int check_dominance(Individual* i1 , Individual* i2){
+
+  bool flag1=0,flag2=0;
+
+  if( i1->f1 < i2->f1 )
+    flag1 = 1;
+  else 
+    if( i1->f1 > i2->f1 )
+      flag2 = 1;
+
+  if( i1->f2 < i2->f2 )
+    flag1 = 1;
+  else 
+    if( i1->f2 > i2->f2 )
+      flag2 = 1;
+
+
+
+  if( flag1 == 1 && flag2 == 0 )
+    return 1;
+  else 
+    if( flag1 == 0 && flag2 == 1)
+      return -1;
+  return 0;
+}
+
+
+struct Individual_list{
+  Individual* content;
+  struct Individual_list* next;
+  struct Individual_list* prev;
+};
+
+
+struct Individual_list* new_Individual_list_reverse(Individual** population, unsigned int size){
+  struct Individual_list* head = NULL;
+
+  for( int i=(size-1) ; i>=0 ; i--){
+    struct Individual_list* tmp=(struct Individual_list*)malloc(sizeof(struct Individual_list));
+    tmp->next = head;
+    tmp->content = population[i];
+    tmp->prev = NULL;
+    if(head) head->prev = tmp;
+    head = tmp; 
+  }
+  return head;
+}
+
+
+void show_Individual_list_content(struct Individual_list* head){
+  std::cout << "Printing list" << std::endl;
+  unsigned int ctr = 0;
+  while(head!=NULL){
+    std::cout << *head->content << "\t\t current : " << head  << " next : " << head->next << " prev : " << head->prev ;
+    head = head->next;
+    ctr++;
+  }
+  std::cout << "\nEnd of list : "<< ctr << std::endl;
+}
+
+
+struct Individual_list* Individual_list_get(struct Individual_list* head, unsigned int){   
+  for( struct Individual_list* h1=head ; h1!=NULL ; h1=h1->next){
+    return h1;
+ }
+  return NULL;
+}
+
+/**
+   remove an element (current) from a list (head)
+   if list become empty, it is freed and become head become null
+ */
+void Individual_list_remove(struct Individual_list** head, struct Individual_list* current){
+  struct Individual_list* tmp = current;
+
+  if(*head==current){
+    if(current->next){
+      *head = (*head)->next;
+      (*head)->prev = NULL;
+    }
+    else{
+      // if this element is the last from the list
+      free(tmp);
+      *head=NULL;
+      return ;
+    }
+  }
+  else{
+    current->prev->next = current->next;
+    current->next->prev = current->prev;
+  } 
+  free(tmp);
+}
+
+void Population::evaluateMoPopulation(){    
+  size_t actualGlobalSize = actualParentPopulationSize+actualOffspringPopulationSize;
+  Individual** globalPopulation = new Individual*[actualGlobalSize]();
+
+  unsigned int rank = 1;
+
+  memcpy(globalPopulation,parents,sizeof(Individual*)*actualParentPopulationSize);
+  memcpy(globalPopulation+actualParentPopulationSize,offsprings,sizeof(Individual*)*actualOffspringPopulationSize);
+
+  struct Individual_list* head = new_Individual_list_reverse(globalPopulation,actualGlobalSize);
+
+  delete[](globalPopulation);
+
+  struct Individual_list* h1,* h2;
+  int** dom = new int*[actualGlobalSize]();
+  for( unsigned int i=0 ; i<actualGlobalSize ; i++ )
+    dom[i] = new int[actualGlobalSize]();
+
+  std::vector<Individual*> pareto_front;
+
+  while(head!=NULL){
+    unsigned int i=0,j=0;
+    for( h1=head ; h1!=NULL ; h1=h1->next,i++){
+      j=0;
+      for( h2=head ; h2!=NULL ; h2=h2->next,j++){
+	dom[i][j] = check_dominance(h1->content,h2->content);
+      }
+      
+    }
+
+    int flag;
+    unsigned int non_dominated_ctr = 0;
+
+    for( unsigned int i=0 ;  i<actualGlobalSize; i++){
+      //printf("%02d ",i);
+      flag=0;
+      for( size_t j = 0 ; j<actualGlobalSize ; j++ ){
+	//std::cout << (dom[i][j]==1?" 1":(dom[i][j]==-1?"-1":" 0"))  << " ";
+	if( dom[i][j] < 0 ){
+	  flag = 1; //i is dominated by j
+	}
+	
+      }
+      //std::cout << " f1 : " << globalPopulation[i]->f1 << " f2 : " << globalPopulation[i]->f2 <<std::endl;
+      if( !flag ) {
+	
+	struct Individual_list*  non_dominated_individual = Individual_list_get(head,i);
+	non_dominated_individual->content->fitness = rank;
+	pareto_front.push_back(non_dominated_individual->content);  
+	Individual_list_remove(&head,non_dominated_individual);
+	non_dominated_ctr++;
+	//Individual_list_remove(&head,
+      }
+    }
+    
+    //for( unsigned int i=0 ; i<pareto_front.size() ; i++ ){
+      //std::cout << "p" << i<<" : " << *pareto_front[i] << std::endl; 
+    //}
+    actualGlobalSize = actualGlobalSize-non_dominated_ctr;
+    //show_Individual_list_content(head);
+    rank++;
+    //std::cout << "end of selection of pareto front " << rank << std::endl;
+    pareto_front.clear();
+  }
+
+  actualGlobalSize = actualParentPopulationSize+actualOffspringPopulationSize;
+  for( unsigned int i=0 ; i<actualGlobalSize ; i++ )
+    delete[](dom[i]);
+  delete[](dom);
+
+}
+
+
 
 
 /**
@@ -940,7 +1416,7 @@ void Population::elitism(size_t elitismSize, Individual** population, size_t pop
   float bestFitness = population[0]->getFitness();
   size_t bestIndividual = 0;
   
-  if( elitismSize >= 5 )DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%d)",elitismSize);
+  if( elitismSize >= 5 )DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%lu)",elitismSize);
   
   
   for(size_t i = 0 ; i<elitismSize ; i++ ){
@@ -961,7 +1437,6 @@ void Population::elitism(size_t elitismSize, Individual** population, size_t pop
     population[populationSize-(i+1)] = NULL;
   }
 }
- 
 
 
 
@@ -1208,15 +1683,49 @@ string setVariable(const string optionName, string defaultValue){
 
 
 
-\START_CUDA_TOOLS_H_TPL/* ****************************************
+\START_CUDA_TOOLS_H_TPL#ifndef TIMING_H
+#define TIMING_H
+
+#include <time.h>             //gettimeofday
+#include <sys/time.h>
+#include <stdio.h>
+
+
+
+#ifdef TIMING
+#define DECLARE_TIME(t)				\
+  struct timeval t##_beg, t##_end, t##_res
+#define TIME_ST(t)				\
+  gettimeofday(&t##_beg,NULL)
+#define TIME_END(t)				\
+  gettimeofday(&t##_end,NULL)
+#define SHOW_TIME(t)						\
+  timersub(&t##_end,&t##_beg,&t##_res);				\
+  printf("%s : %lu.%06lu\n",#t,t##_res.tv_sec,t##_res.tv_usec)
+#define SHOW_SIMPLE_TIME(t)					\
+  printf("%s : %lu.%06lu\n",#t,t.tv_sec,t.tv_usec)
+#define COMPUTE_TIME(t)						\
+  timersub(&t##_end,&t##_beg,&t##_res)
+#else
+#define DECLARE_TIME(t)
+#define TIME_ST(t)
+#define TIME_END(t)
+#define SHOW_TIME(t)
+#define SHOW_SIMPLE_TIME(t)
+#endif
+
+
+#endif
+
+/* ****************************************
    Some tools classes for algorithm
 ****************************************/
 #include <stdlib.h>
 #include <vector>
 #include <iostream>
-#include <boost/archive/text_oarchive.hpp> //for serialization (dumping)
-#include <boost/archive/text_iarchive.hpp> //for serialization (loading)
-#include <boost/serialization/vector.hpp>
+/* #include <boost/archive/text_oarchive.hpp> //for serialization (dumping) */
+/* #include <boost/archive/text_iarchive.hpp> //for serialization (loading) */
+/* #include <boost/serialization/vector.hpp> */
 
 class EvolutionaryAlgorithm;
 class Individual;
@@ -1273,7 +1782,6 @@ public:
   int random(int min, int max);
   float random(float min, float max);
   double random(double min, double max);
-
 };
 
 
@@ -1391,6 +1899,9 @@ class Population {
   RandomGenerator* rg;
   std::vector<Individual*> pop_vect;
 
+  void* cudaParentBuffer;
+  void* cudaOffspringBuffer;
+
  public:
   Population();
   Population(size_t parentPopulationSize, size_t offspringPopulationSize, 
@@ -1398,8 +1909,10 @@ class Population {
   virtual ~Population();
 
   void initializeParentPopulation();  
+  void initializeCudaParentPopulation();
   void evaluatePopulation(Individual** population, size_t populationSize);
   void evaluateParentPopulation();
+  void evaluateMoPopulation();
 
   static void elitism(size_t elitismSize, Individual** population, size_t populationSize, Individual** outPopulation,
 		      size_t outPopulationSize);
@@ -1441,15 +1954,15 @@ class Population {
   void syncOutVector();
   void syncInVector();
 
- private:
-  friend class boost::serialization::access;
-  template <class Archive> void serialize(Archive& ar, const unsigned int version){
+/*  private: */
+/*   friend class boost::serialization::access; */
+/*   template <class Archive> void serialize(Archive& ar, const unsigned int version){ */
 
-    ar & actualParentPopulationSize;
-    DEBUG_PRT("(de)serialization of %d parents",actualParentPopulationSize);
-    ar & pop_vect;
-    DEBUG_PRT("(de)serialization of %d offspring",actualOffspringPopulationSize);
-  }
+/*     ar & actualParentPopulationSize; */
+/*     DEBUG_PRT("(de)serialization of %d parents",actualParentPopulationSize); */
+/*     ar & pop_vect; */
+/*     DEBUG_PRT("(de)serialization of %d offspring",actualOffspringPopulationSize); */
+/*   } */
 };
 
 /* namespace boost{ */
@@ -1475,11 +1988,15 @@ std::string setVariable(const std::string optionName, std::string defaultValue);
 
 NVCC= nvcc
 CPPC= g++
-CXXFLAGS+=-g -Wall 
+CXXFLAGS+=-g -Wall -O2
 LDFLAGS=-lboost_program_options -lboost_serialization
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
+
+CPPFLAGS+=
+NVCCFLAGS+=
+
 
 EASEA_SRC= EASEATools.cpp EASEAIndividual.cpp
 EASEA_MAIN_HDR= EASEA.cpp
@@ -1488,6 +2005,7 @@ EASEA_UC_HDR= EASEAUserClasses.hpp
 EASEA_HDR= $(EASEA_SRC:.cpp=.hpp) 
 
 SRC= $(EASEA_SRC) $(EASEA_MAIN_HDR)
+CUDA_SRC = EASEAIndividual.cu
 HDR= $(EASEA_HDR) $(EASEA_UC_HDR)
 OBJ= $(EASEA_SRC:.cpp=.o) $(EASEA_MAIN_HDR:.cpp=.o)
 
@@ -1496,12 +2014,15 @@ BIN= EASEA
 all:$(BIN)
 
 $(BIN):$(OBJ)
-	$(CXX) $^ -o $@ $(LDFLAGS)
+	$(NVCC) $^ -o $@ $(LDFLAGS) 
+
+%.o:%.cu
+	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -Wall
 
 easeaclean: clean
-	rm -f Makefile $(SRC) $(HDR) EASEA.mak
+	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC)
 clean:
-	rm -f $(OBJ) $(BIN)
+	rm -f $(OBJ) $(BIN) *.linkinfo 
 
 \START_EO_PARAM_TPL#****************************************
 #                                         

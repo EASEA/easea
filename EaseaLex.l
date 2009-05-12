@@ -867,6 +867,11 @@ exponent  ([Ee][+-]?[0-9]+)
     // create a symbolic link from Makefile to EASEA.mak
     symlink(sFullFileName,sPathName);
   }
+  else{
+    DEBUG_PRT("file name : %s",sFileName);
+    if( symlink(sFileName,"Makefile") ) perror("Symlink creation error ");
+  }
+
 
   if (bVERBOSE){
     printf("Creating %s...\n",sFileName);
@@ -1554,6 +1559,24 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_USER_FUNCTION>"GenomeClass"  {if (TARGET==EO) fprintf(fpOutputFile, "GenotypeT");
   else fprintf(fpOutputFile,"Genome.");
  }
+
+<COPY_USER_FUNCTION>"f1"  {
+  if( bWithinCUDA_Evaluator && TARGET==CUDA && TARGET_FLAVOR==CUDA_FLAVOR_MO ){
+    fprintf(fpOutputFile,"(f[0])");
+  }
+  else
+    fprintf(fpOutputFile,"%s",yytext);
+ }
+
+<COPY_USER_FUNCTION>"f2"  {
+  if( bWithinCUDA_Evaluator &&  TARGET==CUDA && TARGET_FLAVOR==CUDA_FLAVOR_MO ){
+    fprintf(fpOutputFile,"(f[1])");
+  }
+  else
+    fprintf(fpOutputFile,"%s",yytext);
+ }
+
+
 <COPY_USER_FUNCTION>"Genome"  {
   if (bWithinDisplayFunction) fprintf(fpOutputFile,"(*this)");
   else if ((TARGET==EO)&&(bWithinInitialiser)) fprintf(fpOutputFile, "(*genome)");
@@ -1661,7 +1684,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_USER_FUNCTION>"\\end" {rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
-  bWithinInitialiser=bWithinXover=bWithinMutator=bWithinEvaluator=0;
+  bWithinInitialiser=bWithinXover=bWithinMutator=bWithinEvaluator=bWithinCUDA_Evaluator=0;
   if (bWithinDisplayFunction){
     bWithinDisplayFunction=0; // display function
   }
@@ -1850,7 +1873,11 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
     } }
 
   if (TARGET==CUDA){
-    strcat(sTemp,"CUDA.tpl");
+    if(TARGET_FLAVOR == CUDA_FLAVOR_SO )
+      strcat(sTemp,"CUDA.tpl");
+    else 
+      strcat(sTemp,"CUDA_MO.tpl");
+
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
       fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
       fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");

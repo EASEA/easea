@@ -82,7 +82,7 @@ struct gpuOptions initOpts;
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 \INSERT_GENERATION_FUNCTION
-
+\INSERT_BOUND_CHECKING
 
 
 
@@ -538,6 +538,7 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     population->produceOffspringPopulation();
 
+    \INSERT_BOUND_CHECKING_FCT_CALL
 
     TIME_ST(eval);
     for( size_t i=0 ; i<this->population->actualOffspringPopulationSize ; i++ )

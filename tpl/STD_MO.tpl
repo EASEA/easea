@@ -279,10 +279,12 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
      
     \INSERT_GEN_FCT_CALL    
 
-    showPopulationStats(begin);
+      showPopulationStats(begin);
     currentGeneration += 1;
   }  
   population->sortParentPopulation();
+  std::cout << *population->parents[0] << std::endl;
+  std::cout << *population << std::endl;
   std::cout << "Generation : " << currentGeneration << std::endl;
 
 
@@ -1690,7 +1692,7 @@ $(BIN):$(OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
 easeaclean: clean
-	rm -f Makefile $(SRC) $(HDR) EASEA.mak
+	rm -f Makefile $(SRC) $(HDR) EASEA.mak EASEA.prm
 clean:
 	rm -f $(OBJ) $(BIN)
 
