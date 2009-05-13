@@ -474,6 +474,7 @@ void EvolutionaryAlgorithm::cudaParentEvaluate(){
 /* #else */
     population->parents[i]->f1 = fitnesses[i*NB_OBJECTIVE];
     population->parents[i]->f2 = fitnesses[i*NB_OBJECTIVE+1];
+    cout << i << " f1 : " << population->parents[i]->f1 << " f2 : " << population->parents[i]->f2 << endl;
     population->parents[i]->valid = true;
 /* #endif */
   }
@@ -1103,12 +1104,23 @@ struct Individual_list* new_Individual_list_reverse(Individual** population, uns
   return head;
 }
 
+struct Individual_list* Individual_list_add_element_top(struct Individual_list* head, Individual* elt){
+
+  struct Individual_list* ret = (struct Individual_list*)malloc(sizeof(struct Individual_list));
+  ret->content = elt;
+  ret->next = head;
+  ret->prev = NULL;
+  if( head != NULL)
+    head->prev = ret;
+
+  return ret;
+}
 
 void show_Individual_list_content(struct Individual_list* head){
   std::cout << "Printing list" << std::endl;
   unsigned int ctr = 0;
   while(head!=NULL){
-    std::cout << *head->content << "\t\t current : " << head  << " next : " << head->next << " prev : " << head->prev ;
+    std::cout << *head->content << std::endl;//"\t\t current : " << head  << " next : " << head->next << " prev : " << head->prev ;
     head = head->next;
     ctr++;
   }
@@ -1149,6 +1161,8 @@ void Individual_list_remove(struct Individual_list** head, struct Individual_lis
   free(tmp);
 }
 
+
+using namespace std;
 void Population::evaluateMoPopulation(){    
   size_t actualGlobalSize = actualParentPopulationSize+actualOffspringPopulationSize;
   Individual** globalPopulation = new Individual*[actualGlobalSize]();
@@ -1158,60 +1172,65 @@ void Population::evaluateMoPopulation(){
   memcpy(globalPopulation,parents,sizeof(Individual*)*actualParentPopulationSize);
   memcpy(globalPopulation+actualParentPopulationSize,offsprings,sizeof(Individual*)*actualOffspringPopulationSize);
 
-  struct Individual_list* head = new_Individual_list_reverse(globalPopulation,actualGlobalSize);
+  vector<Individual*>* currentVectPopulation = new vector<Individual*>();
+
+  for( size_t i=0 ; i<actualGlobalSize ; i++ ){
+    currentVectPopulation->push_back(globalPopulation[i]);
+  }
 
   delete[](globalPopulation);
 
-  struct Individual_list* h1,* h2;
   int** dom = new int*[actualGlobalSize]();
   for( unsigned int i=0 ; i<actualGlobalSize ; i++ )
     dom[i] = new int[actualGlobalSize]();
 
-  std::vector<Individual*> pareto_front;
+  std::vector<Individual*>* pareto_front = new std::vector<Individual*>();
+  std::vector<Individual*>* dominated_solutions = new std::vector<Individual*>();
 
-  while(head!=NULL){
-    unsigned int i=0,j=0;
-    for( h1=head ; h1!=NULL ; h1=h1->next,i++){
-      j=0;
-      for( h2=head ; h2!=NULL ; h2=h2->next,j++){
-	dom[i][j] = check_dominance(h1->content,h2->content);
+
+  while( currentVectPopulation->size() ){
+    
+    for( size_t i = 0 ; i<currentVectPopulation->size() ; i++ ){
+      for( size_t j = 0 ; j<currentVectPopulation->size() ; j++ ){
+	dom[i][j] = check_dominance(currentVectPopulation->at(i),currentVectPopulation->at(j));
       }
       
     }
 
     int flag;
-    unsigned int non_dominated_ctr = 0;
 
-    for( unsigned int i=0 ;  i<actualGlobalSize; i++){
+    for( unsigned int i=0 ;  i<currentVectPopulation->size(); i++){
       //printf("%02d ",i);
       flag=0;
-      for( size_t j = 0 ; j<actualGlobalSize ; j++ ){
+      for( size_t j = 0 ; j<currentVectPopulation->size() ; j++ ){
+
 	//std::cout << (dom[i][j]==1?" 1":(dom[i][j]==-1?"-1":" 0"))  << " ";
+
 	if( dom[i][j] < 0 ){
 	  flag = 1; //i is dominated by j
 	}
 	
       }
-      //std::cout << " f1 : " << globalPopulation[i]->f1 << " f2 : " << globalPopulation[i]->f2 <<std::endl;
+      //std::cout << "\t f1 : " << currentVectPopulation->at(i)->f1 << " f2 : " << currentVectPopulation->at(i)->f2 <<std::endl; 
+
       if( !flag ) {
-	
-	struct Individual_list*  non_dominated_individual = Individual_list_get(head,i);
-	non_dominated_individual->content->fitness = rank;
-	pareto_front.push_back(non_dominated_individual->content);  
-	Individual_list_remove(&head,non_dominated_individual);
-	non_dominated_ctr++;
-	//Individual_list_remove(&head,
+	Individual* currentIndividual = currentVectPopulation->at(i);
+	currentIndividual->fitness = rank;
+	pareto_front->push_back(currentIndividual);
+      }
+      else{
+	dominated_solutions->push_back(currentVectPopulation->at(i));
       }
     }
     
-    //for( unsigned int i=0 ; i<pareto_front.size() ; i++ ){
-      //std::cout << "p" << i<<" : " << *pareto_front[i] << std::endl; 
-    //}
-    actualGlobalSize = actualGlobalSize-non_dominated_ctr;
-    //show_Individual_list_content(head);
     rank++;
     //std::cout << "end of selection of pareto front " << rank << std::endl;
-    pareto_front.clear();
+    pareto_front->clear();
+    currentVectPopulation->clear();
+    vector<Individual*>* tmp = currentVectPopulation;
+    currentVectPopulation = dominated_solutions;
+    dominated_solutions = tmp;
+    
   }
 
   actualGlobalSize = actualParentPopulationSize+actualOffspringPopulationSize;
@@ -1220,6 +1239,85 @@ void Population::evaluateMoPopulation(){
   delete[](dom);
 
 }
+
+
+/* void Population::evaluateMoPopulation(){     */
+/*   size_t actualGlobalSize = actualParentPopulationSize+actualOffspringPopulationSize; */
+/*   Individual** globalPopulation = new Individual*[actualGlobalSize](); */
+
+/*   unsigned int rank = 1; */
+
+/*   memcpy(globalPopulation,parents,sizeof(Individual*)*actualParentPopulationSize); */
+/*   memcpy(globalPopulation+actualParentPopulationSize,offsprings,sizeof(Individual*)*actualOffspringPopulationSize); */
+
+/*   struct Individual_list* head = new_Individual_list_reverse(globalPopulation,actualGlobalSize); */
+
+/*   delete[](globalPopulation); */
+
+/*   struct Individual_list* h1,* h2; */
+/*   int** dom = new int*[actualGlobalSize](); */
+/*   for( unsigned int i=0 ; i<actualGlobalSize ; i++ ) */
+/*     dom[i] = new int[actualGlobalSize](); */
+
+/*   std::vector<Individual*> pareto_front; */
+
+/*   show_Individual_list_content(head); */
+
+/*   while(head!=NULL){ */
+/*     unsigned int i=0,j=0; */
+/*     for( h1=head ; h1!=NULL ; h1=h1->next,i++){ */
+/*       j=0; */
+/*       for( h2=head ; h2!=NULL ; h2=h2->next,j++){ */
+/* 	dom[i][j] = check_dominance(h1->content,h2->content); */
+/*       } */
+      
+/*     } */
+
+/*     int flag, dummy_counter=0; */
+/*     unsigned int non_dominated_ctr = 0; */
+
+/*     for( unsigned int i=0 ;  i<actualGlobalSize; i++){ */
+/*       printf("%02d ",i); */
+/*       flag=0; */
+/*       for( size_t j = 0 ; j<actualGlobalSize ; j++ ){ */
+/* 	std::cout << (dom[i][j]==1?" 1":(dom[i][j]==-1?"-1":" 0"))  << " "; */
+/* 	if( dom[i][j] < 0 ){ */
+/* 	  flag = 1; //i is dominated by j */
+/* 	} */
+	
+/*       } */
+/*       std::cout << "\t f1 : " << Individual_list_get(head,i+dummy_counter)->content->f1 << " f2 : " << Individual_list_get(head,i+dummy_counter)->content->f2 <<std::endl; */
+/*       if( !flag ) { */
+	
+/* 	struct Individual_list*  non_dominated_individual = Individual_list_get(head,i+dummy_counter); */
+/* 	std::cout << *non_dominated_individual->content << std::endl; */
+/* 	non_dominated_individual->content->fitness = rank; */
+/* 	pareto_front.push_back(non_dominated_individual->content);   */
+/* 	Individual_list_remove(&head,non_dominated_individual); */
+/* 	non_dominated_ctr++; */
+/* 	//Individual_list_remove(&head, */
+/*       } */
+/*       else{ */
+/* 	dummy_counter++; */
+/*       } */
+/*     } */
+    
+/*     //for( unsigned int i=0 ; i<pareto_front.size() ; i++ ){ */
+/*       //std::cout << "p" << i<<" : " << *pareto_front[i] << std::endl;  */
+/*     //} */
+/*     actualGlobalSize = actualGlobalSize-non_dominated_ctr; */
+/*     //show_Individual_list_content(head); */
+/*     rank++; */
+/*     //std::cout << "end of selection of pareto front " << rank << std::endl; */
+/*     pareto_front.clear(); */
+/*   } */
+
+/*   actualGlobalSize = actualParentPopulationSize+actualOffspringPopulationSize; */
+/*   for( unsigned int i=0 ; i<actualGlobalSize ; i++ ) */
+/*     delete[](dom[i]); */
+/*   delete[](dom); */
+
+/* } */
 
 
 
