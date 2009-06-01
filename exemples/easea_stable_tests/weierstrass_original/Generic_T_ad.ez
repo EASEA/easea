@@ -31,9 +31,7 @@ float Rosenbrock(float *, int);
 float Schwefel(float *, int);
 float Weierstrass(float *, int);
 
-EvalCounter* d_counter;
 struct gpuOptions{
-  EvalCounter* counter;
 };
 
 \end
@@ -170,31 +168,14 @@ float gauss()
 	 }	      
 \end
 \Initialisation function:
-
   std::cout<<"*************  n: "<<n<<std::endl;
-EvalCounter counter;
-counter.a = 0;
-d_counter = counter.cudaSendToGpuEvalCounter();
-initOpts.counter=d_counter;
-
 \end
 
 \Finalization function:
 cout << "finalization function called" << endl;
-EvalCounter counter;
-counter.cudaGetFromGpuEvalCounter(d_counter);
-cout << counter << endl;
 \end
 
 \User classes :
-EvalCounter {
-  int a;
-}
-
-TestClass1 {
-  int a;
-  float b;
-}
 GenomeClass { 
   float x[SIZE];
   float sigma[SIZE]; // auto-adaptative mutation parameter
@@ -239,7 +220,6 @@ return NbMut;
   float Point[SIZE];
   for (int i=0; i<N_LIM; i++) Point[i] = Genome.x[i];
   Score= Weierstrass(Point, N_LIM);         
-  initOpts.counter->a+=2;
   return Score;
 \end
 

@@ -383,7 +383,7 @@ BaseConstructorParameter
   
 GenomeDeclarationSection
   : GENOME {
-    DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName);
+    //DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName);
       if (bVERBOSE) printf ("\nGenome declaration analysis :\n\n");
       pGENOME=new CSymbol("Genome");
       pCURRENT_CLASS=SymbolTable.insert(pGENOME);  

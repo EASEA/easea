@@ -496,10 +496,13 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
 
 
   DECLARE_TIME(eval);
+  DECLARE_TIME(moPop);
   struct timeval begin,accuEval;
   gettimeofday(&begin,NULL);
   accuEval.tv_sec = 0;
   accuEval.tv_usec = 0;
+
+  struct timeval accuMo = {0,0};
 
 
   void* d_offspringPopulation;
@@ -520,13 +523,16 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     cudaOffspringEvaluate(d_offspringPopulation,d_fitnesses,dimBlock,dimGrid);
     TIME_END(eval);
     
-
+    TIME_ST(moPop);
     population->evaluateMoPopulation();
-
+    TIME_END(moPop);
 
     COMPUTE_TIME(eval);
     //SHOW_TIME(eval);
+    COMPUTE_TIME(moPop);
+    timeradd(&accuMo,&moPop_res,&accuMo);
     timeradd(&accuEval,&eval_res,&accuEval);
+    
 
     if(reduceParents)
       population->reduceParentPopulation(reduceParents);
@@ -540,12 +546,14 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     showPopulationStats(begin);
     currentGeneration += 1;
+    //SHOW_TIME(moPop);
   }  
   population->sortParentPopulation();
   std::cout << *population << std::endl;
   std::cout << *population->parents[0] << std::endl;
   
   std::cout << "Generation : " << currentGeneration << std::endl;
+  SHOW_SIMPLE_TIME(accuMo);
   SHOW_SIMPLE_TIME(accuEval);
 
   cudaFree(d_offspringPopulation);

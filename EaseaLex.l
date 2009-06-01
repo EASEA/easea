@@ -1,3 +1,4 @@
+
 %{
   /****************************************************************************
 EaseaLex.l
@@ -565,13 +566,15 @@ exponent  ([Ee][+-]?[0-9]+)
   BEGIN PARAMETERS_ANALYSIS;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_GEN_FCT_CALL"  {
+  DEBUG_PRT("Generational function call %d",bGenerationFunction);
   if (bGenerationFunction) {
+    if( bVERBOSE ) fprintf(stdout,"Inserting generation function call\n");
     if( TARGET==CUDA || TARGET==STD ){
       fprintf(fpOutputFile,"\n\tEASEAGenerationFunction(this);");
     }
     else fprintf(fpOutputFile,"\n    EASEAGenerationFunction(ga);\n");
   }
- }        
+ }     
 
 <TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING_FCT_CALL"  {
   if (bBoundCheckingFunction) {
@@ -1082,7 +1085,8 @@ exponent  ([Ee][+-]?[0-9]+)
   bFunction=1; bGenerationFunction=1;
   BEGIN COPY_USER_GENERATION;
  }
-<COPY_GENERATION_FUNCTION><<EOF>> {bGenerationFunction=0; // No Generation function was found in the .ez file
+<COPY_GENERATION_FUNCTION><<EOF>> {
+  bGenerationFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No generation function was found. ***\n");
   fprintf(fpOutputFile,"\n// No generation function.\n");
   rewind(fpGenomeFile);
@@ -1100,7 +1104,7 @@ exponent  ([Ee][+-]?[0-9]+)
   bFunction=1; bBoundCheckingFunction=1;
   BEGIN COPY_USER_GENERATION;
  }
-<COPY_BOUND_CHECKING_FUNCTION><<EOF>> {bGenerationFunction=0; // No Generation function was found in the .ez file
+<COPY_BOUND_CHECKING_FUNCTION><<EOF>> {bBoundCheckingFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No bound checking function was found. ***\n");
   fprintf(fpOutputFile,"\n// No Bound checking function.\n");
   rewind(fpGenomeFile);
@@ -1577,6 +1581,15 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 
+<COPY_USER_FUNCTION>"initOpts."  {
+  if( (bWithinEvaluator && !bWithinCUDA_Evaluator) && ( TARGET==STD || TARGET==CUDA )){
+    fprintf(fpOutputFile,"");
+  }
+  else
+    fprintf(fpOutputFile,"%s",yytext);
+ }
+
+
 <COPY_USER_FUNCTION>"Genome"  {
   if (bWithinDisplayFunction) fprintf(fpOutputFile,"(*this)");
   else if ((TARGET==EO)&&(bWithinInitialiser)) fprintf(fpOutputFile, "(*genome)");
@@ -1662,13 +1675,13 @@ exponent  ([Ee][+-]?[0-9]+)
     else if( TARGET==CUDA || TARGET==STD) {
       if( bWithinCUDA_Evaluator ){
 	fprintf(fpOutputFile,"return "); 
-	bWithinCUDA_Evaluator = 0;
+	//bWithinCUDA_Evaluator = 0;
       }
       else
 	fprintf(fpOutputFile,"return fitness = "); 
       bCatchNextSemiColon=false;
     }
-    bWithinEvaluator=0;
+    //bWithinEvaluator=0;
   }
   else if ((bWithinMutator)&&(TARGET!=GALIB)) {
     fprintf(fpOutputFile,"return ");

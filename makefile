@@ -61,7 +61,7 @@ clean:
 	cd alexyacc && make clean
 
 install:$(EXEC)
-	sudo cp $< /usr/bin/easea
+	sudo cp $< /usr/bin/dev-easea
 
 # realclean: clean
 # 	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h

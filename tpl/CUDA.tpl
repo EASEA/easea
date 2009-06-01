@@ -190,12 +190,12 @@ std::ostream& operator << (std::ostream& O, const Individual& B)
 { 
   // ********************
   // Problem specific part
-  O << "\nIndividual : "<< std::endl;
-  O << "\t\t\t";
+  //  O << "\nIndividual : "<< std::endl;
+  //  O << "\t\t\t";
   B.printOn(O);
     
-  if( B.valid ) O << "\t\t\tfitness : " << B.fitness;
-  else O << "fitness is not yet computed" << std::endl;
+  //  if( B.valid ) O << "\t\t\tfitness : " << B.fitness;
+  //else O << "fitness is not yet computed" << std::endl;
   return O; 
 } 
 
@@ -500,23 +500,12 @@ void EvolutionaryAlgorithm::addStoppingCriterion(StoppingCriterion* sc){
 void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   std::vector<Individual*> tmpVect;
 
-/*   if( inputfile ){ */
-/*     DEBUG_PRT("Loading initial population from file : %s",inputfile->c_str()); */
-/*     std::ifstream ifs("essai.out"); */
-/*     DEBUG_PRT("parent population size in ea %d",population->parentPopulationSize); */
-/*     //population->parents = new Individual*[population->parentPopulationSize]; */
-/*     boost::archive::text_iarchive ia(ifs); */
-
-/*     //ia >> *population; */
-/*     population->syncInVector(); */
-/*     //ia >> *population; */
-/*   } */
 
   std::cout << "Parent's population initializing "<< std::endl;
   this->population->initializeCudaParentPopulation();
   cudaParentEvaluate();
 
-//  std::cout << *population << std::endl;
+  std::cout << *population << std::endl;
 
   DEBUG_PRT("Genome size is %lu",\GENOME_SIZE);
 
@@ -567,7 +556,7 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     currentGeneration += 1;
   }  
   population->sortParentPopulation();
-  //std::cout << *population << std::endl;
+  std::cout << *population << std::endl;
   std::cout << "Generation : " << currentGeneration << std::endl;
   SHOW_SIMPLE_TIME(accuEval);
 

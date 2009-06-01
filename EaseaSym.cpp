@@ -134,8 +134,8 @@ void CSymbol::print(FILE *fp){
       if( isFlatClass ){
 	fprintf(fp,"    ret = (%s*)malloc(sizeof(%s));\n",sName,sName);
 	fprintf(fp,"    cudaMemcpy(ret,dev_ptr,sizeof(%s),cudaMemcpyDeviceToHost);\n",sName);
-	while (pSym=pSymbolList->walkToNextItem())
-	  fprintf(fp,"    this->%s=ret->%s;\n",pSym->Object->sName,pSym->Object->sName);      
+	//while (pSym=pSymbolList->walkToNextItem())
+	//fprintf(fp,"    this->%s=ret->%s;\n",pSym->Object->sName,pSym->Object->sName);      
       fprintf(fp,"  }\n\n");
       }
     }
