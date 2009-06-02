@@ -119,6 +119,8 @@ inline float Schwefel(float x[SIZE], int n)
 
 __device__ __host__ inline float Weierstrass(float x[SIZE], int n)  // Weierstrass multimidmensionnel h = 0.25
 {
+  cout << MUT_PROB << endl;
+
    float res = 0.;
    float val[SIZE];
    float b=2.;
@@ -198,6 +200,11 @@ GenomeClass {
   }
 \end
 
+
+\At the end of each generation function:
+\end
+
+
 \GenomeClass::mutator : // Must return the number of mutations
   int NbMut=0;
   float pond = 1./sqrt((float)n);
@@ -218,6 +225,7 @@ return NbMut;
 \GenomeClass::evaluator : // Returns the score
   float Score= 0.0;
   float Point[SIZE];
+if(0) return 0;
   for (int i=0; i<N_LIM; i++) Point[i] = Genome.x[i];
   Score= Weierstrass(Point, N_LIM);         
   return Score;

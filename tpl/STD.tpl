@@ -4,10 +4,17 @@
 */
 \ANALYSE_PARAMETERS
 using namespace std;
+
+#include <stdlib.h>
+/** Global variables for the whole algorithm */
+float* pEZ_MUT_PROB = NULL;
+
 #include <iostream>
 #include "EASEATools.hpp"
 #include "EASEAIndividual.hpp"
 #include <time.h>
+
+
 
 RandomGenerator* globalRandomGenerator;
 
@@ -74,7 +81,6 @@ int main(int argc, char** argv){
 #include <sys/time.h>
 
 #define STD_TPL
-
 extern RandomGenerator* globalRandomGenerator;
 
 \INSERT_USER_DECLARATIONS
@@ -278,8 +284,7 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     \INSERT_BOUND_CHECKING_FCT_CALL
     population->evaluateOffspringPopulation();
 
-
-  \INSERT_END_GEN_FCT_CALL
+    \INSERT_END_GEN_FCT_CALL
 
 #if \IS_PARENT_REDUCTION
       population->reduceParentPopulation(\SURV_PAR_SIZE);
@@ -703,6 +708,7 @@ Population::Population(size_t parentPopulationSize, size_t offspringPopulationSi
 
   this->pCrossover       = pCrossover;
   this->pMutation        = pMutation;
+  pEZ_MUT_PROB = &this->pMutation;
   this->pMutationPerGene = pMutationPerGene;
 
   this->rg = rg;
@@ -1254,6 +1260,8 @@ string setVariable(const string optionName, string defaultValue){
 #include <boost/archive/text_oarchive.hpp> //for serialization (dumping)
 #include <boost/archive/text_iarchive.hpp> //for serialization (loading)
 #include <boost/serialization/vector.hpp>
+
+extern float* pEZ_MUT_PROB;
 
 class EvolutionaryAlgorithm;
 class Individual;
