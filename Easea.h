@@ -23,6 +23,7 @@ Centre de Mathématiques Appliquées
 #define DREAM 3
 #define CUDA 4
 #define STD 5
+#define CMAES 6
 
 #define STD_FLAVOR_SO 0
 #define STD_FLAVOR_MO 1
@@ -45,7 +46,8 @@ extern char sREPLACEMENT[], sSELECTOR[], sSELECT_PRM[], sRED_PAR[], sRED_PAR_PRM
 extern int nMINIMISE,nELITE;
 extern bool bELITISM, bVERBOSE;
 extern bool bPROP_SEQ;
-extern int nPOP_SIZE, nNB_GEN, nNB_ISLANDS, nOFF_SIZE, nSURV_PAR_SIZE, nSURV_OFF_SIZE;
+extern char* nGENOME_NAME;
+extern int nPOP_SIZE, nNB_GEN, nNB_ISLANDS, nOFF_SIZE, nSURV_PAR_SIZE, nSURV_OFF_SIZE, nPROBLEM_DIM;
 extern float fMUT_PROB, fXOVER_PROB, fREPL_PERC, fMIG_FREQ;
 extern int nMIG_CLONE, nNB_MIG, nIMMIG_REPL;
 extern char sMIG_SEL[], sMIGRATOR[], sIMMIG_SEL[],sMIG_TARGET_SELECTOR[];
