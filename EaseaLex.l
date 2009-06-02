@@ -1163,9 +1163,6 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_FINALIZATION_FUNCTION>.|\n {}                                      
 
 
-
-
-
 <COPY_END_GENERATION_FUNCTION>"\\At"[ \t\n]+"the"[ \t\n]+"end"[ \t\n]+"of"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"function"[ \t\n]*":" {
   DEBUG_PRT("at each end");
   if( (TARGET==CUDA || TARGET==STD)  ){
@@ -1294,11 +1291,24 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 <COPY>"MUT_PROB" |
-<COPY>"MUT_PROB"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
-  else fprintf(fpOutputFile,"EZ_MUT_PROB");} // local genome name
+<COPY>"MUT_PROB"/[ \t\n]*"==" {
+  if (bDoubleQuotes) 
+    fprintf(fpOutputFile,"MUT_PROB");
+  else
+    if( TARGET==STD || TARGET==CUDA){
+      fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
+    }
+    else fprintf(fpOutputFile,"EZ_MUT_PROB");
+  
+ } // local genome name
 <COPY>"XOVER_PROB" |
-<COPY>"XOVER_PROB"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
-  else fprintf(fpOutputFile,"EZ_XOVER_PROB");} // local genome name
+<COPY>"XOVER_PROB"/[ \t\n]*"==" {
+  if (bDoubleQuotes) 
+    fprintf(fpOutputFile,"XOVER_PROB");
+  else if( TARGET==CUDA || TARGET==STD )
+    fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
+  else fprintf(fpOutputFile,"EZ_XOVER_PROB");
+ } // local genome name
 <COPY>"REPL_PERC" |
 <COPY>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else fprintf(fpOutputFile,"EZ_REPL_PERC");} // local genome name
@@ -1325,7 +1335,11 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);}
 <COPY>"NB_GEN"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"POP_SIZE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
-<COPY>"MUT_PROB"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+<COPY>"MUT_PROB"[ \t\n]*"=" {
+  fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
+  exit (1);
+}
+
 <COPY>"XOVER_PROB"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The crossover proability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"REPL_PERC"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MINIMISE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
@@ -1601,17 +1615,27 @@ exponent  ([Ee][+-]?[0-9]+)
     case EO : fprintf(fpOutputFile,"EZ_POP_SIZE");
     }} // local genome name
 <COPY_USER_GENERATION>"MUT_PROB" |
-<COPY_USER_GENERATION>"MUT_PROB"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
+<COPY_USER_GENERATION>"MUT_PROB"/[ \t\n]*"==" {
+  if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else switch  (TARGET) {
     case GALIB : fprintf(fpOutputFile,"g.pMutation()"); break;
-    case EO : fprintf(fpOutputFile,"EZ_MUT_PROB");
-    }} // local genome name
+    case EO : fprintf(fpOutputFile,"EZ_MUT_PROB"); break;
+    case STD:
+    case CUDA:
+      fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
+    }
+ } // local genome name
 <COPY_USER_GENERATION>"XOVER_PROB" |
-<COPY_USER_GENERATION>"XOVER_PROB"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
+<COPY_USER_GENERATION>"XOVER_PROB"/[ \t\n]*"==" {
+  if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
   else switch  (TARGET) {
     case GALIB : fprintf(fpOutputFile,"g.pCrossover()"); break;
-    case EO : fprintf(fpOutputFile,"EZ_XOVER_PROB");
-    }} // local genome name
+    case EO : fprintf(fpOutputFile,"EZ_XOVER_PROB"); break;
+    case STD:
+    case CUDA: 
+      fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");     
+    }
+ } // local genome name
 <COPY_USER_GENERATION>"REPL_PERC" |
 <COPY_USER_GENERATION>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else switch  (TARGET) {
@@ -1673,14 +1697,23 @@ exponent  ([Ee][+-]?[0-9]+)
   else switch  (TARGET) {
     case GALIB : fprintf(fpOutputFile,"g.pMutation((EZ_MUT_PROB=");
       bWaitingForSemiColon=1; break;
-    case EO : fprintf(fpOutputFile,"EZ_MUT_PROB=");
-    }} // local genome name
+    case EO : fprintf(fpOutputFile,"EZ_MUT_PROB="); break;
+    case CUDA:
+    case STD:
+      fprintf(fpOutputFile,"(*pEZ_MUT_PROB)=");
+      break;     
+    }
+ } // local genome name
 <COPY_USER_GENERATION>"XOVER_PROB"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else switch  (TARGET) {
     case GALIB :fprintf(fpOutputFile,"g.pCrossover((EZ_XOVER_PROB=");
       bWaitingForSemiColon=1; break;
-    case EO : fprintf(fpOutputFile,"EZ_MUT_PROB=");
-    }} // local genome name
+    case EO : fprintf(fpOutputFile,"EZ_XOVER_PROB="); break;
+    case CUDA:
+    case STD:
+      fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)=");
+    }
+ } // local genome name
 <COPY_USER_GENERATION>"REPL_PERC"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else switch  (TARGET) {
     case GALIB :fprintf(fpOutputFile,"g.pReplacement((1/100)*(EZ_REPL_PERC=");
@@ -1827,10 +1860,18 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_USER_FUNCTION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 <COPY_USER_FUNCTION>"MUT_PROB" |
-<COPY_USER_FUNCTION>"MUT_PROB"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
-  else fprintf(fpOutputFile,"EZ_MUT_PROB");} // local genome name
+<COPY_USER_FUNCTION>"MUT_PROB"/[ \t\n]*"==" {
+  if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
+  else if( TARGET==CUDA || TARGET==STD)
+    fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
+  else fprintf(fpOutputFile,"EZ_MUT_PROB");
+ } // local genome name
 <COPY_USER_FUNCTION>"XOVER_PROB" |
-<COPY_USER_FUNCTION>"XOVER_PROB"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
+<COPY_USER_FUNCTION>"XOVER_PROB"/[ \t\n]*"==" {
+  if (bDoubleQuotes) 
+    fprintf(fpOutputFile,"XOVER_PROB");
+  else if( TARGET==CUDA || TARGET==STD )
+    fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
   else fprintf(fpOutputFile,"EZ_XOVER_PROB");} // local genome name
 <COPY_USER_FUNCTION>"REPL_PERC" |
 <COPY_USER_FUNCTION>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
@@ -1839,7 +1880,11 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_USER_FUNCTION>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);}
 <COPY_USER_FUNCTION>"NB_GEN"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY_USER_FUNCTION>"POP_SIZE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
-<COPY_USER_FUNCTION>"MUT_PROB"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+<COPY_USER_FUNCTION>"MUT_PROB"[ \t\n]*"=" {
+  fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
+  exit (1);
+}
+
 <COPY_USER_FUNCTION>"XOVER_PROB"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The crossover proability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY_USER_FUNCTION>"REPL_PERC"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY_USER_FUNCTION>"false"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaFalse");

@@ -167,11 +167,12 @@ float gauss()
 	      printf("%.02f:%.02f|",Genome.x[i],Genome.sigma[i]);
 	 }	      
 \end
-\Initialisation function:
+\before everything else function:
   std::cout<<"*************  n: "<<n<<std::endl;
 \end
 
-\Finalization function:
+\after everything else function:
+cout << "xover prob is " << XOVER_PROB << endl;
 cout << "finalization function called" << endl;
 \end
 
@@ -198,6 +199,12 @@ GenomeClass {
   }
 \end
 
+
+\At the end of each generation function:
+if( currentGeneration==98 ) XOVER_PROB = 0.5;
+\end
+
+
 \GenomeClass::mutator : // Must return the number of mutations
   int NbMut=0;
   float pond = 1./sqrt((float)n);
@@ -218,6 +225,7 @@ return NbMut;
 \GenomeClass::evaluator : // Returns the score
   float Score= 0.0;
   float Point[SIZE];
+if(0) return 0;
   for (int i=0; i<N_LIM; i++) Point[i] = Genome.x[i];
   Score= Weierstrass(Point, N_LIM);         
   return Score;
@@ -232,7 +240,7 @@ CPPFLAGS+=
 \Default run parameters :        // Please let the parameters appear in this order
  Number of generations : 100     // NB_GEN
   Mutation probability : 1       // MUT_PROB
-  Crossover probability : 1      // XOVER_PROB
+  Crossover probability : 0.8      // XOVER_PROB
   Population size : 20     // POP_SIZE
   Offspring size : 20 // 40%  
   Genitors selector: Tournament 2
