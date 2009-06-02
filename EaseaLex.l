@@ -1282,7 +1282,8 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY>"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
     case GALIB : fprintf(fpOutputFile,"EZ_currentGeneration"); break;
-    case EO : fprintf(fpOutputFile,"generationCounter.value()");
+    case EO : fprintf(fpOutputFile,"generationCounter.value()"); break;
+    case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }} // local genome name
 <COPY>"NB_GEN" |
 <COPY>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
@@ -1602,7 +1603,7 @@ exponent  ([Ee][+-]?[0-9]+)
       fprintf(fpOutputFile,"generationCounter.value()"); break;
     case CUDA:
     case STD:
-      fprintf(fpOutputFile,"(evolutionaryAlgorithm->getCurrentGeneration())");
+      fprintf(fpOutputFile,"(*EZ_current_generation)");
       break;
     }} // local genome name
 <COPY_USER_GENERATION>"NB_GEN" |
@@ -1864,7 +1865,8 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_USER_FUNCTION>"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
     case GALIB : fprintf(fpOutputFile,"EZ_currentGeneration"); break;
-    case EO : fprintf(fpOutputFile,"generationCounter.value()");
+    case EO : fprintf(fpOutputFile,"generationCounter.value()"); break;
+    case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }} // local genome name
 <COPY_USER_FUNCTION>"NB_GEN" |
 <COPY_USER_FUNCTION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
