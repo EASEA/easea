@@ -191,7 +191,7 @@ GenomeClass {
 \end
 
 \GenomeClass::crossover :
-  for (int i=0; i<n; i++)
+   for (int i=0; i<n; i++)
   {
      float alpha = (float)globalRandomGenerator->getRandomIntMax(1.); // barycentric crossover
      child1.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
@@ -202,8 +202,15 @@ GenomeClass {
 
 \At the end of each generation function:
 if( currentGeneration==98 ) XOVER_PROB = 0.5;
+for( int i=0 ; i<20 ; i++ ){
+  cout << pPopulation[i]->getFitness() << endl;
+ }
+
 \end
 
+
+\At the beginning of each generation function:
+\end
 
 \GenomeClass::mutator : // Must return the number of mutations
   int NbMut=0;

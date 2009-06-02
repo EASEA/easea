@@ -1580,11 +1580,18 @@ exponent  ([Ee][+-]?[0-9]+)
     break;
   case CUDA:
   case STD:
-    fprintf(fpOutputFile,"(*evolutionaryAlgorithm->getPopulation())");
+    //fprintf(fpOutputFile,"(*evolutionaryAlgorithm->getPopulation())");
+    fprintf(fpOutputFile,"pPopulation[");
   }
  }
 <COPY_USER_GENERATION>"]" {if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
-  else {fprintf(fpOutputFile,")))"); bWaitingToClosePopulation=false;}}
+  else if( TARGET==CUDA || TARGET==STD)
+    fprintf(fpOutputFile,"]");
+  else {
+    fprintf(fpOutputFile,")))"); 
+    bWaitingToClosePopulation=false;
+  }
+ }
 
 <COPY_USER_GENERATION>"currentGeneration" |
 <COPY_USER_GENERATION>"currentGeneration"/[ \t\n]*"==" {
@@ -1841,10 +1848,16 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_USER_FUNCTION>"pPopulation"[ \t\n]*"[" {bWaitingToClosePopulation=true;
   switch (TARGET) {
   case EO: fprintf(fpOutputFile,"pPopulation ["); break;
-  case GALIB: fprintf(fpOutputFile,"((%sGenome *)&(pPopulation->individual(",sPROJECT_NAME);
+  case GALIB: fprintf(fpOutputFile,"((%sGenome *)&(pPopulation->individual(",sPROJECT_NAME); break;
+  case STD:
+  case CUDA:
+    fprintf(fpOutputFile,"pPopulation[");
   }
  }
-<COPY_USER_FUNCTION>"]" {if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
+<COPY_USER_FUNCTION>"]" {
+  if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
+  else if( TARGET==CUDA || TARGET==STD)
+    fprintf(fpOutputFile,"]");
   else {fprintf(fpOutputFile,")))"); bWaitingToClosePopulation=false;}}
 
 <COPY_USER_FUNCTION>"currentGeneration" |

@@ -5,8 +5,12 @@
 \ANALYSE_PARAMETERS
 using namespace std;
 
+
+class Individual;
+
 #include <stdlib.h>
 /** Global variables for the whole algorithm */
+Individual** pPopulation = NULL;
 float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
 
@@ -721,6 +725,7 @@ Population::Population(size_t parentPopulationSize, size_t offspringPopulationSi
   pEZ_MUT_PROB = &this->pMutation;
   pEZ_XOVER_PROB = &this->pCrossover;
   this->pMutationPerGene = pMutationPerGene;
+  pPopulation = parents;
 
   this->rg = rg;
 
@@ -1272,12 +1277,14 @@ string setVariable(const string optionName, string defaultValue){
 #include <boost/archive/text_iarchive.hpp> //for serialization (loading)
 #include <boost/serialization/vector.hpp>
 
-extern float* pEZ_MUT_PROB;
-extern float* pEZ_XOVER_PROB;
-
 class EvolutionaryAlgorithm;
 class Individual;
 class Population;
+
+extern float* pEZ_MUT_PROB;
+extern float* pEZ_XOVER_PROB;
+extern Individual** pPopulation;
+
 
 extern size_t *EZ_NB_GEN;
 
