@@ -682,6 +682,8 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\RED_FINAL_PRM"  {fprintf(fpOutputFile,"%s",sRED_FINAL_PRM);}
 <TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  {fprintf(fpOutputFile,"%d",nSURV_PAR_SIZE);}
 <TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  {fprintf(fpOutputFile,"%d",nSURV_OFF_SIZE);}
+<TEMPLATE_ANALYSIS>"\\GENOME_NAME"  {fprintf(fpOutputFile,"%s",nGENOME_NAME);}
+<TEMPLATE_ANALYSIS>"\\PROBLEM_DIM"  {fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
 <TEMPLATE_ANALYSIS>"\\NB_GEN"  {fprintf(fpOutputFile,"%d",nNB_GEN);}
 <TEMPLATE_ANALYSIS>"\\NB_ISLANDS"  {fprintf(fpOutputFile,"%d",nNB_ISLANDS);}
 <TEMPLATE_ANALYSIS>"\\PROP_OR_SEQ"  {fprintf(fpOutputFile,"%s",bPROP_SEQ?"Prop":"Seq");}
@@ -1956,6 +1958,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (TARGET==STD){
     if(TARGET_FLAVOR == STD_FLAVOR_SO)
       strcat(sTemp,"STD.tpl");
+    else if (TARGET_FLAVOR == CMAES)
+      strcat(sTemp,"CMAES.tpl");
     else
       strcat(sTemp,"STD_MO.tpl");
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
@@ -1963,7 +1967,7 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
       exit(1);
     } }
-
+  
   if (TARGET==EO){
     if ((sEO_DIR==NULL)||(sEO_DIR[0]==0)) {
       if ((getenv("EO_DIR")==NULL)){

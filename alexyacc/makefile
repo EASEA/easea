@@ -23,4 +23,4 @@ $(LIB_NAME): $(OBJS)
 	$(CPPC) $(CPPFLAGS) -fpic -c $<
 
 clean:
-	rm -f *.o $(LIB_NAME)
+	rm -f *.o $(LIB_NAME) $(STATIC_LIB_NAME)

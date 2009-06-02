@@ -45,6 +45,8 @@ int nELITE;
 bool bELITISM=0;
 bool bVERBOSE=0;
 int nPOP_SIZE, nOFF_SIZE, nSURV_PAR_SIZE, nSURV_OFF_SIZE;
+char *nGENOME_NAME;
+int nPROBLEM_DIM;
 int nNB_GEN;
 int nNB_ISLANDS;
 bool bPROP_SEQ;
@@ -353,6 +355,7 @@ Object
       if (bVERBOSE) printf("    %s pointer declared (%d bytes)\n",$2->sName,$2->nSize);
     }
   | Symbol  '[' Expr ']' {
+      if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
       $1->nSize=pCURRENT_TYPE->nSize*(int)$3;
       $1->pClass=pCURRENT_CLASS;
       $1->pType=pCURRENT_TYPE;
@@ -1374,6 +1377,10 @@ int main(int argc, char *argv[]){
     else if (!mystricmp(sTemp,"std_mo")) {
       TARGET=STD;
       TARGET_FLAVOR = STD_FLAVOR_MO;
+    }
+    else if (!mystricmp(sTemp,"cmaes"))  {
+      TARGET=STD;
+      TARGET_FLAVOR = CMAES;
     }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;

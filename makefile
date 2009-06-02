@@ -63,8 +63,8 @@ clean:
 install:$(EXEC)
 	sudo cp $< /usr/bin/dev-easea
 
-# realclean: clean
-# 	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
+realclean: clean
+	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
 
 
 EaseaParse.cpp: EaseaParse.y
