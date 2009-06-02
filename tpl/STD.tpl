@@ -10,7 +10,7 @@ using namespace std;
 #include <time.h>
 
 RandomGenerator* globalRandomGenerator;
-
+size_t *EZ_NB_GEN;
 
 int main(int argc, char** argv){
 
@@ -39,7 +39,7 @@ int main(int argc, char** argv){
 
   string outputfile = setVariable("outputfile","");
   string inputfile = setVariable("inputfile","");
-
+  
   EASEAInit(argc,argv);
     
   EvolutionaryAlgorithm ea(parentPopulationSize,offspringPopulationSize,selectionPressure,replacementPressure,parentReductionPressure,offspringReductionPressure,
@@ -48,6 +48,9 @@ int main(int argc, char** argv){
 
   StoppingCriterion* sc = new GenerationalCriterion(&ea,setVariable("nbGen",\NB_GEN));
   ea.addStoppingCriterion(sc);
+  
+  EZ_NB_GEN=((GenerationalCriterion*)ea.stoppingCriteria[0])->getGenerationalLimit();
+  
   Population* pop = ea.getPopulation();
 
 
@@ -668,6 +671,9 @@ bool GenerationalCriterion::reached(){
   else return false;
 }
 
+size_t* GenerationalCriterion::getGenerationalLimit(){
+	return &(this->generationalLimit);
+}
 
 /* ****************************************
    Population class
@@ -1259,10 +1265,12 @@ class EvolutionaryAlgorithm;
 class Individual;
 class Population;
 
+extern size_t *EZ_NB_GEN;
+
 #define EZ_MINIMIZE \MINIMAXI
 #define EZ_MINIMISE \MINIMAXI
 #define EZ_MAXIMIZE !\MINIMAXI
-#define EZ_MAXIMIZE !\MINIMAXI
+#define EZ_MAXIMISE !\MINIMAXI
 
 #ifdef DEBUG
 #define DEBUG_PRT(format, args...) fprintf (stdout,"***DBG***  %s-%d: "format"\n",__FILE__,__LINE__,##args)
@@ -1296,7 +1304,7 @@ class GenerationalCriterion : public StoppingCriterion {
  public:
   virtual bool reached();
   GenerationalCriterion(EvolutionaryAlgorithm* ea, size_t generationalLimit);
-  
+  size_t *getGenerationalLimit();
 };
 
 

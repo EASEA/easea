@@ -10,7 +10,7 @@ using namespace std;
 #include <time.h>
 
 RandomGenerator* globalRandomGenerator;
-
+size_t *EZ_NB_GEN;
 
 int main(int argc, char** argv){
 
@@ -48,6 +48,7 @@ int main(int argc, char** argv){
 
   StoppingCriterion* sc = new GenerationalCriterion(&ea,setVariable("nbGen",\NB_GEN));
   ea.addStoppingCriterion(sc);
+  EZ_NB_GEN=((GenerationalCriterion*)ea.stoppingCriteria[0])->getGenerationalLimit();
   Population* pop = ea.getPopulation();
 
 
@@ -726,6 +727,8 @@ void cmaes_exit(CMA *t)
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 \INSERT_GENERATION_FUNCTION
+\INSERT_BEGIN_GENERATION_FUNCTION
+\INSERT_END_GENERATION_FUNCTION
 \INSERT_BOUND_CHECKING
 
 void EASEAFinal(Population* pop){
@@ -932,13 +935,13 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   while( this->allCriteria() == false ){    
     cmaes_UpdateEigensystem(&cma, 0);
     TestMinStdDevs(&cma);
-
+    \INSERT_BEGINNING_GEN_FCT_CALL
 
     population->produceOffspringPopulation();
     \INSERT_BOUND_CHECKING_FCT_CALL
     population->evaluateOffspringPopulation();
 
-
+     \INSERT_END_GEN_FCT_CALL
 
 #if \IS_PARENT_REDUCTION
       population->reduceParentPopulation(\SURV_PAR_SIZE);
@@ -1378,6 +1381,10 @@ bool GenerationalCriterion::reached(){
     return true;
   }
   else return false;
+}
+
+size_t* GenerationalCriterion::getGenerationalLimit(){
+	return &this->generationalLimit;
 }
 
 
@@ -1971,6 +1978,8 @@ class EvolutionaryAlgorithm;
 class Individual;
 class Population;
 
+extern size_t *EZ_NB_GEN;
+
 #define EZ_MINIMIZE \MINIMAXI
 #define EZ_MINIMISE \MINIMAXI
 #define EZ_MAXIMIZE !\MINIMAXI
@@ -2008,7 +2017,7 @@ class GenerationalCriterion : public StoppingCriterion {
  public:
   virtual bool reached();
   GenerationalCriterion(EvolutionaryAlgorithm* ea, size_t generationalLimit);
-  
+  size_t* getGenerationalLimit(); 
 };
 
 

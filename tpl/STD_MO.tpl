@@ -79,6 +79,8 @@ extern RandomGenerator* globalRandomGenerator;
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 \INSERT_GENERATION_FUNCTION
+\INSERT_BEGIN_GENERATION_FUNCTION
+\INSERT_END_GENERATION_FUNCTION
 
 void EASEAFinal(Population* pop){
   \INSERT_FINALIZATION_FCT_CALL
@@ -263,12 +265,15 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
   gettimeofday(&begin,NULL);
   
   while( this->allCriteria() == false ){    
+    \INSERT_BEGINNING_GEN_FCT_CALL
 
     population->produceOffspringPopulation();
     population->evaluateOffspringPopulation();
 
     population->evaluateMoPopulation();
-    
+   
+    \INSERT_END_GEN_FCT_CALL
+ 
     if(reduceParents)
       population->reduceParentPopulation(reduceParents);
     

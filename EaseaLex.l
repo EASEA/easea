@@ -1289,7 +1289,7 @@ exponent  ([Ee][+-]?[0-9]+)
     }} // local genome name
 <COPY>"NB_GEN" |
 <COPY>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
-  else fprintf(fpOutputFile,"EZ_NB_GEN");} // local genome name
+  else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 <COPY>"POP_SIZE" |
 <COPY>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
@@ -1589,6 +1589,10 @@ exponent  ([Ee][+-]?[0-9]+)
   else switch  (TARGET) {
     case GALIB : fprintf(fpOutputFile,"g.nGenerations()"); break;
     case EO : fprintf(fpOutputFile,"ptEZ_NbGen.value()");
+    case STD :
+    case CUDA :
+	fprintf(fpOutputFile,"(*EZ_NB_GEN)");
+	break;
     }} // local genome name                           
 <COPY_USER_GENERATION>"POP_SIZE" |
 <COPY_USER_GENERATION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
@@ -1653,6 +1657,10 @@ exponent  ([Ee][+-]?[0-9]+)
       bWaitingForSemiColon=bFinishNB_GEN=1; break;
     case EO : fprintf(fpOutputFile,"ptEZ_NbGen.value((EZ_NB_GEN=)");
       bWaitingForSemiColon=1;
+    case CUDA :
+    case STD :
+      fprintf(fpOutputFile,"(*EZ_NB_GEN)=");
+      break;
     }} // local genome name
 <COPY_USER_GENERATION>"POP_SIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else switch  (TARGET) {
@@ -1730,7 +1738,7 @@ exponent  ([Ee][+-]?[0-9]+)
     if (bFinishMINIMISE) {fprintf(fpOutputFile,");\n  if (MINIMISE) g.minimize() else g.maximize();\n"); bFinishMINIMISE=0;}
     if (bFinishMINIMIZE) {fprintf(fpOutputFile,");\n  if (MINIMIZE) g.minimize() else g.maximize();\n"); bFinishMINIMISE=0;}
     if ((bFinishNB_GEN)&&(OPERATING_SYSTEM==UNIX))
-      {fprintf(fpOutputFile,"));\n  if ( (EZ_daFITNESS = (double *) realloc(EZ_daFITNESS, (EZ_NB_GEN +1)* sizeof (double) )) == NULL){\n");
+      {fprintf(fpOutputFile,"));\n  if ( (EZ_daFITNESS = (double *) realloc(EZ_daFITNESS, ((*EZ_NB_GEN) +1)* sizeof (double) )) == NULL){\n");
 	fprintf(fpOutputFile,"    fprintf(stderr,\"Not enough memory... bailing out.\");\n    exit(1);");}
     else if (bFinishNB_GEN) {fprintf(fpOutputFile,"));"); bFinishNB_GEN=0;}
     else fprintf(fpOutputFile,"));");
@@ -1814,7 +1822,7 @@ exponent  ([Ee][+-]?[0-9]+)
     }} // local genome name
 <COPY_USER_FUNCTION>"NB_GEN" |
 <COPY_USER_FUNCTION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
-  else fprintf(fpOutputFile,"EZ_NB_GEN");} // local genome name
+  else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 <COPY_USER_FUNCTION>"POP_SIZE" |
 <COPY_USER_FUNCTION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
