@@ -72,7 +72,7 @@ Centre de Mathématiques Appliquées
   bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationFunction;
   bool bCatchNextSemiColon,bWaitingToClosePopulation, bMethodsInGenome, bFinalizationFunction;
   bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION, bWithinCUDA_Evaluator, bBoundCheckingFunction;
-  bool bIsParentReduce, bIsOffspringReduce;
+  bool bIsParentReduce, bIsOffspringReduce, bEndGeneration, bBeginGeneration;
   CSymbol *pASymbol;
 
  public:
@@ -89,6 +89,7 @@ Centre de Mathématiques Appliquées
   bCatchNextSemiColon,bWaitingToClosePopulation=bMethodsInGenome=0;
   bBoundCheckingFunction = bWithinCUDA_Initializer=bWithinMAKEFILEOPTION =bWithinCUDA_Evaluator=0;
   bIsParentReduce = bIsOffspringReduce = false;
+  bEndGeneration = bBeginGeneration = false;
 }
 
 // macros
@@ -155,6 +156,26 @@ exponent  ([Ee][+-]?[0-9]+)
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_GENERATION_FUNCTION;
  }
+
+
+<TEMPLATE_ANALYSIS>"\\INSERT_BEGIN_GENERATION_FUNCTION"  {
+  if (bVERBOSE) printf ("Inserting at the begining of each generation function.\n");
+  yyreset();
+  yyin = fpGenomeFile;
+  BEGIN COPY_GENERATION_FUNCTION;
+ }
+
+
+<TEMPLATE_ANALYSIS>"\\INSERT_END_GENERATION_FUNCTION"  {
+  if (bVERBOSE) printf ("Inserting at the end of each generation function.\n");
+  yyreset();
+  yyin = fpGenomeFile;
+  bEndGeneration = true;
+  bBeginGeneration = false;
+  BEGIN COPY_GENERATION_FUNCTION;
+ }
+
+
 
 <TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING"  {
   if (bVERBOSE) printf ("Inserting Bound Checking function.\n");
@@ -1097,7 +1118,7 @@ exponent  ([Ee][+-]?[0-9]+)
     fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(Population* population){");
     break;
   default:
-    fprintf (stderr," Warning this template doesn't support finalization function ");
+    fprintf (stderr," Error this template doesn't support finalization function ");
     return -1;
   }
   bFunction=1; bFinalizationFunction=1;
@@ -1115,18 +1136,30 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_FINALIZATION_FUNCTION>.|\n {}                                      
 
 
+<COPY_GENERATION_FUNCTION>"\\At"[ \t\n]+"the"[ \t\n]+"end"[ \t\n]+"of"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"function"[ \t\n]*":" {
+  if( (TARGET==CUDA || TARGET==STD)&& bEndGeneration ){
+    fprintf (fpOutputFile,"// Function called at each new generation\nvoid EASEAEndGenerationFunction(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
+    bFunction=1; bGenerationFunction=1;
+    bEndGeneration = 0;
+    BEGIN COPY_USER_GENERATION;
+  }
+ }
+
 
 <COPY_GENERATION_FUNCTION>"\\At"[ \t\n]+"each"[ \t\n]+"new"[ \t\n]+"generation"[ \t\n]*":" {
   if( TARGET==GALIB){
   fprintf (fpOutputFile,"// Function called at each new generation\n\nvoid EASEAGenerationFunction(GAGeneticAlgorithm & g){\n");
   fprintf(fpOutputFile,"  const GAPopulation *pPopulation;\n",sPROJECT_NAME);
   fprintf(fpOutputFile,"  pPopulation=&(g.population());  // to circumvent a bug in GALib\n",sPROJECT_NAME);
+  bFunction=1; bGenerationFunction=1;
+  BEGIN COPY_USER_GENERATION;
   }
   else if(TARGET==CUDA || TARGET==STD){
     fprintf (fpOutputFile,"// Function called at each new generation\nvoid EASEAGenerationFunction(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
+    bFunction=1; bGenerationFunction=1;
+    if( !bEndGeneration && !bBeginGeneration )
+      BEGIN COPY_USER_GENERATION;
   }
-  bFunction=1; bGenerationFunction=1;
-  BEGIN COPY_USER_GENERATION;
  }
 <COPY_GENERATION_FUNCTION><<EOF>> {
   bGenerationFunction=0; // No Generation function was found in the .ez file
