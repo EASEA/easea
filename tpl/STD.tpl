@@ -9,6 +9,8 @@ using namespace std;
 /** Global variables for the whole algorithm */
 float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
+size_t *EZ_NB_GEN;
+size_t *EZ_current_generation;
 
 #include <iostream>
 #include "EASEATools.hpp"
@@ -18,7 +20,6 @@ float* pEZ_XOVER_PROB = NULL;
 
 
 RandomGenerator* globalRandomGenerator;
-size_t *EZ_NB_GEN;
 
 int main(int argc, char** argv){
 
@@ -33,6 +34,8 @@ int main(int argc, char** argv){
 
   pEZ_MUT_PROB = &pMutationPerGene;
   pEZ_XOVER_PROB = &pCrossover;
+  EZ_NB_GEN = (size_t*)setVariable("nbGen",\NB_GEN);
+  EZ_current_generation=0;
 
   time_t seed = setVariable("seed",time(0));
   globalRandomGenerator = new RandomGenerator(seed);
@@ -61,7 +64,8 @@ int main(int argc, char** argv){
   ea.addStoppingCriterion(sc);
   
   EZ_NB_GEN=((GenerationalCriterion*)ea.stoppingCriteria[0])->getGenerationalLimit();
-  
+  EZ_current_generation=&(ea.currentGeneration);
+ 
   Population* pop = ea.getPopulation();
 
 
@@ -1280,6 +1284,7 @@ class Individual;
 class Population;
 
 extern size_t *EZ_NB_GEN;
+extern size_t *EZ_current_generation;
 
 #define EZ_MINIMIZE \MINIMAXI
 #define EZ_MINIMISE \MINIMAXI

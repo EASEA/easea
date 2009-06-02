@@ -11,6 +11,7 @@ using namespace std;
 
 RandomGenerator* globalRandomGenerator;
 size_t *EZ_NB_GEN;
+size_t *EZ_current_generation;
 
 int main(int argc, char** argv){
 
@@ -22,6 +23,8 @@ int main(int argc, char** argv){
   float pCrossover = \XOVER_PROB;
   float pMutation = \MUT_PROB;
   float pMutationPerGene = 0.05;
+  EZ_NB_GEN=(size_t*)setVariable("nbGen",\NB_GEN);
+  EZ_current_generation=0;
 
   time_t seed = setVariable("seed",time(0));
   globalRandomGenerator = new RandomGenerator(seed);
@@ -48,6 +51,7 @@ int main(int argc, char** argv){
 
   StoppingCriterion* sc = new GenerationalCriterion(&ea,setVariable("nbGen",\NB_GEN));
   ea.addStoppingCriterion(sc);
+  EZ_current_generation=&(ea.currentGeneration);
   EZ_NB_GEN=((GenerationalCriterion*)ea.stoppingCriteria[0])->getGenerationalLimit();
   Population* pop = ea.getPopulation();
 
@@ -1979,6 +1983,7 @@ class Individual;
 class Population;
 
 extern size_t *EZ_NB_GEN;
+extern size_t *EZ_current_generation;
 
 #define EZ_MINIMIZE \MINIMAXI
 #define EZ_MINIMISE \MINIMAXI
