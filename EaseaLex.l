@@ -701,10 +701,12 @@ exponent  ([Ee][+-]?[0-9]+)
   switch (TARGET) { 
   case GALIB : fprintf(fpOutputFile,"%d",nMINIMISE? -1:1); break;
   case EO : fprintf(fpOutputFile,"%s",nMINIMISE? "eoMinimizingFitness" : "eoMaximizingFitness"); break;
-  case DREAM : fprintf(fpOutputFile,"%s",nMINIMISE? "false" : "true"); break;
+  //case DREAM : fprintf(fpOutputFile,"%s",nMINIMISE? "false" : "true"); break;
+  case DREAM : fprintf(fpOutputFile,"%s",nMINIMISE? "true" : "false"); break;
     
   case STD:
-  case CUDA: fprintf(fpOutputFile,"%s",(nMINIMISE? "false" : "true")); break;
+  //case CUDA: fprintf(fpOutputFile,"%s",(nMINIMISE? "false" : "true")); break;
+  case CUDA: fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); break;
   }
  }
 <TEMPLATE_ANALYSIS>"\\ELITIST_REPLACE_NAME"  {if (TARGET==EO) {if (bELITISM) fprintf(fpOutputFile,"standardR");
@@ -1066,7 +1068,7 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 <COPY_USER_FUNCTIONS>.|\n {}                                      
 
-<COPY_INITIALISATION_FUNCTION>"\\Initialisation"[ \t\n]+"function"[ \t\n]*":" {
+<COPY_INITIALISATION_FUNCTION>"\\before"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
   if (TARGET==DREAM)
     fprintf (fpOutputFile,"// Evaluator Constructor\n\n  public %sEvaluator(){",sPROJECT_NAME);
   else 
@@ -1075,9 +1077,9 @@ exponent  ([Ee][+-]?[0-9]+)
       
   BEGIN COPY;
  }
-<COPY_INITIALISATION_FUNCTION><<EOF>> {bInitFunction=0; // No initialisation function was found in the .ez file
-  if (bVERBOSE) printf("*** No initialisation function was found. ***\n");
-  fprintf(fpOutputFile,"\n// No initialisation function.\n");
+<COPY_INITIALISATION_FUNCTION><<EOF>> {bInitFunction=0; // No before everything else function was found in the .ez file
+  if (bVERBOSE) printf("*** No before everything else function was found. ***\n");
+  fprintf(fpOutputFile,"\n// No before everything else function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
@@ -1088,7 +1090,7 @@ exponent  ([Ee][+-]?[0-9]+)
 //****************************************
 //  Easea GPGPU & EO Finalization function
 //****************************************
-<COPY_FINALIZATION_FUNCTION>"\\Finalization"[ \t\n]+"function"[ \t\n]*":" {
+<COPY_FINALIZATION_FUNCTION>"\\after"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
   switch( TARGET ){
 
   case EO:
@@ -1106,9 +1108,9 @@ exponent  ([Ee][+-]?[0-9]+)
   BEGIN COPY;
  }
 
-<COPY_FINALIZATION_FUNCTION><<EOF>> {bFinalizationFunction=0; // No initialisation function was found in the .ez file
-  if (bVERBOSE) printf("*** No Finalization function was found. ***\n");
-  fprintf(fpOutputFile,"\n// No Finalization function.\n");
+<COPY_FINALIZATION_FUNCTION><<EOF>> {bFinalizationFunction=0; // No after everything else function was found in the .ez file
+  if (bVERBOSE) printf("*** No after everything else function was found. ***\n");
+  fprintf(fpOutputFile,"\n// No after eveything else function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
@@ -1199,6 +1201,12 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY>"MINIMIZE" |
 <COPY>"MINIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE");
   else fprintf(fpOutputFile,"EZ_MINIMIZE");} // local genome name
+<COPY>"MAXIMISE" |
+<COPY>"MAXIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE");
+  else fprintf(fpOutputFile,"EZ_MAXIMISE");} // local genome name
+<COPY>"MAXIMIZE" |
+<COPY>"MAXIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE");
+  else fprintf(fpOutputFile,"EZ_MAXIMIZE");} // local genome name
 
 <COPY>"__device__" |
 <COPY>"__host__" {
@@ -1215,6 +1223,10 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY>"REPL_PERC"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MINIMISE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MINIMIZE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+<COPY>"MAXIMISE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+<COPY>"MAXIMIZE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+<COPY>"false"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaFalse");
+  else fprintf(fpOutputFile,"false");} // local name
 <COPY>"false"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaFalse");
   else fprintf(fpOutputFile,"false");} // local name
 <COPY>"true"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaTrue");
@@ -1510,6 +1522,20 @@ exponent  ([Ee][+-]?[0-9]+)
     case EO : fprintf(stderr,"\n%s - Error line %d: The MINIMIZE variable cannot be accessed yet undeer EO.\n",sEZ_FILE_NAME,yylineno);
       exit(1);
     }} // local genome name
+<COPY_USER_GENERATION>"MAXIMISE" |
+<COPY_USER_GENERATION>"MAXIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE");
+  else switch  (TARGET) {
+    case GALIB : fprintf(fpOutputFile,"g.minimaxi()"); break;
+    case EO : fprintf(stderr,"\n%s - Error line %d: The MAXIMISE variable cannot be accessed yet undeer EO.\n",sEZ_FILE_NAME,yylineno);
+      exit(1);
+    }} // local genome name
+<COPY_USER_GENERATION>"MAXIMIZE" |
+<COPY_USER_GENERATION>"MAXIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE");
+  else switch  (TARGET) {
+    case GALIB : fprintf(fpOutputFile,"g.minimaxi()"); break;
+    case EO : fprintf(stderr,"\n%s - Error line %d: The MAXIMIZE variable cannot be accessed yet undeer EO.\n",sEZ_FILE_NAME,yylineno);
+      exit(1);
+    }} // local genome name
 
 <COPY_USER_GENERATION>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n    hint -> You must have meant \"NB_GEN=...\" rather than \"currentGeneration=...\"\n",sEZ_FILE_NAME,yylineno);
   exit(1);
@@ -1559,6 +1585,20 @@ exponent  ([Ee][+-]?[0-9]+)
     case GALIB :fprintf(fpOutputFile,"MINIMIZE=");
       bWaitingForSemiColon=bFinishMINIMISE=1; break;
     case EO : fprintf(stderr,"\n%s - Error line %d: MINIMIZE cannot be changed during the run in EO yet.\n",sEZ_FILE_NAME,yylineno);
+      exit(1);
+    }}
+<COPY_USER_GENERATION>"MAXIMISE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
+  else switch  (TARGET) {
+    case GALIB :fprintf(fpOutputFile,"MAXIMISE=");
+      bWaitingForSemiColon=bFinishMINIMISE=1; break;
+    case EO : fprintf(stderr,"\n%s - Error line %d: MAXIMISE cannot be changed during the run in EO yet.\n",sEZ_FILE_NAME,yylineno);
+      exit(1);
+    }}
+<COPY_USER_GENERATION>"MAXIMIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
+  else switch  (TARGET) {
+    case GALIB :fprintf(fpOutputFile,"MAXIMIZE=");
+      bWaitingForSemiColon=bFinishMINIMISE=1; break;
+    case EO : fprintf(stderr,"\n%s - Error line %d: MAXIMIZE cannot be changed during the run in EO yet.\n",sEZ_FILE_NAME,yylineno);
       exit(1);
     }}
 <COPY_USER_GENERATION>"false"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaFalse");
@@ -1958,7 +1998,7 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (TARGET==STD){
     if(TARGET_FLAVOR == STD_FLAVOR_SO)
       strcat(sTemp,"STD.tpl");
-    else if (TARGET_FLAVOR == CMAES)
+    else if (TARGET_FLAVOR == STD_FLAVOR_CMAES)
       strcat(sTemp,"CMAES.tpl");
     else
       strcat(sTemp,"STD_MO.tpl");
