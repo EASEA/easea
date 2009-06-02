@@ -119,8 +119,6 @@ inline float Schwefel(float x[SIZE], int n)
 
 __device__ __host__ inline float Weierstrass(float x[SIZE], int n)  // Weierstrass multimidmensionnel h = 0.25
 {
-  cout << MUT_PROB << endl;
-
    float res = 0.;
    float val[SIZE];
    float b=2.;
@@ -169,11 +167,12 @@ float gauss()
 	      printf("%.02f:%.02f|",Genome.x[i],Genome.sigma[i]);
 	 }	      
 \end
-\Initialisation function:
+\before everything else function:
   std::cout<<"*************  n: "<<n<<std::endl;
 \end
 
-\Finalization function:
+\after everything else function:
+cout << "xover prob is " << XOVER_PROB << endl;
 cout << "finalization function called" << endl;
 \end
 
@@ -202,6 +201,7 @@ GenomeClass {
 
 
 \At the end of each generation function:
+if( currentGeneration==98 ) XOVER_PROB = 0.5;
 \end
 
 
@@ -240,7 +240,7 @@ CPPFLAGS+=
 \Default run parameters :        // Please let the parameters appear in this order
  Number of generations : 100     // NB_GEN
   Mutation probability : 1       // MUT_PROB
-  Crossover probability : 1      // XOVER_PROB
+  Crossover probability : 0.8      // XOVER_PROB
   Population size : 20     // POP_SIZE
   Offspring size : 20 // 40%  
   Genitors selector: Tournament 2

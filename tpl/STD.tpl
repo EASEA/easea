@@ -8,6 +8,7 @@ using namespace std;
 #include <stdlib.h>
 /** Global variables for the whole algorithm */
 float* pEZ_MUT_PROB = NULL;
+float* pEZ_XOVER_PROB = NULL;
 
 #include <iostream>
 #include "EASEATools.hpp"
@@ -29,6 +30,9 @@ int main(int argc, char** argv){
   float pCrossover = \XOVER_PROB;
   float pMutation = \MUT_PROB;
   float pMutationPerGene = 0.05;
+
+  pEZ_MUT_PROB = &pMutationPerGene;
+  pEZ_XOVER_PROB = &pCrossover;
 
   time_t seed = setVariable("seed",time(0));
   globalRandomGenerator = new RandomGenerator(seed);
@@ -709,6 +713,7 @@ Population::Population(size_t parentPopulationSize, size_t offspringPopulationSi
   this->pCrossover       = pCrossover;
   this->pMutation        = pMutation;
   pEZ_MUT_PROB = &this->pMutation;
+  pEZ_XOVER_PROB = &this->pCrossover;
   this->pMutationPerGene = pMutationPerGene;
 
   this->rg = rg;
@@ -1262,6 +1267,7 @@ string setVariable(const string optionName, string defaultValue){
 #include <boost/serialization/vector.hpp>
 
 extern float* pEZ_MUT_PROB;
+extern float* pEZ_XOVER_PROB;
 
 class EvolutionaryAlgorithm;
 class Individual;
