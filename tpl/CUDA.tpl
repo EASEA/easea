@@ -1578,6 +1578,11 @@ class EvolutionaryAlgorithm;
 class Individual;
 class Population;
 
+#define EZ_MINIMIZE \MINIMAXI
+#define EZ_MINIMISE \MINIMAXI
+#define EZ_MAXIMIZE !\MINIMAXI
+#define EZ_MAXIMISE !\MINIMAXI
+
 #ifdef DEBUG
 #define DEBUG_PRT(format, args...) fprintf (stdout,"***DBG***  %s-%d: "format"\n",__FILE__,__LINE__,##args)
 #define DEBUG_YACC(format, args...) fprintf (stdout,"***DBG_YACC***  %s-%d: "format"\n",__FILE__,__LINE__,##args)
