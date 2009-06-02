@@ -30,15 +30,21 @@ int main(int argc, char** argv){
 
   SelectionOperator* selectionOperator = new \SELECTOR;
   SelectionOperator* replacementOperator = new \RED_FINAL;
+  SelectionOperator* parentReductionOperator = new \RED_PAR;
+  SelectionOperator* offspringReductionOperator = new \RED_OFF;
   float selectionPressure = \SELECT_PRM;
   float replacementPressure = \RED_FINAL_PRM;
+  float parentReductionPressure = \RED_PAR_PRM;
+  float offspringReductionPressure = \RED_OFF_PRM;
+
   string outputfile = setVariable("outputfile","");
   string inputfile = setVariable("inputfile","");
 
   EASEAInit(argc,argv);
     
-  EvolutionaryAlgorithm ea(parentPopulationSize,offspringPopulationSize,selectionPressure,replacementPressure,
-			   selectionOperator,replacementOperator,pCrossover, pMutation, pMutationPerGene,outputfile,inputfile);
+  EvolutionaryAlgorithm ea(parentPopulationSize,offspringPopulationSize,selectionPressure,replacementPressure,parentReductionPressure,offspringReductionPressure,
+			   selectionOperator,replacementOperator,parentReductionOperator, offspringReductionOperator, pCrossover, pMutation, pMutationPerGene,
+			   outputfile,inputfile);
 
   StoppingCriterion* sc = new GenerationalCriterion(&ea,setVariable("nbGen",\NB_GEN));
   ea.addStoppingCriterion(sc);
@@ -180,39 +186,40 @@ size_t Individual::mutate( float pMutationPerGene ){
    EvolutionaryAlgorithm class
 ****************************************/
 
-/**
-   @DEPRECATED This contructor will be deleted. It was for test only, because it
-   is too much constrained (default selection/replacement operator)
- */
+/* /\** */
+/*    @DEPRECATED This contructor will be deleted. It was for test only, because it */
+/*    is too much constrained (default selection/replacement operator) */
+/*  *\/ */
+/* EvolutionaryAlgorithm::EvolutionaryAlgorithm( size_t parentPopulationSize, */
+/* 					      size_t offspringPopulationSize, */
+/* 					      float selectionPressure, float replacementPressure, */
+/* 					      float pCrossover, float pMutation,  */
+/* 					      float pMutationPerGene){ */
+/*   RandomGenerator* rg = globalRandomGenerator; */
+
+
+/*   SelectionOperator* so = new MaxTournament(rg); */
+/*   SelectionOperator* ro = new MaxTournament(rg); */
+  
+/*   Individual::initRandomGenerator(rg); */
+/*   Population::initPopulation(so,ro,selectionPressure,replacementPressure); */
+  
+/*   this->population = new Population(parentPopulationSize,offspringPopulationSize, */
+/* 				    pCrossover,pMutation,pMutationPerGene,rg); */
+
+/*   this->currentGeneration = 0; */
+
+/*   this->reduceParents = 0; */
+/*   this->reduceOffsprings = 0; */
+
+
+/* } */
+
 EvolutionaryAlgorithm::EvolutionaryAlgorithm( size_t parentPopulationSize,
 					      size_t offspringPopulationSize,
-					      float selectionPressure, float replacementPressure,
-					      float pCrossover, float pMutation, 
-					      float pMutationPerGene){
-  RandomGenerator* rg = globalRandomGenerator;
-
-
-  SelectionOperator* so = new MaxTournament(rg);
-  SelectionOperator* ro = new MaxTournament(rg);
-  
-  Individual::initRandomGenerator(rg);
-  Population::initPopulation(so,ro,selectionPressure,replacementPressure);
-  
-  this->population = new Population(parentPopulationSize,offspringPopulationSize,
-				    pCrossover,pMutation,pMutationPerGene,rg);
-
-  this->currentGeneration = 0;
-
-  this->reduceParents = 0;
-  this->reduceOffsprings = 0;
-
-
-}
-
-EvolutionaryAlgorithm::EvolutionaryAlgorithm( size_t parentPopulationSize,
-					      size_t offspringPopulationSize,
-					      float selectionPressure, float replacementPressure,
+					      float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
 					      SelectionOperator* selectionOperator, SelectionOperator* replacementOperator,
+					      SelectionOperator* parentReductionOperator, SelectionOperator* offspringReductionOperator,
 					      float pCrossover, float pMutation, 
 					      float pMutationPerGene, string& outputfile, string& inputfile){
 
@@ -222,7 +229,7 @@ EvolutionaryAlgorithm::EvolutionaryAlgorithm( size_t parentPopulationSize,
   SelectionOperator* ro = replacementOperator;
   
   Individual::initRandomGenerator(rg);
-  Population::initPopulation(so,ro,selectionPressure,replacementPressure);
+  Population::initPopulation(so,ro,parentReductionOperator,offspringReductionOperator,selectionPressure,replacementPressure,parentReductionPressure,offspringReductionPressure);
   
   this->population = new Population(parentPopulationSize,offspringPopulationSize,
 				    pCrossover,pMutation,pMutationPerGene,rg);
@@ -266,25 +273,28 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
     population->produceOffspringPopulation();
     \INSERT_BOUND_CHECKING_FCT_CALL
     population->evaluateOffspringPopulation();
+
+
+
+#if \IS_PARENT_REDUCTION
+      population->reduceParentPopulation(\SURV_PAR_SIZE);
+#endif
     
-    if(reduceParents)
-      population->reduceParentPopulation(reduceParents);
-    
-    if(reduceOffsprings)
-      population->reduceOffspringPopulation(reduceOffsprings);
+
+#if \IS_OFFSPRING_REDUCTION
+      population->reduceOffspringPopulation(\SURV_OFF_SIZE);
+#endif
     
     population->reduceTotalPopulation();
      
     \INSERT_GEN_FCT_CALL    
 
-     showPopulationStats(begin);
+    showPopulationStats(begin);
     currentGeneration += 1;
   }  
   population->sortParentPopulation();
   //std::cout << *population << std::endl;
   std::cout << "Generation : " << currentGeneration << std::endl;
-
-
 }
 
 
@@ -405,12 +415,15 @@ class Individual{
 ****************************************/
 class EvolutionaryAlgorithm{
 public:
-  EvolutionaryAlgorithm(  size_t parentPopulationSize, size_t offspringPopulationSize,
-			  float selectionPressure, float replacementPressure, 
-			  float pCrossover, float pMutation, float pMutationPerGene);
-  EvolutionaryAlgorithm( size_t parentPopulationSize,size_t offspringPopulationSize,
-			 float selectionPressure, float replacementPressure,
+/*   EvolutionaryAlgorithm(  size_t parentPopulationSize, size_t offspringPopulationSize, */
+/* 			  float selectionPressure, float replacementPressure,  */
+/* 			  float pCrossover, float pMutation, float pMutationPerGene); */
+  
+  EvolutionaryAlgorithm( size_t parentPopulationSize,
+			 size_t offspringPopulationSize,
+			 float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
 			 SelectionOperator* selectionOperator, SelectionOperator* replacementOperator,
+			 SelectionOperator* parentReductionOperator, SelectionOperator* offspringReductionOperator,
 			 float pCrossover, float pMutation, 
 			 float pMutationPerGene, std::string& outputfile, std::string& inputfile);
 
@@ -656,9 +669,15 @@ bool GenerationalCriterion::reached(){
 ****************************************/
 SelectionOperator* Population::selectionOperator;
 SelectionOperator* Population::replacementOperator;
+SelectionOperator* Population::parentReductionOperator;
+SelectionOperator* Population::offspringReductionOperator;
+
 
 float Population::selectionPressure;
 float Population::replacementPressure;
+float Population::parentReductionPressure;
+float Population::offspringReductionPressure;
+
 
 
 Population::Population(){
@@ -710,11 +729,20 @@ Population::~Population(){
 
 void Population::initPopulation(SelectionOperator* selectionOperator, 
 				SelectionOperator* replacementOperator,
-				float selectionPressure, float replacementPressure){
+				SelectionOperator* parentReductionOperator,
+				SelectionOperator* offspringReductionOperator,
+				float selectionPressure, float replacementPressure,
+				float parentReductionPressure, float offspringReductionPressure){
   Population::selectionOperator   = selectionOperator;
   Population::replacementOperator = replacementOperator;
+  Population::parentReductionOperator = parentReductionOperator;
+  Population::offspringReductionOperator = offspringReductionOperator;
+
   Population::selectionPressure   = selectionPressure;
   Population::replacementPressure = replacementPressure;
+  Population::parentReductionPressure = parentReductionPressure;
+  Population::offspringReductionPressure = offspringReductionPressure;
+
 }
 
 
@@ -800,19 +828,23 @@ Individual** Population::reduceParentPopulation(size_t obSize){
 }
 
 
+
 Individual** Population::reduceOffspringPopulation(size_t obSize){
-  Individual** nextGeneration = new Individual*[obSize];
+  // this array has offspringPopulationSize because it will be used as offspring population in
+  // the next generation
+  Individual** nextGeneration = new Individual*[offspringPopulationSize]; 
+  
 
   reducePopulation(offsprings,actualOffspringPopulationSize,nextGeneration,obSize,
 		   Population::replacementOperator);
 
   // free no longer needed individuals
   for( size_t i=0 ; i<actualOffspringPopulationSize-obSize ; i++ )
-    delete(parents[i]);
-  delete[](parents);
+    delete(offsprings[i]);
+  delete[](offsprings);
 
-  this->actualParentPopulationSize = obSize;
-  parents = nextGeneration;
+  this->actualOffspringPopulationSize = obSize;
+  offsprings = nextGeneration;
   return nextGeneration;
 }
 
@@ -877,7 +909,7 @@ void Population::reduceTotalPopulation(){
   Population::reducePopulation(globalPopulation,actualGlobalSize,\ELITE_SIZE+nextGeneration,
 			       parentPopulationSize-\ELITE_SIZE,replacementOperator);
 
-  for( size_t i=0 ; i<offspringPopulationSize ; i++ )
+  for( size_t i=0 ; i<((int)actualGlobalSize+\ELITE_SIZE)-(int)parentPopulationSize ; i++ )
     delete(globalPopulation[i]);
     
   delete[](parents);
@@ -1386,6 +1418,8 @@ class Population {
 
   static SelectionOperator* selectionOperator;
   static SelectionOperator* replacementOperator;
+  static SelectionOperator* parentReductionOperator;
+  static SelectionOperator* offspringReductionOperator;
 
   size_t currentEvaluationNb;
   RandomGenerator* rg;
@@ -1414,9 +1448,15 @@ class Population {
 
   static float selectionPressure;
   static float replacementPressure;
+  static float parentReductionPressure;
+  static float offspringReductionPressure;
+
   static void initPopulation(SelectionOperator* selectionOperator, 
 			     SelectionOperator* replacementOperator,
-			     float selectionPressure, float replacementPressure);
+			     SelectionOperator* parentReductionOperator,
+			     SelectionOperator* offspringReductionOperator,
+			     float selectionPressure, float replacementPressure,
+			     float parentReductionPressure, float offspringReductionPressure);
 
   static void sortPopulation(Individual** population, size_t populationSize);
 

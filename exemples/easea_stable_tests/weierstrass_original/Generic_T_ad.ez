@@ -231,12 +231,19 @@ CPPFLAGS+=
  Number of generations : 100     // NB_GEN
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
-  Population size : 10     // POP_SIZE
+  Population size : 20     // POP_SIZE
+  Offspring size : 20 // 40%  
   Genitors selector: Tournament 2
-  Final reduce: Tournament 2
+  Final reduce: Tournament 3
+
+    Reduce parents: Tournament 2
+    Surviving parents : 5
+
+    Reduce offspring: Tournament 2
+    Surviving offspring: 17
 
 		    	   //  Selection operator : Tournament // RouletteWheel, Deterministic, Ranking, Random
-  Offspring size : 80% // 40% 
+
 		   //Replacement strategy : Plus    // Comma, SteadyState, Generational
 		   //  Discarding operator : Worst    // Best, Tournament, Parent, Random
   Evaluator goal : Minimise      // Maximise

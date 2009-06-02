@@ -11,6 +11,7 @@ Centre de Mathématiques Appliquées
 
 #include "Easea.h"
 #include "debug.h"
+#include "EaseaYTools.h"
 
 // Globals     
 CSymbol *pCURRENT_CLASS;
@@ -32,9 +33,9 @@ char sREPLACEMENT[50];
 char sSELECTOR[50];
 char sSELECT_PRM[50];
 char sRED_PAR[50];
-char sRED_PAR_PRM[50];
+char sRED_PAR_PRM[50] = {0};
 char sRED_OFF[50];
-char sRED_OFF_PRM[50];
+ char sRED_OFF_PRM[50] = {0};
 char sRED_FINAL[50];
 char sRED_FINAL_PRM[50];
 char sDISCARD[50];
@@ -560,32 +561,36 @@ Parameter
                                 break;
       case CUDA:
       case STD:
-      case EO : if (!mystricmp(sSELECTOR,"RouletteWheel")){
-				  if (nMINIMISE==1) {
-				    fprintf(stderr,"\n%s - Error line %d: The RouletteWheel selection scheme cannot be\n selected when \"minimising the fitness\" is the evaluator goal.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
-				    exit(1);
-				  }
-				  else sprintf(sSELECTOR,"Roulette");
-				}
-				else if (!mystricmp(sSELECTOR,"Tournament")) sprintf(sSELECTOR,"DetTour");
-				else if (!mystricmp(sSELECTOR,"StochTrn")) sprintf(sSELECTOR,"StochTour");
-				else if (!mystricmp(sSELECTOR,"Random")){
-				  sprintf(sSELECTOR,"Random");
-				  if( TARGET==CUDA || TARGET==STD )
-				    sprintf(sSELECT_PRM,"(0)");      
-				}
-				else if (!mystricmp(sSELECTOR,"Ranking")) sprintf(sSELECTOR,"Ranking");
-				else if (!mystricmp(sSELECTOR,"Sequential")){
-				  sprintf(sSELECTOR,"Sequential");
-				  if( TARGET==CUDA || TARGET==STD) sprintf(sSELECT_PRM,"(0)");
-				  
-			  }
-                          else {
-                            fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist in EO.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sSELECTOR);
-                            exit(1);
-                          }
+	pickupSTDSelector(sSELECTOR,sSELECT_PRM,sEZ_FILE_NAME,&EASEALexer);
+	break;
+      case EO : 
+
+	if (!mystricmp(sSELECTOR,"RouletteWheel")){
+	  if (nMINIMISE==1) {
+	    fprintf(stderr,"\n%s - Error line %d: The RouletteWheel selection scheme cannot be\n selected when \"minimising the fitness\" is the evaluator goal.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
+	    exit(1);
+	  }
+	  else sprintf(sSELECTOR,"Roulette");
+	}
+	else if (!mystricmp(sSELECTOR,"Tournament")) sprintf(sSELECTOR,"DetTour");
+	else if (!mystricmp(sSELECTOR,"StochTrn")) sprintf(sSELECTOR,"StochTour");
+	else if (!mystricmp(sSELECTOR,"Random")){
+	  sprintf(sSELECTOR,"Random");
+	  if( TARGET==CUDA || TARGET==STD )
+	    sprintf(sSELECT_PRM,"(0)");
+	}
+	else if (!mystricmp(sSELECTOR,"Ranking")) sprintf(sSELECTOR,"Ranking");
+	else if (!mystricmp(sSELECTOR,"Sequential")){
+	  sprintf(sSELECTOR,"Sequential");
+	  if( TARGET==CUDA || TARGET==STD) sprintf(sSELECT_PRM,"(0)");
+	  
+	}
+	else {
+	  fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist in EO.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sSELECTOR);
+	  exit(1);
+	}
       }
-      }
+    }
   |  SELECTOR IDENTIFIER2 NUMBER2 {
       sprintf(sSELECTOR, $2->sName);   
       switch (TARGET) {
@@ -628,47 +633,52 @@ Parameter
                                 break;
       case CUDA:
       case STD:
-      case EO :  if (!mystricmp(sSELECTOR,"Tournament")||!mystricmp(sSELECTOR,"StochTrn")) {
-                             if ($3>=2) {sprintf(sSELECTOR,"DetTour");sprintf(sSELECT_PRM,"(%d)",(int) $3);}
-                             else if (($3>.5)&&($3<=1.0)) {sprintf(sSELECTOR,"StochTour");sprintf(sSELECT_PRM,"(%f)",(float) $3);}
-                             else {fprintf(stderr,"\n%s - Error line %d: The parameter of the Tournament selector must be either >=2 or within ]0.5, 1].\n",sEZ_FILE_NAME,EASEALexer.yylineno); exit(1);}
-                          }
-                          else if (!mystricmp(sSELECTOR,"RouletteWheel")) {
-                            sprintf(sSELECTOR,"Roulette");
-                            if ($3<1) {fprintf(stderr,"\n%s - Warning line %d: The parameter of RouletteWheel must be greater than one.\nThe parameter will therefore be ignored.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;}
-                            else sprintf(sSELECT_PRM,"(%f)",(float) $3);
-                          }
-                          else if (!mystricmp(sSELECTOR,"Random")) {
-                            sprintf(sSELECTOR,"Random");
-                            fprintf(stderr,"\n%s - Warning line %d: The Uniform selector does not (yet) take any parameter in EO.\nThe parameter will therefore be ignored.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-                          }
-                          else if (!mystricmp(sSELECTOR,"Ranking")) {
-                            sprintf(sSELECTOR,"Ranking");
-                            if (($3<=1)||($3>2)) {
-                              fprintf(stderr,"\n%s - Warning line %d: The parameter of Ranking must be in (1,2].\nThe parameter will default to 2.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-                              sprintf(sSELECT_PRM,"(2)");
-                            }
-                            else sprintf(sSELECT_PRM,"(%f)",(float) $3);
-                          }
-                          else if (!mystricmp(sSELECTOR,"Sequential")) {
-                            sprintf(sSELECTOR,"Sequential");
-                            if ($3==0) 
-			      if( TARGET==CUDA || TARGET==STD )
-				sprintf(sSELECT_PRM,"(0)");
-			      else
-				sprintf(sSELECT_PRM,"(unordered)");
-			    
-                            else if ($3==1) sprintf(sSELECT_PRM,"(ordered)");
-                            else {
-                              fprintf(stderr,"\n%s - Warning line %d: The parameter of Sequential must be either 0 (unordered) or 1 (ordered).\nThe parameter will default to 1.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-                              sprintf(sSELECT_PRM,"(ordered)");
-                            }
-                          }
-                          else {
-                            fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sSELECTOR);
-                            exit(1);
-                          }
-     }}
+	pickupSTDSelectorArgument(sSELECTOR,sSELECT_PRM,sEZ_FILE_NAME,(float)$3,&EASEALexer);
+	break;
+      case EO :  
+
+	if (!mystricmp(sSELECTOR,"Tournament")||!mystricmp(sSELECTOR,"StochTrn")) {
+	  if ($3>=2) {sprintf(sSELECTOR,"DetTour");sprintf(sSELECT_PRM,"(%d)",(int) $3);}
+	  else if (($3>.5)&&($3<=1.0)) {sprintf(sSELECTOR,"StochTour");sprintf(sSELECT_PRM,"(%f)",(float) $3);}
+	  else {fprintf(stderr,"\n%s - Error line %d: The parameter of the Tournament selector must be either >=2 or within ]0.5, 1].\n",sEZ_FILE_NAME,EASEALexer.yylineno); exit(1);}
+	}
+	else if (!mystricmp(sSELECTOR,"RouletteWheel")) {
+	  sprintf(sSELECTOR,"Roulette");
+	  if ($3<1) {fprintf(stderr,"\n%s - Warning line %d: The parameter of RouletteWheel must be greater than one.\nThe parameter will therefore be ignored.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;}
+	  else sprintf(sSELECT_PRM,"(%f)",(float) $3);
+	}
+	else if (!mystricmp(sSELECTOR,"Random")) {
+	  sprintf(sSELECTOR,"Random");
+	  fprintf(stderr,"\n%s - Warning line %d: The Uniform selector does not (yet) take any parameter in EO.\nThe parameter will therefore be ignored.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+	}
+	else if (!mystricmp(sSELECTOR,"Ranking")) {
+	  sprintf(sSELECTOR,"Ranking");
+	  if (($3<=1)||($3>2)) {
+	    fprintf(stderr,"\n%s - Warning line %d: The parameter of Ranking must be in (1,2].\nThe parameter will default to 2.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+	    sprintf(sSELECT_PRM,"(2)");
+	  }
+	  else sprintf(sSELECT_PRM,"(%f)",(float) $3);
+	}
+	else if (!mystricmp(sSELECTOR,"Sequential")) {
+	  sprintf(sSELECTOR,"Sequential");
+	  if ($3==0)
+	    if( TARGET==CUDA || TARGET==STD )
+	      sprintf(sSELECT_PRM,"(0)");
+	    else
+	      sprintf(sSELECT_PRM,"(unordered)");
+	  
+	  else if ($3==1) sprintf(sSELECT_PRM,"(ordered)");
+	  else {
+	    fprintf(stderr,"\n%s - Warning line %d: The parameter of Sequential must be either 0 (unordered) or 1 (ordered).\nThe parameter will default to 1.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+	    sprintf(sSELECT_PRM,"(ordered)");
+	  }
+	}
+	else {
+	  fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sSELECTOR);
+	  exit(1);
+	}
+      }
+    }
   |  RED_PAR IDENTIFIER2{
         sprintf(sRED_PAR, $2->sName);
         switch (TARGET) {
@@ -691,25 +701,29 @@ Parameter
               exit(1);
             }
           break;
-          case EO : if (!mystricmp(sRED_PAR,"RouletteWheel")){
-                              if (nMINIMISE==1) {
-                                fprintf(stderr,"\n%s - Error line %d: The RouletteWheel selection scheme cannot be\n selected when \"minimising the fitness\" is the evaluator goal.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
-                                exit(1);
-                              }
-                              else sprintf(sRED_PAR,"Roulette");
-                            }
-                            else if (!mystricmp(sRED_PAR,"Tournament")) sprintf(sRED_PAR,"DetTour");
-                            else if (!mystricmp(sRED_PAR,"StochTrn")) sprintf(sRED_PAR,"StochTour");
-                            else if (!mystricmp(sRED_PAR,"Random")) sprintf(sRED_PAR,"Random");
-                            else if (!mystricmp(sRED_PAR,"Ranking")) sprintf(sRED_PAR,"Ranking");
-                            else if (!mystricmp(sRED_PAR,"Sequential")) sprintf(sRED_PAR,"Sequential");
-                            else {
-                              fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist in EO.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_PAR);
-                              exit(1);
-                            }
-       }
-       }
-  |  RED_PAR IDENTIFIER2 NUMBER2 {
+	case CUDA:
+	case STD:
+	  pickupSTDSelector(sRED_PAR,sRED_PAR_PRM,sEZ_FILE_NAME,&EASEALexer);
+	  break;
+	case EO : if (!mystricmp(sRED_PAR,"RouletteWheel")){
+	    if (nMINIMISE==1) {
+	      fprintf(stderr,"\n%s - Error line %d: The RouletteWheel selection scheme cannot be\n selected when \"minimising the fitness\" is the evaluator goal.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
+	      exit(1);
+	    }
+	    else sprintf(sRED_PAR,"Roulette");
+	  }
+	  else if (!mystricmp(sRED_PAR,"Tournament")) sprintf(sRED_PAR,"DetTour");
+	  else if (!mystricmp(sRED_PAR,"StochTrn")) sprintf(sRED_PAR,"StochTour");
+	  else if (!mystricmp(sRED_PAR,"Random")) sprintf(sRED_PAR,"Random");
+	  else if (!mystricmp(sRED_PAR,"Ranking")) sprintf(sRED_PAR,"Ranking");
+	  else if (!mystricmp(sRED_PAR,"Sequential")) sprintf(sRED_PAR,"Sequential");
+	  else {
+	    fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist in EO.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_PAR);
+	    exit(1);
+	  }
+	}
+    }
+|  RED_PAR IDENTIFIER2 NUMBER2 {
         sprintf(sRED_PAR, $2->sName);
         switch (TARGET) {
           case DREAM : if (!mystricmp(sRED_PAR,"EPTrn")){
@@ -736,7 +750,10 @@ Parameter
           break;
 	case CUDA :
 	case STD:
-        case EO :  if (!mystricmp(sRED_PAR,"Tournament")||!mystricmp(sRED_PAR,"StochTrn")) {
+	  pickupSTDSelectorArgument(sRED_PAR,sRED_PAR_PRM,sEZ_FILE_NAME,(float)$3,&EASEALexer);
+	  break;
+        case EO :
+	  if (!mystricmp(sRED_PAR,"Tournament")||!mystricmp(sRED_PAR,"StochTrn")) {
                              if ($3>=2) {sprintf(sRED_PAR,"DetTour");sprintf(sRED_PAR_PRM,"(%d)",(int) $3);}
                              else if (($3>.5)&&($3<=1.0)) {sprintf(sRED_PAR,"StochTour");sprintf(sRED_PAR_PRM,"(%f)",(float) $3);}
                              else {fprintf(stderr,"\n%s - Error line %d: The parameter of the Tournament selector must be either >=2 or within ]0.5, 1].\n",sEZ_FILE_NAME,EASEALexer.yylineno); exit(1);}
@@ -776,45 +793,52 @@ Parameter
                             fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_PAR);
                             exit(1);
                           }
-	}}
+	}
+    }
   |  RED_OFF IDENTIFIER2{
       sprintf(sRED_OFF, $2->sName);
       switch (TARGET) {
-          case DREAM : if (!mystricmp(sRED_OFF,"EPTrn")){
-                                        fprintf(stderr,"\n%s - Error line %d: The EP-Tournament selector is not implemented in DREAM.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
-                                        exit(1);
-                                      }
-                                      else if (!mystricmp(sRED_OFF,"Tournament")) sprintf(sRED_OFF,"TournamentSelector(MAX, 1, 2)");
-                                      else if (!mystricmp(sRED_OFF,"StochTrn")) {
-                                        fprintf(stderr,"\n%s - Warning line %d: The Stochatic Tournament selector needs a parameter in [0.5,1].\nDefault value 1 inserted",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-                                        sprintf(sRED_OFF,"TournamentSelector(MAX, 1, 2)");
-                                      }
-                                      else if (!mystricmp(sRED_OFF,"RouletteWheel")) sprintf(sRED_OFF,"RouletteWheelSelector(MAX)");
-                                      else if (!mystricmp(sRED_OFF,"Random")) sprintf(sRED_OFF,"RandomSelector()");
-                                      else if (!mystricmp(sRED_OFF,"Sequential")) sprintf(sRED_OFF,"BestNSelector(MAX,%d)",nPOP_SIZE);
-                                      else if (!mystricmp(sRED_OFF,"Ranking")) sprintf(sRED_OFF,"RankingSelector(MAX)");
-                                      else {
-                                        fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_OFF);
-                                        exit(1);
-                                      }
-            break;
-          case EO : if (!mystricmp(sRED_OFF,"RouletteWheel")){
-                              if (nMINIMISE==1) {
-                                fprintf(stderr,"\n%s - Error line %d: The RouletteWheel selection scheme cannot be\n selected when \"minimising the fitness\" is the evaluator goal.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
-                                exit(1);
-                              }
-                              else sprintf(sRED_OFF,"Roulette");
-                            }
-                            else if (!mystricmp(sRED_OFF,"Tournament")) sprintf(sRED_OFF,"DetTour");
-                            else if (!mystricmp(sRED_OFF,"StochTrn")) sprintf(sRED_OFF,"StochTour");
-                            else if (!mystricmp(sRED_OFF,"Random")) sprintf(sRED_OFF,"Random");
-                            else if (!mystricmp(sRED_OFF,"Ranking")) sprintf(sRED_OFF,"Ranking");
-                            else if (!mystricmp(sRED_OFF,"Sequential")) sprintf(sRED_OFF,"Sequential");
-                            else {
-                              fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist in EO.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_OFF);
-                              exit(1);
-                            }
-       }}
+      case DREAM : if (!mystricmp(sRED_OFF,"EPTrn")){
+	  fprintf(stderr,"\n%s - Error line %d: The EP-Tournament selector is not implemented in DREAM.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
+	  exit(1);
+	}
+	else if (!mystricmp(sRED_OFF,"Tournament")) sprintf(sRED_OFF,"TournamentSelector(MAX, 1, 2)");
+	else if (!mystricmp(sRED_OFF,"StochTrn")) {
+	  fprintf(stderr,"\n%s - Warning line %d: The Stochatic Tournament selector needs a parameter in [0.5,1].\nDefault value 1 inserted",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+	  sprintf(sRED_OFF,"TournamentSelector(MAX, 1, 2)");
+	}
+	else if (!mystricmp(sRED_OFF,"RouletteWheel")) sprintf(sRED_OFF,"RouletteWheelSelector(MAX)");
+	else if (!mystricmp(sRED_OFF,"Random")) sprintf(sRED_OFF,"RandomSelector()");
+	else if (!mystricmp(sRED_OFF,"Sequential")) sprintf(sRED_OFF,"BestNSelector(MAX,%d)",nPOP_SIZE);
+	else if (!mystricmp(sRED_OFF,"Ranking")) sprintf(sRED_OFF,"RankingSelector(MAX)");
+	else {
+	  fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_OFF);
+	  exit(1);
+	}
+	break;
+      case EO : if (!mystricmp(sRED_OFF,"RouletteWheel")){
+	  if (nMINIMISE==1) {
+	    fprintf(stderr,"\n%s - Error line %d: The RouletteWheel selection scheme cannot be\n selected when \"minimising the fitness\" is the evaluator goal.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
+	    exit(1);
+	  }
+	  else sprintf(sRED_OFF,"Roulette");
+	}
+	else if (!mystricmp(sRED_OFF,"Tournament")) sprintf(sRED_OFF,"DetTour");
+	else if (!mystricmp(sRED_OFF,"StochTrn")) sprintf(sRED_OFF,"StochTour");
+	else if (!mystricmp(sRED_OFF,"Random")) sprintf(sRED_OFF,"Random");
+	else if (!mystricmp(sRED_OFF,"Ranking")) sprintf(sRED_OFF,"Ranking");
+	else if (!mystricmp(sRED_OFF,"Sequential")) sprintf(sRED_OFF,"Sequential");
+	else {
+	  fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist in EO.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_OFF);
+	  exit(1);
+	}
+	break;
+      case STD:
+      case CUDA:
+	pickupSTDSelector(sRED_OFF,sRED_OFF_PRM,sEZ_FILE_NAME,&EASEALexer);
+	break;
+      }
+    }
   |  RED_OFF IDENTIFIER2 NUMBER2 {
         strcpy(sRED_OFF, $2->sName);
         switch (TARGET) {
@@ -839,46 +863,50 @@ Parameter
                                         fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_OFF);
                                         exit(1);
                                       }
-          break;
+	    break;
         case EO :  if (!mystricmp(sRED_OFF,"Tournament")||!mystricmp(sRED_OFF,"StochTrn")) {
-                             if ($3>=2) {sprintf(sRED_OFF,"DetTour");sprintf(sRED_OFF_PRM,"(%d)",(int) $3);}
-                             else if (($3>.5)&&($3<=1.0)) {sprintf(sRED_OFF,"StochTour");sprintf(sRED_OFF_PRM,"(%f)",(float) $3);}
-                             else {fprintf(stderr,"\n%s - Error line %d: The parameter of the Tournament selector must be either >=2 or within ]0.5, 1].\n",sEZ_FILE_NAME,EASEALexer.yylineno); exit(1);}
-                          }
-                          else if (!mystricmp(sRED_OFF,"RouletteWheel")) {
-                            sprintf(sRED_OFF,"Roulette");
-                            if ($3<1) {fprintf(stderr,"\n%s - Warning line %d: The parameter of RouletteWheel must be greater than one.\nThe parameter will therefore be ignored.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;}
-                            else sprintf(sRED_OFF_PRM,"(%f)",(float) $3);
-                          }
-                          else if (!mystricmp(sRED_OFF,"Random")) {
-                            sprintf(sRED_OFF,"Random");
-                            fprintf(stderr,"\n%s - Warning line %d: The Uniform selector does not (yet) take any parameter in EO.\nThe parameter will therefore be ignored.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-                          }
-                          else if (!mystricmp(sRED_OFF,"Ranking")) {
-                            sprintf(sRED_OFF,"Ranking");
-                            if (($3<=1)||($3>2)) {
-                              fprintf(stderr,"\n%s - Warning line %d: The parameter of Ranking must be in (1,2].\nThe parameter will default to 2.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-                              sprintf(sRED_OFF_PRM,"(2)");
-                            }
-                            else sprintf(sRED_OFF_PRM,"(%f)",(float) $3);
-                          }
-                          else if (!mystricmp(sRED_OFF,"Sequential")) {
-                            sprintf(sRED_OFF,"Sequential");
-			    
-                            if ($3==0) if( TARGET==CUDA || TARGET==STD )
-				sprintf(sSELECT_PRM,"(0)");
-			      else
-				sprintf(sRED_OFF_PRM,"(unordered)");
-                            else if ($3==1) sprintf(sRED_OFF_PRM,"(ordered)");
-                            else {
-                              fprintf(stderr,"\n%s - Warning line %d: The parameter of Sequential must be either 0 (unordered) or 1 (ordered).\nThe parameter will default to 1.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-                              sprintf(sRED_OFF_PRM,"(ordered)");
-                            }
-                          }
-                          else {
-                            fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_OFF);
-                            exit(1);
-                          }
+	      if ($3>=2) {sprintf(sRED_OFF,"DetTour");sprintf(sRED_OFF_PRM,"(%d)",(int) $3);}
+	      else if (($3>.5)&&($3<=1.0)) {sprintf(sRED_OFF,"StochTour");sprintf(sRED_OFF_PRM,"(%f)",(float) $3);}
+	      else {fprintf(stderr,"\n%s - Error line %d: The parameter of the Tournament selector must be either >=2 or within ]0.5, 1].\n",sEZ_FILE_NAME,EASEALexer.yylineno); exit(1);}
+	    }
+	    else if (!mystricmp(sRED_OFF,"RouletteWheel")) {
+	      sprintf(sRED_OFF,"Roulette");
+	      if ($3<1) {fprintf(stderr,"\n%s - Warning line %d: The parameter of RouletteWheel must be greater than one.\nThe parameter will therefore be ignored.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;}
+	      else sprintf(sRED_OFF_PRM,"(%f)",(float) $3);
+	    }
+	    else if (!mystricmp(sRED_OFF,"Random")) {
+	      sprintf(sRED_OFF,"Random");
+	      fprintf(stderr,"\n%s - Warning line %d: The Uniform selector does not (yet) take any parameter in EO.\nThe parameter will therefore be ignored.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+	    }
+	    else if (!mystricmp(sRED_OFF,"Ranking")) {
+	      sprintf(sRED_OFF,"Ranking");
+	      if (($3<=1)||($3>2)) {
+		fprintf(stderr,"\n%s - Warning line %d: The parameter of Ranking must be in (1,2].\nThe parameter will default to 2.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+		sprintf(sRED_OFF_PRM,"(2)");
+	      }
+	      else sprintf(sRED_OFF_PRM,"(%f)",(float) $3);
+	    }
+	    else if (!mystricmp(sRED_OFF,"Sequential")) {
+	      sprintf(sRED_OFF,"Sequential");
+	      
+	      if ($3==0) if( TARGET==CUDA || TARGET==STD )
+			   sprintf(sSELECT_PRM,"(0)");
+		else
+		  sprintf(sRED_OFF_PRM,"(unordered)");
+	      else if ($3==1) sprintf(sRED_OFF_PRM,"(ordered)");
+	      else {
+		fprintf(stderr,"\n%s - Warning line %d: The parameter of Sequential must be either 0 (unordered) or 1 (ordered).\nThe parameter will default to 1.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+		sprintf(sRED_OFF_PRM,"(ordered)");
+	      }
+	    }
+	    else {
+	      fprintf(stderr,"\n%s - Error line %d: The %s selection scheme does not exist.\n",sEZ_FILE_NAME,EASEALexer.yylineno, sRED_OFF);
+	      exit(1);
+	    }
+	  break;
+	case STD:
+	case CUDA:
+	  pickupSTDSelectorArgument(sRED_OFF,sRED_OFF_PRM,sEZ_FILE_NAME,$3,&EASEALexer);
        }}
   |  RED_FINAL IDENTIFIER2{
         strcpy(sRED_FINAL, $2->sName);
@@ -903,7 +931,9 @@ Parameter
             break;
 	case CUDA:
 	case STD:
-          case EO : if (!mystricmp(sRED_FINAL,"RouletteWheel")){
+	  pickupSTDSelector(sRED_FINAL,sRED_FINAL_PRM,sEZ_FILE_NAME,&EASEALexer);
+	  break;
+	case EO : if (!mystricmp(sRED_FINAL,"RouletteWheel")){
                               if (nMINIMISE==1) {
                                 fprintf(stderr,"\n%s - Error line %d: The RouletteWheel selection scheme cannot be\n selected when \"minimising the fitness\" is the evaluator goal.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
                                 exit(1);
@@ -954,6 +984,8 @@ Parameter
           break;
 	case CUDA :
 	case STD:
+	  pickupSTDSelectorArgument(sRED_FINAL,sRED_FINAL_PRM,sEZ_FILE_NAME,$3,&EASEALexer);
+	  break;
         case EO :  
  	  if (!mystricmp(sRED_FINAL,"Tournament")||!mystricmp(sRED_FINAL,"StochTrn")) {
 	    if ($3>=2) {

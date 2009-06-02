@@ -72,6 +72,7 @@ Centre de Mathématiques Appliquées
   bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationFunction;
   bool bCatchNextSemiColon,bWaitingToClosePopulation, bMethodsInGenome, bFinalizationFunction;
   bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION, bWithinCUDA_Evaluator, bBoundCheckingFunction;
+  bool bIsParentReduce, bIsOffspringReduce;
   CSymbol *pASymbol;
 
  public:
@@ -87,6 +88,7 @@ Centre de Mathématiques Appliquées
   bWaitingForSemiColon=bFinishNB_GEN=bFinishMINIMISE=bFinishMINIMIZE=bGenerationFunction=0;
   bCatchNextSemiColon,bWaitingToClosePopulation=bMethodsInGenome=0;
   bBoundCheckingFunction = bWithinCUDA_Initializer=bWithinMAKEFILEOPTION =bWithinCUDA_Evaluator=0;
+  bIsParentReduce = bIsOffspringReduce = false;
 }
 
 // macros
@@ -584,6 +586,14 @@ exponent  ([Ee][+-]?[0-9]+)
   }
  }        
 
+<TEMPLATE_ANALYSIS>"\\IS_PARENT_REDUCTION" {
+    fprintf(fpOutputFile,"%d",bIsParentReduce);
+ }
+
+<TEMPLATE_ANALYSIS>"\\IS_OFFSPRING_REDUCTION" {
+  fprintf(fpOutputFile,"%d",bIsOffspringReduce);
+ }
+
 <TEMPLATE_ANALYSIS>"\\INSERT_INIT_FCT_CALL"  {
   if (bInitFunction) fprintf(fpOutputFile,"\n  EASEAInitFunction(argc, argv);\n");
  }
@@ -619,10 +629,43 @@ exponent  ([Ee][+-]?[0-9]+)
   //DEBUG_PRT("elitism is %d, elite size is %d",bELITISM, nELITE);
  }
 
-<TEMPLATE_ANALYSIS>"\\RED_PAR"  {fprintf(fpOutputFile,"%s",sRED_PAR);}
-<TEMPLATE_ANALYSIS>"\\RED_PAR_PRM"  {fprintf(fpOutputFile,"%s",sRED_PAR_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_OFF"  {fprintf(fpOutputFile,"%s",sRED_OFF);}
-<TEMPLATE_ANALYSIS>"\\RED_OFF_PRM"  {fprintf(fpOutputFile,"%s",sRED_OFF_PRM);}
+<TEMPLATE_ANALYSIS>"\\RED_PAR"  {
+  if( TARGET==CUDA || TARGET==STD){
+    DEBUG_PRT("Parent reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
+    char* selectorClass = selectorDetermination(nMINIMISE,sSELECTOR);
+    if( !selectorClass ){
+      fprintf(stderr,"Error %d : selection operator %s doesn't exist in CUDA/STD template\n",yylineno,sSELECTOR);
+      return -1;
+    }    
+    DEBUG_PRT("Created class is %s",selectorClass);
+    fprintf(fpOutputFile,"%s",selectorClass);
+  }
+  else fprintf(fpOutputFile,"%s",sRED_PAR);
+ }
+<TEMPLATE_ANALYSIS>"\\RED_PAR_PRM"  {
+  if( (TARGET==CUDA || TARGET==STD) && strlen(sRED_PAR_PRM)==0)
+    fprintf(fpOutputFile,"0");
+  else
+    fprintf(fpOutputFile,"%s",sRED_PAR_PRM);
+ }
+<TEMPLATE_ANALYSIS>"\\RED_OFF"  {
+  if( TARGET==CUDA || TARGET==STD){
+    DEBUG_PRT("Offspring reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
+    char* selectorClass = selectorDetermination(nMINIMISE,sSELECTOR);
+    if( !selectorClass ){
+      fprintf(stderr,"Error %d : selection operator %s doesn't exist in CUDA/STD template\n",yylineno,sSELECTOR);
+      return -1;
+    }    
+    DEBUG_PRT("Created class is %s",selectorClass);
+    fprintf(fpOutputFile,"%s",selectorClass);
+  }
+  else fprintf(fpOutputFile,"%s",sRED_OFF);
+ }
+<TEMPLATE_ANALYSIS>"\\RED_OFF_PRM"  {
+  if( (TARGET==CUDA || TARGET==STD ) && strlen(sRED_OFF_PRM)==0 )
+    fprintf(fpOutputFile,"0");
+  else
+    fprintf(fpOutputFile,"%s",sRED_OFF_PRM);}
 <TEMPLATE_ANALYSIS>"\\RED_FINAL"  {
   if( TARGET==CUDA || TARGET==STD){
     DEBUG_PRT("Replacement selector is \"%s\" | Goal is %s",sRED_FINAL,(nMINIMISE?"Minimize":"Maximize"));
@@ -1736,10 +1779,23 @@ exponent  ([Ee][+-]?[0-9]+)
 <GET_PARAMETERS>"Mutation"[ \t\n]+"probability"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMut Prob...\n");return MUT_PROB;}
 <GET_PARAMETERS>"Crossover"[ \t\n]+"probability"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tXov Prob...\n");return XOVER_PROB;}
 <GET_PARAMETERS>"Offspring"[ \t\n]+"size"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tOff Size...\n");return OFFSPRING;}
-<GET_PARAMETERS>"Reduce"[ \t\n]+"parents"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tReduce Par...\n");return RED_PAR;}
+
+
+<GET_PARAMETERS>"Reduce"[ \t\n]+"parents"[ \t\n]*":"[ \t\n]* {
+  if (bVERBOSE) printf ("\tReduce Par...\n");
+  bIsParentReduce = true;
+  return RED_PAR;
+ }
 <GET_PARAMETERS>"Surviving"[ \t\n]+"parents"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tSurv Par...\n");return SURVPAR;}
-<GET_PARAMETERS>"Reduce"[ \t\n]+"offspring"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tRed Off...\n");return RED_OFF;}
+
+<GET_PARAMETERS>"Reduce"[ \t\n]+"offspring"[ \t\n]*":"[ \t\n]* {
+  if (bVERBOSE) printf ("\tRed Off...\n");
+  bIsOffspringReduce = true;
+  return RED_OFF;
+ }
 <GET_PARAMETERS>"Surviving"[ \t\n]+"offspring"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tSurv Off...\n");return SURVOFF;}
+
+
 <GET_PARAMETERS>"Final"[ \t\n]+"reduce"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tFinal Red...\n");return RED_FINAL;}// DISCARD;}
 <GET_PARAMETERS>"Elitism"[ \t\n]*":" {if (bVERBOSE) printf ("\tElitism...\n");return ELITISM;}
 <GET_PARAMETERS>"Evaluator"[ \t\n]+"goal"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;}

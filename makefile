@@ -5,7 +5,7 @@ LDFLAGS =
 
 
 
-$(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a
+$(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o
 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
@@ -42,7 +42,7 @@ $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a
 
 
 
-EaseaParse.o: EaseaParse.cpp EaseaLex.cpp	
+EaseaParse.o: EaseaParse.cpp EaseaLex.cpp
 	$(CPPC) $(CPPFLAGS) $< -o $@ -c
 
 %.o:%.cpp
