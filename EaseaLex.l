@@ -2161,6 +2161,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (TARGET==CUDA){
     if(TARGET_FLAVOR == CUDA_FLAVOR_SO )
       strcat(sTemp,"CUDA.tpl");
+    else if(TARGET_FLAVOR == CUDA_FLAVOR_CMAES )
+      strcat(sTemp,"CMAES_CUDA.tpl");
     else 
       strcat(sTemp,"CUDA_MO.tpl");
 

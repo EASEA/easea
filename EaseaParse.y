@@ -355,7 +355,7 @@ Object
       if (bVERBOSE) printf("    %s pointer declared (%d bytes)\n",$2->sName,$2->nSize);
     }
   | Symbol  '[' Expr ']' {
-      if((TARGET_FLAVOR==STD_FLAVOR_CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
+      if((TARGET_FLAVOR==STD_FLAVOR_CMAES || TARGET_FLAVOR==CUDA_FLAVOR_CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
       $1->nSize=pCURRENT_TYPE->nSize*(int)$3;
       $1->pClass=pCURRENT_CLASS;
       $1->pType=pCURRENT_TYPE;
@@ -1381,6 +1381,10 @@ int main(int argc, char *argv[]){
     else if (!mystricmp(sTemp,"cmaes"))  {
       TARGET=STD;
       TARGET_FLAVOR = STD_FLAVOR_CMAES;
+    }
+    else if (!mystricmp(sTemp,"cmaes_cuda"))  {
+      TARGET=CUDA;
+      TARGET_FLAVOR = CUDA_FLAVOR_CMAES;
     }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;

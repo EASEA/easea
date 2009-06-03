@@ -572,9 +572,9 @@ void EvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   for(size_t i=0; i<population->parentPopulationSize; i++){
     currentAverageFitness+=population->parents[i]->getFitness();
 #if \MINIMAXI
-    if(population->parents[i]->getFitness()>population->Best->getFitness())
-#else
     if(population->parents[i]->getFitness()<population->Best->getFitness())
+#else
+    if(population->parents[i]->getFitness()>population->Best->getFitness())
 #endif
       population->Best=population->parents[i];
   }
