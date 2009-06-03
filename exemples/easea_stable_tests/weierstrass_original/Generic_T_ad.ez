@@ -172,7 +172,7 @@ float gauss()
 \end
 
 \after everything else function:
-cout << "xover prob is " << XOVER_PROB << endl;
+//cout << "xover prob is " << XOVER_PROB << endl;
 cout << "finalization function called" << endl;
 \end
 
@@ -202,10 +202,6 @@ GenomeClass {
 
 \At the end of each generation function:
 if( currentGeneration==98 ) XOVER_PROB = 0.5;
-for( int i=0 ; i<20 ; i++ ){
-  cout << pPopulation[i]->getFitness() << endl;
- }
-
 \end
 
 
