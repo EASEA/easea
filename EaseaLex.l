@@ -37,8 +37,13 @@ Centre de Mathématiques Appliquées
     strcat(selectorName,"Deterministic()");
   else if( mystricmp("Random",sSELECTOR)==0 )
     strcat(selectorName,"Random(globalRandomGenerator)");
+  else if( mystricmp("Roulette",sSELECTOR)==0 )
+    strcat(selectorName,"Roulette(globalRandomGenerator)");
 
-  else return NULL;
+  else{
+    DEBUG_PRT("%s is not yet implemented",sSELECTOR);
+    return NULL;
+  }
   
   char* ret = (char*)malloc((strlen(selectorName)+1)*sizeof(char));
   strcpy(ret,selectorName);
