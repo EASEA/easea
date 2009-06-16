@@ -242,19 +242,19 @@ CPPFLAGS+=
 
 \Default run parameters :        // Please let the parameters appear in this order
   Evaluator goal : Maximise //Minimise      // Maximise
- Number of generations : 100     // NB_GEN
+  Number of generations : 100     // NB_GEN
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 0.8      // XOVER_PROB
   Population size : 20     // POP_SIZE
   Offspring size : 20 // 40%  
   Genitors selector: RouletteWheel
   Final reduce: Tournament 3
+  
+  //  Selection operator : Tournament // RouletteWheel, Deterministic, Ranking, Random
 
+  //Replacement strategy : Plus    // Comma, SteadyState, Generational
+  //  Discarding operator : Worst    // Best, Tournament, Parent, Random
 
-		    	   //  Selection operator : Tournament // RouletteWheel, Deterministic, Ranking, Random
-
-		   //Replacement strategy : Plus    // Comma, SteadyState, Generational
-		   //  Discarding operator : Worst    // Best, Tournament, Parent, Random
   Elitism: Strong
   Elite: 1
 \end
