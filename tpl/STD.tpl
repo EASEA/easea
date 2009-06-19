@@ -9,19 +9,21 @@ using namespace std;
 class Individual;
 
 #include <stdlib.h>
-/** Global variables for the whole algorithm */
+/** Global variables for the whole algoritm **/
 Individual** pPopulation = NULL;
 float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
 size_t *EZ_NB_GEN;
 size_t *EZ_current_generation;
+int printStats;
+int plotStats;
 
 #include <iostream>
 #include "EASEATools.hpp"
 #include "EASEAIndividual.hpp"
 #include <time.h>
 
-
+PCom *gnuplot;
 
 RandomGenerator* globalRandomGenerator;
 
@@ -41,6 +43,9 @@ int main(int argc, char** argv){
   EZ_NB_GEN = (size_t*)setVariable("nbGen",\NB_GEN);
   EZ_current_generation=0;
 
+  printStats = setVariable("printStats",1);
+  plotStats = setVariable("plotStats",0);
+
   time_t seed = setVariable("seed",time(0));
   globalRandomGenerator = new RandomGenerator(seed);
 
@@ -58,6 +63,17 @@ int main(int argc, char** argv){
   string outputfile = setVariable("outputfile","");
   string inputfile = setVariable("inputfile","");
   
+#ifdef __linux__
+  if(plotStats){
+	remove("stats.dat");
+	gnuplot = initGnuplot();
+	fprintf(gnuplot->fWrit, "set term x11 persist\n");
+	fprintf(gnuplot->fWrit, "set grid\n");
+        fflush(gnuplot->fWrit);
+  }
+#endif
+
+
   EASEAInit(argc,argv);
     
   EvolutionaryAlgorithm ea(parentPopulationSize,offspringPopulationSize,selectionPressure,replacementPressure,parentReductionPressure,offspringReductionPressure,
@@ -83,6 +99,14 @@ int main(int argc, char** argv){
   delete replacementOperator;
   delete globalRandomGenerator;
 
+#ifdef __linux__
+  if(plotStats){
+        fprintf(gnuplot->fWrit,"quit\n");
+        fclose(gnuplot->fRead);
+        fclose(gnuplot->fWrit);
+        free(gnuplot);
+  }
+#endif
 
   return 0;
 }
@@ -288,7 +312,8 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
 
   std::cout << "Parent's population initializing "<< std::endl;
   this->population->initializeParentPopulation();  
-  std::cout << *population << std::endl;
+  if(setVariable("printInitialPopulation",0))
+	  std::cout << *population << std::endl;
 
   struct timeval begin;
   gettimeofday(&begin,NULL);
@@ -316,9 +341,10 @@ void EvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     showPopulationStats(begin);
     currentGeneration += 1;
-  }  
+  }
   population->sortParentPopulation();
-  //std::cout << *population << std::endl;
+  if(setVariable("printFinalPopulation",0))  
+  	std::cout << *population << std::endl;
   std::cout << "Generation : " << currentGeneration << std::endl;
 }
 
@@ -350,7 +376,7 @@ void EvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   currentSTDEV=sqrt(currentSTDEV);
   
   //Affichage
-  if(currentGeneration==0)
+  if(currentGeneration==0 && printStats)
     printf("GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
 
     //  assert( currentSTDEV == currentSTDEV );
@@ -358,8 +384,31 @@ void EvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   struct timeval end, res;
   gettimeofday(&end,0);
   timersub(&end,&beginTime,&res);
-  printf("%lu\t%d.%06d\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,
-	 population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+
+  if(printStats)
+  	printf("%lu\t%d.%06d\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb, population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+
+#ifdef __linux__
+  //print Gnutplot
+  if(plotStats){
+ 	 FILE *f;
+ 	 f = fopen("stats.dat","a");
+ 	 if(f!=NULL){
+ 	 	fprintf(f,"%lu\t%d.%06d\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb, population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+		fclose(f);
+	}
+	if(currentGeneration==0)
+		fprintf(gnuplot->fWrit,"plot \'stats.dat\' using 3:4 t \'Best Fitness\' w lines, \'stats.dat\' using 3:5 t  \'Average\' w lines, \'stats.dat\' using 3:6 t \'StdDev\' w lines\n");
+	else if((currentGeneration+1)==(*EZ_NB_GEN)){
+		fprintf(gnuplot->fWrit,"set term png\n");
+		fprintf(gnuplot->fWrit,"set output \"plot.png\"\n");
+		fprintf(gnuplot->fWrit,"replot \n");
+	}
+	else
+		fprintf(gnuplot->fWrit,"replot\n");
+	fflush(gnuplot->fWrit);
+ }
+#endif
 }
 
 bool EvolutionaryAlgorithm::allCriteria(){
@@ -553,6 +602,43 @@ int RandomGenerator::getRandomIntMax(int max){
   return r;
 }
 
+/*****************************************
+   MaxRoulette class
+****************************************/
+void MaxRoulette::initialize(Individual** population, float selectionPressure, size_t populationSize) {
+  SelectionOperator::initialize(population,selectionPressure,populationSize);
+  Population::sortRPopulation(population,populationSize);
+  populationSize = populationSize;
+}
+
+size_t MaxRoulette::selectNext(size_t populationSize){
+	size_t bestIndex = 0;
+	float poidsTotal = 0.;
+	float poidsCourant = 0.;
+	float poidsSelectionne;
+	float poids[populationSize];
+	int i;
+
+	for(i=0; i<populationSize; i++){
+		poidsTotal += population[i]->getFitness();
+	} 
+	for(i=0; i<populationSize; i++){
+		poidsCourant += (population[i]->getFitness()/poidsTotal);	
+		poids[i] = poidsCourant;
+	}
+	poidsSelectionne = rg->randFloat(0.0,1.0);
+	for(i=0; i<populationSize; i++){
+		if(poidsSelectionne<poids[i]){
+			bestIndex = i;
+			break;
+		}
+	}
+	return bestIndex;
+}
+
+float MaxRoulette::getExtremum(){
+  return -FLT_MAX;
+}
 
 /* ****************************************
    Tournament class (min and max)
@@ -560,7 +646,6 @@ int RandomGenerator::getRandomIntMax(int max){
 void MaxTournament::initialize(Individual** population, float selectionPressure, size_t populationSize) {
   SelectionOperator::initialize(population,selectionPressure,populationSize);
 }
-
 
 float MaxTournament::getExtremum(){
   return -FLT_MAX;
@@ -1200,6 +1285,54 @@ int loadParametersFile(const string& filename, char*** outputContainer){
   return tmpContainer.size();
 }
 
+PCom * initGnuplot(){
+        int toFils[2];
+        int toPere[2];
+        int sonPid;
+        PCom *ret = NULL;
+
+        if(pipe(toFils)<0){
+                perror("PipeComOpen: Creating pipes");
+                return ret;
+        }
+        if(pipe(toPere)<0){
+                perror("PipeComOpen: Creating pipes");
+                return ret;
+        }
+        switch((sonPid=vfork())){
+                case -1:
+                        perror("PipeComOpen: fork failed");
+                        return ret;
+                        break;
+                case 0:
+                        /* --- here's the son --- */
+                        if(dup2(toFils[0], fileno(stdin))<0){
+                                perror("PipeComOpen(son): could not connect");
+                                abort();
+			}
+                        if(dup2(toPere[1], fileno(stdout))<0){
+                                perror("PipeComOpen(son): could not connect");
+                                abort();
+                        }
+                        char *arg[2];
+                        arg[0] = "-persist";
+                        arg[1] = 0;
+                        if(execvp("gnuplot",arg)<0){
+                                perror("gnuplot not installed, please change plotStats parameter");
+                                abort();
+                        }
+                        break;
+                default:
+                        ret = (PCom *)malloc(sizeof(PCom));
+                        if(!ret)
+                                return NULL;
+                        ret->fWrit = (FILE *)fdopen(toFils[1],"w");
+                        ret->fRead = (FILE *)fdopen(toPere[0],"r");
+                        ret->pid = sonPid;
+        }
+        return ret;
+}
+
 
 void parseArguments(const char* parametersFileName, int ac, char** av, 
 		    po::variables_map& vm, po::variables_map& vm_file){
@@ -1221,6 +1354,10 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
     ("surviveOffsprings",po::value<int>()," Nb of surviving offsprings (absolute)")
     ("outputfile",po::value<string>(),"Set an output file for the final population (default : none)")
     ("inputfile",po::value<string>(),"Set an input file for the initial population (default : none)")
+    ("printStats",po::value<int>(),"Dynamic printing of Population Stats (default : 1)")
+    ("plotStats",po::value<int>(),"Dynamic Plotting of Population Stats (default : 0)")
+    ("printInitialPopulation",po::value<int>(),"Print initial population (default : 0)")
+    ("printFinalPopulation",po::value<int>(),"Print final population (default : 0)")
     ("u1",po::value<string>(),"User defined parameter 1")
     ("u2",po::value<string>(),"User defined parameter 2")
     ("u3",po::value<string>(),"User defined parameter 3")
@@ -1289,6 +1426,8 @@ extern float* pEZ_MUT_PROB;
 extern float* pEZ_XOVER_PROB;
 extern Individual** pPopulation;
 
+extern int printStats;
+extern int plotStats;
 
 extern size_t *EZ_NB_GEN;
 extern size_t *EZ_current_generation;
@@ -1306,12 +1445,23 @@ extern size_t *EZ_current_generation;
 #define DEBUG_YACC(format, args...)
 #endif
 
+#ifndef __EASEATOOLS
+#define __EASEATOOLS
+
+/* ****************************************
+  PCom Structure 
+****************************************/
+typedef struct{
+	FILE *fWrit;
+	FILE *fRead;
+	int pid;
+}PCom;
+
+extern PCom *gnuplot;
 
 /* ****************************************
    StoppingCriterion class
 ****************************************/
-#ifndef __EASEATOOLS
-#define __EASEATOOLS
 class StoppingCriterion {
 
 public:
@@ -1371,6 +1521,17 @@ protected:
 /* ****************************************
    Tournament classes (min and max)
 ****************************************/
+class MaxRoulette : public SelectionOperator{
+public:
+  MaxRoulette(RandomGenerator* rg){ this->rg = rg; }
+  virtual void initialize(Individual** population, float selectionPressure, size_t populationSize);
+  virtual size_t selectNext(size_t populationSize);
+  float getExtremum();
+private:
+  size_t populationSize;
+  RandomGenerator* rg;
+};
+
 class MaxTournament : public SelectionOperator{
 public:
   MaxTournament(RandomGenerator* rg){ this->rg = rg; }
@@ -1545,6 +1706,7 @@ class Population {
 /*   } */
 /* } */
 
+PCom *initGnuplot();
 void parseArguments(const char* parametersFileName, int ac, char** av);
 int setVariable(const std::string optionName, int defaultValue);
 std::string setVariable(const std::string optionName, std::string defaultValue);
@@ -1599,6 +1761,7 @@ clean:
 ######    Evolution Engine    ######
 --popSize=\POP_SIZE # -P : Population Size
 --nbOffspring=\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
+--nbGen=\NB_GEN #Nb of generations
 
 ######    Evolution Engine / Replacement    ######
 --elite=\ELITE_SIZE  # Nb of elite parents (percentage or absolute)
@@ -1606,8 +1769,13 @@ clean:
 --surviveParents=\SURV_PAR_SIZE # Nb of surviving parents (percentage or absolute)
 # --reduceParents=Ranking # Parents reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
 --surviveOffspring=\SURV_OFF_SIZE  # Nb of surviving offspring (percentage or absolute)
-# --reduceOffspring=Roulette # Offspring reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
+# --reduceOffspring=MaxRoulette # Offspring reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
 # --reduceFinal=DetTour(2) # Final reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
 
+#####	Stats Ouput 	#####
+--printStats=1 #print Stats to screen
+--plotStats=0 #plot Stats with gnuplot (requires Gnuplot)
+--printInitialPopulation=0 #Print initial population
+--printFinalPopulation=0 #Print final population
 
 \TEMPLATE_END
