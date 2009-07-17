@@ -1,6 +1,6 @@
 
 %{
-  /****************************************************************************
+/****************************************************************************
 EaseaLex.l
 Lexical analyser for the EASEA language (EAsy Specification for Evolutionary Algorithms)
 
@@ -9,10 +9,17 @@ Ecole Polytechnique
 Centre de Mathématiques Appliquées
 91128 Palaiseau cedex
   ****************************************************************************/
-
+#ifdef WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#pragma comment(lib, "libAlexYacc.lib")
+#endif
 #include "Easea.h"
 #include "EaseaParse.h"
+#ifdef WIN32
+#include <direct.h>
+#else
 #include <unistd.h>
+#endif
 #include "debug.h"
 
   size_t genomeSize;
@@ -41,7 +48,7 @@ Centre de Mathématiques Appliquées
     strcat(selectorName,"Roulette(globalRandomGenerator)");
 
   else{
-    DEBUG_PRT("%s is not yet implemented",sSELECTOR);
+    //DEBUG_PRT_PRT("%s is not yet implemented",sSELECTOR);
     return NULL;
   }
   
@@ -135,6 +142,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"AESAE" {fprintf(fpOutputFile,"EASEA");}        
 <TEMPLATE_ANALYSIS>"EASEA" {fprintf(fpOutputFile,"%s",sPROJECT_NAME);}        
 <TEMPLATE_ANALYSIS>"\\EZ_PATH" {fprintf(fpOutputFile,"%s",sEZ_PATH);}        
+<TEMPLATE_ANALYSIS>"\\TPL_DIR" {fprintf(fpOutputFile,"%s",sTPL_DIR);}
 <TEMPLATE_ANALYSIS>"\\EO_DIR" {fprintf(fpOutputFile,"%s",sEO_DIR);}        
 <TEMPLATE_ANALYSIS>"LC_EASEA" {fprintf(fpOutputFile,"%s",sLOWER_CASE_PROJECT_NAME);}        
 <TEMPLATE_ANALYSIS>"\\OPERATING_SYSTEM"  {switch (OPERATING_SYSTEM) {
@@ -164,7 +172,7 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_BEGIN_GENERATION_FUNCTION"  {
-  DEBUG_PRT("insert beg");
+  //DEBUG_PRT_PRT("insert beg");
   if (bVERBOSE) printf ("Inserting at the begining of each generation function.\n");
   yyreset();
   yyin = fpGenomeFile;
@@ -175,7 +183,7 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_END_GENERATION_FUNCTION"  {
-  DEBUG_PRT("insert end");
+  //DEBUG_PRT_PRT("insert end");
   if (bVERBOSE) printf ("Inserting at the end of each generation function.\n");
   yyreset();
   yyin = fpGenomeFile;
@@ -207,21 +215,21 @@ exponent  ([Ee][+-]?[0-9]+)
   pGENOME->pSymbolList->reset();
   while (pSym=pGENOME->pSymbolList->walkToNextItem())
     if ((pSym->Object->pType->ObjectType==oUserClass)&&(!pSym->Object->pType->bAlreadyPrinted)){
-      DEBUG_PRT("%p",pSym->Object->pType);
+      //DEBUG_PRT_PRT("%p",pSym->Object->pType);
       pSym->Object->pType->printClasses(fpOutputFile);
     }
 
 
   if( TARGET == CUDA ){
-    DEBUG_PRT("User classes are :");
+    //DEBUG_PRT_PRT("User classes are :");
     for( int i = nClasses_nb-1 ; i>=0 ; i-- ){
-      DEBUG_PRT(" %s, %p ,%d| ",pCLASSES[i]->sName,pCLASSES[i],pCLASSES[i]->bAlreadyPrinted);
+      //DEBUG_PRT_PRT(" %s, %p ,%d| ",pCLASSES[i]->sName,pCLASSES[i],pCLASSES[i]->bAlreadyPrinted);
       if( !pCLASSES[i]->bAlreadyPrinted ){
 	fprintf(fpOutputFile,"// User class not refereced by the Genome");
 	pCLASSES[i]->printClasses(fpOutputFile);
       }
     }
-    DEBUG_PRT("\n");
+    //DEBUG_PRT_PRT("\n");
   }
  }
 <TEMPLATE_ANALYSIS>"\\GENOME_CTOR"  {
@@ -247,10 +255,10 @@ exponent  ([Ee][+-]?[0-9]+)
     CListItem<CSymbol*> *pSym;
     pGENOME->pSymbolList->reset();
     while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-      DEBUG_PRT("%s has size : %lu",pSym->Object->sName,pSym->Object->nSize);
+      //DEBUG_PRT_PRT("%s has size : %lu",pSym->Object->sName,pSym->Object->nSize);
       size_of_genome+=pSym->Object->nSize;
     }
-    DEBUG_PRT("Total genome size is %lu",size_of_genome); 
+    //DEBUG_PRT_PRT("Total genome size is %lu",size_of_genome); 
     genomeSize = size_of_genome;
     genomeSizeValidity=true;
   }
@@ -307,7 +315,7 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bVERBOSE) printf ("Inserting default genome serializer.\n");
   pGENOME->pSymbolList->reset();
   while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    DEBUG_PRT("found new symbol %s",pSym->Object->sName);
+    //DEBUG_PRT_PRT("found new symbol %s",pSym->Object->sName);
     fprintf(fpOutputFile," ar & %s;\n",pSym->Object->sName);
   }
  }
@@ -652,19 +660,19 @@ exponent  ([Ee][+-]?[0-9]+)
  }        
 
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_CLASSES_DEFINITIONS"  {
-  DEBUG_PRT("Inserting user classe definitions");
+  //DEBUG_PRT_PRT("Inserting user classe definitions");
   pGENOME->printUserClasses(fpOutputFile);
  }        
 
 <TEMPLATE_ANALYSIS>"\\SELECTOR"  {
   if( TARGET==CUDA || TARGET==STD){
-    DEBUG_PRT("Selector is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
+    //DEBUG_PRT_PRT("Selector is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sSELECTOR);
     if( !selectorClass ){
       fprintf(stderr,"Error %d : selection operator %s doesn't exist in CUDA/STD template\n",yylineno,sSELECTOR);
       return -1;
     }    
-    DEBUG_PRT("Created class is %s",selectorClass);
+    //DEBUG_PRT_PRT("Created class is %s",selectorClass);
     fprintf(fpOutputFile,"%s",selectorClass);
   }
   else fprintf(fpOutputFile,"%s",sSELECTOR);
@@ -675,18 +683,18 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\OFF_SIZE"  {fprintf(fpOutputFile,"%d",nOFF_SIZE);}
 <TEMPLATE_ANALYSIS>"\\ELITE_SIZE"  {
   fprintf(fpOutputFile,"%d",nELITE);
-  //DEBUG_PRT("elitism is %d, elite size is %d",bELITISM, nELITE);
+  ////DEBUG_PRT_PRT("elitism is %d, elite size is %d",bELITISM, nELITE);
  }
 
 <TEMPLATE_ANALYSIS>"\\RED_PAR"  {
   if( TARGET==CUDA || TARGET==STD){
-    DEBUG_PRT("Parent reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
+    //DEBUG_PRT_PRT("Parent reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sSELECTOR);
     if( !selectorClass ){
       fprintf(stderr,"Error %d : selection operator %s doesn't exist in CUDA/STD template\n",yylineno,sSELECTOR);
       return -1;
     }    
-    DEBUG_PRT("Created class is %s",selectorClass);
+    //DEBUG_PRT_PRT("Created class is %s",selectorClass);
     fprintf(fpOutputFile,"%s",selectorClass);
   }
   else fprintf(fpOutputFile,"%s",sRED_PAR);
@@ -699,13 +707,13 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 <TEMPLATE_ANALYSIS>"\\RED_OFF"  {
   if( TARGET==CUDA || TARGET==STD){
-    DEBUG_PRT("Offspring reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
+    //DEBUG_PRT_PRT("Offspring reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sSELECTOR);
     if( !selectorClass ){
       fprintf(stderr,"Error %d : selection operator %s doesn't exist in CUDA/STD template\n",yylineno,sSELECTOR);
       return -1;
     }    
-    DEBUG_PRT("Created class is %s",selectorClass);
+    //DEBUG_PRT_PRT("Created class is %s",selectorClass);
     fprintf(fpOutputFile,"%s",selectorClass);
   }
   else fprintf(fpOutputFile,"%s",sRED_OFF);
@@ -717,17 +725,21 @@ exponent  ([Ee][+-]?[0-9]+)
     fprintf(fpOutputFile,"%s",sRED_OFF_PRM);}
 <TEMPLATE_ANALYSIS>"\\RED_FINAL"  {
   if( TARGET==CUDA || TARGET==STD){
-    DEBUG_PRT("Replacement selector is \"%s\" | Goal is %s",sRED_FINAL,(nMINIMISE?"Minimize":"Maximize"));
+    //DEBUG_PRT_PRT("Replacement selector is \"%s\" | Goal is %s",sRED_FINAL,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sRED_FINAL);
     if( !selectorClass ){
       fprintf(stderr,"Error %d : replacement operator %s doesn't exist in CUDA/TPL template\n",yylineno,sRED_FINAL);
       return -1;
     }    
-    DEBUG_PRT("Created class is %s",selectorClass);
+    //DEBUG_PRT_PRT("Created class is %s",selectorClass);
     fprintf(fpOutputFile,"%s",selectorClass);
   }
   else fprintf(fpOutputFile,"%s",sRED_FINAL);
  }
+<TEMPLATE_ANALYSIS>"\\CUDA_RULE_DIR"  {
+if(OPERATING_SYSTEM=WINDOWS)
+	fprintf(fpOutputFile,"%s\\",getenv("NVSDKCUDA_ROOT"));
+}
 <TEMPLATE_ANALYSIS>"\\RED_FINAL_PRM"  {fprintf(fpOutputFile,"%s",sRED_FINAL_PRM);}
 <TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  {fprintf(fpOutputFile,"%d",nSURV_PAR_SIZE);}
 <TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  {fprintf(fpOutputFile,"%d",nSURV_OFF_SIZE);}
@@ -931,6 +943,15 @@ exponent  ([Ee][+-]?[0-9]+)
   fpOutputFile=fopen(sFileName,"w");
  }
 
+<TEMPLATE_ANALYSIS>"\\START_VISUAL_TPL"  {
+  char sFileName[1000];
+ fclose(fpOutputFile);
+  strcpy(sFileName, sRAW_PROJECT_NAME);
+  strcat(sFileName,".vcproj");
+  if (bVERBOSE) printf("Creating %s...\n",sFileName);
+  fpOutputFile=fopen(sFileName,"w");
+ }
+
 <TEMPLATE_ANALYSIS>"\\START_CUDA_MAKEFILE_TPL"  {
   char sFileName[1000];
   char sPathName[1000];
@@ -949,8 +970,12 @@ exponent  ([Ee][+-]?[0-9]+)
   if( fileNameLength != -1 ){
     // add "Makefile" at the end of path
     //char* cdn = get_current_dir_name();
-    char cdn[4096]; 
+    char cdn[4096];
+    #ifdef WIN32 
+    _getcwd(cdn,4096);
+    #else
     getcwd(cdn,4096);
+    #endif
     size_t cdnLength = strlen(cdn);
     strcpy(sFullFileName,cdn);
     strcat(sFullFileName,"/\0");
@@ -959,17 +984,18 @@ exponent  ([Ee][+-]?[0-9]+)
     strncpy(sPathName,sRAW_PROJECT_NAME,fileNameLength);
     strcpy(sPathName+fileNameLength,"/Makefile");
     
-    DEBUG_PRT("PathName is %s",sPathName);
-    DEBUG_PRT("FullFileName is %s",sFullFileName);
+    //DEBUG_PRT_PRT("PathName is %s",sPathName);
+    //DEBUG_PRT_PRT("FullFileName is %s",sFullFileName);
     
   
     // create a symbolic link from Makefile to EASEA.mak
     symlink(sFullFileName,sPathName);
   }
   else{
-    DEBUG_PRT("file name : %s",sFileName);
+    //DEBUG_PRT_PRT("file name : %s",sFileName);
     if( symlink(sFileName,"Makefile") ) perror("Symlink creation error ");
   }
+ 
 
 
   if (bVERBOSE){
@@ -981,7 +1007,7 @@ exponent  ([Ee][+-]?[0-9]+)
     fprintf(stderr,"Error in %s creation\n",sFileName);
     exit(-1);
   }
- }
+}
 
 
 <TEMPLATE_ANALYSIS>"\\START_EVAL_TPL"  {
@@ -1147,7 +1173,7 @@ exponent  ([Ee][+-]?[0-9]+)
     break;
   case STD:
   case CUDA:
-    fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(Population* population){");
+    fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){");
     break;
   default:
     fprintf (stderr," Error this template doesn't support finalization function ");
@@ -1169,9 +1195,10 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <COPY_END_GENERATION_FUNCTION>"\\At"[ \t\n]+"the"[ \t\n]+"end"[ \t\n]+"of"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"function"[ \t\n]*":" {
-  DEBUG_PRT("at each end");
+  //DEBUG_PRT_PRT("at each end");
   if( (TARGET==CUDA || TARGET==STD)  ){
-    fprintf (fpOutputFile,"// Function called at each new generation\nvoid EASEAEndGenerationFunction(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
+    fprintf (fpOutputFile,"{\n");
+    //fprintf (fpOutputFile,"// Function called at each new generation\nvoid EASEAEndGenerationFunction(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
     bFunction=1; 
     bEndGenerationFunction = 1;
     BEGIN COPY_USER_GENERATION;
@@ -1192,9 +1219,9 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <COPY_BEG_GENERATION_FUNCTION>"\\At"[ \t\n]+"the"[ \t\n]+"beginning"[ \t\n]+"of"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"function"[ \t\n]*":" {
-  DEBUG_PRT("at each beg");
+  //DEBUG_PRT_PRT("at each beg");
   if( (TARGET==CUDA || TARGET==STD)){
-    fprintf (fpOutputFile,"// Function called at each new generation\nvoid EASEABeginningGenerationFunction(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
+    fprintf (fpOutputFile,"{\n");
     bFunction=1;
     bBeginGeneration = 0;
     bBeginGenerationFunction = 1;
@@ -1217,7 +1244,7 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <COPY_GENERATION_FUNCTION>"\\At"[ \t\n]+"each"[ \t\n]+"new"[ \t\n]+"generation"[ \t\n]*":" {
-  DEBUG_PRT("at each");
+  //DEBUG_PRT_PRT("at each");
   if( TARGET==GALIB ){
   fprintf (fpOutputFile,"// Function called at each new generation\n\nvoid EASEAGenerationFunction(GAGeneticAlgorithm & g){\n");
   fprintf(fpOutputFile,"  const GAPopulation *pPopulation;\n",sPROJECT_NAME);
@@ -1482,7 +1509,7 @@ exponent  ([Ee][+-]?[0-9]+)
 //****************************************
 
 <COPY_DISPLAY>"\\GenomeClass::display"[ \t\n]*":" { 
-/*   DEBUG_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
+/*   //DEBUG_PRT_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
 /*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
   bDisplayFunction=bWithinDisplayFunction=1;
   BEGIN COPY_USER_FUNCTION;
@@ -1497,7 +1524,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <COPY_DISPLAY>.|\n {}                                      
 
 <COPY_MAKEFILE_OPTION>"\\User"[ \t\n]+[Mm]"akefile"[ \t\n]+"options"[ \t\n]*":" {
-  DEBUG_PRT("LDFLAGS is beg: %s",yytext); 
+  //DEBUG_PRT_PRT("LDFLAGS is beg: %s",yytext); 
   bWithinMAKEFILEOPTION=1;
   return MAKEFILE_OPTION;
  }
@@ -1509,7 +1536,7 @@ exponent  ([Ee][+-]?[0-9]+)
 //****************************************
 <COPY_MAKEFILE_OPTION>"\\end" {
   if( bWithinMAKEFILEOPTION ){
-    DEBUG_PRT("end of makefile options");
+    //DEBUG_PRT_PRT("end of makefile options");
     yyin = fpTemplateFile;
     bWithinMAKEFILEOPTION = 0;
     BEGIN TEMPLATE_ANALYSIS;
@@ -1528,7 +1555,7 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <COPY_MAKEFILE_OPTION><<EOF>> { 
-  DEBUG_PRT("No makefile options defined.");
+  //DEBUG_PRT_PRT("No makefile options defined.");
 
   yyin = fpTemplateFile;
   bWithinMAKEFILEOPTION = 0;
@@ -1918,7 +1945,7 @@ exponent  ([Ee][+-]?[0-9]+)
   if (TARGET==DREAM) fprintf(fpOutputFile,"Math.random()<");} // local random name
 <COPY_USER_FUNCTION>"random"  {
   if (TARGET==DREAM) fprintf(fpOutputFile,"%s.random",sPROJECT_NAME);
-  else if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"rg->random");
+  else if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"globalRandomGenerator->random");
   else fprintf(fpOutputFile,"random");}
 <COPY_USER_FUNCTION>"child1"  {if ((bWithinXover)&&(TARGET==GALIB)) fprintf(fpOutputFile, "(*pBro)");
   else fprintf(fpOutputFile,"child1");
@@ -2092,10 +2119,10 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   char sTemp[1000];
 #if defined UNIX_OS
   OPERATING_SYSTEM=UNIX;
-#elif defined WINDOWS_OS
+#elif defined WIN32 //WINDOWS_OS
   OPERATING_SYSTEM=WINDOWS;
-#else
-  OPERATING_SYSTEM=OTHER_SYSTEM;
+//#else
+//  OPERATING_SYSTEM=OTHER_SYSTEM;
 #endif
   assert(pParser != NULL);
   assert(pSymTable != NULL);
@@ -2130,17 +2157,23 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   //strcpy(sTemp,"e:\\lutton\\easea\\debug");pour tester sous windows
   if ((sEZ_PATH==NULL)||(sEZ_PATH[0]==0)) {
     if (getenv("EZ_PATH")==NULL){
-      strcpy(sEZ_PATH,"./tpl/");	
+      //strcpy(sEZ_PATH,"./tpl/");	
+      strcpy(sEZ_PATH,"./");	
     }else
       strcpy(sEZ_PATH,getenv("EZ_PATH"));
   }
+
+  strcpy(sTPL_DIR,sEZ_PATH);
+  strcat(sTPL_DIR,"tpl/");
   
+ 
   switch (OPERATING_SYSTEM) {
   case UNIX : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '/') strcat (sEZ_PATH,"./"); break;
   case WINDOWS : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '\\') strcat (sEZ_PATH,"\\"); break;
   case UNKNOWN_OS : fprintf(fpOutputFile,"UNKNOWN_OS"); break;
   }
-  strcpy(sTemp,sEZ_PATH);
+  //strcpy(sTemp,sEZ_PATH);
+  strcpy(sTemp,sTPL_DIR);
   if (TARGET==EO){
     strcat(sTemp,"EO.tpl");
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){

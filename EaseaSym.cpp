@@ -1,3 +1,6 @@
+#ifdef WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 /****************************************************************************
 EaseaSym.cpp
 Symbol table and other functions for the EASEA language (EAsy Specification for Evolutionary Algorithms)
@@ -97,7 +100,7 @@ void CSymbol::print(FILE *fp){
       bool isFlatClass = true;
       pSymbolList->reset();
       while (pSym=pSymbolList->walkToNextItem()){
-	DEBUG_PRT("analyse flat %s",pSym->Object->pType->sName);
+	//DEBUG_PRT("analyse flat %s",pSym->Object->pType->sName);
 	if( (pSym->Object->ObjectType == oPointer) ){  //|| (pSym->Object->pType->ObjectType == oObject) ){
 	  isFlatClass = false;
 	  break;
@@ -105,7 +108,7 @@ void CSymbol::print(FILE *fp){
       }
 
 
-      DEBUG_PRT("Does %s flat class : %s",sName,(isFlatClass?"yes":"no"));
+      //DEBUG_PRT("Does %s flat class : %s",sName,(isFlatClass?"yes":"no"));
       pSymbolList->reset();      
       fprintf(fp,"  %s* cudaSendToGpu%s(){\n",sName,sName);
       fprintf(fp,"    %s* ret=NULL;\n",sName);
@@ -376,11 +379,11 @@ void CSymbol::printClasses(FILE *fp){
 
 void CSymbol::printUC(FILE* fp){
 
-  DEBUG_PRT("print user classes definitions");
+  //DEBUG_PRT("print user classes definitions");
   if (strcmp(sName,"Genome") && (TARGET==CUDA || TARGET==STD)){   // If we are printing a user class other than the genome
     fprintf(fp,"\nclass %s;\n",sName); // class  header
   }
-  DEBUG_PRT("%s",sName);
+  //DEBUG_PRT("%s",sName);
 }
 
 

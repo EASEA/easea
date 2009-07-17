@@ -5,7 +5,7 @@ LDFLAGS =
 
 
 
-$(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o
+$(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libeasea/libeasea.a
 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
@@ -23,7 +23,7 @@ $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o
 	#       export EZ_PATH=`pwd`/tpl/
 	# Or define EZ_PATH in your bashrc file (for bash users) :
 	#       For example :
-	#       export EZ_PATH=/path/to/easea/directory/tpl/
+	#       export EZ_PATH=/path/to/easea/directory/
 	#
 	# Otherwise you can use easea from this directory by typing :
 	#       For example : 
@@ -55,10 +55,14 @@ alexyacc/libalex.so:alexyacc/*.cpp
 alexyacc/libalex.a:alexyacc/*.cpp
 	cd alexyacc && make libalex.a
 
+#compile libeasea
+libeasea/libeasea.a:libeasea/*.cpp
+	cd libeasea && make libeasea.a
 
 clean:
 	rm -f *.o $(EXEC) $(EXEC)_bin
 	cd alexyacc && make clean
+	cd libeasea && make clean
 
 install:$(EXEC)
 	sudo cp $< /usr/bin/dev-easea
@@ -68,7 +72,7 @@ realclean: clean
 
 
 EaseaParse.cpp: EaseaParse.y
-	wine /home/maitre/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d
+	wine /home/kruger/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d -l
 
 EaseaLex.cpp: EaseaLex.l
-	wine /home/maitre/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i
+	wine /home/kruger/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i -l

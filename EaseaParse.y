@@ -25,6 +25,7 @@ char sLOWER_CASE_PROJECT_NAME[1000];
 char sEZ_FILE_NAME[1000];
 char sEO_DIR[1000];
 char sEZ_PATH[1000];
+char sTPL_DIR[1000];
 int TARGET,TARGET_FLAVOR;
 int OPERATING_SYSTEM;
 int nWARNINGS=0;
@@ -235,12 +236,12 @@ ClassDeclaration
       pCURRENT_CLASS=SymbolTable.insert($1);  
       pCURRENT_CLASS->pSymbolList=new CLList<CSymbol *>();
       $1->ObjectType=oUserClass;
-      DEBUG_PRT("Yacc Symbol declaration %s %d",$1->sName,$1->nSize);
+      //DEBUG_PRT("Yacc Symbol declaration %s %d",$1->sName,$1->nSize);
       pCLASSES[nClasses_nb++] = $1;
     }
   '{' VariablesDeclarations '}' {
       if (bVERBOSE) printf("Class %s declared for %d bytes.\n\n",$1->sName,$1->nSize);
-      DEBUG_PRT("Yacc variable declaration %s %d",$1->sName,$1->nSize);
+      //DEBUG_PRT("Yacc variable declaration %s %d",$1->sName,$1->nSize);
     }                       
   ;
 
@@ -387,7 +388,7 @@ BaseConstructorParameter
   
 GenomeDeclarationSection
   : GENOME {
-    //DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName);
+    ////DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName);
       if (bVERBOSE) printf ("\nGenome declaration analysis :\n\n");
       pGENOME=new CSymbol("Genome");
       pCURRENT_CLASS=SymbolTable.insert(pGENOME);  
@@ -499,7 +500,7 @@ StandardFunctionAnalysis
       if (TARGET!=EO && TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"}\n");
     }
    | MAKEFILE_OPTION END_OF_FUNCTION {
-     DEBUG_PRT("User makefile options have been reduced");
+     //DEBUG_PRT("User makefile options have been reduced");
      }
    | MAKEFILE_OPTION {}
   ;
@@ -993,7 +994,7 @@ Parameter
  	  if (!mystricmp(sRED_FINAL,"Tournament")||!mystricmp(sRED_FINAL,"StochTrn")) {
 	    if ($3>=2) {
 	      sprintf(sRED_FINAL,"DetTour");sprintf(sRED_FINAL_PRM,"(%d)",(int) $3);
-	      DEBUG_PRT("tournament parameter is %s",sRED_FINAL_PRM);
+	      //DEBUG_PRT("tournament parameter is %s",sRED_FINAL_PRM);
 	    }
 	    else if (($3>.5)&&($3<=1.0)) {sprintf(sRED_FINAL,"StochTour");sprintf(sRED_FINAL_PRM,"(%f)",(float) $3);}
 	    else {fprintf(stderr,"\n%s - Error line %d: The parameter of the Tournament selector must be either >=2 or within ]0.5, 1].\n",sEZ_FILE_NAME,EASEALexer.yylineno); exit(1);}

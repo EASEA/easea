@@ -14,7 +14,7 @@ Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 #include <assert.h>
 
 // defines
-#include <yytdefs.h>
+#include "yytdefs.h"
 
 // user defines
 #if defined(YYTUDEFS) || defined(YYUDEFS)
@@ -370,6 +370,6 @@ extern "C" int YYNEAR YYDCDECL yydebugflush;
 #endif
 
 // defines
-#include <yybdefs.h>
+#include "yybdefs.h"
 
 #endif

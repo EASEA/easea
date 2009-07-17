@@ -1,10 +1,13 @@
+#ifdef WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include "Easea.h"
 #include "EaseaLex.h"
 #include "debug.h"
 
 
 void pickupSTDSelector(char* sSELECTOR, char* sSELECT_PRM, char* sEZ_FILE_NAME, CEASEALexer* EASEALexer){
-  DEBUG_PRT("Picking up selector without argument %s",sSELECTOR);
+  //DEBUG_PRT("Picking up selector without argument %s",sSELECTOR);
   if (!mystricmp(sSELECTOR,"RouletteWheel")){
     if (nMINIMISE==1) {
       fprintf(stderr,"\n%s - Error line %d: The RouletteWheel selection scheme cannot be\n selected when \"minimising the fitness\" is the evaluator goal.\n",
@@ -38,7 +41,7 @@ void pickupSTDSelector(char* sSELECTOR, char* sSELECT_PRM, char* sEZ_FILE_NAME, 
 
 
 void pickupSTDSelectorArgument(char* sSELECTOR, char* sSELECTOR_PRM, char* sEZ_FILE_NAME, float thirdParam, CEASEALexer* EASEALexer){
-  DEBUG_PRT("Picking up selector with argument %s %d",sSELECTOR,(int) thirdParam);
+  //DEBUG_PRT("Picking up selector with argument %s %d",sSELECTOR,(int) thirdParam);
   if (!mystricmp(sSELECTOR,"Tournament")||!mystricmp(sSELECTOR,"StochTrn")) {
     if (thirdParam>=2) {sprintf(sSELECTOR,"DetTour");
       sprintf(sSELECTOR_PRM,"(%d)",(int) thirdParam);}
