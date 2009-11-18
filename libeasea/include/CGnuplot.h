@@ -10,6 +10,7 @@
 
 class CRandomGenerator;
 #include <iostream>
+#include <stdlib.h>
 
 class CGnuplot {
 public:
@@ -18,7 +19,7 @@ public:
 	int pid;
 	int valid;
 public:
-	CGnuplot();
+	CGnuplot(int nbEval);
 	 ~CGnuplot();
 };
 

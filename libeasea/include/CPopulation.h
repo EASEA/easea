@@ -65,15 +65,15 @@ public:
   void evaluatePopulation(CIndividual** population, size_t populationSize);
   virtual void evaluateParentPopulation();
 
-  void elitism(size_t elitismSize, CIndividual** population, size_t populationSize, CIndividual** outPopulation,
-		      size_t outPopulationSize);
+  void strongElitism(size_t elitismSize, CIndividual** population, size_t populationSize, CIndividual** outPopulation, size_t outPopulationSize);
+  void weakElitism(size_t elitismSize, CIndividual** parentsPopulation, CIndividual** offspringPopulation, size_t* parentPopSize, size_t* offPopSize, CIndividual** outPopulation, size_t outPopulationSize);
 
   virtual void evaluateOffspringPopulation();
   CIndividual** reducePopulations(CIndividual** population, size_t populationSize,
 			       CIndividual** reducedPopulation, size_t obSize);
   CIndividual** reduceParentPopulation(size_t obSize);
   CIndividual** reduceOffspringPopulation(size_t obSize);
-  void reduceTotalPopulation();
+  void reduceTotalPopulation(CIndividual** elitPop);
   void evolve();
 
   static float selectionPressure;

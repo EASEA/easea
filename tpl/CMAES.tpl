@@ -23,6 +23,7 @@ using namespace std;
 
 /** Global variables for the whole algorithm */
 CIndividual** pPopulation = NULL;
+CIndividual *bBest = NULL;
 float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
 size_t *EZ_NB_GEN;
@@ -41,9 +42,7 @@ int main(int argc, char** argv){
 
 	EASEAInit(argc,argv);
 
-
 	CPopulation* pop = ea->getPopulation();
-
 
 	ea->runEvolutionaryLoop();
 
@@ -98,7 +97,6 @@ CRandomGenerator* globalRandomGenerator;
 
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
-\INSERT_GENERATION_FUNCTION
 
 \INSERT_BOUND_CHECKING
 
@@ -116,7 +114,7 @@ void EASEAFinal(CPopulation* pop){
 void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
     cma->cmaes_UpdateEigensystem(0);
     cma->TestMinStdDevs();
-	\INSERT_BEGIN_GENERATION_FUNCTION
+    \INSERT_BEGIN_GENERATION_FUNCTION
 }
 
 void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
@@ -145,6 +143,11 @@ void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
 	free(fitpar);
 
 }
+
+void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+        \INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT
+}
+
 
 
 IndividualImpl::IndividualImpl() : CIndividual() {
@@ -249,64 +252,41 @@ size_t IndividualImpl::mutate( float pMutationPerGene ){
 
 void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
-	selectionOperator = new \SELECTOR;
-	replacementOperator = new \RED_FINAL;
-	parentReductionOperator = new \RED_PAR;
-	offspringReductionOperator = new \RED_OFF;
-	selectionPressure = \SELECT_PRM;
-	replacementPressure = \RED_FINAL_PRM;
-	parentReductionPressure = \RED_PAR_PRM;
-	offspringReductionPressure = \RED_OFF_PRM;
-	pCrossover = \XOVER_PROB;
-	pMutation = \MUT_PROB;
-	pMutationPerGene = 0.05;
+        this->minimizing =1;
+        this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 
-	parentPopulationSize = setVariable("popSize",\POP_SIZE);
-	offspringPopulationSize = setVariable("nbOffspring",\OFF_SIZE);
+        selectionOperator = getSelectionOperator(setVariable("selectionOperator","Tournament"), this->minimizing, globalRandomGenerator);
+        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
+        selectionPressure = 1;
+        replacementPressure = setVariable("reduceFinalPressure",(float)\RED_FINAL_PRM);
+        pCrossover = 1;
+        pMutation = 1;
+        pMutationPerGene = 1;
+
+        parentPopulationSize = setVariable("popSize",(int)\POP_SIZE);
+        offspringPopulationSize = setVariable("nbOffspring",(int)\OFF_SIZE);
+
+        this->elitSize = 0;
+
+	offspringReduction = parentReduction = false;
+
+        generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
+        controlCStopingCriterion = new CControlCStopingCriterion();
+        timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
 
 
-	// je crois qu'on a quelque chose qui dit qu'une valeur de réduction a été indiqué dans le .ez.
-	// sinon il est intéressant de regler la valeur soit sur la ligne de commande, soit a la taille de
-	// population (ca désactive la réduction un peu plus bas)
-#ifdef false
-	parentReductionSize = setVariable("parentReductionSize",\SURV_PAR_SIZE);
-#else
-	parentReductionSize = setVariable("parentReductionSize",parentPopulationSize);
-#endif
+        seed = setVariable("seed",(int)time(0));
+        globalRandomGenerator = new CRandomGenerator(seed);
+        this->randomGenerator = globalRandomGenerator;
 
-#ifdef false
-	offspringReductionSize = setVariable("offspringReductionSize",\SURV_OFF_SIZE);
-#else
-	offspringReductionSize = setVariable("offspringReductionSize",offspringPopulationSize);
-#endif
+        this->printStats = setVariable("printStats",\PRINT_STATS);
+        this->printStatsFile = setVariable("printStatsFile",\PRINT_STATS_FILE);
+        this->plotStats = setVariable("plotStats",\PLOT_STATS);
+        this->printInitialPopulation = setVariable("printInitialPopulation",0);
+        this->printFinalPopulation = setVariable("printFinalPopulation",0);
 
-	/*
-	 * The reduction is set to true if reductionSize (parent or offspring) is set to a size less than the
-	 * populationSize. The reduction size is set to populationSize by default
-	 */
-	if(offspringReductionSize<offspringPopulationSize) offspringReduction = true;
-	else offspringReduction = false;
-
-	if(parentReductionSize<parentPopulationSize) parentReduction = true;
-	else parentReduction = false;
-
-	cout << "Parent red " << parentReduction << " " << parentReductionSize << "/"<< parentPopulationSize << endl;
-	cout << "Parent red " << offspringReduction << " " << offspringReductionSize << "/" << offspringPopulationSize << endl;
-
-	generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",\NB_GEN));
-
-	seed = setVariable("seed",time(0));
-	globalRandomGenerator = new CRandomGenerator(seed);
-	this->randomGenerator = globalRandomGenerator;
-
-	this->minimizing = \MINIMAXI;
-	this->elitSize = \ELITE_SIZE;
-	this->strongElitism = \ELITISM;
-
-	this->printStats = setVariable("printStats",1);
-	this->plotStats = setVariable("plotStats",0);
-	this->printInitialPopulation = setVariable("printInitialPopulation",0);
-	this->printFinalPopulation = setVariable("printFinalPopulation",0);
+        this->outputFilename = (char*)"EASEA.dat";
+        this->plotOutputFilename = (char*)"EASEA.png";
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -319,6 +299,8 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
 	 ea->addStoppingCriterion(generationalCriterion);
+	ea->addStoppingCriterion(controlCStopingCriterion);
+	ea->addStoppingCriterion(timeCriterion);
 
 	  EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
 	  EZ_current_generation=&(ea->currentGeneration);
@@ -361,8 +343,6 @@ class CCmaes;
 class Parameters;
 
 extern CCmaes *cma;
-
-//extern CMA cma;
 
 \INSERT_USER_CLASSES_DEFINITIONS
 
@@ -407,6 +387,7 @@ void EASEAInit(int argc, char** argv);
 void EASEAFinal(CPopulation* pop);
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
+void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 
 
 class EvolutionaryAlgorithmImpl: public CEvolutionaryAlgorithm {
@@ -428,6 +409,8 @@ OBJS = EASEA.o EASEAIndividual.o
 
 LIBS = -lboost_program_options 
 
+\INSERT_MAKEFILE_OPTION
+
 TARGET =	EASEA
 
 $(TARGET):	$(OBJS)
@@ -441,7 +424,8 @@ all:	$(TARGET)
 clean:
 	rm -f $(OBJS) $(TARGET)
 easeaclean:
-	rm -f $(TARGET) *.o *.cpp *.hpp plot.png data.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj
+	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj
+	
 	
 	
 \START_VISUAL_TPL<?xml version="1.0" encoding="Windows-1252"?>
@@ -578,32 +562,33 @@ easeaclean:
 </VisualStudioProject>
 
 \START_EO_PARAM_TPL#****************************************
-#                                         
+#
 #  EASEA.prm
-#                                         
-#  Parameter file generated by AESAE-EO v0.7b
-#                                         
+#
+#  Parameter file generated by CMAES.tpl AESAE v0.1
+#
 #***************************************
 # --seed=0   # -S : Random number seed. It is possible to give a specific seed.
 
 ######    Evolution Engine    ######
 --popSize=\POP_SIZE # -P : Population Size
 --nbOffspring=\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
+
+######    Stopping Criterions    #####
 --nbGen=\NB_GEN #Nb of generations
+--timeLimit=\TIME_LIMIT # Time Limit: desactivate with (0) (in Seconds)
 
 ######    Evolution Engine / Replacement    ######
---elite=\ELITE_SIZE  # Nb of elite parents (percentage or absolute)
---eliteType=\ELITISM # Strong (true) or weak (false) elitism (set elite to 0 for none)
---surviveParents=\SURV_PAR_SIZE # Nb of surviving parents (percentage or absolute)
-# --reduceParents=Ranking # Parents reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
---surviveOffspring=\SURV_OFF_SIZE  # Nb of surviving offspring (percentage or absolute)
-# --reduceOffspring=MaxRoulette # Offspring reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
-# --reduceFinal=DetTour(2) # Final reducer: Deterministic, EP(T), DetTour(T), StochTour(t), Uniform
+--elite=\ELITE_SIZE  # Nb of elite parents (absolute)
+--eliteType=\ELITISM # Strong (1) or weak (0) elitism (set elite to 0 for none)
+--reduceFinalOperator=\RED_FINAL_OPERATOR
+--reduceFinalPressure=\RED_FINAL_PRM
 
-#####	Stats Ouput 	#####
---printStats=1 #print Stats to screen
---plotStats=0 #plot Stats with gnuplot (requires Gnuplot)
+#####   Stats Ouput     #####
+--printStats=\PRINT_STATS #print Stats to screen
+--plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
+--printStatsFile=\PRINT_STATS_FILE #Print stats to File (filename: ProjetName.dat)
 
 \TEMPLATE_END

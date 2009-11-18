@@ -18,9 +18,6 @@ Centre de Mathématiques Appliquées
 #define true 1
 #define false 0
 
-#define GALIB 1
-#define EO 2
-#define DREAM 3
 #define CUDA 4
 #define STD 5
 
@@ -43,15 +40,14 @@ extern int nClasses_nb;
 extern   FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile, *fpExplodedGenomeFile;  
 extern char sRAW_PROJECT_NAME[], sPROJECT_NAME[], sEO_DIR[], sEZ_PATH[1000],  sTPL_DIR[1000], sEZ_FILE_NAME[];
 extern char sLOWER_CASE_PROJECT_NAME[];
-extern char sREPLACEMENT[], sSELECTOR[], sSELECT_PRM[], sRED_PAR[], sRED_PAR_PRM[], sRED_FINAL[], sRED_FINAL_PRM[], sRED_OFF[], sRED_OFF_PRM[], sDISCARD[], sDISCARD_PRM[];
+extern float fSELECT_PRM, fRED_PAR_PRM, fRED_FINAL_PRM, fRED_OFF_PRM;
+extern char  sSELECTOR[], sSELECTOR_OPERATOR[], sRED_PAR[], sRED_PAR_OPERATOR[], sRED_FINAL[], sRED_FINAL_OPERATOR[], sRED_OFF[], sRED_OFF_OPERATOR[];
 extern int nMINIMISE,nELITE;
 extern bool bELITISM, bVERBOSE;
-extern bool bPROP_SEQ;
+extern bool bPRINT_STATS, bPLOT_STATS, bGENERATE_CVS_FILE, bGENERATE_GNUPLOT_SCRIPT, bGENERATE_R_SCRIPT;
 extern char* nGENOME_NAME;
-extern int nPOP_SIZE, nNB_GEN, nNB_ISLANDS, nOFF_SIZE, nSURV_PAR_SIZE, nSURV_OFF_SIZE, nPROBLEM_DIM;
-extern float fMUT_PROB, fXOVER_PROB, fREPL_PERC, fMIG_FREQ;
-extern int nMIG_CLONE, nNB_MIG, nIMMIG_REPL;
-extern char sMIG_SEL[], sMIGRATOR[], sIMMIG_SEL[],sMIG_TARGET_SELECTOR[];
+extern int nPOP_SIZE, nNB_GEN, nOFF_SIZE, nPROBLEM_DIM, nTIME_LIMIT;
+extern float fMUT_PROB, fXOVER_PROB, fSURV_PAR_SIZE, fSURV_OFF_SIZE;
 
 extern int nWARNINGS, nERRORS;
 extern int TARGET, OPERATING_SYSTEM;

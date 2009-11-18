@@ -2,7 +2,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
 #include "include/CCmaes.h"
 
 //Functions for cma
@@ -491,7 +490,7 @@ CCmaes::CCmaes(int lambda, int mu, int problemdim){
 	this->facupdateCmode = 1;
 	this->flgIniphase = 0;
 
-	this->xstart = (double*)malloc((this->dim)*sizeof(double));
+	this->xstart = (double*)malloc(this->dim*sizeof(double));
 	
 	this->typicalXcase = 1;
 	for (i=0; i<this->dim; ++i)
@@ -517,9 +516,8 @@ CCmaes::CCmaes(int lambda, int mu, int problemdim){
 
 	this->rgpc = (double*)malloc(this->dim*sizeof(double));
 	this->rgps = (double*)malloc(this->dim*sizeof(double));
-	if((this->rgdTmp = (double*)malloc((this->dim)*sizeof(double)))==NULL)
-		puts("malloc failed");
-	this->rgBDz = (double*)malloc((this->dim)*sizeof(double));
+	this->rgdTmp = (double*)malloc((this->dim+1)*sizeof(double));
+	this->rgBDz = (double*)malloc(this->dim*sizeof(double));
 	this->rgxmean = (double*)malloc(this->dim*sizeof(double));
 	this->rgxold = (double*)malloc(this->dim*sizeof(double));  
 	this->rgD = (double*)malloc(this->dim*sizeof(double));
@@ -541,10 +539,8 @@ CCmaes::CCmaes(int lambda, int mu, int problemdim){
 		this->B[i][i] = 1.;
 		this->C[i][i] = this->rgD[i] = this->rgInitialStds[i] * sqrt(this->dim / trace);
 		this->C[i][i] *= this->C[i][i];
-		this->rgpc[i] = this->rgps[i] = 0.;
-		this->rgdTmp[i] = 0.0;
+		this->rgpc[i] = this->rgps[i] = this->rgdTmp[i] = 0.;
 	}
-	printf("%f\n", rgdTmp[0]);
 
   //initialise mean;
   	for ( i = 0; i < this->dim; ++i){

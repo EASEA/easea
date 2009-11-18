@@ -45,8 +45,12 @@ public:
   CPopulation* population;
   size_t reduceParents;
   size_t reduceOffsprings;
-  //void showPopulationStats();
+
   void showPopulationStats(struct timeval beginTime);
+  void generateGnuplotScript();
+  void generateRScript();
+
+  void outputGraph();
   Parameters* params;
 
   CGnuplot* gnuplot;

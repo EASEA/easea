@@ -1,8 +1,8 @@
-CXXFLAGS =	-O2 -g -Wall -fmessage-length=0
+CXXFLAGS = -g -Wall -fmessage-length=0
 
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
-	CGnuplot.o CCmaes.o CCuda.o  CCmaesCuda.o
+	CGnuplot.o CCmaes.o CCuda.o CCmaesCuda.o Parameters.o CManyCmaes.o
 
 LIBS = -lboost_program_options 
 

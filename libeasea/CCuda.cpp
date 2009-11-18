@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdlib.h>
 #include "include/CCuda.h"
 #define NB_MP 16
 

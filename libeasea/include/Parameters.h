@@ -10,6 +10,7 @@
 
 #include "CEvolutionaryAlgorithm.h"
 class CGenerationalCriterion;
+class CControlCStopingCriterion;
 class CSelectionOperator;
 
 class Parameters {
@@ -18,7 +19,12 @@ public:
 	CSelectionOperator* replacementOperator;
 	CSelectionOperator* parentReductionOperator;
 	CSelectionOperator* offspringReductionOperator;
+
 	CGenerationalCriterion* generationalCriterion;
+	CControlCStopingCriterion* controlCStopingCriterion;
+	CTimeCriterion* timeCriterion;
+
+	int nbGen;
 
 	float selectionPressure;
 	float replacementPressure;
@@ -45,9 +51,15 @@ public:
 	unsigned int elitSize;
 
 	int printStats;
+	int generateCVSFile;
+	int generateGnuplotScript;
+	int generateRScript;	
 	int plotStats;
 	int printInitialPopulation;
 	int printFinalPopulation;
+
+	char* outputFilename;
+	char* plotOutputFilename;
 
 public:
 #ifdef WIN32
@@ -56,7 +68,7 @@ public:
 #endif
 	virtual void setDefaultParameters(int argc, char** argv) = 0;
 	virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;
+	int setReductionSizes(int popSize, float popReducSize);
 };
-
 
 #endif /* PARAMETERS_H_ */

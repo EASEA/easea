@@ -9,6 +9,15 @@
 #define CSTOPPINGCRITERION_H_
 
 #include <stdlib.h>
+#include <signal.h>
+#ifndef WIN32
+#include <sys/time.h>
+#endif
+#ifdef WIN32
+#include <windows.h>
+#endif
+#include <time.h>
+
 class CEvolutionaryAlgorithm;
 
 /* ****************************************
@@ -36,4 +45,28 @@ class CGenerationalCriterion : public CStoppingCriterion {
   size_t *getGenerationalLimit();
 };
 
+/* ****************************************
+   TimeCriterion class
+****************************************/
+class CTimeCriterion : public CStoppingCriterion {
+ private:
+  size_t timeLimit;
+  size_t elapsedTime;
+ public:
+  virtual bool reached();
+  CTimeCriterion(size_t timeLimit);
+  void setElapsedTime(size_t elapsedTime);
+};
+
+/* ****************************************
+   ControlCStopingCriterion class
+****************************************/
+extern void signal_handler(int sig);
+
+class CControlCStopingCriterion : public CStoppingCriterion {
+ private:
+ public:
+  virtual bool reached();
+  CControlCStopingCriterion();
+};
 #endif /* CSTOPPINGCRITERION_H_ */

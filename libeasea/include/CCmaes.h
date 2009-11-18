@@ -7,8 +7,7 @@
 
 #ifndef CCMAES_H_
 #define CCMAES_H_
-#define MAX(x,y) ((x)>(y)?(x):(y))
-#define MIN(x,y) ((x)<(y)?(x):(y))
+#include "define.h"
 class Caleatoire 
 {
 public:

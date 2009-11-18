@@ -9,11 +9,14 @@
 #define GLOBAL_H_
 
 #include <stdlib.h>
+#include "define.h"
+
 //#define true 1;
 //#define false 0;
 class CIndividual;
 
 extern CIndividual** pPopulation;
+extern CIndividual* bBest;
 extern float* pEZ_MUT_PROB;
 extern float* pEZ_XOVER_PROB;
 extern size_t *EZ_NB_GEN;

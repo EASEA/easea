@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include "CIndividual.h"
+#include <string>
 
 class CSelectionOperator {
 public:
@@ -21,6 +22,8 @@ protected:
   float currentSelectionPressure;
 };
 
+extern float getSelectionPressure(std::string selectop);
+extern CSelectionOperator* getSelectionOperator(std::string selectop, int minimizing, CRandomGenerator* globalRandomGenerator);
 
 /* ****************************************
    Tournament classes (min and max)
@@ -93,6 +96,20 @@ class MinRandom : public CSelectionOperator{
   CRandomGenerator* rg;
 };
 
+/* ****************************************
+ *    Roulette classes (MAX)
+ *****************************************/
+
+class MaxRoulette : public CSelectionOperator{
+public:
+  MaxRoulette(CRandomGenerator* rg){ this->rg = rg; }
+  virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
+  virtual size_t selectNext(size_t populationSize);
+  float getExtremum();
+private:
+  size_t populationSize;
+  CRandomGenerator* rg;
+};
 
 
 #endif /* CSELECTIONOPERATOR_H_ */

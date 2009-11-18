@@ -1,5 +1,5 @@
-EXEC = main.out
-CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated
+EXEC = easea 
+CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated -DDEBUG
 CPPC = g++ 
 LDFLAGS = 
 
@@ -7,6 +7,7 @@ LDFLAGS =
 
 $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libeasea/libeasea.a
 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
+	echo "export EZ_PATH=$(PWD)/">>$(HOME)/.bashrc
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
 	# 
@@ -16,18 +17,20 @@ $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libe
 	#       For example, on ubuntu :
 	#       sudo apt-get install libboost-program-options-dev
 	#
+	# EZ_PATH was automatically added to your .bashrc at the end of the compilation
+	#
 	# Easea could be moved to a bin directory or included in the PATH 
 	# as long as users have defined a EZ_PATH environment variable 
-	# pointing to the tpl/ directory.
+	# pointing to the Easea directory.
 	# To do this temporarly type : 
-	#       export EZ_PATH=`pwd`/tpl/
+	#       export EZ_PATH=`pwd`/
 	# Or define EZ_PATH in your bashrc file (for bash users) :
 	#       For example :
 	#       export EZ_PATH=/path/to/easea/directory/
 	#
 	# Otherwise you can use easea from this directory by typing :
 	#       For example : 
-	#       ./easea examples/weierstrass/weierstrass.ez
+	#       ./easea examples/weierstrass_std/weierstrass.ez
 	# Go to the taget directory and type make
 	#
 	# Thanks for using EASEA.
@@ -72,7 +75,7 @@ realclean: clean
 
 
 EaseaParse.cpp: EaseaParse.y
-	wine /home/kruger/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d -l
+	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d
 
 EaseaLex.cpp: EaseaLex.l
-	wine /home/kruger/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i -l
+	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i

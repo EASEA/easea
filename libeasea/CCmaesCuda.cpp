@@ -450,14 +450,24 @@ void CCmaesCuda::cmaes_UpdateEigensystem(int flgforce)
       return;
   }
 
+
   Eigen( this->dim, this->C, this->rgD, this->B, this->rgdTmp);
 
   if (this->flgCheckEigen)
     /* needs O(n^3)! writes, in case, error message in error file */ 
     i = Check_Eigen( this->dim, this->C, this->rgD, this->B);
   
-  for (i = 0; i < this->dim; ++i)
-    this->rgD[i] = sqrt(this->rgD[i]);
+  for (i = 0; i < this->dim; ++i){
+    //printf("%f ",this->rgD[i]);
+    this->rgD[i] = sqrt(fabs(this->rgD[i]));
+  }
+  //printf("\n");
+  /*for(i=0; i<this->dim; ++i){
+  	if(isnan(rgD[i])){
+		printf("Ca merde apres sqrt %f \n",rgD[i]);
+		exit(1);
+	}
+  }*/
   
   this->flgEigensysIsUptodate = 1;
   this->genOfEigensysUpdate = this->gen; 
@@ -544,7 +554,6 @@ CCmaesCuda::CCmaesCuda(int lambda, int mu, int problemdim){
 		this->rgpc[i] = this->rgps[i] = 0.;
 		this->rgdTmp[i] = 0.0;
 	}
-	printf("%f\n", rgdTmp[0]);
 
   //initialise mean;
   	for ( i = 0; i < this->dim; ++i){
@@ -595,6 +604,9 @@ CCmaesCuda::~CCmaesCuda()
 } /* cmaes_exit() */
 
 void CCmaesCuda::cmaes_update(float **popparent, float *fitpar){
+  //printf("Dans update sigma debut %f\n",this->sigma);
+  //if(isnan(this->sigma))
+//	exit(1);
     	int i, j, iNk, hsig;
 	float sum; 
 	float psxps;
@@ -603,27 +615,37 @@ void CCmaesCuda::cmaes_update(float **popparent, float *fitpar){
 		printf("Warning: sigma increased due to equal function values\n");
 		printf("   Reconsider the formulation of the objective function\n");
 	}
+  //printf("Dans update sigma milieu %f %f %f\n",this->sigma, this->cs, this->damps);
+  //if(isnan(this->sigma))
+//	exit(1);
 	for (i = 0; i < this->dim; ++i) {
 		this->rgxold[i] = this->rgxmean[i]; 
 		this->rgxmean[i] = 0.;
-		for (iNk = 0; iNk < this->mu; ++iNk) 
+		for (iNk = 0; iNk < this->mu; ++iNk){ 
 			this->rgxmean[i] += this->weights[iNk] * popparent[iNk][i];
+		}
 		this->rgBDz[i] = sqrt(this->mueff)*(this->rgxmean[i] - this->rgxold[i])/this->sigma; 
 	}
 	/* calculate z := D^(-1) * B^(-1) * rgBDz into rgdTmp */
 	for (i = 0; i < this->dim; ++i) {
 		sum = 0.;
-		for (j = 0; j < this->dim; ++j)
+		for (j = 0; j < this->dim; ++j){
 			sum += this->B[j][i] * this->rgBDz[j];
+		}
 		this->rgdTmp[i] = sum / this->rgD[i];
+		// ICI PROBLEME !!!!!!!!!!!!!!!!!!!!!!! ////////////////////////
+//		if(isnan(this->rgdTmp[i])){
+//			printf("%f %f\n", sum, rgD[i]);
+//			exit(0);
+//		}
 	}
 	/* cumulation for sigma (ps) using B*z */
 	for (i = 0; i < this->dim; ++i) {
 		sum = 0.;
-		for (j = 0; j < this->dim; ++j)
+		for (j = 0; j < this->dim; ++j){
 			sum += this->B[i][j] * this->rgdTmp[j];
-		this->rgps[i] = (1. - this->cs) * this->rgps[i] + 
-				sqrt(this->cs * (2. - this->cs)) * sum;
+		}
+		this->rgps[i] = (1. - this->cs) * this->rgps[i] + sqrt(this->cs * (2. - this->cs)) * sum;
 	}
 	/* calculate norm(ps)^2 */
 	psxps = 0.;
@@ -641,8 +663,15 @@ void CCmaesCuda::cmaes_update(float **popparent, float *fitpar){
 			this->flgIniphase = 0;
 	}
 	this->Adapt_C2(hsig, popparent);
+//  printf("Dans update sigma apres Adapt %f\n",this->sigma);
+  //if(isnan(this->sigma))
+//	exit(1);
+//	printf("TEST %f %f %f %f\n",psxps, this->chiN, this->cs, this->damps);
 	/* update of sigma */
 	this->sigma *= exp(((sqrt(psxps)/this->chiN)-1.)*this->cs/this->damps);
 	this->gen++;
+  //printf("Dans update sigma fin%f %f %f %f %f\n",this->sigma, psxps, this->chiN, this->cs, this->damps);
+  //if(isnan(this->sigma))
+//	exit(1);
 }
 

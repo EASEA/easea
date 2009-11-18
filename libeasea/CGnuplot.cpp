@@ -1,10 +1,11 @@
 #include "include/CGnuplot.h"
 
-CGnuplot::CGnuplot(){
+CGnuplot::CGnuplot(int nbEval){
 #ifdef __linux__
 	int toFils[2];
         int toPere[2];
         int sonPid;
+	this->valid=1;
 
         if(pipe(toFils)<0){
                 perror("PipeComOpen: Creating pipes");
@@ -24,35 +25,36 @@ CGnuplot::CGnuplot(){
                 case 0:
                         /* --- here's the son --- */
                         if(dup2(toFils[0], fileno(stdin))<0){
-                                perror("PipeComOpen(son): could not connect");
+                                perror("PipeComOpen(son): could not connect\n");
 				this->valid=0;
-				return;
-                                //abort();
+                                abort();
 			}
                         if(dup2(toPere[1], fileno(stdout))<0){
-                                perror("PipeComOpen(son): could not connect");
+                                perror("PipeComOpen(son): could not connect\n");
 				this->valid=0;
-				return;
-                                //abort();
+                                abort();
                         }
                         char *arg[2];
-                        arg[0] = "-persist";
+                        arg[0] = (char*)"-persist";
                         arg[1] = 0;
                         if(execvp("gnuplot",arg)<0){
-                                perror("gnuplot not installed, please change plotStats parameter");
-                                //abort();
+                                perror("gnuplot not installed, please change plotStats parameter\n");
+                                abort();
 				this->valid=0;
-				break;
                         }
                         break;
-                default:
-                        this->fWrit = (FILE *)fdopen(toFils[1],"w");
-                        this->fRead = (FILE *)fdopen(toPere[0],"r");
-                        this->pid = sonPid;
-			this->valid = 1;
-			fprintf(this->fWrit,"set term x11 persist\n");
-			fprintf(this->fWrit,"set grid\n");
-			fflush(this->fWrit);
+                default	:
+			if(this->valid){
+                        	this->fWrit = (FILE *)fdopen(toFils[1],"w");
+                        	this->fRead = (FILE *)fdopen(toPere[0],"r");
+                        	this->pid = sonPid;
+				fprintf(this->fWrit,"set term x11 persist\n");
+				fprintf(this->fWrit,"set grid\n");
+				fprintf(this->fWrit,"set xrange[0:%d]\n",nbEval);
+				fprintf(this->fWrit,"set xlabel	\"Number of Evaluations\"\n");
+				fprintf(this->fWrit,"set ylabel \"Fitness\"\n");
+				fflush(this->fWrit);
+			}
         }
 #endif
 }

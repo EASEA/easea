@@ -36,11 +36,13 @@ Centre de Mathématiques Appliquées
     strcpy(selectorName,"Max");
   
 
-  if( mystricmp("tournament",sSELECTOR)==0 )
+  if( mystricmp("Tournament",sSELECTOR)==0 )
     strcat(selectorName,"Tournament(globalRandomGenerator)");
   else if( mystricmp("dettour",sSELECTOR)==0 )
     strcat(selectorName,"Tournament(globalRandomGenerator)");
-  else if( mystricmp("Sequential",sSELECTOR)==0 )
+  else if( mystricmp("Deterministic",sSELECTOR)==0 )
+    strcat(selectorName,"Deterministic()");
+  else if( mystricmp("deterministic",sSELECTOR)==0 )
     strcat(selectorName,"Deterministic()");
   else if( mystricmp("Random",sSELECTOR)==0 )
     strcat(selectorName,"Random(globalRandomGenerator)");
@@ -72,7 +74,7 @@ Centre de Mathématiques Appliquées
 %start COPY_EO_INITIALISER 
 %start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
-%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION
+%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION
 
  // lexical analyser name and class definition
 %name CEASEALexer {
@@ -81,10 +83,10 @@ Centre de Mathématiques Appliquées
   bool bSymbolInserted,bWithinEvaluator;  // used to change evalutor type from double to float 
   bool bInitFunction,bDisplayFunction,bFunction, bNotFinishedYet, bWithinEO_Function;
   bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
-  bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationFunction;
+  bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationReplacementFunction;
   bool bCatchNextSemiColon,bWaitingToClosePopulation, bMethodsInGenome, bFinalizationFunction;
   bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION, bWithinCUDA_Evaluator, bBoundCheckingFunction;
-  bool bIsParentReduce, bIsOffspringReduce, bEndGeneration, bBeginGeneration, bEndGenerationFunction, bBeginGenerationFunction;
+  bool bIsParentReduce, bIsOffspringReduce, bEndGeneration, bBeginGeneration, bEndGenerationFunction, bBeginGenerationFunction, bGenerationFunctionBeforeReplacement;
   CSymbol *pASymbol;
 
  public:
@@ -97,11 +99,11 @@ Centre de Mathématiques Appliquées
 {                                
   bFunction=bWithinEvaluator=bDisplayFunction=bInitFunction=bNotFinishedYet=0;
   bSymbolInserted=bDoubleQuotes=bWithinDisplayFunction=bWithinInitialiser=bWithinMutator=bWithinXover=0;
-  bWaitingForSemiColon=bFinishNB_GEN=bFinishMINIMISE=bFinishMINIMIZE=bGenerationFunction=0;
+  bWaitingForSemiColon=bFinishNB_GEN=bFinishMINIMISE=bFinishMINIMIZE=bGenerationReplacementFunction=0;
   bCatchNextSemiColon,bWaitingToClosePopulation=bMethodsInGenome=0;
   bBoundCheckingFunction = bWithinCUDA_Initializer=bWithinMAKEFILEOPTION =bWithinCUDA_Evaluator=0;
   bIsParentReduce = bIsOffspringReduce = false;
-  bEndGeneration = bBeginGeneration = bEndGenerationFunction = bBeginGenerationFunction = false;
+  bGenerationFunctionBeforeReplacement = bEndGeneration = bBeginGeneration = bEndGenerationFunction = bBeginGenerationFunction = false;
 }
 
 // macros
@@ -132,7 +134,6 @@ exponent  ([Ee][+-]?[0-9]+)
   char sFileName[1000];
   strcpy(sFileName, sRAW_PROJECT_NAME);
   switch (TARGET) {
-  case DREAM : strcat(sFileName,".java"); break;
   case STD :
   case CUDA : strcat(sFileName,".cpp"); break;
   default : strcat(sFileName,".cpp");
@@ -163,11 +164,13 @@ exponent  ([Ee][+-]?[0-9]+)
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_INITIALISATION_FUNCTION;
  }
-<TEMPLATE_ANALYSIS>"\\INSERT_GENERATION_FUNCTION"  {
-  if (bVERBOSE) printf ("Inserting generation function.\n");
+
+<TEMPLATE_ANALYSIS>"\\INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT"  {
+  if (bVERBOSE) printf ("Inserting generation before reduce function.\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  BEGIN COPY_GENERATION_FUNCTION;
+  bGenerationFunctionBeforeReplacement = true;
+  BEGIN COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT;
  }
 
 
@@ -193,7 +196,6 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 
-
 <TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING"  {
   if (bVERBOSE) printf ("Inserting Bound Checking function.\n");
   yyreset();
@@ -208,9 +210,10 @@ exponent  ([Ee][+-]?[0-9]+)
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN ANALYSE_USER_CLASSES;
  }
+
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_CLASSES"  {
   if (bVERBOSE) printf ("Inserting User classes.\n");
-  if (TARGET!=DREAM) fprintf (fpOutputFile,"// User classes\n");
+  fprintf (fpOutputFile,"// User classes\n");
   CListItem<CSymbol*> *pSym;
   pGENOME->pSymbolList->reset();
   while (pSym=pGENOME->pSymbolList->walkToNextItem())
@@ -238,11 +241,8 @@ exponent  ([Ee][+-]?[0-9]+)
   pGENOME->pSymbolList->reset();
   while (pSym=pGENOME->pSymbolList->walkToNextItem()){
     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-    if ((pSym->Object->ObjectType==oArray)&&(TARGET==DREAM))
-      fprintf(fpOutputFile,"    %s = new %s[%d];\n",pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
     if (pSym->Object->ObjectType==oPointer){
-      if (TARGET==DREAM) fprintf(fpOutputFile,"    %s=null;\n",pSym->Object->sName);
-      else fprintf(fpOutputFile,"    %s=NULL;\n",pSym->Object->sName);
+      fprintf(fpOutputFile,"    %s=NULL;\n",pSym->Object->sName);
     }
   }
  }
@@ -277,11 +277,8 @@ exponent  ([Ee][+-]?[0-9]+)
 
   while (pSym=pGENOME->pSymbolList->walkToNextItem()){
     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-    if ((pSym->Object->ObjectType==oArray)&&(TARGET==DREAM))
-      fprintf(fpOutputFile,"    %s = new %s[%d];\n",pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
     if (pSym->Object->ObjectType==oPointer){
-      if (TARGET==DREAM) fprintf(fpOutputFile,"    %s=null;\n",pSym->Object->sName);
-      else fprintf(fpOutputFile,"    %s=NULL;\n",pSym->Object->sName);
+      fprintf(fpOutputFile,"    %s=NULL;\n",pSym->Object->sName);
     }
   }
   
@@ -353,18 +350,6 @@ exponent  ([Ee][+-]?[0-9]+)
   pGENOME->pSymbolList->reset();
   while (pSym=pGENOME->pSymbolList->walkToNextItem()){
     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-    if (TARGET==DREAM){
-      if (pSym->Object->ObjectType==oObject)
-	fprintf(fpOutputFile,"    %s=EZ_genome.%s;\n",pSym->Object->sName,pSym->Object->sName);
-      if (pSym->Object->ObjectType==oPointer)
-	fprintf(fpOutputFile,"    %s=((EZ_genome.%s!=null) ? new %s(EZ_genome.%s) : null);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-      if (pSym->Object->ObjectType==oArray){
-	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-	if (pSym->Object->pType->ObjectType==oUserClass) fprintf(fpOutputFile,"       this.%s[EASEA_Ndx]=new %s(EZ_genome.%s[EASEA_Ndx]);}\n",pSym->Object->sName, pSym->Object->pType->sName, pSym->Object->sName);
-	else fprintf(fpOutputFile,"       this.%s[EASEA_Ndx]=EZ_genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
-      }
-    } 
-    else {
       if (pSym->Object->ObjectType==oObject)
 	fprintf(fpOutputFile,"    %s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName);
       if (pSym->Object->ObjectType==oPointer)
@@ -373,7 +358,6 @@ exponent  ([Ee][+-]?[0-9]+)
 	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
 	fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
       }
-    }
   }
  }
 
@@ -384,18 +368,6 @@ exponent  ([Ee][+-]?[0-9]+)
   pGENOME->pSymbolList->reset();
   while (pSym=pGENOME->pSymbolList->walkToNextItem()){
     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-    if (TARGET==DREAM){
-      if (pSym->Object->ObjectType==oObject)
-	fprintf(fpOutputFile,"    EZ_genome.%s=%s;\n",pSym->Object->sName,pSym->Object->sName);
-      if (pSym->Object->ObjectType==oPointer)
-	fprintf(fpOutputFile,"    EZ_genome.%s=(%s!=null ? new %s(%s) : null);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-      if (pSym->Object->ObjectType==oArray){
-	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-	if (pSym->Object->pType->ObjectType==oUserClass) fprintf(fpOutputFile,"       EZ_genome.%s[EASEA_Ndx]=new %s(this.%s[EASEA_Ndx]);}\n",pSym->Object->sName, pSym->Object->pType->sName, pSym->Object->sName);
-	else fprintf(fpOutputFile,"       EZ_genome.%s[EASEA_Ndx]=this.%s[EASEA_Ndx];}\n",pSym->Object->sName, pSym->Object->sName);
-      }
-    }
-    else {
       if (pSym->Object->ObjectType==oObject)
 	fprintf(fpOutputFile,"    %s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName);
       if (pSym->Object->ObjectType==oPointer)
@@ -404,7 +376,6 @@ exponent  ([Ee][+-]?[0-9]+)
 	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
 	fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
       }
-    }
   }
  }
 <TEMPLATE_ANALYSIS>"\\GENOME_DTOR"  {
@@ -414,8 +385,7 @@ exponent  ([Ee][+-]?[0-9]+)
   pGENOME->pSymbolList->reset();
   while (pSym=pGENOME->pSymbolList->walkToNextItem())
     if (pSym->Object->ObjectType==oPointer){
-      if (TARGET==DREAM) fprintf(fpOutputFile,"  if (%s) delete %s;\n  %s=null;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
-      else fprintf(fpOutputFile,"  if (%s) delete %s;\n  %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+      fprintf(fpOutputFile,"  if (%s) delete %s;\n  %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
     }
  }
 <TEMPLATE_ANALYSIS>"\\EQUAL"  {       
@@ -457,26 +427,6 @@ exponent  ([Ee][+-]?[0-9]+)
   pGENOME->pSymbolList->reset();
   while (pSym=pGENOME->pSymbolList->walkToNextItem()){
     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-    if (TARGET==GALIB) {
-      if ((pSym->Object->ObjectType==oObject)&&(strcmp(pSym->Object->pType->sName, "bool")))
-	fprintf(fpOutputFile,"  is >> %s;\n",pSym->Object->sName);                                  
-      if ((pSym->Object->ObjectType==oArray)&&(strcmp(pSym->Object->pType->sName, "bool"))){
-	fprintf(fpOutputFile,"  {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-	fprintf(fpOutputFile,"     is >> %s[EASEA_Ndx];}\n",pSym->Object->sName);
-      }
-      if (pSym->Object->ObjectType==oPointer)
-	fprintf(fpOutputFile,"  is >> *%s;\n",pSym->Object->sName);
-    }
-    if (TARGET==EO) {
-      if (pSym->Object->ObjectType==oObject)
-	fprintf(fpOutputFile,"  is >> %s;\n",pSym->Object->sName);                                  
-      if (pSym->Object->ObjectType==oArray){
-	fprintf(fpOutputFile,"  {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-	fprintf(fpOutputFile,"     is >> %s[EASEA_Ndx];}\n",pSym->Object->sName);
-      }
-      if (pSym->Object->ObjectType==oPointer)
-	fprintf(fpOutputFile,"  is >> *(%s);\n",pSym->Object->sName);
-    }
   }
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_DISPLAY"  {        
@@ -502,51 +452,20 @@ exponent  ([Ee][+-]?[0-9]+)
     pGENOME->pSymbolList->reset();
     while (pSym=pGENOME->pSymbolList->walkToNextItem()){
       if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-      if (TARGET==DREAM) {
 	if (pSym->Object->ObjectType==oObject){
 	  if (bDisplayFunction) printf("//");
-	  fprintf(fpOutputFile,"  EASEA_S = EASEA_S + \"%s:\" + %s + \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
 	}
 	if (pSym->Object->ObjectType==oArray){
 	  if (bDisplayFunction) printf("//");
-	  fprintf(fpOutputFile,"  {EASEA_S = \"Array %s : \";\n",pSym->Object->sName);
 	  if (bDisplayFunction) printf("//");
 	  fprintf(fpOutputFile,"   for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
 	  if (bDisplayFunction) printf("//");
-	  fprintf(fpOutputFile,"     EASEA_S = EASEA_S + \"\\t\"+ %s[EASEA_Ndx];}\n",pSym->Object->sName);
 	  if (bDisplayFunction) printf("//");
+	  fprintf(fpOutputFile,"  os << \"\\n\";\n",pSym->Object->sName);
 	}         
 	if (pSym->Object->ObjectType==oPointer){
 	  if (bDisplayFunction) printf("//");
-	  fprintf(fpOutputFile,"  if (%s!=null) EASEA_S = EASEA_S + \"%s:\" + %s + \"\\n\";\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
 	}
-      }
-      else {
-	if (pSym->Object->ObjectType==oObject){
-	  if (bDisplayFunction) printf("//");
-	  if (TARGET==GALIB) fprintf(fpOutputFile,"  os << \"%s:\" << %s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
-	  if (TARGET==EO) fprintf(fpOutputFile,"  os << \"%s:\" << %s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
-	}
-	if (pSym->Object->ObjectType==oArray){
-	  if (bDisplayFunction) printf("//");
-	  if (TARGET == GALIB) fprintf(fpOutputFile,"  {os << \"Array %s : \";\n",pSym->Object->sName);
-	  if (TARGET == DREAM) fprintf(fpOutputFile,"  {EASEA_S = \"Array %s : \";\n",pSym->Object->sName);
-	  if (TARGET == EO) fprintf(fpOutputFile,"  {",pSym->Object->sName);
-	  if (bDisplayFunction) printf("//");
-	  fprintf(fpOutputFile,"   for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-	  if (bDisplayFunction) printf("//");
-	  if (TARGET==GALIB) fprintf(fpOutputFile,"     os << \"[\" << EASEA_Ndx << \"]:\" << %s[EASEA_Ndx] << \"\\t\";}\n",pSym->Object->sName);
-	  if (TARGET==EO) fprintf(fpOutputFile,"     os << %s[EASEA_Ndx];}\n",pSym->Object->sName);
-	  if (TARGET==DREAM) fprintf(fpOutputFile,"     EASEA_S = EASEA_S + \"\\t\"+ %s[EASEA_Ndx];}\n",pSym->Object->sName);
-	  if (bDisplayFunction) printf("//");
-	  if (TARGET!=DREAM) fprintf(fpOutputFile,"  os << \"\\n\";\n",pSym->Object->sName);
-	}         
-	if (pSym->Object->ObjectType==oPointer){
-	  if (bDisplayFunction) printf("//");
-	  if (TARGET==GALIB) fprintf(fpOutputFile,"  os << \"%s:\" << *%s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
-	  if (TARGET==EO) fprintf(fpOutputFile,"  os << \"%s:\" << *%s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
-	}
-      }
     }
   }                      
  }    
@@ -606,13 +525,11 @@ exponent  ([Ee][+-]?[0-9]+)
   BEGIN PARAMETERS_ANALYSIS;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_GEN_FCT_CALL"  {
-  if (bGenerationFunction) {
+  if (bGenerationReplacementFunction) {
     if( bVERBOSE ) fprintf(stdout,"Inserting generation function call\n");
-
     if( TARGET==CUDA || TARGET==STD ){
       fprintf(fpOutputFile,"\n\tEASEAGenerationFunction(this);");
     }
-    else fprintf(fpOutputFile,"\n    EASEAGenerationFunction(ga);\n");
   }
  }     
 
@@ -677,8 +594,14 @@ exponent  ([Ee][+-]?[0-9]+)
   }
   else fprintf(fpOutputFile,"%s",sSELECTOR);
 }
-//<TEMPLATE_ANALYSIS>"\\GEN_SELECTOR"  {fprintf(fpOutputFile,"%s(%s,%d)",sGEN_SELECTOR);}
-<TEMPLATE_ANALYSIS>"\\SELECT_PRM"  {fprintf(fpOutputFile,"%s",sSELECT_PRM);}
+<TEMPLATE_ANALYSIS>"\\SELECTOR_OPERATOR" {fprintf(fpOutputFile,"%s",sSELECTOR_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\SELECT_PRM"  {fprintf(fpOutputFile,"%f",fSELECT_PRM);}
+<TEMPLATE_ANALYSIS>"\\RED_PAR_OPERATOR" {fprintf(fpOutputFile,"%s",sRED_PAR_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\RED_PAR_PRM"  {fprintf(fpOutputFile,"%f",fRED_PAR_PRM);}
+<TEMPLATE_ANALYSIS>"\\RED_OFF_OPERATOR" {fprintf(fpOutputFile,"%s",sRED_OFF_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\RED_OFF_PRM"  {fprintf(fpOutputFile,"%f",fRED_OFF_PRM);}
+<TEMPLATE_ANALYSIS>"\\RED_FINAL_OPERATOR" {fprintf(fpOutputFile,"%s",sRED_FINAL_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\RED_FINAL_PRM"  {fprintf(fpOutputFile,"%f",fRED_FINAL_PRM);}
 <TEMPLATE_ANALYSIS>"\\POP_SIZE"  {fprintf(fpOutputFile,"%d",nPOP_SIZE);}
 <TEMPLATE_ANALYSIS>"\\OFF_SIZE"  {fprintf(fpOutputFile,"%d",nOFF_SIZE);}
 <TEMPLATE_ANALYSIS>"\\ELITE_SIZE"  {
@@ -699,12 +622,6 @@ exponent  ([Ee][+-]?[0-9]+)
   }
   else fprintf(fpOutputFile,"%s",sRED_PAR);
  }
-<TEMPLATE_ANALYSIS>"\\RED_PAR_PRM"  {
-  if( (TARGET==CUDA || TARGET==STD) && strlen(sRED_PAR_PRM)==0)
-    fprintf(fpOutputFile,"0");
-  else
-    fprintf(fpOutputFile,"%s",sRED_PAR_PRM);
- }
 <TEMPLATE_ANALYSIS>"\\RED_OFF"  {
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Offspring reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
@@ -718,11 +635,6 @@ exponent  ([Ee][+-]?[0-9]+)
   }
   else fprintf(fpOutputFile,"%s",sRED_OFF);
  }
-<TEMPLATE_ANALYSIS>"\\RED_OFF_PRM"  {
-  if( (TARGET==CUDA || TARGET==STD ) && strlen(sRED_OFF_PRM)==0 )
-    fprintf(fpOutputFile,"0");
-  else
-    fprintf(fpOutputFile,"%s",sRED_OFF_PRM);}
 <TEMPLATE_ANALYSIS>"\\RED_FINAL"  {
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Replacement selector is \"%s\" | Goal is %s",sRED_FINAL,(nMINIMISE?"Minimize":"Maximize"));
@@ -740,66 +652,32 @@ exponent  ([Ee][+-]?[0-9]+)
 if(OPERATING_SYSTEM=WINDOWS)
 	fprintf(fpOutputFile,"%s\\",getenv("NVSDKCUDA_ROOT"));
 }
-<TEMPLATE_ANALYSIS>"\\RED_FINAL_PRM"  {fprintf(fpOutputFile,"%s",sRED_FINAL_PRM);}
-<TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  {fprintf(fpOutputFile,"%d",nSURV_PAR_SIZE);}
-<TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  {fprintf(fpOutputFile,"%d",nSURV_OFF_SIZE);}
+<TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  {if(fSURV_PAR_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_PAR_SIZE); else fprintf(fpOutputFile,"%f",(float)nPOP_SIZE);}
+<TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  {if(fSURV_OFF_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_OFF_SIZE); else fprintf(fpOutputFile,"%f",(float)nOFF_SIZE);}
 <TEMPLATE_ANALYSIS>"\\GENOME_NAME"  {fprintf(fpOutputFile,"%s",nGENOME_NAME);}
 <TEMPLATE_ANALYSIS>"\\PROBLEM_DIM"  {fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
 <TEMPLATE_ANALYSIS>"\\NB_GEN"  {fprintf(fpOutputFile,"%d",nNB_GEN);}
-<TEMPLATE_ANALYSIS>"\\NB_ISLANDS"  {fprintf(fpOutputFile,"%d",nNB_ISLANDS);}
-<TEMPLATE_ANALYSIS>"\\PROP_OR_SEQ"  {fprintf(fpOutputFile,"%s",bPROP_SEQ?"Prop":"Seq");}
-<TEMPLATE_ANALYSIS>"\\MUT_PROB"  {if (TARGET==GALIB)fprintf(fpOutputFile,"(float)%f",fMUT_PROB);
-  else fprintf(fpOutputFile,"%f",fMUT_PROB);}
-<TEMPLATE_ANALYSIS>"\\XOVER_PROB"  {if (TARGET==GALIB)fprintf(fpOutputFile,"(float)%f",fXOVER_PROB);
-  else fprintf(fpOutputFile,"%f",fXOVER_PROB);}
-<TEMPLATE_ANALYSIS>"\\REPLACEMENT"  {fprintf(fpOutputFile,"%s",sREPLACEMENT);}
-<TEMPLATE_ANALYSIS>"\\REPL_PERC"  {fprintf(fpOutputFile,"(float)%f/100",fREPL_PERC);}
-<TEMPLATE_ANALYSIS>"\\DISCARD_PRM"  {fprintf(fpOutputFile,"%s",sDISCARD_PRM);}
-<TEMPLATE_ANALYSIS>"\\STEADYSTATE"  {if ((fREPL_PERC==0)||(!strcmp(sREPLACEMENT,"Incremental"))||(!strcmp(sREPLACEMENT,"Simple")))
-     fprintf(fpOutputFile,"// undefined ");}
-<TEMPLATE_ANALYSIS>"\\COMMENT"  {if (mystricmp(sREPLACEMENT,"SSGA")) fprintf(fpOutputFile,"//");}
+<TEMPLATE_ANALYSIS>"\\TIME_LIMIT" {fprintf(fpOutputFile,"%d",nTIME_LIMIT);}
+<TEMPLATE_ANALYSIS>"\\MUT_PROB"  {fprintf(fpOutputFile,"%f",fMUT_PROB);}
+<TEMPLATE_ANALYSIS>"\\XOVER_PROB"  {fprintf(fpOutputFile,"%f",fXOVER_PROB);}
 <TEMPLATE_ANALYSIS>"\\MINIMAXI"  {
   switch (TARGET) { 
-  case GALIB : fprintf(fpOutputFile,"%d",nMINIMISE? -1:1); break;
-  case EO : fprintf(fpOutputFile,"%s",nMINIMISE? "eoMinimizingFitness" : "eoMaximizingFitness"); break;
-  //case DREAM : fprintf(fpOutputFile,"%s",nMINIMISE? "false" : "true"); break;
-  case DREAM : fprintf(fpOutputFile,"%s",nMINIMISE? "true" : "false"); break;
-    
   case STD:
   //case CUDA: fprintf(fpOutputFile,"%s",(nMINIMISE? "false" : "true")); break;
   case CUDA: fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); break;
   }
  }
-<TEMPLATE_ANALYSIS>"\\ELITIST_REPLACE_NAME"  {if (TARGET==EO) {if (bELITISM) fprintf(fpOutputFile,"standardR");
-    else fprintf(fpOutputFile,"r");}}
 <TEMPLATE_ANALYSIS>"\\ELITISM"  {
   switch (TARGET) { 
-  case GALIB : if (!mystricmp(sREPLACEMENT,"simple"))
-      if (bELITISM) fprintf(fpOutputFile,"  ga.elitist(gaTrue);\n");
-      else fprintf(fpOutputFile,"  ga.elitist(gaFalse);\n");
-    break;
-  case EO :  fprintf(fpOutputFile,"%d",bELITISM);
-    break;
   case STD:
   case CUDA: fprintf(fpOutputFile,"%d",bELITISM);
   }                                 }
-<TEMPLATE_ANALYSIS>"\\IMMIG_SEL" {fprintf(fpOutputFile,"%s",sIMMIG_SEL);}
-<TEMPLATE_ANALYSIS>"\\IMMIG_REPL" {fprintf(fpOutputFile,"%d",nIMMIG_REPL);}
-<TEMPLATE_ANALYSIS>"\\MIGRATOR" {fprintf(fpOutputFile,"%s",sMIGRATOR);}
-<TEMPLATE_ANALYSIS>"\\MIG_SEL" {fprintf(fpOutputFile,"%s",sMIG_SEL);}
-<TEMPLATE_ANALYSIS>"\\MIG_CLONE" {fprintf(fpOutputFile,"%d",nMIG_CLONE);}
-<TEMPLATE_ANALYSIS>"\\NB_MIG" {fprintf(fpOutputFile,"%d",nNB_MIG);}
-<TEMPLATE_ANALYSIS>"\\MIG_FREQ" {fprintf(fpOutputFile,"%f",fMIG_FREQ);}
-<TEMPLATE_ANALYSIS>"\\MIG_TARGET_SELECTOR" {fprintf(fpOutputFile,"%s",sMIG_TARGET_SELECTOR);}
 
-<TEMPLATE_ANALYSIS>"\\START_EO_GENOME_H_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Genome.h");
-  fpOutputFile=fopen(sFileName,"w");    
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
- }
+<TEMPLATE_ANALYSIS>"\\PRINT_STATS" {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
+<TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_CVS_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CVS_FILE);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_GNUPLOT_SCRIPT);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_R_SCRIPT);}
 
 <TEMPLATE_ANALYSIS>"\\START_CUDA_GENOME_H_TPL"  {
   char sFileName[1000];
@@ -809,17 +687,6 @@ if(OPERATING_SYSTEM=WINDOWS)
   fpOutputFile=fopen(sFileName,"w");    
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  }
-
-<TEMPLATE_ANALYSIS>"\\START_CUDA_USER_CLASSES_H_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"UserClasses.hpp");
-  fpOutputFile=fopen(sFileName,"w");    
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
- }
-
-
 <TEMPLATE_ANALYSIS>"\\START_CUDA_GENOME_CU_TPL"  {
   char sFileName[1000];
   fclose(fpOutputFile);
@@ -830,101 +697,6 @@ if(OPERATING_SYSTEM=WINDOWS)
     strcat(sFileName,"Individual.cpp");
   fpOutputFile=fopen(sFileName,"w");    
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
- }
-
-<TEMPLATE_ANALYSIS>"\\START_CUDA_TOOLS_CPP_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Tools.cpp");
-  fpOutputFile=fopen(sFileName,"w");    
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
- }
-
-<TEMPLATE_ANALYSIS>"\\START_CUDA_TOOLS_H_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Tools.hpp");
-  fpOutputFile=fopen(sFileName,"w");    
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
- }
-
-
-<TEMPLATE_ANALYSIS>"\\START_CUDA_POPULATION_CPP_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Population.cpp");
-  fpOutputFile=fopen(sFileName,"w");    
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
- }
-
-<TEMPLATE_ANALYSIS>"\\START_CUDA_POPULATION_H_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Population.hpp");
-  fpOutputFile=fopen(sFileName,"w");    
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
- }
-
-
-<TEMPLATE_ANALYSIS>"\\START_EO_EVAL_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"EvalFunc.h");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_EO_INITER_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Init.h");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_EO_MUT_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Mutation.h");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_EO_QUAD_XOVER_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"QuadCrossover.h");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_EO_CONTINUE_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"_make_continue.h");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_EO_MAKE_GENOTYPE_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"_make_genotype.h");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_EO_MAKE_OPERATORS_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"_make_operators.h");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
  }
 <TEMPLATE_ANALYSIS>"\\START_EO_PARAM_TPL"  {
   char sFileName[1000];
@@ -989,15 +761,16 @@ if(OPERATING_SYSTEM=WINDOWS)
     
   
     // create a symbolic link from Makefile to EASEA.mak
+#ifndef WIN32
     symlink(sFullFileName,sPathName);
+#endif
   }
   else{
     //DEBUG_PRT_PRT("file name : %s",sFileName);
+#ifndef WIN32
     if( symlink(sFileName,"Makefile") ) perror("Symlink creation error ");
+#endif
   }
- 
-
-
   if (bVERBOSE){
     printf("Creating %s...\n",sFileName);
     printf("Creating %s symbolic link...\n",sPathName);
@@ -1008,88 +781,11 @@ if(OPERATING_SYSTEM=WINDOWS)
     exit(-1);
   }
 }
-
-
-<TEMPLATE_ANALYSIS>"\\START_EVAL_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Evaluator.java");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_INITER_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Initer.java");
-  fpOutputFile=fopen(sFileName,"w");    
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
- }
-<TEMPLATE_ANALYSIS>"\\START_GENOME_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Genome.java");
-  fpOutputFile=fopen(sFileName,"w");    
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
- }
-<TEMPLATE_ANALYSIS>"\\START_MUT_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Mutator.java");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_RECOMB_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Recombine.java");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_IHDEF_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"IHDefIniter.java");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_FITINIT_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"FitnessIniter.java");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
-<TEMPLATE_ANALYSIS>"\\START_ISLAND_TPL"  {
-  char sFileName[1000];
-  fclose(fpOutputFile);
-  strcpy(sFileName, sRAW_PROJECT_NAME);
-  strcat(sFileName,"Island.java");
-  if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
- }
 <TEMPLATE_ANALYSIS>"\\TEMPLATE_END"  {
   if (nWARNINGS) printf ("\nWARNING !!!\nTarget file(s) generation went through WITH %d WARNING(S) !\n",nWARNINGS);
   else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded with no warning.\n");
-  if (OPERATING_SYSTEM==UNIX){
-    if (TARGET==GALIB) {
-      printf ("\nYou may now compile your file with:\n");
-      printf ("\ng++ %s.cpp -o %s %sgdc.o %sgdchart.o %sprice_conv.o -lga -L%sgdchart0.94b/gd1.3 -lgd -lm\n\n",sPROJECT_NAME,sPROJECT_NAME,sEZ_PATH,sEZ_PATH,sEZ_PATH,sEZ_PATH);
-    }
-    if (TARGET==EO) {
-      printf ("\nYou may now compile your file with:\n");
-      printf ("\nmake -f %s.mak\n\n",sPROJECT_NAME);
-      printf ("and run it with:\n\n",sPROJECT_NAME);
-      printf ("%s @%s.prm\n\n",sPROJECT_NAME,sPROJECT_NAME);
-    } }
   printf ("Have a nice compile time.\n");
-  if (TARGET==EO || TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"\n# That's all folks ! \n");
+  if (TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"\n# That's all folks ! \n");
   else fprintf(fpOutputFile,"\n// That's all folks ! \n");
   fflush(fpOutputFile);
   fclose(fpOutputFile);
@@ -1143,10 +839,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 <COPY_USER_FUNCTIONS>.|\n {}                                      
 
-<COPY_INITIALISATION_FUNCTION>"\\before"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
-  if (TARGET==DREAM)
-    fprintf (fpOutputFile,"// Evaluator Constructor\n\n  public %sEvaluator(){",sPROJECT_NAME);
-  else 
+<COPY_INITIALISATION_FUNCTION>"\\Before"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
     fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){");
   bFunction=1; bInitFunction=1;
       
@@ -1165,12 +858,9 @@ if(OPERATING_SYSTEM=WINDOWS)
 //****************************************
 //  Easea GPGPU & EO Finalization function
 //****************************************
-<COPY_FINALIZATION_FUNCTION>"\\after"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
+<COPY_FINALIZATION_FUNCTION>"\\After"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
   switch( TARGET ){
 
-  case EO:
-    fprintf (fpOutputFile,"// Finalization function\n\nvoid EASEAFinalFunction(eoPop<Indi>& population){");
-    break;
   case STD:
   case CUDA:
     fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){");
@@ -1207,7 +897,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_END_GENERATION_FUNCTION><<EOF>> {
   bEndGenerationFunction=0; // No Generation function was found in the .ez file
-  printf("*** No end generation function was found. ***\n");
+  if( bVERBOSE) printf("*** No end generation function was found. ***\n");
   fprintf(fpOutputFile,"\n// No at end of generation function.\n");
 
   rewind(fpGenomeFile);
@@ -1231,7 +921,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_BEG_GENERATION_FUNCTION><<EOF>> {
   bBeginGenerationFunction=0; // No Generation function was found in the .ez file
-  printf("*** No beginning generation function was found. ***\n");
+  if (bVERBOSE) printf("*** No beginning generation function was found. ***\n");
   fprintf(fpOutputFile,"\n// No at beginning of generation function.\n");
 
   rewind(fpGenomeFile);
@@ -1243,41 +933,26 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 
 
-<COPY_GENERATION_FUNCTION>"\\At"[ \t\n]+"each"[ \t\n]+"new"[ \t\n]+"generation"[ \t\n]*":" {
+<COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>"\\At"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"before"[ \t\n]+"reduce"[ \t\n]+"function"[ \t\n]*":" {
   //DEBUG_PRT_PRT("at each");
-  if( TARGET==GALIB ){
-  fprintf (fpOutputFile,"// Function called at each new generation\n\nvoid EASEAGenerationFunction(GAGeneticAlgorithm & g){\n");
-  fprintf(fpOutputFile,"  const GAPopulation *pPopulation;\n",sPROJECT_NAME);
-  fprintf(fpOutputFile,"  pPopulation=&(g.population());  // to circumvent a bug in GALib\n",sPROJECT_NAME);
-  bFunction=1; bGenerationFunction=1;
-  BEGIN COPY_USER_GENERATION;
-  }
-  else if((TARGET==CUDA || TARGET==STD) && !bBeginGeneration && !bEndGeneration ){
-      fprintf (fpOutputFile,"// Function called at each new generation\nvoid EASEAGenerationFunction(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
-      bFunction=1; bGenerationFunction=1;
+  if((TARGET==CUDA || TARGET==STD)){// && !bBeginGeneration && !bEndGeneration ){
+      fprintf (fpOutputFile,"{\n");
+      bFunction=1; 
+      bGenerationReplacementFunction=1;
       BEGIN COPY_USER_GENERATION;
   }
  }
-<COPY_GENERATION_FUNCTION><<EOF>> {
-  bGenerationFunction=0; // No Generation function was found in the .ez file
-  if( bBeginGeneration ){
-    if( bVERBOSE ) printf("*** No generation function was found. ***\n");
-    fprintf(fpOutputFile,"\n// No at begining of generation function.\n");
-  }
-  else if ( bEndGeneration ){
-    printf("*** No generation function was found. ***\n");
-    fprintf(fpOutputFile,"\n// No at end of generation function.\n");
-  }
-  else{
-    printf("*** No generation function was found. ***\n");
-    fprintf(fpOutputFile,"\n// No generation function.\n");
-  }
+
+<COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT><<EOF>> {
+  bGenerationFunctionBeforeReplacement=0; // No Generation function was found in the .ez file
+  if (bVERBOSE) printf("*** No generation function was found. ***\n");
+  fprintf(fpOutputFile,"\n// No generation function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
-<COPY_GENERATION_FUNCTION>.|\n {}                                      
+<COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>.|\n {}                                      
 
 
 <COPY_BOUND_CHECKING_FUNCTION>"\\Bound"[ \t\n]+"checking"[ \t\n]*":" {
@@ -1313,8 +988,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"currentGeneration" |
 <COPY>"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"EZ_currentGeneration"); break;
-    case EO : fprintf(fpOutputFile,"generationCounter.value()"); break;
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }} // local genome name
 <COPY>"NB_GEN" |
@@ -1379,22 +1052,14 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"MINIMIZE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MAXIMISE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MAXIMIZE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
-<COPY>"false"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaFalse");
-  else fprintf(fpOutputFile,"false");} // local name
-<COPY>"false"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaFalse");
-  else fprintf(fpOutputFile,"false");} // local name
-<COPY>"true"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaTrue");
-  else fprintf(fpOutputFile,"true");} // local name
-<COPY>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {if (TARGET==DREAM) fprintf(fpOutputFile," boolean ");
-  else fprintf(fpOutputFile,yytext);}
-<COPY>"tossCoin"  {if (TARGET==GALIB) fprintf(fpOutputFile,"tossCoin");
-  if (TARGET==EO) fprintf(fpOutputFile,"rng.flip");
-  if (TARGET==DREAM) fprintf(fpOutputFile,"Math.random()<");
- } // local random name 
+<COPY>"false"  {fprintf(fpOutputFile,"false");} // local name
+<COPY>"true"  {fprintf(fpOutputFile,"true");} // local name
+<COPY>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
+  fprintf(fpOutputFile,yytext);}
+<COPY>"tossCoin"  { // local random name 
+  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 <COPY>"random"  {
-  if (TARGET==DREAM) fprintf(fpOutputFile,"%s.random",sPROJECT_NAME);
-  else if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"globalRandomGenerator->random");
-  else fprintf(fpOutputFile,"random");}
+  fprintf(fpOutputFile,"globalRandomGenerator->random");}
 <COPY>"Genome" {
   if (bWithinEO_Function && TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"_genotype");
   else if(bWithinEO_Function && bWithinCUDA_Initializer )fprintf(fpOutputFile,"(*this)");
@@ -1408,15 +1073,28 @@ if(OPERATING_SYSTEM=WINDOWS)
   fprintf(fpOutputFile,"template <class fitT> %s %sGenome<fitT>::",yytext,sPROJECT_NAME);}         
 <COPY>"GenomeClass::"  {fprintf(fpOutputFile,"template <class fitT> %sGenome<fitT>::",sPROJECT_NAME);}
 <COPY>"GenomeClass"  {
-  if (TARGET==EO) fprintf(fpOutputFile,"Indi");
-  else if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"Individual");
+  if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"Individual");
   else fprintf(fpOutputFile,"%sGenome",sPROJECT_NAME);} // local name
-<COPY>"population" {
-  if( (TARGET == CUDA || TARGET==STD) && bFinalizationFunction ){
-    fprintf(fpOutputFile,"(*population)");
+<COPY>"pPopulation[" {
+  if(bFinalizationFunction){
+	bWaitingToClosePopulation=true;
+    fprintf(fpOutputFile,"((IndividualImpl*)pPopulation[");
   }
-  else fprintf(fpOutputFile,"population");
  }
+<COPY>"]" {
+  	if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
+  	else {fprintf(fpOutputFile,"])"); ;bWaitingToClosePopulation=false;}}
+<COPY>"pPopulation" {
+  if(bFinalizationFunction){
+    fprintf(fpOutputFile,"pPopulation");
+  }
+  else fprintf(fpOutputFile,"/*pPopulation only in \"After everything else function\" this will cause an error*/ pPopulation");
+ }
+<COPY>"bBest" {
+  if(bFinalizationFunction)
+	fprintf(fpOutputFile,"((IndividualImpl*)bBest)");
+  else fprintf(fpOutputFile,"/*bBest only in \"After everything else function\" this will cause an error*/ bBest");
+  }
 <COPY>"\\end"  {
   if (bFunction==1 && bWithinCUDA_Initializer==0) {
     fprintf (fpOutputFile,"}\n"); 
@@ -1468,17 +1146,13 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GENOME_ANALYSIS>\n                 { /*return '\n';*/ }
 
 // keywords
-<GENOME_ANALYSIS>"bool"                  {if (TARGET!=DREAM) yylval.pSymbol = pSymbolTable->find("bool");
-  else yylval.pSymbol = pSymbolTable->find("boolean");
+<GENOME_ANALYSIS>"bool"                  {
+  yylval.pSymbol = pSymbolTable->find("boolean");
   return BOOL;}
-<GENOME_ANALYSIS>"boolean"            {if (TARGET==DREAM){
-    yylval.pSymbol = pSymbolTable->find("boolean");
-    return BOOL;
-  }
-  else {
+<GENOME_ANALYSIS>"boolean"            {
     yylval.pSymbol = new CSymbol(yytext);
     return IDENTIFIER;
-  }  }
+    }
 <GENOME_ANALYSIS>"static"                  {return STATIC;}
 <GENOME_ANALYSIS>"int"                  {yylval.pSymbol = pSymbolTable->find("int"); return INT;}
 <GENOME_ANALYSIS>"double"                  {yylval.pSymbol = pSymbolTable->find("double"); return DOUBLE;}
@@ -1605,23 +1279,13 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_GENERATION>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 <COPY_USER_GENERATION>"\\\""  {fprintf(fpOutputFile,"\\\"");}
 
-<COPY_USER_GENERATION>"pPopulation"[ \t\n]*"[" {bWaitingToClosePopulation=true;
-  switch (TARGET) {
-  case EO: fprintf(fpOutputFile,"pPopulation ["); break;
-  case GALIB: 
-    fprintf(fpOutputFile,"((%sGenome *)&(pPopulation->individual(",sPROJECT_NAME); 
-    break;
-  case CUDA:
-  case STD:
-    //fprintf(fpOutputFile,"(*evolutionaryAlgorithm->getPopulation())");
-    fprintf(fpOutputFile,"pPopulation[");
-  }
+<COPY_USER_GENERATION>"pPopulation[" {bWaitingToClosePopulation=true;
+    fprintf(fpOutputFile,"((IndividualImpl*)pPopulation[");
  }
-<COPY_USER_GENERATION>"]" {if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
-  else if( TARGET==CUDA || TARGET==STD)
-    fprintf(fpOutputFile,"]");
+<COPY_USER_GENERATION>"]" {
+  if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
   else {
-    fprintf(fpOutputFile,")))"); 
+    fprintf(fpOutputFile,"])"); 
     bWaitingToClosePopulation=false;
   }
  }
@@ -1630,9 +1294,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_GENERATION>"currentGeneration"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.generation()"); break;
-    case EO : 
-      fprintf(fpOutputFile,"generationCounter.value()"); break;
     case CUDA:
     case STD:
       fprintf(fpOutputFile,"(*EZ_current_generation)");
@@ -1641,8 +1302,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_GENERATION>"NB_GEN" |
 <COPY_USER_GENERATION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.nGenerations()"); break;
-    case EO : fprintf(fpOutputFile,"ptEZ_NbGen.value()");
     case STD :
     case CUDA :
 	fprintf(fpOutputFile,"(*EZ_NB_GEN)");
@@ -1650,16 +1309,11 @@ if(OPERATING_SYSTEM=WINDOWS)
     }} // local genome name                           
 <COPY_USER_GENERATION>"POP_SIZE" |
 <COPY_USER_GENERATION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
-  else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.populationSize()"); break;
-    case EO : fprintf(fpOutputFile,"EZ_POP_SIZE");
-    }} // local genome name
+    } // local genome name
 <COPY_USER_GENERATION>"MUT_PROB" |
 <COPY_USER_GENERATION>"MUT_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.pMutation()"); break;
-    case EO : fprintf(fpOutputFile,"EZ_MUT_PROB"); break;
     case STD:
     case CUDA:
       fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
@@ -1669,8 +1323,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_GENERATION>"XOVER_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
   else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.pCrossover()"); break;
-    case EO : fprintf(fpOutputFile,"EZ_XOVER_PROB"); break;
     case STD:
     case CUDA: 
       fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");     
@@ -1678,66 +1330,34 @@ if(OPERATING_SYSTEM=WINDOWS)
  } // local genome name
 <COPY_USER_GENERATION>"REPL_PERC" |
 <COPY_USER_GENERATION>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
-  else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.pReplacement()*100"); break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: The REPL_PERC variable cannot be accessed yet undeer EO.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }} // local genome name
+    } // local genome name
 <COPY_USER_GENERATION>"MINIMISE" |
 <COPY_USER_GENERATION>"MINIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE");
-  else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.minimaxi()"); break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: The MINIMISE variable cannot be accessed yet undeer EO.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }} // local genome name
+    } // local genome name
 <COPY_USER_GENERATION>"MINIMIZE" |
 <COPY_USER_GENERATION>"MINIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE");
-  else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.minimaxi()"); break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: The MINIMIZE variable cannot be accessed yet undeer EO.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }} // local genome name
+    } // local genome name
 <COPY_USER_GENERATION>"MAXIMISE" |
 <COPY_USER_GENERATION>"MAXIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE");
-  else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.minimaxi()"); break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: The MAXIMISE variable cannot be accessed yet undeer EO.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }} // local genome name
+    } // local genome name
 <COPY_USER_GENERATION>"MAXIMIZE" |
 <COPY_USER_GENERATION>"MAXIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE");
-  else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.minimaxi()"); break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: The MAXIMIZE variable cannot be accessed yet undeer EO.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }} // local genome name
+    } // local genome name
 
 <COPY_USER_GENERATION>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n    hint -> You must have meant \"NB_GEN=...\" rather than \"currentGeneration=...\"\n",sEZ_FILE_NAME,yylineno);
   exit(1);
  } 
 <COPY_USER_GENERATION>"NB_GEN"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.nGenerations((EZ_NB_GEN=");
-      bWaitingForSemiColon=bFinishNB_GEN=1; break;
-    case EO : fprintf(fpOutputFile,"ptEZ_NbGen.value((EZ_NB_GEN=)");
-      bWaitingForSemiColon=1;
     case CUDA :
     case STD :
       fprintf(fpOutputFile,"(*EZ_NB_GEN)=");
       break;
     }} // local genome name
 <COPY_USER_GENERATION>"POP_SIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
-  else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.populationSize((EZ_POP_SIZE=");
-      bWaitingForSemiColon=1; break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: The population size cannot be changed during the run in EO yet.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }} // local genome name
+    } // local genome name
 <COPY_USER_GENERATION>"MUT_PROB"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"g.pMutation((EZ_MUT_PROB=");
-      bWaitingForSemiColon=1; break;
-    case EO : fprintf(fpOutputFile,"EZ_MUT_PROB="); break;
     case CUDA:
     case STD:
       fprintf(fpOutputFile,"(*pEZ_MUT_PROB)=");
@@ -1746,62 +1366,39 @@ if(OPERATING_SYSTEM=WINDOWS)
  } // local genome name
 <COPY_USER_GENERATION>"XOVER_PROB"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else switch  (TARGET) {
-    case GALIB :fprintf(fpOutputFile,"g.pCrossover((EZ_XOVER_PROB=");
-      bWaitingForSemiColon=1; break;
-    case EO : fprintf(fpOutputFile,"EZ_XOVER_PROB="); break;
     case CUDA:
     case STD:
       fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)=");
     }
  } // local genome name
 <COPY_USER_GENERATION>"REPL_PERC"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
-  else switch  (TARGET) {
-    case GALIB :fprintf(fpOutputFile,"g.pReplacement((1/100)*(EZ_REPL_PERC=");
-      bWaitingForSemiColon=1; break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: REPL_PERC cannot be changed during the run in EO yet.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }} // local genome name
+    } // local genome name
 <COPY_USER_GENERATION>"MINIMISE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
-  else switch  (TARGET) {
-    case GALIB :fprintf(fpOutputFile,"MINIMISE=");
-      bWaitingForSemiColon=bFinishMINIMISE=1; break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: MINIMISE cannot be changed during the run in EO yet.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }}
+    }
 <COPY_USER_GENERATION>"MINIMIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
-  else switch  (TARGET) {
-    case GALIB :fprintf(fpOutputFile,"MINIMIZE=");
-      bWaitingForSemiColon=bFinishMINIMISE=1; break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: MINIMIZE cannot be changed during the run in EO yet.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }}
+    }
 <COPY_USER_GENERATION>"MAXIMISE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
-  else switch  (TARGET) {
-    case GALIB :fprintf(fpOutputFile,"MAXIMISE=");
-      bWaitingForSemiColon=bFinishMINIMISE=1; break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: MAXIMISE cannot be changed during the run in EO yet.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }}
+    }
 <COPY_USER_GENERATION>"MAXIMIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
-  else switch  (TARGET) {
-    case GALIB :fprintf(fpOutputFile,"MAXIMIZE=");
-      bWaitingForSemiColon=bFinishMINIMISE=1; break;
-    case EO : fprintf(stderr,"\n%s - Error line %d: MAXIMIZE cannot be changed during the run in EO yet.\n",sEZ_FILE_NAME,yylineno);
-      exit(1);
-    }}
-<COPY_USER_GENERATION>"false"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaFalse");
-  else fprintf(fpOutputFile,"false");} // local name
-<COPY_USER_GENERATION>"true"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaTrue");
-  else fprintf(fpOutputFile,"true");} // local name
-<COPY_USER_GENERATION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {if (TARGET==DREAM) fprintf(fpOutputFile," boolean ");
-  else fprintf(fpOutputFile,yytext);}
-<COPY_USER_GENERATION>"tossCoin"  {if (TARGET==GALIB) fprintf(fpOutputFile,"tossCoin");
-  if (TARGET==EO) fprintf(fpOutputFile,"rng.flip");
-  if (TARGET==DREAM) fprintf(fpOutputFile,"Math.random()<");
- } // local random name
-<COPY_USER_GENERATION>"random"  {if (TARGET==DREAM) fprintf(fpOutputFile,"%s.random",sPROJECT_NAME);
-  else fprintf(fpOutputFile,"random");}
+    }
+<COPY_USER_GENERATION>"false"  {fprintf(fpOutputFile,"false");} // local name
+<COPY_USER_GENERATION>"true"  {fprintf(fpOutputFile,"true");} // local name
+<COPY_USER_GENERATION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
+  fprintf(fpOutputFile,yytext);}
+<COPY_USER_GENERATION>"tossCoin"  { // local random name
+  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
+<COPY_USER_GENERATION>"random"  {
+  fprintf(fpOutputFile,"globalRandomGenerator->random");}
 <COPY_USER_GENERATION>"identicalGenome"  {fprintf(fpOutputFile,"genome._evaluated");} // local name
+<COPY_USER_GENERATION>"pPopulation" {
+  if(bBeginGenerationFunction || bEndGenerationFunction || bGenerationFunctionBeforeReplacement){
+    fprintf(fpOutputFile,"pPopulation)");
+  }
+  else fprintf(fpOutputFile,"pPopulation");
+ }
+<COPY_USER_GENERATION>"bBest" {
+  fprintf(fpOutputFile,"((IndividualImpl*)bBest)");
+ }
 <COPY_USER_GENERATION>"\\end" {rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
@@ -1833,8 +1430,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>\/\*[^\*]*\*\/ {fprintf(fpOutputFile,yytext);}  /* blah blah on a line containing sth else */
 <COPY_USER_FUNCTION>^[ \t]*\/\*[^\*]*\*\/[ \t]*\n {fprintf(fpOutputFile,yytext);} /* blah blah with nothing before the comment */
 
-<COPY_USER_FUNCTION>"GenomeClass"  {if (TARGET==EO) fprintf(fpOutputFile, "GenotypeT");
-  else fprintf(fpOutputFile,"Genome.");
+<COPY_USER_FUNCTION>"GenomeClass"  {
+  fprintf(fpOutputFile,"Genome.");
  }
 
 <COPY_USER_FUNCTION>"f1"  {
@@ -1864,40 +1461,21 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 
 <COPY_USER_FUNCTION>"Genome"  {
-  if (bWithinDisplayFunction) fprintf(fpOutputFile,"(*this)");
-  else if ((TARGET==EO)&&(bWithinInitialiser)) fprintf(fpOutputFile, "(*genome)");
-  
-  else if ((TARGET==CUDA || TARGET==STD) && ((bWithinEvaluator) || bWithinMutator)) 
+
+  if(bWithinEvaluator || bWithinMutator || bWithinDisplayFunction){ 
     if( bWithinCUDA_Evaluator)
       fprintf(fpOutputFile, "(*INDIVIDUAL_ACCESS(devBuffer,id))");
     else fprintf(fpOutputFile, "(*this)");
+  }
 
-  else if ((TARGET==EO)&&(bWithinMutator)) fprintf(fpOutputFile, "_genotype");
-  else fprintf(fpOutputFile,"genome");} // local genome name
+  else fprintf(fpOutputFile,"Genome");} // local genome name
 
 <COPY_USER_FUNCTION>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 <COPY_USER_FUNCTION>"\\\""  {fprintf(fpOutputFile,"\\\"");}
 
-<COPY_USER_FUNCTION>"pPopulation"[ \t\n]*"[" {bWaitingToClosePopulation=true;
-  switch (TARGET) {
-  case EO: fprintf(fpOutputFile,"pPopulation ["); break;
-  case GALIB: fprintf(fpOutputFile,"((%sGenome *)&(pPopulation->individual(",sPROJECT_NAME); break;
-  case STD:
-  case CUDA:
-    fprintf(fpOutputFile,"pPopulation[");
-  }
- }
-<COPY_USER_FUNCTION>"]" {
-  if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
-  else if( TARGET==CUDA || TARGET==STD)
-    fprintf(fpOutputFile,"]");
-  else {fprintf(fpOutputFile,")))"); bWaitingToClosePopulation=false;}}
-
 <COPY_USER_FUNCTION>"currentGeneration" |
 <COPY_USER_FUNCTION>"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
-    case GALIB : fprintf(fpOutputFile,"EZ_currentGeneration"); break;
-    case EO : fprintf(fpOutputFile,"generationCounter.value()"); break;
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }} // local genome name
 <COPY_USER_FUNCTION>"NB_GEN" |
@@ -1934,37 +1512,25 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_USER_FUNCTION>"XOVER_PROB"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The crossover proability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY_USER_FUNCTION>"REPL_PERC"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
-<COPY_USER_FUNCTION>"false"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaFalse");
-  else fprintf(fpOutputFile,"false");} // local name
-<COPY_USER_FUNCTION>"true"  {if (TARGET==GALIB) fprintf(fpOutputFile,"gaTrue");
-  else fprintf(fpOutputFile,"true");} // local name
-<COPY_USER_FUNCTION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {if (TARGET==DREAM) fprintf(fpOutputFile," boolean ");
-  else fprintf(fpOutputFile,yytext);}
-<COPY_USER_FUNCTION>"tossCoin"  {if (TARGET==GALIB) fprintf(fpOutputFile,"tossCoin");
-  if (TARGET==EO) fprintf(fpOutputFile,"rng.flip");
-  if (TARGET==DREAM) fprintf(fpOutputFile,"Math.random()<");} // local random name
+<COPY_USER_FUNCTION>"false"  {fprintf(fpOutputFile,"false");} // local name
+<COPY_USER_FUNCTION>"true"  {fprintf(fpOutputFile,"true");} // local name
+<COPY_USER_FUNCTION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
+  fprintf(fpOutputFile,yytext);}
+<COPY_USER_FUNCTION>"tossCoin"  { // local random name
+  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 <COPY_USER_FUNCTION>"random"  {
-  if (TARGET==DREAM) fprintf(fpOutputFile,"%s.random",sPROJECT_NAME);
-  else if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"globalRandomGenerator->random");
-  else fprintf(fpOutputFile,"random");}
-<COPY_USER_FUNCTION>"child1"  {if ((bWithinXover)&&(TARGET==GALIB)) fprintf(fpOutputFile, "(*pBro)");
-  else fprintf(fpOutputFile,"child1");
+  fprintf(fpOutputFile,"globalRandomGenerator->random");}
+<COPY_USER_FUNCTION>"child1"  {fprintf(fpOutputFile,"child1");
  }
-<COPY_USER_FUNCTION>"child2"  {if ((bWithinXover)&&(TARGET==GALIB)) fprintf(fpOutputFile, "(*pSis)");
-  else fprintf(fpOutputFile,"child2");
+<COPY_USER_FUNCTION>"child2"  {fprintf(fpOutputFile,"child2");
  }
-<COPY_USER_FUNCTION>"parent1"  {if ((bWithinXover)&&(TARGET==GALIB)) fprintf(fpOutputFile, "(*pDad)");
-  else fprintf(fpOutputFile,"parent1");
+<COPY_USER_FUNCTION>"parent1"  {fprintf(fpOutputFile,"parent1");
  }
-<COPY_USER_FUNCTION>"parent2"  {if ((bWithinXover)&&(TARGET==GALIB)) fprintf(fpOutputFile, "(*pMom)");
-  else fprintf(fpOutputFile,"parent2");
+<COPY_USER_FUNCTION>"parent2"  {fprintf(fpOutputFile,"parent2");
  }
 <COPY_USER_FUNCTION>"identicalGenome"  {fprintf(fpOutputFile,"genome._evaluated");} // local name
 <COPY_USER_FUNCTION>"return"  {if (bWithinEvaluator) {
-    if (TARGET==GALIB) fprintf(fpOutputFile,"EZ_EVAL+=(double)(clock()-EZ_t1);\n  return (float)");
-    else if (TARGET==EO)  {fprintf(fpOutputFile,"genome.fitness(");bCatchNextSemiColon=true;}// changes function type// changes function type
-    else if (TARGET==DREAM) {fprintf(fpOutputFile,"infoHabitant.setFitness(new Double(");bCatchNextSemiColon=true;}// changes function type
-    else if( TARGET==CUDA || TARGET==STD) {
+    if( TARGET==CUDA || TARGET==STD) {
       if( bWithinCUDA_Evaluator ){
 	fprintf(fpOutputFile,"return "); 
 	//bWithinCUDA_Evaluator = 0;
@@ -1975,14 +1541,13 @@ if(OPERATING_SYSTEM=WINDOWS)
     }
     //bWithinEvaluator=0;
   }
-  else if ((bWithinMutator)&&(TARGET!=GALIB)) {
+  else if ((bWithinMutator)) {
     fprintf(fpOutputFile,"return ");
     bCatchNextSemiColon=true;
   }
   else fprintf(fpOutputFile,"return"); }
 <COPY_USER_FUNCTION>";" {if (!bCatchNextSemiColon) fprintf(fpOutputFile,";");
-  else if ((TARGET!=GALIB)&&(bWithinMutator)){fprintf(fpOutputFile,">0?true:false;"); bWithinMutator=false;}
-  else if (TARGET==EO) fprintf(fpOutputFile,");");
+  else if (bWithinMutator){fprintf(fpOutputFile,">0?true:false;");/* bWithinMutator=false;*/}
   else fprintf(fpOutputFile,"));");
   bCatchNextSemiColon=false;
  }
@@ -2017,44 +1582,39 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>\n                 { /*return '\n';*/ }
 
 <GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"generations"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Gen...\n");return NB_GEN;}
-<GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"islands"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Isl...\n");return NB_ISLANDS;}
-<GET_PARAMETERS>"Operators"[ \t\n]+"are"[ \t\n]+"called"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tOp Seq...\n");return PROP_SEQ;}
-<GET_PARAMETERS>"Evolutionary"[ \t\n]+"engine"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tEvol Engine...\n");return REPLACEMENT;}
+<GET_PARAMETERS>"Time"[ \t\n]+"limit"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tTime Limit...\n");return TIME_LIMIT;}
 <GET_PARAMETERS>"Population"[ \t\n]+"size"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tPop Size...\n");return POP_SIZE;}
 <GET_PARAMETERS>"Elite"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tElite Size...\n");return ELITE;}
-<GET_PARAMETERS>"Fertility"[ \t\n]*":"[ \ta-zA-Z0-9_]* {if (bVERBOSE) printf ("\tFertil...\n");}
-<GET_PARAMETERS>"Genitors"[ \t\n]+"selector"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tGenitors Sel...\n");return SELECTOR;}
+<GET_PARAMETERS>"Selection"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tSelection Operator...\n");return SELECTOR;}
 <GET_PARAMETERS>"Selected"[ \t\n]+"genitors"[ \t\n]*":"[ \ta-zA-Z0-9_]* {if (bVERBOSE) printf ("\tSel Genitors...\n");}
 <GET_PARAMETERS>"Mutation"[ \t\n]+"probability"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMut Prob...\n");return MUT_PROB;}
 <GET_PARAMETERS>"Crossover"[ \t\n]+"probability"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tXov Prob...\n");return XOVER_PROB;}
 <GET_PARAMETERS>"Offspring"[ \t\n]+"size"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tOff Size...\n");return OFFSPRING;}
 
+<GET_PARAMETERS>"Print"[ \t\n]+"stats"[ \t\n]*":"[\t\n]* {if (bVERBOSE) printf("\tPrint Stats...\n");return PRINT_STATS;}
+<GET_PARAMETERS>"Plot"[ \t\n]+"stats"[ \t\n]*":"[\t\n]* {if (bVERBOSE) printf("\tPlot Stats with gnuplot...\n");return PLOT_STATS;}
+<GET_PARAMETERS>"Generate"[ \t\n]+"cvs"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to cvs File...\n");return GENERATE_CVS_FILE;}
+<GET_PARAMETERS>"Generate"[ \t\n]+"gnuplot"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate Gnuplot Script...\n");return GENERATE_GNUPLOT_SCRIPT;}
+<GET_PARAMETERS>"Generate"[ \t\n]+"R"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate R Script...\n");return GENERATE_R_SCRIPT;}
 
-<GET_PARAMETERS>"Reduce"[ \t\n]+"parents"[ \t\n]*":"[ \t\n]* {
-  if (bVERBOSE) printf ("\tReduce Par...\n");
+<GET_PARAMETERS>"Reduce"[ \t\n]+"parents"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {
+  if (bVERBOSE) printf ("\tReduce Parents Operator...\n");
   bIsParentReduce = true;
   return RED_PAR;
  }
 <GET_PARAMETERS>"Surviving"[ \t\n]+"parents"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tSurv Par...\n");return SURVPAR;}
 
-<GET_PARAMETERS>"Reduce"[ \t\n]+"offspring"[ \t\n]*":"[ \t\n]* {
-  if (bVERBOSE) printf ("\tRed Off...\n");
+<GET_PARAMETERS>"Reduce"[ \t\n]+"offspring"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {
+  if (bVERBOSE) printf ("\tReduce Offspring Operator...\n");
   bIsOffspringReduce = true;
   return RED_OFF;
  }
 <GET_PARAMETERS>"Surviving"[ \t\n]+"offspring"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tSurv Off...\n");return SURVOFF;}
 
 
-<GET_PARAMETERS>"Final"[ \t\n]+"reduce"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tFinal Red...\n");return RED_FINAL;}// DISCARD;}
+<GET_PARAMETERS>"Final"[ \t\n]+"reduce"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tFinal Reduce Operator...\n");return RED_FINAL;}// DISCARD;}
 <GET_PARAMETERS>"Elitism"[ \t\n]*":" {if (bVERBOSE) printf ("\tElitism...\n");return ELITISM;}
 <GET_PARAMETERS>"Evaluator"[ \t\n]+"goal"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;}
-<GET_PARAMETERS>"Emigration"[ \t\n]+"policy"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMig Policy...\n");return MIG_CLONE;}
-<GET_PARAMETERS>"Migrants"[ \t\n]+"selector"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMig Sel...\n");return MIG_SEL;}
-<GET_PARAMETERS>"Migrants"[ \t\n]+"destination"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMig Dest...\n");return MIGRATOR;}
-<GET_PARAMETERS>"Migration"[ \t\n]+"frequency"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMig Freq...\n");return MIG_FREQ;}
-<GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"emigrants"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb Mig...\n");return NB_MIG;}
-<GET_PARAMETERS>"Immigration"[ \t\n]+"replacement"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tImmig Repl...\n");return IMMIG_SEL;}
-<GET_PARAMETERS>"Immigration"[ \t\n]+"policy"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tImmig Policy...\n");return IMMIG_REPL;}
  
 // number
 <GET_PARAMETERS>[0-9]+"."[0-9]*{exponent}?  |
@@ -2131,7 +1691,7 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (!yycreate(pParser)) return 0;    
 
   if (bVERBOSE) printf("\n                                                                   ");
-  if (bVERBOSE) printf("\n                                   E A S E A                   (v0.9au)");
+  if (bVERBOSE) printf("\n                                   E A S E A                   (v1.0)");
   if (bVERBOSE) printf("\n                              ___________________     ");
   if (bVERBOSE) printf("\n                                                                    ");
   
@@ -2142,11 +1702,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (bVERBOSE) printf("\n");
   
   if (TARGET==0) {
-/*     printf("\nPlease select a target library (DREAM, EO, GALib STD or CUDA): "); */
+/*     printf("\nPlease select a target library (GALib STD or CUDA): "); */
 /*     scanf("%s",sTemp); */
-/*     if (!mystricmp(sTemp,"eo")) TARGET=EO; */
-/*     else if (!mystricmp(sTemp,"galib")) TARGET=GALIB; */
-/*     else if (!mystricmp(sTemp,"dream")) TARGET=DREAM; */
 /*     else if (!mystricmp(sTemp,"cuda")) TARGET=CUDA; */
 /*     else if (!mystricmp(sTemp,"std")) TARGET=STD; */
 /*     else return 0; */
@@ -2174,27 +1731,6 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   }
   //strcpy(sTemp,sEZ_PATH);
   strcpy(sTemp,sTPL_DIR);
-  if (TARGET==EO){
-    strcat(sTemp,"EO.tpl");
-    if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
-      fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
-      fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
-      exit(1);
-    } }
-  if (TARGET==GALIB){
-    strcat(sTemp,"GALib.tpl");
-    if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
-      fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
-      fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
-      exit(1);
-    } }
-  if (TARGET==DREAM){
-    strcat(sTemp,"DREAM.tpl");
-    if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
-      fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
-      fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
-      exit(1);
-    } }
 
   if (TARGET==CUDA){
     if(TARGET_FLAVOR == CUDA_FLAVOR_SO )
@@ -2223,20 +1759,6 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       exit(1);
     } }
   
-  if (TARGET==EO){
-    if ((sEO_DIR==NULL)||(sEO_DIR[0]==0)) {
-      if ((getenv("EO_DIR")==NULL)){
-        printf("Please, set the \"EO_DIR\" environment variable to the EO installation directory.\n");
-        exit(1);
-      }
-      strcpy(sEO_DIR,getenv("EO_DIR"));
-    }
-    switch (OPERATING_SYSTEM) {
-    case UNIX : if (sEO_DIR[strlen(sEO_DIR)-1] != '/') strcat (sEO_DIR,"/"); break;
-    case WINDOWS : if (sEO_DIR[strlen(sEO_DIR)-1] != '\\') strcat (sEO_DIR,"\\"); break;
-    case UNKNOWN_OS : fprintf(fpOutputFile,"UNKNOWN_OS"); break;
-    }
-  }
   
   if ((sRAW_PROJECT_NAME[0]=='"')&&(OPERATING_SYSTEM!=WINDOWS)){
     strcpy(sRAW_PROJECT_NAME,&(sRAW_PROJECT_NAME[1]));

@@ -26,6 +26,7 @@ float CPopulation::offspringReductionPressure;
 extern float* pEZ_MUT_PROB;
 extern float* pEZ_XOVER_PROB;
 extern CIndividual** pPopulation;
+extern CIndividual* bBest;
 
 CPopulation::CPopulation(){
 }
@@ -49,6 +50,7 @@ CPopulation::CPopulation(size_t parentPopulationSize, size_t offspringPopulation
   pEZ_XOVER_PROB = &this->pCrossover;
   this->pMutationPerGene = pMutationPerGene;
   pPopulation = parents;
+  bBest = Best;
 
   this->rg = rg;
 
@@ -141,6 +143,7 @@ void CPopulation::reducePopulation(CIndividual** population, size_t populationSi
     // std::cout << "Selected " << selectedIndex << "/" << populationSize
     // 	      << " replaced by : " << populationSize-(i+1)<< std::endl;
     reducedPopulation[i] = population[selectedIndex];
+    //printf("TEST REMPLACEMENT %d %d %f %f\n", i, selectedIndex, reducedPopulation[i]->fitness, population[selectedIndex]->fitness);
 
     // erase it to the std population by swapping last CIndividual end current
     population[selectedIndex] = population[populationSize-(i+1)];
@@ -152,7 +155,12 @@ void CPopulation::reducePopulation(CIndividual** population, size_t populationSi
 
 
 CIndividual** CPopulation::reduceParentPopulation(size_t obSize){
-  CIndividual** nextGeneration = new CIndividual*[obSize];
+  CIndividual** nextGeneration;
+  if(obSize==0){
+  	nextGeneration = new CIndividual*[1];
+  }
+  else
+  	nextGeneration = new CIndividual*[obSize];
 
   reducePopulation(parents,actualParentPopulationSize,nextGeneration,obSize,
 		   CPopulation::replacementOperator);
@@ -163,8 +171,8 @@ CIndividual** CPopulation::reduceParentPopulation(size_t obSize){
   delete[](parents);
 
   this->actualParentPopulationSize = obSize;
-  parents = nextGeneration;
 
+  parents = nextGeneration;
 
   return nextGeneration;
 }
@@ -176,14 +184,18 @@ CIndividual** CPopulation::reduceOffspringPopulation(size_t obSize){
   // the next generation
   CIndividual** nextGeneration = new CIndividual*[offspringPopulationSize];
 
-
   reducePopulation(offsprings,actualOffspringPopulationSize,nextGeneration,obSize,
 		   CPopulation::replacementOperator);
 
+  //printf("POPULATION SIZE %d\n",actualOffspringPopulationSize-obSize);
   // free no longer needed CIndividuals
   for( size_t i=0 ; i<actualOffspringPopulationSize-obSize ; i++ )
     delete(offsprings[i]);
   delete[](offsprings);
+  //printf("DANS LA FONCTION DE REMPLACEMENT\n");
+  /*for(int i=0; i<parentPopulationSize; i++)
+	printf("Indiv %d %f | ",i, parents[i]->fitness);
+  printf("\n");*/
 
   this->actualOffspringPopulationSize = obSize;
   offsprings = nextGeneration;
@@ -222,36 +234,34 @@ void CPopulation::sortRPopulation(CIndividual** population, size_t populationSiz
    mais cela semble incompatible avec CSelectionOperator (notamment l'operation
    d'initialisation.
 */
-void CPopulation::reduceTotalPopulation(){
+void CPopulation::reduceTotalPopulation(CIndividual** elitPop){
 
   CIndividual** nextGeneration = new CIndividual*[parentPopulationSize];
 
-  //If there is elitism and it is strong
-  if( params->strongElitism && params->elitSize ){
-	  CPopulation::elitism(1,parents,actualParentPopulationSize,
-			  nextGeneration,parentPopulationSize); // do the elitism on the parent population only
-	  actualParentPopulationSize -= params->elitSize;                // decrement the parent population size
-  }
+  if(params->elitSize)
+	memcpy(nextGeneration,elitPop, sizeof(CIndividual*)*params->elitSize);
 
   size_t actualGlobalSize = actualParentPopulationSize+actualOffspringPopulationSize;
+  
   CIndividual** globalPopulation = new CIndividual*[actualGlobalSize]();
 
-
-  memcpy(globalPopulation,parents,sizeof(CIndividual*)*actualParentPopulationSize);
-  memcpy(globalPopulation+actualParentPopulationSize,offsprings,
-   	 sizeof(CIndividual*)*actualOffspringPopulationSize);
-  replacementOperator->initialize(globalPopulation, replacementPressure,actualGlobalSize);
-
-  // If there is elitism and it is weak
-  if( !params->strongElitism && params->elitSize ){
-  CPopulation::elitism(1,globalPopulation,actualGlobalSize,
-		      nextGeneration,parentPopulationSize); // do the elitism on the global (already merged) population
-  actualGlobalSize -= params->elitSize;                // decrement the parent population size
+  if(actualParentPopulationSize==0){
+  	memcpy(globalPopulation,offsprings,sizeof(CIndividual*)*actualOffspringPopulationSize);
+  }
+  else if(actualOffspringPopulationSize==0){
+  	memcpy(globalPopulation,parents,sizeof(CIndividual*)*actualParentPopulationSize);
+  }
+  else{
+  	memcpy(globalPopulation,parents,sizeof(CIndividual*)*actualParentPopulationSize);
+        memcpy(globalPopulation+actualParentPopulationSize,offsprings,sizeof(CIndividual*)*actualOffspringPopulationSize);
   }
 
+
+  replacementOperator->initialize(globalPopulation, replacementPressure,actualGlobalSize);
 
   CPopulation::reducePopulation(globalPopulation,actualGlobalSize,params->elitSize+nextGeneration,
 			       parentPopulationSize-params->elitSize,replacementOperator);
+
 
   for( unsigned int i=0 ; i<((int)actualGlobalSize+params->elitSize)-(int)parentPopulationSize ; i++ )
     delete(globalPopulation[i]);
@@ -310,7 +320,7 @@ void CPopulation::produceOffspringPopulation(){
    @ARG outPopulationSize the size of the output population
 
 */
-void CPopulation::elitism(size_t elitismSize, CIndividual** population, size_t populationSize,
+void CPopulation::strongElitism(size_t elitismSize, CIndividual** population, size_t populationSize,
 			 CIndividual** outPopulation, size_t outPopulationSize){
 
   float bestFitness = population[0]->getFitness();
@@ -320,9 +330,10 @@ void CPopulation::elitism(size_t elitismSize, CIndividual** population, size_t p
   if( elitismSize >= 5 )DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%d)",elitismSize);
 #endif
 
-
+  //printf("MINIMIZING ? %d\n",params->minimizing);
   for(size_t i = 0 ; i<elitismSize ; i++ ){
-    bestFitness = replacementOperator->getExtremum();
+    //bestFitness = replacementOperator->getExtremum();
+    bestFitness = population[0]->getFitness();
     bestCIndividual = 0;
     for( size_t j=0 ; j<populationSize-i ; j++ ){
 
@@ -338,6 +349,62 @@ void CPopulation::elitism(size_t elitismSize, CIndividual** population, size_t p
   }
 }
 
+void CPopulation::weakElitism(size_t elitismSize, CIndividual** parentsPopulation, CIndividual** offspringPopulation, size_t* parentPopSize, size_t* offPopSize, CIndividual** outPopulation, size_t outPopulationSize){
+
+  float bestParentFitness = parentsPopulation[0]->getFitness();
+  float bestOffspringFitness = offspringPopulation[0]->getFitness();
+  int bestParentIndiv = 0;
+  int bestOffspringIndiv = 0;
+
+  for(int i=1; (unsigned)i<(*parentPopSize); i++){
+        if( (params->minimizing && bestParentFitness > parentsPopulation[i]->getFitness() ) ||
+                        ( !params->minimizing && bestParentFitness < parentsPopulation[i]->getFitness() )){
+                bestParentFitness = parentsPopulation[i]->getFitness();
+                bestParentIndiv = i;
+        }
+  }
+ 
+  for(int i=1; (unsigned)i<(*offPopSize); i++){
+        if( (params->minimizing && bestOffspringFitness > offspringPopulation[i]->getFitness() ) ||
+                        ( !params->minimizing && bestOffspringFitness < offspringPopulation[i]->getFitness() )){
+                bestOffspringFitness = offspringPopulation[i]->getFitness();
+                bestOffspringIndiv = i;
+        }
+  }
+ 
+  for(int i = 0 ; (unsigned)i<elitismSize ; i++ ){
+ 	if((!params->minimizing && bestParentFitness > bestOffspringFitness) || (params->minimizing && bestParentFitness<bestOffspringFitness)){
+		outPopulation[i] = parentsPopulation[bestParentIndiv];
+		parentsPopulation[bestParentIndiv] = parentsPopulation[(*parentPopSize)-1];
+		parentsPopulation[(*parentPopSize)-1] = NULL;
+		(*parentPopSize)-=1; 
+  		bestParentFitness = parentsPopulation[0]->getFitness();
+		bestParentIndiv=0;
+		for(int j=1; (unsigned)j<(*parentPopSize); j++){
+		        if( (params->minimizing && bestParentFitness > parentsPopulation[j]->getFitness() ) ||
+        	                ( !params->minimizing && bestParentFitness < parentsPopulation[j]->getFitness() )){
+        	        	bestParentFitness = parentsPopulation[j]->getFitness();
+        	        	bestParentIndiv = j;
+       			}
+  		}
+	}
+	else{
+		outPopulation[i] = offspringPopulation[bestOffspringIndiv];
+		offspringPopulation[bestOffspringIndiv] = offspringPopulation[(*offPopSize)-1];
+		offspringPopulation[(*offPopSize)-1] = NULL;
+		(*offPopSize)-=1;
+  		bestOffspringFitness = offspringPopulation[0]->getFitness();
+		bestOffspringIndiv = 0;	
+		for(int j=1; (unsigned)j<(*offPopSize); j++){
+		        if( (params->minimizing && bestOffspringFitness > offspringPopulation[j]->getFitness() ) ||
+        	                ( !params->minimizing && bestOffspringFitness < offspringPopulation[j]->getFitness() )){
+        	        	bestOffspringFitness = offspringPopulation[j]->getFitness();
+        	        	bestOffspringIndiv = j;
+       			}
+  		}
+	}
+  }
+}
 
 
 void CPopulation::addIndividualParentPopulation(CIndividual* indiv){
