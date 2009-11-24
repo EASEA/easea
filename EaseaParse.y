@@ -319,8 +319,24 @@ Object
       pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($2));
       if (bVERBOSE) printf("    %s pointer declared (%d bytes)\n",$2->sName,$2->nSize);
     }
+  | '*''*' Symbol {
+      $3->nSize=sizeof (char *);
+      $3->pClass=pCURRENT_CLASS;
+      $3->pType=pCURRENT_TYPE;
+      $3->ObjectType=oPointer;
+      $3->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+      pCURRENT_CLASS->nSize+=$3->nSize;
+      pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($3));
+      if (bVERBOSE) printf("    %s pointer of pointer declared (%d bytes)\n",$3->sName,$3->nSize);
+      fprintf(stderr,"Pointer of pointer doesn't work properly yet\n");
+      exit(-1);
+    }
+
   | Symbol  '[' Expr ']' {
       if((TARGET_FLAVOR==STD_FLAVOR_CMAES || TARGET_FLAVOR==CUDA_FLAVOR_CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
+
+      printf("DEBUG : size of $3 %d nSize %d\n",(int)$3,pCURRENT_TYPE->nSize);
+
       $1->nSize=pCURRENT_TYPE->nSize*(int)$3;
       $1->pClass=pCURRENT_CLASS;
       $1->pType=pCURRENT_TYPE;
@@ -329,6 +345,26 @@ Object
       pCURRENT_CLASS->nSize+=$1->nSize;
       pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($1));
       if (bVERBOSE) printf("    %s array declared (%d bytes)\n",$1->sName,$1->nSize);
+    }
+  | '*' Symbol  '[' Expr ']' {
+
+    // this is for support of pointer array. This should be done in a more generic way in a later version
+      if((TARGET_FLAVOR==STD_FLAVOR_CMAES || TARGET_FLAVOR==CUDA_FLAVOR_CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { 
+	nGENOME_NAME=$2->sName; nPROBLEM_DIM=(int)$4;
+      }
+      
+      //pCURRENT_CLASS->nSize
+
+      $2->nSize=sizeof(char*)*(int)$4;
+      $2->pClass=pCURRENT_CLASS;
+      $2->pType=pCURRENT_TYPE;
+      $2->ObjectType=oArrayPointer;
+      $2->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+      pCURRENT_CLASS->nSize+=$2->nSize;
+      pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($2));
+
+      printf("DEBUG : size of $4 %d nSize %d\n",(int)$4,pCURRENT_TYPE->nSize);
+      if (bVERBOSE) printf("    %s array of pointers declared (%d bytes)\n",$2->sName,$2->nSize);
     }
   ;  
 

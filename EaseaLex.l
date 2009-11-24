@@ -1159,6 +1159,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GENOME_ANALYSIS>"float"                  {yylval.pSymbol = pSymbolTable->find("float"); return FLOAT;}
 <GENOME_ANALYSIS>"char"                  {yylval.pSymbol = pSymbolTable->find("char"); return CHAR;}
 <GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}
+//<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}
 <GENOME_ANALYSIS>"\\end"   {rewind(fpGenomeFile);yyin = fpTemplateFile;BEGIN TEMPLATE_ANALYSIS;} // Back to the template file
   
 <GENOME_ANALYSIS>"GenomeClass"        {return GENOME; }                         

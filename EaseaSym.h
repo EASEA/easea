@@ -16,7 +16,7 @@ Rocquencourt BP 105
 
 extern void debug (char *);
 
-enum EObjectType {oUserClass, oBaseClass, oObject, oPointer, oArray, oMacro, oUndefined};
+enum EObjectType {oUserClass, oBaseClass, oObject, oPointer, oArray, oMacro, oUndefined, oArrayPointer};
 
 /////////////////////////////////////////////////////////////////////////////
 // Object
