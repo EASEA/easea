@@ -1,0 +1,192 @@
+/*_________________________________________________________
+
+  This is a standard GP implementation on EASEA, 
+  aimed for regression.
+__________________________________________________________*/
+
+\User declarations :
+#include <gsl/gsl_rng.h>
+#include <assert.h>
+#define  OPERAND 0
+
+
+
+#define MAX_ARITY 3
+#define VAR_LEN 4
+
+float** inputs;
+float* outputs;
+float fitnessCasesSetLength;
+
+/* For the sake of simplicity, constant operators become first in the function set
+   Koza defines 2 operator sets, one for constants, another for function.
+*/
+enum OPCODE      { OP_ERC, OP_LD_INPUT, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OP_SIN, OP_COS, OP_EXP, OPCODE_SIZE };
+int opArrity[] = { 0     , 0          , 2     , 2     , 2     , 2     , 1     , 1     , 1     };
+int constLen = 2;
+int totalLen = OPCODE_SIZE;
+\end
+
+\User functions:
+/** This function allows one to load .csv file for 1 input variables.T he file must start with the number
+    of fitness cases, then it has to contain every inputs values, finally outputs values for each point : 
+    x[0,1], x[0,2], ..., x[0,n], f(x[0])
+    x[1,1], x[1,2], ..., x[1,n], f(x[1])
+    ...
+    x[m,1], x[m,2], ..., x[m,n], f(x[m])
+
+    This function allocates inputs and outputs wrt the size written in the file*/
+int load_data(float*** inputs, float** outputs, string filename){
+  int i;
+  FILE* file = fopen(filename.c_str(),"r");
+  int loaded_size;
+  int match = 0;
+  int variable;
+
+  if( !file ){
+    fprintf(stderr,"ERROR : input file (%s) cannot be opened\n",filename.c_str());
+    exit(-1);
+  }
+
+  match = fscanf(file,"%d\n",&loaded_size);
+  assert(match==1);
+
+  (*inputs) = (float**)malloc(sizeof(**inputs)*loaded_size);
+  (*outputs) = (float*)malloc(sizeof(**outputs)*loaded_size);
+  
+  for( i=0 ; i<loaded_size ; i++){
+    (*inputs)[i] = (float*)malloc(sizeof(**inputs)*VAR_LEN);
+    for( variable=0 ; variable<VAR_LEN ; variable++ ){   
+      match = fscanf(file,"%f,",((*inputs)[i])+variable);
+      assert(match==1);
+    }
+    match = fscanf(file,"%f\n",(*outputs)+i);
+    assert(match==1);
+  }
+  return loaded_size;
+}
+
+/* /\** Full construction method for trees.  */
+    
+/*  *\/ */
+/* GPNode full_method( const int constLen, const int totalLen , int currentDepth,  */
+/* 		     const int maxDepth){ */
+  
+/*   GPNode* node = (GPNode*)malloc(sizeof(*node)); */
+/*   if( currentDepth<maxDepth ){ */
+/*     node->opCode = random(constLen,totalLen); */
+/*   } */
+/*   else{ */
+/*     node->opCode = random(0, constLen); */
+/*   } */
+
+  
+/*   int arity = opArrity[(int)node->opCode]; */
+/*   node->children = (GPNode*)malloc(sizeof(GPNode)*arity); */
+
+/*   //DEBUG */
+/*   printf("selected node : %d arity : %d\n",(node->opCode), arity); */
+
+/*   for( int i=0 ; i<arity ; i++ ) */
+/*     node->children[i] = full_method(constLen, totalLen, currentDepth+1, maxDepth ); */
+ 
+/*   return *node; */
+/* } */
+\end
+
+
+
+\Before everything else function:
+{
+  int fitnessCasesSetLength;
+  cout<<"Before everything else function called "<<endl;
+  fitnessCasesSetLength = load_data(&inputs,&outputs,"data.csv");
+
+  //full_method( constLen, totalLen, 0, 15 );
+}
+\end
+
+\After everything else function:
+{
+  //cout << "After everything else function called" << endl;
+}
+\end
+
+\At the beginning of each generation function:
+  //cout << "At the beginning of each generation function called" << endl;
+\end
+
+\At the end of each generation function:
+  //cout << "At the end of each generation function called" << endl;
+\end
+
+\At each generation before reduce function:
+  //cout << "At each generation before replacement function called" << endl;
+\end
+
+\User classes :
+GPNode {
+  GPNode* children[MAX_ARITY];
+  char opCode;
+}
+
+GenomeClass { 
+  GPNode *root;
+}
+\end
+
+\GenomeClass::display:
+{
+}
+\end
+
+\GenomeClass::initialiser :
+{
+
+}
+\end
+
+\GenomeClass::crossover :
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+{
+  return 0;
+}
+\end
+
+\GenomeClass::evaluator : // Returns the score
+{
+  return 0;
+}
+\end
+
+\User Makefile options: 
+CPPFLAGS+=
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 1     	// NB_GEN
+  Time limit: 0 			// In seconds, 0 to deactivate
+  Population size : 10			//POP_SIZE
+  Offspring size : 10 // 40% 
+  Mutation probability : 1       // MUT_PROB
+  Crossover probability : 1      // XOVER_PROB
+  Evaluator goal : minimise      // Maximise
+  Selection operator: Tournament 2.0
+  Surviving parents: 100%//percentage or absolute  
+  Surviving offspring: 100%
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+  Final reduce operator: Tournament 2
+
+  Elitism: Strong			//Weak or Strong
+  Elite: 0
+
+  Print stats:1				//Default: 1
+  Generate cvs stats file:0			
+  Generate gnuplot script:0
+  Generate R script:0
+  Plot stats:0				//Default: 0
+\end
+	
