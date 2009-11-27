@@ -5,14 +5,22 @@
 __________________________________________________________*/
 
 \User declarations :
-#include <gsl/gsl_rng.h>
+//#include <gsl/gsl_rng.h>
 #include <assert.h>
+#include <errno.h>
+#include <sstream>
 #define  OPERAND 0
 
 
+// number of input variables
+#define VAR_LEN 4 
 
-#define MAX_ARITY 3
-#define VAR_LEN 4
+// Here, some well known parameters for GP.
+#define MAX_ARITY 3          // maximum arrity for GP nodes
+#define NB_TREES 2           // number of co-evolved trees
+#define TREE_DEPTH_MIN 4     // minimum size of (initial) trees (included)
+#define TREE_DEPTH_MAX 9     // maximum size of (initial) trees (excluded)
+#define GROW_FULL_RATIO 0.5  // ratio between grow and full construction method
 
 float** inputs;
 float* outputs;
@@ -21,8 +29,9 @@ float fitnessCasesSetLength;
 /* For the sake of simplicity, constant operators become first in the function set
    Koza defines 2 operator sets, one for constants, another for function.
 */
-enum OPCODE      { OP_ERC, OP_LD_INPUT, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OP_SIN, OP_COS, OP_EXP, OPCODE_SIZE };
-int opArrity[] = { 0     , 0          , 2     , 2     , 2     , 2     , 1     , 1     , 1     };
+enum OPCODE               { OP_ERC, OP_LD_INPUT, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OP_SIN, OP_COS, OP_EXP, OPCODE_SIZE };
+const string opCodeName[]={ "erc" , "input"    , "*"   , "+"   , "-"   , "/"   , "sin" , "cos" , "exp" };
+int opArrity[] =          { 0     , 0          , 2     , 2     , 2     , 2     , 1     , 1     , 1     };
 int constLen = 2;
 int totalLen = OPCODE_SIZE;
 \end
@@ -66,32 +75,86 @@ int load_data(float*** inputs, float** outputs, string filename){
   return loaded_size;
 }
 
-/* /\** Full construction method for trees.  */
-    
-/*  *\/ */
-/* GPNode full_method( const int constLen, const int totalLen , int currentDepth,  */
-/* 		     const int maxDepth){ */
-  
-/*   GPNode* node = (GPNode*)malloc(sizeof(*node)); */
-/*   if( currentDepth<maxDepth ){ */
-/*     node->opCode = random(constLen,totalLen); */
-/*   } */
-/*   else{ */
-/*     node->opCode = random(0, constLen); */
-/*   } */
+/** Recursive construction method for trees.
+    Koza construction methods. Function set has to be ordered,
+    with first every terminal nodes and then non-terminal.
 
-  
-/*   int arity = opArrity[(int)node->opCode]; */
-/*   node->children = (GPNode*)malloc(sizeof(GPNode)*arity); */
-
-/*   //DEBUG */
-/*   printf("selected node : %d arity : %d\n",(node->opCode), arity); */
-
-/*   for( int i=0 ; i<arity ; i++ ) */
-/*     node->children[i] = full_method(constLen, totalLen, currentDepth+1, maxDepth ); */
+    @arg constLen : length of terminal function set.
+    @arg totalLen : length of the function set (non-terminal+terminal)
+    @arg currentDepth : depth of the origin (sould always be 0, when the function
+    is directly call)
+    @arg maxDepth : The maximum depth of the resulting tree.
+    @arg full : whether the construction method used has to be full (from koza's book)
+                Otherwise, it will use grow method (defined in the same book).
  
-/*   return *node; */
-/* } */
+    @return : pointer to the root node of the resulting sub tree
+ */
+GPNode* construction_method( const int constLen, const int totalLen , int currentDepth,
+			     const int maxDepth, const bool full){
+  GPNode* node = new GPNode();
+  
+  // first select the opCode for the current Node.
+  if( full )
+    if( currentDepth<maxDepth ) node->opCode = random(constLen,totalLen);
+    else node->opCode = random(0, constLen);
+  else
+    if( currentDepth<maxDepth ) node->opCode = random(0, totalLen);
+    else node->opCode = random(0, constLen);
+ 
+  int arity = opArrity[(int)node->opCode];
+  node->currentArity = arity;
+
+  // construct children (if any)
+  for( int i=0 ; i<arity ; i++ )
+    node->children[i] = construction_method(constLen, totalLen, currentDepth+1, maxDepth, full );
+  
+  // affect null to other array cells (if any)
+  for( int i=arity ; i<MAX_ARITY ; i++ )
+    node->children[i] = NULL;
+
+  return node;
+}
+
+/**
+   This function handles printing of tree.
+   Every node is identify by its address, in memory,
+   and labeled by the actual opCode.
+
+   On our architecture (64bits, ubuntu 8.04 and gcc-4.3.2)
+   the long int variable is sufficient to store the address
+   without any warning.
+ */
+void toDotFile_r(GPNode* root, FILE* outputFile){
+  fprintf(outputFile," %ld [label=\"%s\"];\n", (long int)root, opCodeName[(int)root->opCode].c_str());
+  for( int i=0 ; i<root->currentArity ; i++ ){
+    fprintf(outputFile,"%ld -> %ld;\n", (long int)root, (long int)root->children[i]);
+    toDotFile_r( root->children[i] , outputFile);
+  }
+}
+
+/**
+   This function prints a tree in dot (graphviz format).
+   This is the entry point for the print operation. (see toDotFile_r,
+   for the actual function)
+
+   @arg root : set of trees, same type than in a individual.
+   @arg baseFileName : base of filename for the output file.
+   @arg treeId : the id of the tree to print, in the given set.
+ */
+void toDotFile(GPNode* root[NB_TREES], const char* baseFileName, int treeId){
+  std::ostringstream oss;
+  oss << baseFileName << "-" << treeId << ".gv";
+
+  FILE* outputFile = fopen(oss.str().c_str(),"w");
+  if( !outputFile ){
+    perror("Opening file for outputing dot representation ");
+    exit(-1);
+  }
+
+  fprintf(outputFile,"digraph trees {\n");
+  toDotFile_r( root[treeId], outputFile);
+  fprintf(outputFile,"}\n");
+}
 \end
 
 
@@ -108,7 +171,12 @@ int load_data(float*** inputs, float** outputs, string filename){
 
 \After everything else function:
 {
-  //cout << "After everything else function called" << endl;
+  for( unsigned int i=0 ; i<population->actualParentPopulationSize ; i++ ){
+    std::ostringstream oss;
+    oss << "out/indiv-" << i << "-trees" ;
+      toDotFile( ((IndividualImpl*)population->parents[i])->root,oss.str().c_str(),0);
+      toDotFile( ((IndividualImpl*)population->parents[i])->root,oss.str().c_str(),1);
+  }
 }
 \end
 
@@ -128,21 +196,36 @@ int load_data(float*** inputs, float** outputs, string filename){
 GPNode {
   GPNode* children[MAX_ARITY];
   char opCode;
+  int currentArity;
 }
 
 GenomeClass { 
-  GPNode *root;
+  GPNode* root[NB_TREES];
 }
 \end
 
 \GenomeClass::display:
 {
+  os << this << " trees addr : " ;
+  for( int i=0 ; i<NB_TREES ; i++ )
+    os << Genome.root[i]<< "\t";
 }
 \end
 
 \GenomeClass::initialiser :
 {
 
+  
+  int id = EA->population->actualParentPopulationSize;
+  int currentDepth;
+
+  
+  int seg = EA->population->parentPopulationSize/(TREE_DEPTH_MAX-TREE_DEPTH_MIN);
+  cout << id << " "<< seg<< " " << id/seg  << " " << TREE_DEPTH_MIN+id/seg<< endl;
+  
+  for( int i=0 ; i<NB_TREES ; i++ ){
+    Genome.root[i] = construction_method( constLen, totalLen , 0, 6,false);
+  }
 }
 \end
 
@@ -169,7 +252,7 @@ CPPFLAGS+=
   Number of generations : 1     	// NB_GEN
   Time limit: 0 			// In seconds, 0 to deactivate
   Population size : 10			//POP_SIZE
-  Offspring size : 10 // 40% 
+  Offspring size : 0 // 40% 
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
   Evaluator goal : minimise      // Maximise

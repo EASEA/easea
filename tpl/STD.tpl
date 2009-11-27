@@ -27,7 +27,7 @@ float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
 size_t *EZ_NB_GEN;
 size_t *EZ_current_generation;
-
+CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
 
@@ -37,6 +37,8 @@ int main(int argc, char** argv){
 	ParametersImpl p;
 	p.setDefaultParameters(argc,argv);
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
+
+	EA = ea;
 
 	EASEAInit(argc,argv);
 
@@ -82,7 +84,7 @@ using namespace std;
 
 
 CRandomGenerator* globalRandomGenerator;
-
+extern CEvolutionaryAlgorithm* EA;
 #define STD_TPL
 
 \INSERT_USER_DECLARATIONS

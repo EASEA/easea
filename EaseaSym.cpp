@@ -149,7 +149,7 @@ void CSymbol::print(FILE *fp){
             if (pSym->Object->ObjectType==oPointer)
               fprintf(fp,"    %s=NULL;\n",pSym->Object->sName);
 	    if (pSym->Object->ObjectType==oArrayPointer){
-	      fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	      fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
 	      fprintf(fp,"         %s[EASEA_Ndx]=NULL;\n",pSym->Object->sName);
 	    }
 	  }
@@ -167,7 +167,11 @@ void CSymbol::print(FILE *fp){
             if (pSym->Object->ObjectType==oPointer){
               fprintf(fp,"    %s=(EASEA_Var.%s ? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
             }
-
+	    if( pSym->Object->ObjectType==oArrayPointer ){
+	      fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	      fprintf(fp,"        if( EASEA_Var.%s[EASEA_Ndx] ) %s[EASEA_Ndx] = new %s(*(EASEA_Var.%s[EASEA_Ndx]));\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+	      fprintf(fp,"        else  %s[EASEA_Ndx] = NULL;\n",pSym->Object->sName);
+	    }
           }
     fprintf(fp,"  }\n"); // copy constructor
 
@@ -267,6 +271,7 @@ void CSymbol::print(FILE *fp){
       fprintf(fpOutputFile,"%s\n",sString);
     }
   }
+
     fprintf(fp,"// Class members \n"); // Now, we must print the class members
     pSymbolList->reset();
     while (pSym=pSymbolList->walkToNextItem()){

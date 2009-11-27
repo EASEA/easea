@@ -376,6 +376,15 @@ exponent  ([Ee][+-]?[0-9]+)
 	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
 	fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
       }
+      else if( pSym->Object->ObjectType==oArrayPointer ){ 
+	// here we handle array of pointer (developped for Tree GP)
+	fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fpOutputFile,"      if(genome.%s[EASEA_Ndx]) %s[EASEA_Ndx] = new %s(*(genome.%s[EASEA_Ndx]));\n",pSym->Object->sName,
+		pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+	fprintf(fpOutputFile,"      else %s[EASEA_Ndx] = NULL;\n",pSym->Object->sName);
+	
+      }
+      
   }
  }
 <TEMPLATE_ANALYSIS>"\\GENOME_DTOR"  {
@@ -383,11 +392,18 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bVERBOSE) printf ("Creating default destructor.\n");
   fprintf (fpOutputFile,"// Destructing pointers\n");             
   pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem())
+  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
     if (pSym->Object->ObjectType==oPointer){
       fprintf(fpOutputFile,"  if (%s) delete %s;\n  %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
     }
+    else if( pSym->Object->ObjectType==oArrayPointer ){ 
+      // here we handle array of pointer (developped for Tree GP)
+      fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+      fprintf(fpOutputFile,"      if(%s[EASEA_Ndx]) delete %s[EASEA_Ndx];\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+    }
+  }
  }
+
 <TEMPLATE_ANALYSIS>"\\EQUAL"  {       
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default diversity test.\n");
@@ -402,6 +418,12 @@ exponent  ([Ee][+-]?[0-9]+)
       fprintf(fpOutputFile,"  {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
       fprintf(fpOutputFile,"     if (%s[EASEA_Ndx]!=genome.%s[EASEA_Ndx]) return 0;}\n",pSym->Object->sName,pSym->Object->sName);
     }
+    else if( pSym->Object->ObjectType==oArrayPointer ){ 
+      // here we handle array of pointer (developped for Tree GP)
+      fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+      fprintf(fpOutputFile,"      if(%s[EASEA_Ndx] != genome.%s[EASEA_Ndx]) return 0;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+    }
+    
   }
  }
 <TEMPLATE_ANALYSIS>"\\COMPARE"  {

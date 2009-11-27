@@ -27,6 +27,7 @@
 using namespace std;
 
 extern CRandomGenerator* globalRandomGenerator;
+extern CEvolutionaryAlgorithm* EA;
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
