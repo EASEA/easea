@@ -52,6 +52,7 @@ extern float fMUT_PROB, fXOVER_PROB, fSURV_PAR_SIZE, fSURV_OFF_SIZE;
 extern int nWARNINGS, nERRORS;
 extern int TARGET, OPERATING_SYSTEM;
 extern int TARGET_FLAVOR;
+extern bool bLINE_NUM_EZ_FILE;
 
 // Prototypes
 extern int mystricmp(char *, char *);

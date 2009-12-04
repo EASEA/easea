@@ -9,6 +9,7 @@ __________________________________________________________*/
 #include <assert.h>
 #include <errno.h>
 #include <sstream>
+#include <math.h>
 #define  OPERAND 0
 
 
@@ -16,24 +17,39 @@ __________________________________________________________*/
 #define VAR_LEN 4 
 
 // Here, some well known parameters for GP.
-#define MAX_ARITY 3          // maximum arrity for GP nodes
-#define NB_TREES 2           // number of co-evolved trees
-#define TREE_DEPTH_MIN 4     // minimum size of (initial) trees (included)
-#define TREE_DEPTH_MAX 9     // maximum size of (initial) trees (excluded)
-#define GROW_FULL_RATIO 0.5  // ratio between grow and full construction method
+#define MAX_ARITY 2          // maximum arrity for GP nodes
+#define NB_TREES 1           // number of co-evolved trees
+#define TREE_DEPTH_MIN 5     // minimum size of (initial) trees (included)
+#define TREE_DEPTH_MAX 6     // maximum size of (initial) trees (excluded)
+#define GROW_FULL_RATIO 0    // ratio between grow and full construction method
+#define DIV_ERR_VALUE 1      // Returned value, in case of non defined input value
 
 float** inputs;
 float* outputs;
-float fitnessCasesSetLength;
+int fitnessCasesSetLength;
 
-/* For the sake of simplicity, constant operators become first in the function set
-   Koza defines 2 operator sets, one for constants, another for function.
+/** For the sake of simplicity, constant operators become first in the function set
+    Koza defines 2 operator sets, one for constants, another for function.
+
+    @TODO
+    Terminal variables could be encoded differently, for example using one opCode for every
+    variable, and another field to encode the id of the variable (what about the likelyhood of having 
+    each variable (this sould divide by the number of variables)
 */
-enum OPCODE               { OP_ERC, OP_LD_INPUT, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OP_SIN, OP_COS, OP_EXP, OPCODE_SIZE };
-const string opCodeName[]={ "erc" , "input"    , "*"   , "+"   , "-"   , "/"   , "sin" , "cos" , "exp" };
-int opArrity[] =          { 0     , 0          , 2     , 2     , 2     , 2     , 1     , 1     , 1     };
-int constLen = 2;
+
+#if 0
+enum OPCODE               { OP_ERC, OP_W, OP_X, OP_Y, OP_Z, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OP_SIN, OP_COS, OP_EXP, OPCODE_SIZE };
+const string opCodeName[]={ "erc" , "w" , "x" , "y" , "z" , "*"   , "+"   , "-"   , "/"   , "sin" , "cos" , "exp" };
+int opArrity[] =          { 0     , 0   , 0   , 0   , 0   , 2     , 2     , 2     , 2     , 1     , 1     , 1     };
+int constLen = 5;
 int totalLen = OPCODE_SIZE;
+#else
+enum OPCODE               { OP_ERC, OP_W, OP_X, OP_Y, OP_Z, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OPCODE_SIZE };
+const string opCodeName[]={ "erc" , "w" , "x" , "y" , "z" , "*"   , "+"   , "-"   , "/"   };
+int opArrity[] =          { 0     , 0   , 0   , 0   , 0   , 2     , 2     , 2     , 2     };
+int constLen = 5;
+int totalLen = OPCODE_SIZE;
+#endif
 \end
 
 \User functions:
@@ -75,7 +91,8 @@ int load_data(float*** inputs, float** outputs, string filename){
   return loaded_size;
 }
 
-/** Recursive construction method for trees.
+/** 
+    Recursive construction method for trees.
     Koza construction methods. Function set has to be ordered,
     with first every terminal nodes and then non-terminal.
 
@@ -89,17 +106,19 @@ int load_data(float*** inputs, float** outputs, string filename){
  
     @return : pointer to the root node of the resulting sub tree
  */
-GPNode* construction_method( const int constLen, const int totalLen , int currentDepth,
+GPNode* construction_method( const int constLen, const int totalLen , const int currentDepth,
 			     const int maxDepth, const bool full){
   GPNode* node = new GPNode();
   
   // first select the opCode for the current Node.
-  if( full )
+  if( full ){
     if( currentDepth<maxDepth ) node->opCode = random(constLen,totalLen);
     else node->opCode = random(0, constLen);
-  else
+  }
+  else{
     if( currentDepth<maxDepth ) node->opCode = random(0, totalLen);
     else node->opCode = random(0, constLen);
+  }
  
   int arity = opArrity[(int)node->opCode];
   node->currentArity = arity;
@@ -111,6 +130,10 @@ GPNode* construction_method( const int constLen, const int totalLen , int curren
   // affect null to other array cells (if any)
   for( int i=arity ; i<MAX_ARITY ; i++ )
     node->children[i] = NULL;
+
+  if( node->opCode==OP_ERC ){
+    node->erc_value = random(0,1);
+  }
 
   return node;
 }
@@ -125,10 +148,17 @@ GPNode* construction_method( const int constLen, const int totalLen , int curren
    without any warning.
  */
 void toDotFile_r(GPNode* root, FILE* outputFile){
-  fprintf(outputFile," %ld [label=\"%s\"];\n", (long int)root, opCodeName[(int)root->opCode].c_str());
+  if( root->opCode==OP_ERC )
+    fprintf(outputFile," %ld [label=\"%s : %f\"];\n", (long int)root, opCodeName[(int)root->opCode].c_str(),
+	    root->erc_value);
+ else
+    fprintf(outputFile," %ld [label=\"%s\"];\n", (long int)root, opCodeName[(int)root->opCode].c_str());
+  
   for( int i=0 ; i<root->currentArity ; i++ ){
-    fprintf(outputFile,"%ld -> %ld;\n", (long int)root, (long int)root->children[i]);
-    toDotFile_r( root->children[i] , outputFile);
+    if( root->children[i] ){
+      fprintf(outputFile,"%ld -> %ld;\n", (long int)root, (long int)root->children[i]);
+      toDotFile_r( root->children[i] , outputFile);
+    }
   }
 }
 
@@ -141,7 +171,7 @@ void toDotFile_r(GPNode* root, FILE* outputFile){
    @arg baseFileName : base of filename for the output file.
    @arg treeId : the id of the tree to print, in the given set.
  */
-void toDotFile(GPNode* root[NB_TREES], const char* baseFileName, int treeId){
+void toDotFile(GPNode* root, const char* baseFileName, int treeId){
   std::ostringstream oss;
   oss << baseFileName << "-" << treeId << ".gv";
 
@@ -152,8 +182,97 @@ void toDotFile(GPNode* root[NB_TREES], const char* baseFileName, int treeId){
   }
 
   fprintf(outputFile,"digraph trees {\n");
-  toDotFile_r( root[treeId], outputFile);
+  toDotFile_r( root, outputFile);
   fprintf(outputFile,"}\n");
+  fclose(outputFile);
+}
+
+
+/**
+   Compute the maximum depth of a tree, rooted on root.
+
+   @arg root : root of the tree
+   @return : depth of current tree rooted on root
+ */
+int depthOfTree(GPNode* root){
+  int depth = 0;
+  for( int i=0 ; i<root->currentArity ; i++ ){
+    int d = depthOfTree(root->children[i]);
+    if( d>=depth ) depth = d;
+  }
+  return depth+1;
+}
+
+
+/**
+   Recursively evaluate tree for given inputs
+   
+ */
+double recEvale(GPNode* root, float* inputs){ 
+  if( root->currentArity==2 ){
+    double a=recEvale(root->children[0],inputs);
+    double b=recEvale(root->children[1],inputs);
+    switch( root->opCode ){
+    case OP_MUL: return a*b;
+    case OP_ADD: return a+b;
+    case OP_SUB: return a-b;
+    case OP_DIV:
+      if( !b ) return DIV_ERR_VALUE;
+      else return a/b;
+    default:
+      fprintf(stderr,"unknown binary opcode %d\n",root->opCode);      
+      exit(-1);
+    }
+  }
+  else if( root->currentArity==1 ){
+    double a=recEvale(root->children[0],inputs);
+    switch( root->opCode ){
+#ifdef OP_SIN
+    case OP_SIN: return sin(a);
+#endif
+#ifdef OP_COS:
+    case OP_COS: return cos(a);
+#endif
+#ifdef OP_EXP
+    case OP_EXP: return exp(a);
+#endif
+    default:
+      fprintf(stderr,"unknown unary opcode %d\n",root->opCode);      
+      exit(-1);
+    }
+  }
+  else 
+    switch( root->opCode ){
+    case OP_ERC: return root->erc_value;
+    case OP_W: return inputs[0];
+    case OP_X: return inputs[1];
+    case OP_Y: return inputs[2];
+    case OP_Z: return inputs[3];
+    default:
+      fprintf(stderr,"unknown terminal opcode %d\n",root->opCode);
+      exit(-1);
+    }
+}
+
+
+/**
+   Fill the collection array with GPNode located at goalDepth
+
+   @arg goalDepth: level from which GPNode are collected
+   @arg collection: an empty, allocated array 
+ */
+int collectNodesDepth(const int goalDepth, GPNode** collection, int collected, int currentDepth, GPNode* root){
+
+  if( currentDepth>=goalDepth ){
+    collection[collected] = root;
+    return collected+1;
+  }
+  else{
+    for( int i=0 ; i<root->currentArity ; i++ ){
+      collected=collectNodesDepth(goalDepth, collection, collected, currentDepth+1, root->children[i]);
+    }
+    return collected;
+  }
 }
 \end
 
@@ -161,21 +280,20 @@ void toDotFile(GPNode* root[NB_TREES], const char* baseFileName, int treeId){
 
 \Before everything else function:
 {
-  int fitnessCasesSetLength;
   cout<<"Before everything else function called "<<endl;
   fitnessCasesSetLength = load_data(&inputs,&outputs,"data.csv");
-
-  //full_method( constLen, totalLen, 0, 15 );
+  cout << "number of point in fitness cases set : " << fitnessCasesSetLength << endl;
 }
 \end
 
 \After everything else function:
 {
+  // write both trees of every individuals in a separate file.
   for( unsigned int i=0 ; i<population->actualParentPopulationSize ; i++ ){
     std::ostringstream oss;
     oss << "out/indiv-" << i << "-trees" ;
-      toDotFile( ((IndividualImpl*)population->parents[i])->root,oss.str().c_str(),0);
-      toDotFile( ((IndividualImpl*)population->parents[i])->root,oss.str().c_str(),1);
+    toDotFile( ((IndividualImpl*)population->parents[i])->root[0],oss.str().c_str(),0);
+    //toDotFile( ((IndividualImpl*)population->parents[i])->root,oss.str().c_str(),1);
   }
 }
 \end
@@ -197,6 +315,7 @@ GPNode {
   GPNode* children[MAX_ARITY];
   char opCode;
   int currentArity;
+  double erc_value;
 }
 
 GenomeClass { 
@@ -214,22 +333,129 @@ GenomeClass {
 
 \GenomeClass::initialiser :
 {
+  /**
+     This is the standard ramped half-and-half method
+     for creation of trees.
+   */
+  int id = EA->population->actualParentPopulationSize;  
+  int seg = EA->population->parentPopulationSize/(TREE_DEPTH_MAX-TREE_DEPTH_MIN); 
+  int currentDepth = TREE_DEPTH_MIN+id/seg;
 
-  
-  int id = EA->population->actualParentPopulationSize;
-  int currentDepth;
+  bool full;
+  if( GROW_FULL_RATIO==0 ) full=true;
+  else full = (id%seg)/(int)(seg*GROW_FULL_RATIO);
 
-  
-  int seg = EA->population->parentPopulationSize/(TREE_DEPTH_MAX-TREE_DEPTH_MIN);
-  cout << id << " "<< seg<< " " << id/seg  << " " << TREE_DEPTH_MIN+id/seg<< endl;
-  
+  cout << seg << " " <<  currentDepth << " " << full ;
   for( int i=0 ; i<NB_TREES ; i++ ){
-    Genome.root[i] = construction_method( constLen, totalLen , 0, 6,false);
+    Genome.root[i] = construction_method( constLen, totalLen , 1, currentDepth ,full);
+    cout << " " << depthOfTree(Genome.root[i]);
   }
+  cout << endl;
 }
 \end
 
 \GenomeClass::crossover :
+{
+  int depthP1 = depthOfTree(parent1.root[0]);
+  int depthP2 = depthOfTree(parent2.root[0]);
+  
+  int xoverD1 = random(0,depthP1);
+  int xoverD2 = random(0,depthP2);
+
+  int maxNode1 = 1<<(depthP1-1);
+  int maxNode2 = 1<<(depthP2-1);
+
+  GPNode** d1Nodes = new GPNode*[maxNode1];
+  GPNode** d2Nodes = new GPNode*[maxNode2];
+  
+  int collected1 = 0;
+  int collected2 = 0;
+  if(xoverD1!=0)
+    collected1 = collectNodesDepth(xoverD1-1,d1Nodes,0,0,child1.root[0]);
+  else{
+    d1Nodes[0]=child1.root[0];
+    collected1=1;
+  }
+  
+  if( xoverD2!=0)
+    collected2 = collectNodesDepth(xoverD2-1,d2Nodes,0,0,parent2.root[0]);
+  else{
+    d2Nodes[0]=parent2.root[0];
+    collected2=1;
+  }
+
+#if 1
+  cout << "dp1 : " << depthP1 << " xov1 : " << xoverD1  << " maxnodeCount1 : " << maxNode1 << " collected1 : "<< collected1  << endl;
+  cout << "dp2 : " << depthP2 << " xov2 : " << xoverD2  << " maxnodeCount2 : " << maxNode2 << " collected2 : "<< collected2  << endl;
+
+  for( int i=0 ; i<collected1 ; i++ )
+    printf("%s | ",opCodeName[(int)d1Nodes[i]->opCode].c_str());
+  printf("\n");
+
+  for( int i=0 ; i<collected2 ; i++ )
+    printf("%s | ",opCodeName[(int)d2Nodes[i]->opCode].c_str());
+  printf("\n");
+#endif
+
+  int stockPointCountP1=0;
+  for( int i=0 ; i<collected1 ; i++ ){
+    stockPointCountP1+=d1Nodes[i]->currentArity;
+  }
+
+  int stockPointCountP2=0;
+  for( int i=0 ; i<collected2 ; i++ ){
+    stockPointCountP2+=d2Nodes[i]->currentArity;
+  }
+
+  
+  cout << "stock point count parent 1 : " << stockPointCountP1 << endl;
+  cout << "stock point count parent 2 : " << stockPointCountP2 << endl;
+
+  int xoverP1 = random(0,stockPointCountP1);
+  int xoverP2 = random(0,stockPointCountP2);
+
+  int reminderP1=0;
+  int parentIndexP1 = 0;
+
+  for( int i=0 ; ; ) 
+    if( (i+d1Nodes[parentIndexP1]->currentArity)>xoverP1 ){
+      reminderP1 = xoverP1-i;
+      break;
+    }
+    else i+=d1Nodes[parentIndexP1++]->currentArity;
+
+  int reminderP2=0;
+  int parentIndexP2 = 0;
+  for( int i=0 ; ; ) 
+    if( (i+d2Nodes[parentIndexP2]->currentArity)>xoverP2 ){
+      reminderP2 = xoverP2-i;
+      break;
+    }
+    else i+=d2Nodes[parentIndexP2++]->currentArity;
+
+  cout << "r : " << reminderP1 << " parentIndex : " << parentIndexP1 << " xoverPt1 : " << xoverP1<<endl;
+  cout << "r : " << reminderP2 << " parentIndex : " << parentIndexP2 << " xoverPt2 : " << xoverP2<<endl;
+  cout << "xoverPt2 : " << xoverP2 << endl;
+
+  toDotFile( parent1.root[0],"out/xover/p1-o",0);
+  toDotFile( parent2.root[0],"out/xover/p2-o",0);
+ 
+
+  d1Nodes[parentIndexP1]->children[reminderP1] = NULL;
+  toDotFile( child1.root[0],"out/xover/p1",0);
+
+  d1Nodes[parentIndexP1]->children[reminderP1] = d2Nodes[parentIndexP2]->children[reminderP2];
+  toDotFile(d2Nodes[parentIndexP2]->children[reminderP2],"out/xover/graft",0);
+
+  d2Nodes[parentIndexP2]->children[reminderP2] = NULL;
+  toDotFile( parent2.root[0],"out/xover/p2",0);
+
+  toDotFile(d1Nodes[parentIndexP1]->children[reminderP1],"out/xover/stock",0);
+  toDotFile( child1.root[0],"out/xover/c",0);
+
+  delete[] d1Nodes;
+  delete[] d2Nodes;
+}
 \end
 
 \GenomeClass::mutator : // Must return the number of mutations
@@ -240,7 +466,19 @@ GenomeClass {
 
 \GenomeClass::evaluator : // Returns the score
 {
-  return 0;
+  /**
+     Standard raw fitness, as in Koza's book.
+     For symbolic regression, this is equal to 
+     the standardized fitness.
+   */
+  double fitness = 0.;
+  for( int i=0 ; i<fitnessCasesSetLength ; i++ ){
+    double evolvedValue = recEvale(Genome.root[0],inputs[i]);
+    //cout << evolvedValue << ":" << outputs[i] << " ";
+    fitness += fabs(evolvedValue-outputs[i]);
+  }
+  cout << "->" << fitness <<endl;
+  return fitness;
 }
 \end
 
@@ -248,14 +486,14 @@ GenomeClass {
 CPPFLAGS+=
 \end
 
-\Default run parameters :        // Please let the parameters appear in this order
-  Number of generations : 1     	// NB_GEN
-  Time limit: 0 			// In seconds, 0 to deactivate
-  Population size : 10			//POP_SIZE
-  Offspring size : 0 // 40% 
-  Mutation probability : 1       // MUT_PROB
-  Crossover probability : 1      // XOVER_PROB
-  Evaluator goal : minimise      // Maximise
+\Default run parameters :         // Please let the parameters appear in this order
+  Number of generations : 1       // NB_GEN
+  Time limit: 0 		  // In seconds, 0 to deactivate
+  Population size : 10		  //POP_SIZE
+  Offspring size : 1              // 40% 
+  Mutation probability : 1        // MUT_PROB
+  Crossover probability : 1       // XOVER_PROB
+  Evaluator goal : minimise       // Maximise
   Selection operator: Tournament 2.0
   Surviving parents: 100%//percentage or absolute  
   Surviving offspring: 100%
@@ -272,4 +510,3 @@ CPPFLAGS+=
   Generate R script:0
   Plot stats:0				//Default: 0
 \end
-	

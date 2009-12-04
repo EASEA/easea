@@ -24,6 +24,7 @@ Centre de Mathématiques Appliquées
 
   size_t genomeSize;
   bool genomeSizeValidity=false;
+  int lineCounter = 0;
 
 // local functions
   char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
@@ -155,7 +156,8 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_DECLARATIONS"  {
   if (bVERBOSE) printf ("Inserting user declarations.\n");
   yyreset();
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
+  lineCounter=1;
   BEGIN COPY_USER_DECLARATIONS;
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISATION_FUNCTION"  {
@@ -494,12 +496,14 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_FUNCTIONS"  {
   if (bVERBOSE) printf ("Inserting user functions.\n");
   yyreset();
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yyin = fpGenomeFile;                    
+  lineCounter=1;                                 // switch to .ez file and analyser
   BEGIN COPY_USER_FUNCTIONS;
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_EO_INITIALISER"  {        
   yyreset();
   bWithinEO_Function=1;
+  lineCounter=1;
   if( TARGET==CUDA || TARGET==STD) bWithinCUDA_Initializer = 1;
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_EO_INITIALISER;                               // not implemented as a function !
@@ -521,6 +525,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_CROSSOVER"  {        
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  lineCounter=1;
   BEGIN COPY_CROSSOVER;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_MUTATOR"  {        
@@ -823,6 +828,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_EO_INITIALISER>"\\GenomeClass::initiali"[sz]"er"[ \t\n]*":" {
   fprintf (fpOutputFile,"// Genome Initialiser\n"); 
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   BEGIN COPY;
  }                                                               
 <COPY_EO_INITIALISER><<EOF>> {
@@ -832,10 +839,13 @@ if(OPERATING_SYSTEM=WINDOWS)
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
-<COPY_EO_INITIALISER>.|\n {}                                      
+<COPY_EO_INITIALISER>. {}                                      
+<COPY_EO_INITIALISER>\n {lineCounter++;}
 
 <COPY_USER_DECLARATIONS>"\\User"[ \t\n]+"declarations"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User declarations\n"); 
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   BEGIN COPY;
  }                                                               
 <COPY_USER_DECLARATIONS><<EOF>> {
@@ -845,10 +855,16 @@ if(OPERATING_SYSTEM=WINDOWS)
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
-<COPY_USER_DECLARATIONS>.|\n {}                                      
+
+<COPY_USER_DECLARATIONS>. {}
+<COPY_USER_DECLARATIONS>\n {
+  lineCounter++;
+ }                
 
 <COPY_USER_FUNCTIONS>"\\User"[ \t\n]+"functions"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User functions\n\n"); 
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   BEGIN COPY;
  }                                                               
 <COPY_USER_FUNCTIONS><<EOF>> {
@@ -859,7 +875,10 @@ if(OPERATING_SYSTEM=WINDOWS)
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
-<COPY_USER_FUNCTIONS>.|\n {}                                      
+<COPY_USER_FUNCTIONS>. {}                                      
+<COPY_USER_FUNCTIONS>\n {
+  lineCounter++;
+ }
 
 <COPY_INITIALISATION_FUNCTION>"\\Before"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
     fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){");
@@ -1273,10 +1292,13 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_INITIALISER>.|\n {}                                      
 <COPY_CROSSOVER>"\\GenomeClass::crossover"[ \t\n]*":" {
   bWithinXover=1;
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   BEGIN COPY_USER_FUNCTION;
   return USER_XOVER;
  }
-<COPY_CROSSOVER>.|\n {}                                      
+<COPY_CROSSOVER>. {}
+<COPY_CROSSOVER>\n {lineCounter++;}
 <COPY_MUTATOR>"\\GenomeClass::mutator"[ \t\n]*":" {
   bWithinMutator=1;
   BEGIN COPY_USER_FUNCTION;
@@ -1651,7 +1673,9 @@ if(OPERATING_SYSTEM=WINDOWS)
 // end of .ez file : resume tpl analysis
 <GET_PARAMETERS>"\\end" {rewind(fpGenomeFile); yyin = fpTemplateFile; BEGIN TEMPLATE_ANALYSIS;}  // switch back to .tpl file and analyser
 
-//<GET_PARAMETERS>.|\n {}                                      
+\n {
+  lineCounter++;
+}                                      
 
 
 //****************************************

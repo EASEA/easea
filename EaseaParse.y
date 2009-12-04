@@ -42,6 +42,7 @@ int nMINIMISE=2;
 int nELITE;
 bool bELITISM=0;
 bool bVERBOSE=0;
+bool bLINE_NUM_EZ_FILE=1;
 bool bPRINT_STATS=1;
 bool bPLOT_STATS=0;
 bool bGENERATE_CVS_FILE=0, bGENERATE_R_SCRIPT=0, bGENERATE_GNUPLOT_SCRIPT=0;
@@ -675,6 +676,7 @@ int main(int argc, char *argv[]){
     }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
+    else if (!mystricmp(sTemp,"tl"))  bLINE_NUM_EZ_FILE=false;
     else if (!mystricmp(sTemp,"path"))  {
       if (argv[++nParamNb][0]=='"') {
         strcpy(sEZ_PATH,&(argv[nParamNb][1]));

@@ -1,5 +1,5 @@
 EXEC = easea 
-CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated -DDEBUG
+CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated -DDEBUG -DLINE_NUM_EZ_FILE
 CPPC = g++ 
 LDFLAGS = 
 
