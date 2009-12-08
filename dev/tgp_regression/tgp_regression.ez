@@ -24,6 +24,7 @@ __________________________________________________________*/
 #define GROW_FULL_RATIO 0    // ratio between grow and full construction method
 #define DIV_ERR_VALUE 1      // Returned value, in case of non defined input value
 #define MAX_XOVER_DEPTH 15
+#define MAX_MUTAT_DEPTH 15
 
 float** inputs;
 float* outputs;
@@ -284,6 +285,41 @@ int collectNodesDepth(const int goalDepth, GPNode** collection, int collected, i
     return collected;
   }
 }
+
+
+GPNode* selectNode( GPNode* root, int* childId, int* depth){
+  
+  int xoverDepth = random(0,depthOfTree(root));
+  (*depth) = xoverDepth;
+
+  GPNode** dNodes = new GPNode*[1<<(xoverDepth-1)];
+  int collected;
+
+  if(xoverDepth!=0)
+    collected = collectNodesDepth(xoverDepth-1,dNodes,0,0,root);
+  else{
+    return NULL;
+  }
+  int stockPointCount=0;
+  for( int i=0 ; i<collected; i++ ){
+    stockPointCount+=dNodes[i]->currentArity;
+  }
+
+  int reminderP = 0, parentIndexP = 0;
+
+  int xoverP = random(0,stockPointCount);
+  for( int i=0 ; ; ) 
+    if( (i+dNodes[parentIndexP]->currentArity)>xoverP ){
+      reminderP = xoverP-i;
+      break;
+    }
+    else i+=dNodes[parentIndexP++]->currentArity;
+  
+  *childId = reminderP;
+  cout << "d of x : " << xoverDepth << "/" << depthOfTree(root)<< " n : "<< xoverP << endl;
+  delete dNodes;
+  return dNodes[parentIndexP];
+}
 \end
 
 
@@ -373,104 +409,120 @@ GenomeClass {
      It selects depths of cross, then selects which nodes
      will be exchanged at those depths.
    */
-  int depthP1 = depthOfTree(parent1.root[0]);
-  int depthP2 = depthOfTree(parent2.root[0]);
   
-  int xoverD1 = random(0,depthP1);
-  int xoverD2 = random(0,depthP2);
+  int depthOfStock, depthOfGraft;
+  GPNode** d1Nodes = NULL, ** d2Nodes = NULL;
+  int reminderP1, reminderP2;
+  int parentIndexP1, parentIndexP2;
 
-  int maxNode1 = 1<<(depthP1-1);
-  int maxNode2 = 1<<(depthP2-1);
-
-  GPNode** d1Nodes = new GPNode*[maxNode1];
-  GPNode** d2Nodes = new GPNode*[maxNode2];
-  
-  int collected1 = 0;
-  int collected2 = 0;
-  if(xoverD1!=0)
-    collected1 = collectNodesDepth(xoverD1-1,d1Nodes,0,0,child1.root[0]);
-  else{
-    d1Nodes[0]=child1.root[0];
-    collected1=1;
-  }
-  
-  if( xoverD2!=0)
-    collected2 = collectNodesDepth(xoverD2-1,d2Nodes,0,0,parent2.root[0]);
-  else{
-    d2Nodes[0]=parent2.root[0];
-    collected2=1;
-  }
-
+  do{
+    int depthP1 = depthOfTree(parent1.root[0]);
+    int depthP2 = depthOfTree(parent2.root[0]);
+    
+    int xoverD1 = random(0,depthP1);
+    int xoverD2 = random(0,depthP2);
+    
+    int maxNode1 = 1<<(depthP1-1);
+    int maxNode2 = 1<<(depthP2-1);
+    
+    if( d1Nodes ) free( d1Nodes );
+    if( d2Nodes ) free( d2Nodes );
+    d1Nodes = new GPNode*[maxNode1];
+    d2Nodes = new GPNode*[maxNode2];
+    
+    int collected1 = 0;
+    int collected2 = 0;
+    if(xoverD1!=0)
+      collected1 = collectNodesDepth(xoverD1-1,d1Nodes,0,0,child1.root[0]);
+    else{
+      d1Nodes[0]=child1.root[0];
+      collected1=1;
+    }
+    
+    if( xoverD2!=0)
+      collected2 = collectNodesDepth(xoverD2-1,d2Nodes,0,0,parent2.root[0]);
+    else{
+      d2Nodes[0]=parent2.root[0];
+      collected2=1;
+    }
+    
 #if 0
-  cout << "dp1 : " << depthP1 << " xovd1 : " << xoverD1  << " maxnodeCount1 : " << maxNode1 << " collected1 : "<< collected1  << endl;
-  cout << "dp2 : " << depthP2 << " xovd2 : " << xoverD2  << " maxnodeCount2 : " << maxNode2 << " collected2 : "<< collected2  << endl;
-
-  for( int i=0 ; i<collected1 ; i++ )
-    printf("%s | ",opCodeName[(int)d1Nodes[i]->opCode].c_str());
-  printf("\n");
-
-  for( int i=0 ; i<collected2 ; i++ )
-    printf("%s | ",opCodeName[(int)d2Nodes[i]->opCode].c_str());
-  printf("\n");
+    cout << "dp1 : " << depthP1 << " xovd1 : " << xoverD1  << " maxnodeCount1 : " << maxNode1 << " collected1 : "<< collected1  << endl;
+    cout << "dp2 : " << depthP2 << " xovd2 : " << xoverD2  << " maxnodeCount2 : " << maxNode2 << " collected2 : "<< collected2  << endl;
+    
+    for( int i=0 ; i<collected1 ; i++ )
+      printf("%s | ",opCodeName[(int)d1Nodes[i]->opCode].c_str());
+    printf("\n");
+    
+    for( int i=0 ; i<collected2 ; i++ )
+      printf("%s | ",opCodeName[(int)d2Nodes[i]->opCode].c_str());
+    printf("\n");
 #endif
-
-  int stockPointCountP1=0;
-  for( int i=0 ; i<collected1 ; i++ ){
-    stockPointCountP1+=d1Nodes[i]->currentArity;
-  }
-
-  int stockPointCountP2=0;
-  for( int i=0 ; i<collected2 ; i++ ){
-    stockPointCountP2+=d2Nodes[i]->currentArity;
-  }
-
+    
+    int stockPointCountP1=0;
+    for( int i=0 ; i<collected1 ; i++ ){
+      stockPointCountP1+=d1Nodes[i]->currentArity;
+    }
+    
+    int stockPointCountP2=0;
+    for( int i=0 ; i<collected2 ; i++ ){
+      stockPointCountP2+=d2Nodes[i]->currentArity;
+    }
+    
 #if 0  
-  cout << "stock point count parent 1 : " << stockPointCountP1 << endl;
-  cout << "stock point count parent 2 : " << stockPointCountP2 << endl;
+    cout << "stock point count parent 1 : " << stockPointCountP1 << endl;
+    cout << "stock point count parent 2 : " << stockPointCountP2 << endl;
 #endif
+    
+    int xoverP1 = random(0,stockPointCountP1);
+    int xoverP2 = random(0,stockPointCountP2);
+    
+    
+    reminderP1    = 0; reminderP2    = 0;
+    parentIndexP1 = 0; parentIndexP2 = 0;
 
-  int xoverP1 = random(0,stockPointCountP1);
-  int xoverP2 = random(0,stockPointCountP2);
+    for( int i=0 ; ; ) 
+      if( (i+d1Nodes[parentIndexP1]->currentArity)>xoverP1 ){
+	reminderP1 = xoverP1-i;
+	break;
+      }
+      else i+=d1Nodes[parentIndexP1++]->currentArity;
 
-  int reminderP1=0;
-  int parentIndexP1 = 0;
-
-  for( int i=0 ; ; ) 
-    if( (i+d1Nodes[parentIndexP1]->currentArity)>xoverP1 ){
-      reminderP1 = xoverP1-i;
-      break;
-    }
-    else i+=d1Nodes[parentIndexP1++]->currentArity;
-
-  int reminderP2=0;
-  int parentIndexP2 = 0;
-  for( int i=0 ; ; ) 
-    if( (i+d2Nodes[parentIndexP2]->currentArity)>xoverP2 ){
-      reminderP2 = xoverP2-i;
-      break;
-    }
-    else i+=d2Nodes[parentIndexP2++]->currentArity;
-
+    for( int i=0 ; ; ) 
+      if( (i+d2Nodes[parentIndexP2]->currentArity)>xoverP2 ){
+	reminderP2 = xoverP2-i;
+	break;
+      }
+      else i+=d2Nodes[parentIndexP2++]->currentArity;
+    
 #if 0
-  cout << "r : " << reminderP1 << " parentIndex : " << parentIndexP1 << " xoverPt1 : " << xoverP1<<endl;
-  cout << "r : " << reminderP2 << " parentIndex : " << parentIndexP2 << " xoverPt2 : " << xoverP2<<endl;
-  cout << "xoverPt2 : " << xoverP2 << endl;
-
-  toDotFile( parent1.root[0],"out/xover/p1-o",0);
-  toDotFile( parent2.root[0],"out/xover/p2-o",0);
+    cout << "r : " << reminderP1 << " parentIndex : " << parentIndexP1 << " xoverPt1 : " << xoverP1<<endl;
+    cout << "r : " << reminderP2 << " parentIndex : " << parentIndexP2 << " xoverPt2 : " << xoverP2<<endl;
+    cout << "xoverPt2 : " << xoverP2 << endl;
+    
+    
+    toDotFile( parent1.root[0],"out/xover/p1-o",0);
+    toDotFile( parent2.root[0],"out/xover/p2-o",0);
 #endif
-  
+    
+    depthOfStock = xoverD1;
+    depthOfGraft = depthOfTree(d2Nodes[parentIndexP2]->children[reminderP2]);
+
+    //cout << "depth of resulting tree comp : " << depthOfGraft+depthOfStock;
+  }
+  while(depthOfStock+depthOfGraft>MAX_XOVER_DEPTH);
+
   delete d1Nodes[parentIndexP1]->children[reminderP1];
   d1Nodes[parentIndexP1]->children[reminderP1] = NULL;
-
+    
 #if 0
-  toDotFile( child1.root[0],"out/xover/p1",0);
+    toDotFile( child1.root[0],"out/xover/p1",0);
 #endif
-
-  d1Nodes[parentIndexP1]->children[reminderP1] = d2Nodes[parentIndexP2]->children[reminderP2];
+    
+    d1Nodes[parentIndexP1]->children[reminderP1] = d2Nodes[parentIndexP2]->children[reminderP2];
 
 #if 0
-  toDotFile(d2Nodes[parentIndexP2]->children[reminderP2],"out/xover/graft",0);
+    toDotFile(d2Nodes[parentIndexP2]->children[reminderP2],"out/xover/graft",0);
 #endif
 
   d2Nodes[parentIndexP2]->children[reminderP2] = NULL;
@@ -481,6 +533,9 @@ GenomeClass {
   toDotFile( child1.root[0],"out/xover/c",0);
 #endif
 
+  //cout << " real : " << depthOfTree(child1.root[0]) << endl;
+  assert( depthOfStock+depthOfGraft<=depthOfTree(child1.root[0]));
+
   child1.valid=false;
   delete[] d1Nodes;
   delete[] d2Nodes;
@@ -489,6 +544,24 @@ GenomeClass {
 
 \GenomeClass::mutator : // Must return the number of mutations
 {
+  int mutationPointChildId = 0;
+  int mutationPointDepth = 0;
+  GPNode* mutationPointParent = selectNode(Genome.root[0], &mutationPointChildId, &mutationPointDepth);
+
+  //mutationPointParent = Genome.root[0];
+  if( mutationPointParent ){
+
+    
+    cout << "mutation output" << endl; 
+    toDotFile( mutationPointParent->children[mutationPointChildId], "out/mutation/mp", 0);
+    toDotFile( Genome.root[0], "out/mutation/p", 0);
+    free( mutationPointParent->children[mutationPointChildId] );
+    mutationPointParent->children[mutationPointChildId] = NULL;
+    mutationPointParent->children[mutationPointChildId] = 
+      construction_method( constLen, totalLen , 1, MAX_MUTAT_DEPTH-mutationPointDepth ,0);
+    toDotFile( Genome.root[0], "out/mutation/f", 0);
+    
+  }
   return 0;
 }
 \end
@@ -520,8 +593,8 @@ CPPFLAGS+=
 \Default run parameters :         // Please let the parameters appear in this order
   Number of generations : 1       // NB_GEN
   Time limit: 0 		  // In seconds, 0 to deactivate
-  Population size : 1000		  //POP_SIZE
-  Offspring size : 100           // 40% 
+  Population size : 10		  //POP_SIZE
+  Offspring size : 1           // 40% 
   Mutation probability : 1        // MUT_PROB
   Crossover probability : 1       // XOVER_PROB
   Evaluator goal : minimise       // Maximise
@@ -533,7 +606,7 @@ CPPFLAGS+=
   Final reduce operator: Tournament 2
 
   Elitism: Strong			//Weak or Strong
-  Elite: 0
+  Elite: 1
 
   Print stats:1				//Default: 1
   Generate cvs stats file:0			
