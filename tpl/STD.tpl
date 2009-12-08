@@ -164,7 +164,7 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 	IndividualImpl** tmp = (IndividualImpl**)ps;
 	IndividualImpl parent1(*this);
 	IndividualImpl parent2(*tmp[0]);
-	IndividualImpl child1(*this);
+	IndividualImpl child(*this);
 
 	//DEBUG_PRT("Xover");
 	/*   cout << "p1 : " << parent1 << endl; */
@@ -175,9 +175,9 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
   	\INSERT_CROSSOVER
 
 
-	child1.valid = false;
-	/*   cout << "child1 : " << child1 << endl; */
-	return new IndividualImpl(child1);
+	child.valid = false;
+	/*   cout << "child : " << child << endl; */
+	return new IndividualImpl(child);
 }
 
 
@@ -421,7 +421,7 @@ all:	$(TARGET)
 clean:
 	rm -f $(OBJS) $(TARGET)
 easeaclean:
-	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj
+	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot
 	
 \START_VISUAL_TPL<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject

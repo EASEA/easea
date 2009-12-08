@@ -135,7 +135,7 @@ Individual* Individual::crossover(Individual** ps){
   // Generic part  
   Individual parent1(*this);
   Individual parent2(*ps[0]);
-  Individual child1(*this);
+  Individual child(*this);
 
   //DEBUG_PRT("Xover");
 /*   cout << "p1 : " << parent1 << endl; */
@@ -145,9 +145,9 @@ Individual* Individual::crossover(Individual** ps){
   // Problem specific part
   \INSERT_CROSSOVER
 
-    child1.valid = false;
-/*   cout << "child1 : " << child1 << endl; */
-  return new Individual(child1);
+    child.valid = false;
+/*   cout << "child : " << child << endl; */
+  return new Individual(child);
 }
 
 

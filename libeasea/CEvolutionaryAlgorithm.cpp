@@ -75,22 +75,22 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	this->reduceOffsprings = 0;
 	this->gnuplot = NULL;
 	if(params->plotStats || params->generateGnuplotScript){
-		string fichier = params->outputFilename;
+		string fichier (params->outputFilename);
 		fichier.append(".dat");
 		remove(fichier.c_str());
 	}
 	if(params->generateGnuplotScript){
-		string fichier = params->outputFilename;
+		string fichier (params->outputFilename);
 		fichier.append(".plot");
 		remove(fichier.c_str());
 	}
 	if(params->generateRScript || params->generateCVSFile){
-		string fichier = params->outputFilename;
-		fichier.append(".cvs");
+		string fichier (params->outputFilename);
+		fichier.append(".csv");
 		remove(fichier.c_str());
 	}
 	if(params->generateRScript){
-		string fichier = params->outputFilename;
+		string fichier (params->outputFilename);
 		fichier.append(".r");
 		remove(fichier.c_str());
 	}
@@ -228,6 +228,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
   if((this->params->plotStats && this->gnuplot->valid) || this->params->generateGnuplotScript){
  	FILE *f;
+	string fichier (params->outputFilename);
  	f = fopen(params->outputFilename,"a"); //ajouter .dat
 	if(f!=NULL){
 	  if(currentGeneration==0)
@@ -238,9 +239,9 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   }
   if(params->generateCVSFile || params->generateRScript){ //Generation du fichier CVS;
  	FILE *f;
-	string fichier = params->outputFilename;
-	fichier.append(".cvs");
- 	f = fopen(fichier.c_str(),"a"); //ajouter .cvs
+	string fichier (params->outputFilename);
+	fichier.append(".csv");
+ 	f = fopen(fichier.c_str(),"a"); //ajouter .csv
 	if(f!=NULL){
 	  if(currentGeneration==0)
 		fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDEV\n");
@@ -275,7 +276,7 @@ void CEvolutionaryAlgorithm::outputGraph(){
 
 void CEvolutionaryAlgorithm::generateGnuplotScript(){
 	FILE* f;
-	string fichier = this->params->outputFilename;
+	string fichier (this->params->outputFilename);
 	fichier.append(".plot");
 	f = fopen(fichier.c_str(),"a");
 	fprintf(f,"set term png\n");
@@ -289,12 +290,12 @@ void CEvolutionaryAlgorithm::generateGnuplotScript(){
 
 void CEvolutionaryAlgorithm::generateRScript(){
 	FILE* f;
-	string fichier = this->params->outputFilename;
+	string fichier (this->params->outputFilename);
 	fichier.append(".r");
 	f=fopen(fichier.c_str(),"a");
 	fprintf(f,"#Plotting for R\n"),
 	fprintf(f,"png(\"%s\")\n",params->plotOutputFilename);
-	fprintf(f,"data <- read.table(\"./%s.cvs\",sep=\",\")\n",params->outputFilename);
+	fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename);
 	fprintf(f,"plot(0, type = \"n\", main = \"Plot Title\", xlab = \"Number of Evaluations\", ylab = \"Fitness\", xlim = c(0,%d) )\n",population->currentEvaluationNb);
 	fprintf(f,"grid() # add grid\n");
 	fprintf(f,"lines(data[,3], data[,4], lty = 1) #draw first dataset\n");
