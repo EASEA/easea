@@ -280,7 +280,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->randomGenerator = globalRandomGenerator;
 
         this->printStats = setVariable("printStats",\PRINT_STATS);
-        this->printStatsFile = setVariable("printStatsFile",\PRINT_STATS_FILE);
+        this->generateCVSFile = setVariable("generateCVSFile",\GENERATE_CVS_FILE);
+        this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
+        this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
         this->plotStats = setVariable("plotStats",\PLOT_STATS);
         this->printInitialPopulation = setVariable("printInitialPopulation",0);
         this->printFinalPopulation = setVariable("printFinalPopulation",0);
@@ -589,6 +591,8 @@ easeaclean:
 --plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---printStatsFile=\PRINT_STATS_FILE #Print stats to File (filename: ProjetName.dat)
+--generateCVSFile=\GENERATE_CVS_FILE
+--generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
+--generateRScript=\GENERATE_R_SCRIPT
 
 \TEMPLATE_END
