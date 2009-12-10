@@ -7,7 +7,7 @@ LDFLAGS =
 
 $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libeasea/libeasea.a
 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
-	echo "export EZ_PATH=$(PWD)/">>$(HOME)/.bashrc
+	@if [ $(EZ_PATH) != "$(PWD)/" ] ; then echo "export EZ_PATH=$(PWD)/">>$(HOME)/.bashrc ; fi
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
 	# 

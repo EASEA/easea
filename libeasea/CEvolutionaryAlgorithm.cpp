@@ -31,6 +31,9 @@ extern CEvolutionaryAlgorithm* EA;
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
+
+extern void evale_pop_chunk(CIndividual** pop, int popSize);
+extern bool INSTEAD_EVAL_STEP;
 /**
  * @DEPRECATED the next contructor has to be used instead of this one.
  */
@@ -112,7 +115,11 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   
   std::cout << "Parent's population initializing "<< std::endl;
   this->initializeParentPopulation();
-  this->population->evaluateParentPopulation();
+  if(!INSTEAD_EVAL_STEP)
+    this->population->evaluateParentPopulation();
+  else
+    evale_pop_chunk(population->parents, population->parentPopulationSize);
+
   this->population->currentEvaluationNb += this->params->parentPopulationSize;
   if(this->params->printInitialPopulation){
   	std::cout << *population << std::endl;
@@ -131,9 +138,10 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     EASEABeginningGenerationFunction(this);
 
     population->produceOffspringPopulation();
-
-    population->evaluateOffspringPopulation();
-
+    if(!INSTEAD_EVAL_STEP)
+      population->evaluateOffspringPopulation();
+    else
+      evale_pop_chunk(population->offsprings, population->offspringPopulationSize);
     population->currentEvaluationNb += this->params->offspringPopulationSize;
 
     EASEAGenerationFunctionBeforeReplacement(this);
@@ -160,8 +168,9 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     population->reduceTotalPopulation(elitistPopulation);
 
+    population->sortParentPopulation();
     showPopulationStats(begin);
-
+    bBest = population->Best;
     EASEAEndGenerationFunction(this);
 
     currentGeneration += 1;
