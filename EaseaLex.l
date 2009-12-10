@@ -1607,9 +1607,11 @@ if(OPERATING_SYSTEM=WINDOWS)
   fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 <COPY_USER_FUNCTION>"random"  {
   fprintf(fpOutputFile,"globalRandomGenerator->random");}
-<COPY_USER_FUNCTION>"child1"  {fprintf(fpOutputFile,"child1");
+<COPY_USER_FUNCTION>"child1"  {fprintf(fpOutputFile,"child");
  }
-<COPY_USER_FUNCTION>"child2"  {fprintf(fpOutputFile,"child2");
+<COPY_USER_FUNCTION>"child2"  {fprintf(fpOutputFile,"child");
+ }
+<COPY_USER_FUNCTION>"child"  {fprintf(fpOutputFile,"child");
  }
 <COPY_USER_FUNCTION>"parent1"  {fprintf(fpOutputFile,"parent1");
  }

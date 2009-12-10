@@ -195,7 +195,7 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 	IndividualImpl** tmp = (IndividualImpl**)ps;
 	IndividualImpl parent1(*this);
 	IndividualImpl parent2(*tmp[0]);
-	IndividualImpl child1(*this);
+	IndividualImpl child(*this);
 
 	//DEBUG_PRT("Xover");
 	/*   cout << "p1 : " << parent1 << endl; */
@@ -206,9 +206,9 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
   	\INSERT_CROSSOVER
 
 
-	child1.valid = false;
-	/*   cout << "child1 : " << child1 << endl; */
-	return new IndividualImpl(child1);
+	child.valid = false;
+	/*   cout << "child : " << child << endl; */
+	return new IndividualImpl(child);
 }
 
 
@@ -607,7 +607,7 @@ $(BIN):$(OBJ)
 	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -Wall
 
 easeaclean: clean
-	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj
+	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj EASEA.plot EASEA.r EASEA.csv
 clean:
 	rm -f $(OBJ) $(BIN) 	
 	

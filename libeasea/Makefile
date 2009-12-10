@@ -2,7 +2,7 @@ CXXFLAGS = -g -Wall -fmessage-length=0
 
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
-	CGnuplot.o CCmaes.o CCuda.o CCmaesCuda.o Parameters.o CManyCmaes.o
+	CGnuplot.o CCmaes.o CCuda.o CCmaesCuda.o Parameters.o
 
 LIBS = -lboost_program_options 
 
