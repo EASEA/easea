@@ -137,7 +137,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 	("inputfile",po::value<string>(),"Set an input file for the initial population (default : none)")
 	("printStats",po::value<int>(),"Print the Stats (default : 1)")
 	("plotStats",po::value<int>(),"Plot the Stats with gnuplot (default : 0)")
-	("generateCVSFile",po::value<int>(),"Print the Stats to a CVS File (Filename: ProjectName.dat) (default : 0)")
+	("generateCSV",po::value<int>(),"Print the Stats to a CSV File (Filename: ProjectName.csv) (default : 0)")
 	("generateGnuplotScript",po::value<int>(),"Generates a Gnuplot script to plat the Stats (Filename: ProjectName.plot) (default : 0)")
 	("generateRScript",po::value<int>(),"Generates a R script to plat the Stats (Filename: ProjectName.r) (default : 0)")
 //	("printStatsFile",po::value<int>(),"Print the Stats to a File (Filename: ProjectName.dat) (default : 0)")

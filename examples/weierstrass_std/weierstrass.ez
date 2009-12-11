@@ -118,7 +118,7 @@ GenomeClass {
   for (int i=0; i<SIZE; i++)
   {
     float alpha = (float)random(0.,1.); // barycentric crossover
-     child1.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
+     child.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
   }
 \end
 
@@ -165,8 +165,7 @@ CPPFLAGS+=
   Final reduce operator: Tournament 2
 
   Elitism: Strong			//Weak or Strong
-  Elite: 0
-
+  Elite: 1
   Print stats:1				//Default: 1
   Generate cvs stats file:0			
   Generate gnuplot script:0

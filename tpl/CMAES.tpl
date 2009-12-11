@@ -287,7 +287,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->printInitialPopulation = setVariable("printInitialPopulation",0);
         this->printFinalPopulation = setVariable("printFinalPopulation",0);
 
-        this->outputFilename = (char*)"EASEA.dat";
+        this->outputFilename = (char*)"EASEA";
         this->plotOutputFilename = (char*)"EASEA.png";
 }
 
