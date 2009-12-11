@@ -10,6 +10,11 @@ __________________________________________________________*/
 #include <errno.h>
 #include <sstream>
 #include <math.h>
+
+
+#include <cutil.h>
+
+
 #define  OPERAND 0
 
 
@@ -191,7 +196,7 @@ void toDotFile(GPNode* root, const char* baseFileName, int treeId){
   std::ostringstream oss;
   oss << baseFileName << "-" << treeId << ".gv";
 
-  FILE* outputFile = fopen(oss.str().c_str(),"w");
+  FILE* outputFile = fopen(oss.str().c_str(),"a");
   if( !outputFile ){
     perror("Opening file for outputing dot representation ");
     exit(-1);
@@ -356,9 +361,15 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
   fitnessCasesSetLength = load_data(&inputs,&outputs,"quadra_reg_data.csv");
   cout << "number of point in fitness cases set : " << fitnessCasesSetLength << endl;
 
+  INSTEAD_EVAL_STEP=true;
   // Adding another stopping, as we are minimizing, the goal is 0 
   CGoalCriterion* gc = new CGoalCriterion(0,true);
   EA->stoppingCriteria.push_back(gc);
+
+
+  // Here starts the CUDA parts
+  cudaSetDevice(1); // on GTX295 ;) we want to use the second card for computation
+  
 }
 \end
 
@@ -393,7 +404,11 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
 \end
 
 \Instead evaluation function:
-  cout << "yopyop" << endl;
+{
+  for( int i=0 ; i<popSize ; i++ ){
+    cout << population[i] << endl;
+  }
+}
 \end
 
 \User classes :
@@ -627,7 +642,6 @@ GenomeClass {
 \end
 
 \User Makefile options: 
-CPPFLAGS+=
 \end
 
 \Default run parameters :         // Please let the parameters appear in this order

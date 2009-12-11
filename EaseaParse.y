@@ -657,6 +657,10 @@ int main(int argc, char *argv[]){
       TARGET=CUDA;
       TARGET_FLAVOR = CUDA_FLAVOR_MO;
     }
+    else if( !mystricmp(sTemp,"cuda_gp") ){
+      TARGET=STD;
+      TARGET_FLAVOR = CUDA_FLAVOR_GP;
+    }
 
     else if (!mystricmp(sTemp,"std"))  {
       TARGET=STD;
@@ -675,8 +679,12 @@ int main(int argc, char *argv[]){
       TARGET_FLAVOR = CUDA_FLAVOR_CMAES;
     }
 
+
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
-    else if (!mystricmp(sTemp,"tl"))  bLINE_NUM_EZ_FILE=false;
+    else if (!mystricmp(sTemp,"tl")){
+      printf("yopyop true line\n");
+      bLINE_NUM_EZ_FILE=false;
+    }
     else if (!mystricmp(sTemp,"path"))  {
       if (argv[++nParamNb][0]=='"') {
         strcpy(sEZ_PATH,&(argv[nParamNb][1]));

@@ -1,0 +1,648 @@
+/* ANTPROJECT */
+ 
+  \User declarations:
+  int nbEvalTotal = 0; //Le nombre d'evaluations
+  short nbPasMax = 600; //Le nombre max de mouvements autorises
+  double pMutPerGene=0.05; // La probabilité de muter un gene
+  
+  enum symboles {food_ahead, progn2, progn3, LEFT, RIGHT, MOVE}; //L'ensemble des valeurs que peut prendre un noeud de l'arbre
+  enum orientations {nord, est, sud, ouest}; //Les 4 orientations possibles
+  
+  int profondeurMax = 2; //La profondeur max d'un arbre a sa cration (racine = 0)
+  int profondeurMax1 = 9; //La profondeur max d'un arbre au cours de l'évolution
+  
+  int taille = 32; //taille de la grille
+  int SIZE=0;//taille d'un individu 
+  int carte[32][32]; //la grille
+  inline void swap(int& a,int& b) {int c=a; a=b; b=c;}
+  \end
+  
+  \User functions:
+  #include <math.h>
+  
+  void echangeNoeud(Element *child, Element *parent){
+    swap(child->Value,parent->Value);	
+  }
+  
+  /*
+    Creation de la carte avec le chemin.
+  */
+  void initCarte(){
+    int i,j;
+    for(i=0;i<32;i++)
+      for(j=0;j<32;j++)
+	carte[i][j]=0;
+      
+      carte[0][1]=1;carte[0][2]=1;carte[0][3]=1;carte[1][3]=1;carte[2][3]=1;
+    carte[3][3]=1;carte[4][3]=1;carte[5][3]=1;carte[5][4]=1;carte[5][5]=1;
+    carte[5][6]=1;carte[5][8]=1;carte[5][9]=1;carte[5][10]=1;carte[5][11]=1;
+    carte[5][12]=1;carte[6][12]=1;carte[7][12]=1;carte[8][12]=1;carte[9][12]=1;
+    carte[11][12]=1;carte[12][12]=1;carte[13][12]=1;carte[14][12]=1;carte[17][12]=1;
+    carte[18][12]=1;carte[19][12]=1;carte[20][12]=1;carte[21][12]=1;carte[22][12]=1;
+    carte[23][12]=1;carte[24][11]=1;carte[24][10]=1;carte[24][9]=1;carte[24][8]=1;
+    carte[24][7]=1; carte[24][4]=1;carte[24][3]=1;carte[25][1]=1;carte[26][1]=1;
+    carte[27][1]=1;carte[28][1]=1;carte[30][2]=1;carte[30][3]=1;carte[30][4]=1;
+    carte[30][5]=1;carte[29][7]=1;carte[28][7]=1;carte[27][8]=1;carte[27][9]=1;//50
+    
+    carte[27][10]=1;carte[27][11]=1;carte[27][12]=1;carte[27][13]=1;carte[27][14]=1;
+    carte[26][16]=1;carte[25][16]=1;carte[24][16]=1;carte[21][16]=1;carte[20][16]=1;
+    carte[19][16]=1;carte[18][16]=1;carte[15][17]=1;carte[14][20]=1;carte[13][20]=1;
+    carte[10][20]=1;carte[9][20]=1;carte[8][20]=1;carte[7][20]=1;carte[5][21]=1;
+    carte[5][22]=1;carte[4][24]=1;carte[3][24]=1;carte[2][25]=1;carte[2][26]=1;
+    carte[2][27]=1;carte[3][29]=1;carte[4][29]=1;carte[6][29]=1;carte[9][29]=1;//80
+    
+    carte[12][29]=1;carte[14][28]=1;carte[14][27]=1;carte[14][26]=1;carte[15][23]=1;
+    carte[18][24]=1;carte[19][27]=1;carte[22][26]=1;carte[23][23]=1;//89
+  }
+  
+  /*
+    Creation de la carte avec le chemin sans trou.
+  */
+  void initCarteFull(){
+    int i,j;
+    for(i=0;i<32;i++)
+      for(j=0;j<32;j++)
+	carte[i][j]=0;
+      
+      carte[0][1]=1;carte[0][2]=1;carte[0][3]=1;carte[1][3]=1;carte[2][3]=1;
+    carte[3][3]=1;carte[4][3]=1;carte[5][3]=1;carte[5][4]=1;carte[5][5]=1;
+    carte[5][6]=1;carte[5][7]=1;carte[5][8]=1;carte[5][9]=1;carte[5][10]=1;
+    carte[5][11]=1;carte[5][12]=1;carte[6][12]=1;carte[7][12]=1;carte[8][12]=1;
+    carte[9][12]=1;carte[10][12]=1;carte[11][12]=1;carte[12][12]=1;carte[13][12]=1;
+    carte[14][12]=1;carte[15][12]=1;carte[16][12]=1;carte[17][12]=1;carte[18][12]=1;
+    carte[19][12]=1;carte[20][12]=1;carte[21][12]=1;carte[22][12]=1;carte[23][12]=1;
+    carte[24][12]=1;carte[24][11]=1;carte[24][10]=1;carte[24][9]=1;carte[24][8]=1;
+    carte[24][7]=1;carte[24][6]=1;carte[24][5]=1;carte[24][4]=1;carte[24][3]=1;
+    carte[24][2]=1;carte[24][1]=1;carte[25][1]=1;carte[26][1]=1;carte[27][1]=1;//50
+    
+    carte[28][1]=1;carte[29][1]=1;carte[30][1]=1;carte[30][2]=1;carte[30][3]=1;
+    carte[30][4]=1;carte[30][5]=1;carte[30][6]=1;carte[30][7]=1;carte[29][7]=1;
+    carte[28][7]=1;carte[27][7]=1;carte[27][8]=1;carte[27][9]=1;carte[27][10]=1;
+    carte[27][11]=1;carte[27][12]=1;carte[27][13]=1;carte[27][14]=1;carte[27][15]=1;
+    carte[27][16]=1;carte[26][16]=1;carte[25][16]=1;carte[24][16]=1;carte[23][16]=1;
+    carte[22][16]=1;carte[21][16]=1;carte[20][16]=1;carte[19][16]=1;carte[18][16]=1;
+    carte[17][16]=1;carte[16][16]=1;carte[15][16]=1;carte[15][17]=1;carte[15][18]=1;
+    carte[15][19]=1;carte[15][20]=1;carte[14][20]=1;carte[13][20]=1;carte[12][20]=1;
+    carte[11][20]=1;carte[10][20]=1;carte[9][20]=1;carte[8][20]=1;carte[7][20]=1;
+    carte[6][20]=1;carte[5][20]=1;carte[5][21]=1;carte[5][22]=1;carte[5][23]=1;//100
+    
+    carte[5][24]=1;carte[4][24]=1;carte[3][24]=1;carte[2][24]=1;carte[2][25]=1;
+    carte[2][26]=1;carte[2][27]=1;carte[2][28]=1;carte[2][29]=1;carte[3][29]=1;
+    carte[4][29]=1;carte[5][29]=1;carte[6][29]=1;carte[7][29]=1;carte[8][29]=1;
+    carte[9][29]=1;carte[10][29]=1;carte[11][29]=1;carte[12][29]=1;carte[13][29]=1;
+    carte[14][29]=1;carte[14][28]=1;carte[14][27]=1;carte[14][26]=1;carte[14][25]=1;
+    carte[14][24]=1;carte[14][23]=1;carte[15][23]=1;carte[16][23]=1;carte[17][23]=1;
+    carte[18][23]=1;carte[18][24]=1;carte[18][25]=1;carte[18][26]=1;carte[18][27]=1;
+    carte[19][27]=1;carte[20][27]=1;carte[21][27]=1;carte[22][27]=1;carte[22][26]=1;
+    carte[22][25]=1;carte[22][24]=1;carte[22][23]=1;carte[23][23]=1;//144
+  }
+ 
+  /*
+  Fonction qui recopie un sous arbre. Il s'agit d'un vrai clonage et pas d'un
+  simple echange de références !
+  */
+  Element *copierSousArbreRec(Element* ssArbreSource, int profondeur, int pMax){
+    Element *elt = new Element;
+    elt->numero = SIZE++;
+    elt->profondeur = profondeur;
+    if(ssArbreSource==NULL)
+      return NULL;
+    
+    if(profondeur == pMax){
+      elt->filsG = NULL;
+      elt->filsD = NULL;
+      elt->filsC = NULL;
+      double rnd = random(0.,1.);
+      //Left
+      if(rnd<1./3.)
+	elt->Value = LEFT;		
+      
+      else if(rnd<2./3.)
+	elt->Value = RIGHT;
+      
+      else
+	elt->Value = MOVE;
+      
+    }
+    else{
+      elt->Value=ssArbreSource->Value;
+      elt->filsG=copierSousArbreRec(ssArbreSource->filsG,profondeur+1,pMax);
+      elt->filsC=copierSousArbreRec(ssArbreSource->filsC,profondeur+1,pMax);
+      elt->filsD=copierSousArbreRec(ssArbreSource->filsD,profondeur+1,pMax);
+    }
+    return elt;	
+  }
+  
+  /*
+  Fonction de génération d'un noeud.
+  */
+  Element *genererNoeud(int profondeur, int profondeurMaxAutorisee){
+    Element *elt = new Element;
+    elt->numero = SIZE++;
+    elt->profondeur = profondeur;
+    //Cas d'un symbole terminal (feuille)
+    if(profondeur == profondeurMaxAutorisee ){
+ elt->filsG = NULL;
+ elt->filsD = NULL;
+ elt->filsC = NULL;
+ double rnd = random(0.,1.);
+ //Left
+ if(rnd<1./3.){
+   elt->Value = LEFT;		
+ }
+ 
+ else if(rnd<2./3.){
+   elt->Value = RIGHT;
+ }
+ 
+ else{
+   elt->Value = MOVE;
+ }
+ 
+    }
+    //Cas d'une fonction (noeud non feuille)
+    else{
+      double rnd = random(0.,1.);
+      if(rnd<1./3.){
+      elt->Value = food_ahead;
+      elt->filsG = genererNoeud(profondeur+1,profondeurMaxAutorisee);
+      elt->filsC = NULL;
+      elt->filsD = genererNoeud(profondeur+1,profondeurMaxAutorisee);
+    }
+    else if(rnd<2./3.){
+    elt->Value = progn2;
+    elt->filsG = genererNoeud(profondeur+1,profondeurMaxAutorisee);
+    elt->filsC = NULL;
+    elt->filsD = genererNoeud(profondeur+1,profondeurMaxAutorisee);
+    
+  }
+  else{
+  elt->Value = progn3;
+  elt->filsG = genererNoeud(profondeur+1,profondeurMaxAutorisee);
+  elt->filsC = genererNoeud(profondeur+1,profondeurMaxAutorisee);
+  elt->filsD = genererNoeud(profondeur+1,profondeurMaxAutorisee);
+  }
+  
+  }
+  return elt;
+  }
+  
+  /*
+  Cette fonction cherche un noeud dont le numero est passé en paramètre 
+  dans l'arbre passé également en paramètre.
+  */
+ 
+  Element *chercheNoeud(Element *eltDepart, int numero){
+    fflush(stdout);
+    if(eltDepart == NULL){
+       return NULL;
+    }
+    if(eltDepart->numero == numero){
+       return eltDepart;
+    }
+    else{
+      Element *tmp = NULL;
+      if(eltDepart->filsG !=NULL)
+	tmp = chercheNoeud(eltDepart->filsG, numero); 
+       if(tmp != NULL)
+	return tmp;
+       if(eltDepart->filsC !=NULL)
+	tmp = chercheNoeud(eltDepart->filsC, numero); 
+      if(tmp != NULL)
+	return tmp;
+      if(eltDepart->filsD !=NULL)
+	tmp = chercheNoeud(eltDepart->filsD, numero); 
+      if(tmp != NULL)
+	return tmp;
+    }
+    
+    return NULL;
+  }
+  
+  /*
+  Cette fonction remplace le noeud numero "numero" dans l'arbre de racine "dst"
+  par l'element src.
+  */
+  void remplace(Element *dst, Element *src, int numero){
+    
+    if(dst == NULL){
+      return;
+    }
+    if(dst->numero == numero){
+      dst->Value=src->Value;
+      dst->filsG=src->filsG;
+      dst->filsC=src->filsC;
+      dst->filsD=src->filsD;
+    }
+    else{
+      if(dst->filsG !=NULL)
+	remplace(dst->filsG, src, numero); 
+      if(dst->filsC !=NULL)
+	remplace(dst->filsC, src, numero);  
+      if(dst->filsD !=NULL)
+	remplace(dst->filsD, src, numero);  
+    }
+  }
+  
+  /*
+  Renumerote les noeuds de l'arbre et regenere sa taille
+  */
+  void regenSizeRec(Element *racine, int p){
+    racine->numero=SIZE++;
+    racine->profondeur=p;
+    if(racine->filsG!=NULL)
+      regenSizeRec(racine->filsG, p+1);
+    if(racine->filsC!=NULL)
+      regenSizeRec(racine->filsC, p+1);
+    if(racine->filsD!=NULL)
+      regenSizeRec(racine->filsD, p+1);
+  }
+  
+  void regenSize(Element *racine){
+    SIZE=0;
+    regenSizeRec(racine, 0);
+  }
+  
+  
+  int evaluerFoodAhead(int *orientationCourante, int *ligneCourante, int *colCourante){
+    switch(*orientationCourante){
+      case nord : {
+	int l = ((*ligneCourante)-1<0)?(*ligneCourante)-1+taille:(*ligneCourante)-1;
+	if(carte[l][(*colCourante)]!=1)
+	  return 0;
+	else
+	  return 1;	
+      }
+      case sud : {
+	int l = ((*ligneCourante)+1==taille)?0:(*ligneCourante)+1;
+	if(carte[l][(*colCourante)]!=1)
+	  return 0;
+	else
+	  return 1;	
+      }
+      case est : {
+	int c = ((*colCourante)+1==taille)?0:(*colCourante)+1;
+	if(carte[(*ligneCourante)][c]!=1)
+	  return 0;
+	else
+	  return 1;	
+      }
+      case ouest : {
+	int c = ((*colCourante)-1<0)?(*colCourante)-1+taille:(*colCourante)-1;
+	if(carte[(*ligneCourante)][c]!=1)
+	  return 0;
+	else
+	  return 1;	
+      }
+      default:return 0;
+    }
+  }
+  
+  void evaluerMove(int *orientationCourante, int *ligneCourante, int *colCourante, int *fitnessCourant){
+    switch(*orientationCourante){
+      case nord : {
+	(*ligneCourante) = ((*ligneCourante)-1<0)?(*ligneCourante)-1+taille:(*ligneCourante)-1;
+	break;
+      }
+      case sud : {
+	(*ligneCourante) = ((*ligneCourante)+1==taille)?0:(*ligneCourante)+1;
+	break;	
+      }
+      case est : {
+	(*colCourante) = ((*colCourante)+1==taille)?0:(*colCourante)+1;
+	break;	
+      }
+      case ouest : {
+	(*colCourante) = ((*colCourante)-1<0)?(*colCourante)-1+taille:(*colCourante)-1;
+	break;	
+      }
+    }
+    if(carte[(*ligneCourante)][(*colCourante)]==1){
+      *fitnessCourant = *fitnessCourant-1;
+      carte[(*ligneCourante)][(*colCourante)]=-1;
+      
+      //Partie utile si l'on veut stopper l'évolution immédiatement apres avoir trouve l'individu 
+      //(pour calculer le nombre d'évaluations precis)
+ /*    if(*fitnessCourant==0){
+	FILE *fichier;
+	fichier = fopen("sortie.txt","a");
+	fprintf(fichier,"Individu idéal trouvé après %d évaluations\t %d\n",nbEvalTotal,nbEvalTotal);
+	fclose(fichier);
+	exit(0);
+      }  */
+    }
+  
+         
+  }
+  
+  void evaluerNoeud(Element *elt, int *orientationCourante, int *ligneCourante, int *colCourante, int *fitnessCourant, int *nbPas){
+    
+    
+    if(*nbPas>=nbPasMax)
+      return;
+    
+    switch(elt->Value){
+      case food_ahead : {
+	if(evaluerFoodAhead(orientationCourante, ligneCourante, colCourante)>0)
+	  evaluerNoeud(elt->filsG,orientationCourante, ligneCourante, colCourante, fitnessCourant, nbPas);
+	else
+	  evaluerNoeud(elt->filsD,orientationCourante, ligneCourante, colCourante, fitnessCourant, nbPas);
+	break;
+      }		
+      case progn2 : {
+	evaluerNoeud(elt->filsG,orientationCourante, ligneCourante, colCourante, fitnessCourant, nbPas);
+	evaluerNoeud(elt->filsD,orientationCourante, ligneCourante, colCourante, fitnessCourant, nbPas);
+	break;
+      }
+      case progn3 : {
+	evaluerNoeud(elt->filsG,orientationCourante, ligneCourante, colCourante, fitnessCourant, nbPas);
+	evaluerNoeud(elt->filsC,orientationCourante, ligneCourante, colCourante, fitnessCourant, nbPas);
+	evaluerNoeud(elt->filsD,orientationCourante, ligneCourante, colCourante, fitnessCourant, nbPas);
+	break;
+      }
+      case LEFT : {
+	switch(*orientationCourante){
+	  case est:*orientationCourante=nord;(*nbPas)++;break;
+	  case sud:*orientationCourante=est;(*nbPas)++;break;
+	  case ouest:*orientationCourante=sud;(*nbPas)++;break;
+	  case nord:*orientationCourante=ouest;(*nbPas)++;break;
+	}
+	break;
+      }
+      case RIGHT : {
+      switch(*orientationCourante){
+	case est:*orientationCourante=sud;(*nbPas)++;break;
+	case sud:*orientationCourante=ouest;(*nbPas)++;break;
+	case ouest:*orientationCourante=nord;(*nbPas)++;break;
+	case nord:*orientationCourante=est;(*nbPas)++;break;
+    }
+	    
+	    break;
+	  }
+	      case MOVE : {
+		evaluerMove(orientationCourante, ligneCourante, colCourante, fitnessCourant);(*nbPas)++;
+		break;
+	      }
+	      
+    }
+  }
+  
+  void imprimerArbre(Element *elt){
+    switch(elt->Value){
+      case food_ahead : {
+	printf("IF_FOOD-");
+	imprimerArbre(elt->filsG);
+	imprimerArbre(elt->filsD);
+	break;
+      }		
+      case progn2 : {
+	printf("PROGN2-");
+	imprimerArbre(elt->filsG);
+	imprimerArbre(elt->filsD);
+	break;
+      }
+      case progn3 : {printf("PROGN3-");
+      imprimerArbre(elt->filsG);
+      imprimerArbre(elt->filsC);
+      imprimerArbre(elt->filsD);
+      break;
+      }
+      case LEFT : {printf("LEFT-");
+      break;
+      }
+      case RIGHT : {printf("RIGHT-");
+      
+      break;
+      }
+      case MOVE : {printf("MOVE-");
+      break;
+      }
+    }
+  }
+  void imprimerArbreDansFichier(Element *elt, FILE *fichier){
+    switch(elt->Value){
+      case food_ahead : {
+	fprintf(fichier,"IF_FOOD-");
+	imprimerArbreDansFichier(elt->filsG, fichier);
+	imprimerArbreDansFichier(elt->filsD, fichier);
+	break;
+      }		
+      case progn2 : {
+	fprintf(fichier,"PROGN2-");
+	imprimerArbreDansFichier(elt->filsG, fichier);
+	imprimerArbreDansFichier(elt->filsD, fichier);
+	break;
+      }
+      case progn3 : {fprintf(fichier,"PROGN3-");
+      imprimerArbreDansFichier(elt->filsG, fichier);
+      imprimerArbreDansFichier(elt->filsC, fichier);
+      imprimerArbreDansFichier(elt->filsD, fichier);
+      break;
+      }
+      case LEFT : {fprintf(fichier,"LEFT-");
+      break;
+      }
+      case RIGHT : {fprintf(fichier,"RIGHT-");
+      
+      break;
+      }
+      case MOVE : {fprintf(fichier,"MOVE-");
+      break;
+      }
+    }
+  }
+  \end
+  
+  \Before everything else function:
+  if ((argc>1)&&(!strcmp(argv[1],"size"))) SIZE=atoi(argv[2]);
+  \end
+  
+  \User classes:
+  Element     { 
+    int Value;
+    int numero;
+    int profondeur;
+    Element *filsG;
+    Element *filsC;
+    Element *filsD; 
+  }
+ 
+  GenomeClass { 
+    Element *arbre; 
+    int Size;
+    int nbPas;
+    int ligneCourante;
+    int colCourante;
+    int orientationCourante ;
+    int fitnessCourant;
+    int seqlen;
+  }
+  \end
+  
+  \After everything else function:
+  /**
+  *Version utilisée pour les lancement en sequence pour les stats.
+ * Attention : penser à décommenter dans la fonction evaluerMove
+  
+  FILE *fichier;
+	fichier = fopen("sortie.txt","a");
+	fprintf(fichier,"Individu idéal non trouvé \n");
+	fclose(fichier);
+	exit(0);
+ */
+ 
+ /**Version de la fonction de finalisation pour visualiser l'arbre vainqueur
+  *C'est ce qu'il faut utiliser pour generer le fichier pour le viewer java.
+  * Attention : penser à commenter dans la fonction evaluerMove
+   */
+  imprimerArbre(bBest->arbre);
+  printf("\nfitness = %d\n",pPopulation[0]->getFitness());
+  FILE *fichier;
+  fichier = fopen("sortieEasea.txt","w");
+  imprimerArbreDansFichier(pPopulation[0]->arbre, fichier);
+  fclose(fichier);
+ 
+  \end
+  
+  \GenomeClass::initialiser:
+  SIZE = 0;
+  //Creation de l'arbre.
+  Element *pElt = genererNoeud(0,profondeurMax);
+  Genome.arbre= pElt;
+  Genome.Size=SIZE;
+  SIZE=0;
+  \end
+  
+  
+  \GenomeClass::crossover:
+  
+  int locusC = random(0,child1.Size-1);
+  int locusP2 = random(0,parent2.Size-1);
+  
+  Element * elt1=chercheNoeud(child1.arbre,locusC);
+  Element * eltParent2=chercheNoeud(parent2.arbre,locusP2);
+  
+  Element *elt11 = copierSousArbreRec(eltParent2, elt1->profondeur,profondeurMax1);
+  
+  remplace(child1.arbre,elt11,locusC);
+  regenSize(child1.arbre);
+  child1.Size=SIZE;
+  
+  \end
+  
+  \GenomeClass::mutator:
+  int nbMut=0;
+  int i=0;
+  Element *racine = Genome.arbre;
+  int nbMutATest = Genome.Size;
+  
+  for(i=1;i<nbMutATest;i++){
+    double d = random(0.0,1.0);
+    if(d<pMutPerGene){
+     Element *elt=chercheNoeud(racine,i);
+      if(elt==NULL){
+	return 0;
+      }
+      double rnd = random(0.0,1.0);
+      switch(elt->Value){
+	case food_ahead : {
+	  if(rnd<0.5)
+	    elt->Value = progn2;
+	  else{
+	    int profondeurMaxVoulue = random(elt->profondeur,profondeurMax1);
+	    elt->Value = progn3;
+	    elt->filsC = genererNoeud(elt->profondeur,profondeurMaxVoulue);
+	  }
+	  break;
+	}		
+	case progn2 : {
+	  if(rnd<0.5)
+	    elt->Value = food_ahead;
+	  else{
+	    int profondeurMaxVoulue = random(elt->profondeur,profondeurMax1);
+	    elt->Value = progn3;
+	    elt->filsC = genererNoeud(elt->profondeur,profondeurMaxVoulue);
+	  }
+	  break;
+	}
+	case progn3 : {
+	if(rnd<0.5)
+	    elt->Value = food_ahead;
+	  else{
+	    elt->Value = progn2;
+	elt->filsC = NULL;
+	  }
+	break;
+	}
+	case LEFT : {
+	 if(rnd<0.5)
+	    elt->Value = MOVE;
+	  else
+	    elt->Value = RIGHT;
+	break;
+	}
+	case RIGHT : {
+	 if(rnd<0.5)
+	    elt->Value = MOVE;
+	  else
+	    elt->Value = LEFT;
+	
+	break;
+	}
+	case MOVE : {
+	  if(rnd<0.5)
+	    elt->Value = LEFT;
+	  else
+	    elt->Value = RIGHT;
+	break;
+	}
+      }
+	regenSize(racine);
+	Genome.Size = SIZE;
+	nbMut++;
+      }
+    } 
+   
+  return nbMut;
+  \end
+    
+    \GenomeClass::evaluator:
+    initCarte();
+    nbEvalTotal++;
+    fitnessCourant=89;
+    nbPas=0;
+    ligneCourante=0;
+    colCourante=0;
+    orientationCourante = est;
+    Element *elt = Genome.arbre;
+    while(nbPas<nbPasMax && fitnessCourant>0)
+    evaluerNoeud(elt,&orientationCourante, &ligneCourante, &colCourante, &fitnessCourant, &nbPas);
+   
+    return fitnessCourant;
+    \end
+    
+    \GenomeClass::display:
+    
+    \end
+    \Default run parameters:
+    
+    // Variation operators:
+    Mutation probability: 1.0
+    Crossover probability: 1.0
+    
+    // Evolution Engine:
+    Evaluator goal: minimize
+    Number of generations: 100
+    Population size: 100
+    Elite: 4
+    Selection operator: Tournament 7
+    Offspring size: 50%
+    Reduce parents operator: Tournament 4 
+    Surviving parents: 50
+    Reduce offspring operator: Tournament 2
+    Surviving offspring: 96
+    Final reduce operator: Tournament 2
+    Elitism: Weak
+    
+    \end
+    
