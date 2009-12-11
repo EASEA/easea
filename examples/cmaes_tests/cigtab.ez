@@ -1,0 +1,125 @@
+*_________________________________________________________
+
+Test functions
+__________________________________________________________*/
+
+\User declarations :
+#define SIZE 22
+#define X_MIN -1.
+#define X_MAX 1.
+#define ITER 50      
+#define Abs(x) ((x) < 0 ? -(x) : (x))
+#define MAX(x,y) ((x)>(y)?(x):(y))
+#define MIN(x,y) ((x)<(y)?(x):(y))
+#define SIGMA  1.                     /*  mutation parameter */
+#define PI 3.141592654
+
+ 
+float pMutPerGene=0.1;
+
+
+
+\end
+
+\User functions:
+//fitness function
+#include <math.h>
+
+static double SQR(double d)
+{
+  return (d*d);
+}
+
+double rosenbrock( double const *x)
+/*
+	Rosenbrock's Function, generalized.
+*/
+{
+  double qualitaet;
+  int i;
+  int DIM = SIZE;
+	qualitaet = 0.0;
+
+	for( i = DIM-2; i >= 0; --i)
+	  qualitaet += 100.*SQR(SQR(x[i])-x[i+1]) + SQR(1.-x[i]);
+	return ( qualitaet);
+} /* f_rosenbrock() */
+
+double cigtab(double *x)
+{
+  int i;
+  double sum = 0.;
+
+  sum = x[0]*x[0] + 1e8*x[SIZE-1]*x[SIZE-1];
+  for (i = 1; i < SIZE-1; ++i)
+    sum += 1e4*x[i]*x[i];
+  return sum;
+}
+\end
+
+\GenomeClass::display:
+	for(int i=0; i<SIZE; i++){
+		cout << Genome.x[i] << "|";
+	}
+\end
+
+\Before everything else function:
+\end
+
+\After everything else function:
+\end
+
+\At the beginning of each generation function:
+\end
+
+\At the end of each generation function:
+\end
+
+\At each generation before reduce function:
+\end
+
+\User classes :
+GenomeClass { 
+  double x[SIZE];
+}
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser : // "initializer" is also accepted
+\end
+
+\GenomeClass::crossover :
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+  int NbMut=0;
+return NbMut;
+\end
+
+\GenomeClass::evaluator : // Returns the score
+  float Score= 0.0;
+  Score= cigtab(Genome.x);
+  //Score= rosenbrock(Genome.x);         
+  return Score;
+\end
+
+\User Makefile options: 
+CXXFLAGS+=
+LIBS+=
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 100     // NB_GEN
+  Time limit: 0			// In seconds, 0 to deactive
+  Population size : 7     // POP_SIZE
+  Offspring size : 13
+  Final reduce operator:Deterministic //Deterministic, Tournament, Random, Roulette(only Maximise)
+  Elitism: Strong                       //Weak or Strong
+  Elite: 5
+  Print stats:1                         //Default: 1
+  Print stats to file:0
+  Plot stats:0                          //Default: 0
+\end
+	
