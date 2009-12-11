@@ -14,7 +14,7 @@
 //#define true 1;
 //#define false 0;
 class CIndividual;
-
+class CRandomGenerator;
 extern CIndividual** pPopulation;
 extern CIndividual* bBest;
 extern float* pEZ_MUT_PROB;

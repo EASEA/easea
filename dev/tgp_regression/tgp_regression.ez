@@ -14,20 +14,20 @@ __________________________________________________________*/
 
 
 // number of input variables
-#define VAR_LEN 4 
+#define VAR_LEN 1
 
 // Here, some well known parameters for GP.
 #define MAX_ARITY 2          // maximum arrity for GP nodes
 #define NB_TREES 1           // number of co-evolved trees
-#define TREE_DEPTH_MIN 5     // minimum size of (initial) trees (included)
-#define TREE_DEPTH_MAX 6     // maximum size of (initial) trees (excluded)
-#define GROW_FULL_RATIO 0    // ratio between grow and full construction method
+#define TREE_DEPTH_MIN 4     // minimum size of (initial) trees (included)
+#define TREE_DEPTH_MAX 5     // maximum size of (initial) trees (excluded)
+#define GROW_FULL_RATIO 0.5  // ratio between grow and full construction method
 #define DIV_ERR_VALUE 1      // Returned value, in case of non defined input value
-#define MAX_XOVER_DEPTH 15
-#define MAX_MUTAT_DEPTH 15
+#define MAX_XOVER_DEPTH 4
+#define MAX_MUTAT_DEPTH 4
 
 float** inputs;
-float* outputs;
+float** outputs;
 int fitnessCasesSetLength;
 
 /** For the sake of simplicity, constant operators become first in the function set
@@ -46,10 +46,10 @@ int opArrity[] =          { 0     , 0   , 0   , 0   , 0   , 2     , 2     , 2   
 int constLen = 5;
 int totalLen = OPCODE_SIZE;
 #else
-enum OPCODE               { OP_ERC, OP_W, OP_X, OP_Y, OP_Z, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OPCODE_SIZE };
-const string opCodeName[]={ "erc" , "w" , "x" , "y" , "z" , "*"   , "+"   , "-"   , "/"   };
-int opArrity[] =          { 0     , 0   , 0   , 0   , 0   , 2     , 2     , 2     , 2     };
-int constLen = 5;
+enum OPCODE               { OP_ERC, OP_W, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OPCODE_SIZE };
+const string opCodeName[]={ "erc" , "w" , "*"   , "+"   , "-"   , "/"   };
+int opArrity[] =          { 0     ,  0   , 2     , 2     , 2     , 2    };
+int constLen = 2;
 int totalLen = OPCODE_SIZE;
 #endif
 \end
@@ -63,7 +63,7 @@ int totalLen = OPCODE_SIZE;
     x[m,1], x[m,2], ..., x[m,n], f(x[m])
 
     This function allocates inputs and outputs wrt the size written in the file*/
-int load_data(float*** inputs, float** outputs, string filename){
+int load_data(float*** inputs, float*** outputs, string filename){
   int i;
   FILE* file = fopen(filename.c_str(),"r");
   int loaded_size;
@@ -79,7 +79,7 @@ int load_data(float*** inputs, float** outputs, string filename){
   assert(match==1);
 
   (*inputs) = (float**)malloc(sizeof(**inputs)*loaded_size);
-  (*outputs) = (float*)malloc(sizeof(**outputs)*loaded_size);
+  (*outputs) = (float**)malloc(sizeof(**outputs)*loaded_size);
   
   for( i=0 ; i<loaded_size ; i++){
     (*inputs)[i] = (float*)malloc(sizeof(**inputs)*VAR_LEN);
@@ -87,8 +87,11 @@ int load_data(float*** inputs, float** outputs, string filename){
       match = fscanf(file,"%f,",((*inputs)[i])+variable);
       assert(match==1);
     }
-    match = fscanf(file,"%f\n",(*outputs)+i);
-    assert(match==1);
+    (*outputs)[i] = (float*)malloc(sizeof(**outputs)*NB_TREES);
+    for( int output_vals = 0 ; output_vals<NB_TREES ; output_vals++ ){
+      match = fscanf(file,"%f,\n",(*outputs)[i]+output_vals);
+      assert(match==1);
+    }
   }
   fclose(file);
   return loaded_size;
@@ -98,6 +101,8 @@ void free_data(){
 
   for( int i=0 ; i<fitnessCasesSetLength ;i++ )
     free( inputs[i] );
+  for( int i=0 ; i<NB_TREES ; i++ )
+    free( outputs[i] );
   free( inputs );
   free( outputs );
 }
@@ -143,7 +148,7 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
     node->children[i] = NULL;
 
   if( node->opCode==OP_ERC ){
-    node->erc_value = random(0,1);
+    node->erc_value = random(0.,1.);
   }
 
   return node;
@@ -193,7 +198,8 @@ void toDotFile(GPNode* root, const char* baseFileName, int treeId){
   }
 
   fprintf(outputFile,"digraph trees {\n");
-  toDotFile_r( root, outputFile);
+  if(root)
+    toDotFile_r( root, outputFile);
   fprintf(outputFile,"}\n");
   fclose(outputFile);
 }
@@ -241,7 +247,7 @@ double recEvale(GPNode* root, float* inputs){
 #ifdef OP_SIN
     case OP_SIN: return sin(a);
 #endif
-#ifdef OP_COS:
+#ifdef OP_COS
     case OP_COS: return cos(a);
 #endif
 #ifdef OP_EXP
@@ -256,9 +262,14 @@ double recEvale(GPNode* root, float* inputs){
     switch( root->opCode ){
     case OP_ERC: return root->erc_value;
     case OP_W: return inputs[0];
+#ifdef OP_X
     case OP_X: return inputs[1];
+#endif
+#ifdef OP_Y
     case OP_Y: return inputs[2];
+#ifdefOP_Z
     case OP_Z: return inputs[3];
+#endif
     default:
       fprintf(stderr,"unknown terminal opcode %d\n",root->opCode);
       exit(-1);
@@ -287,16 +298,29 @@ int collectNodesDepth(const int goalDepth, GPNode** collection, int collected, i
 }
 
 
+/**
+   Pick a node in a tree. It first pick a depth and then, it pick a 
+   node amongst nodes at this depth. It returns the parent node,
+   and by pointer, the childId of the choosen child.
+
+   @arg root : the root node of the tree, amongt which we have to choose the node
+   @arg chilId : pointer to an allocated int, children position of the choosen node will be stored here
+   @arg depth : pointer to an allocated int, will contain the choosen depth.
+
+   @return : return the address of the parent of the choosen node. Return null if the root node has been choosen
+ */
 GPNode* selectNode( GPNode* root, int* childId, int* depth){
   
   int xoverDepth = random(0,depthOfTree(root));
   (*depth) = xoverDepth;
-
-  GPNode** dNodes = new GPNode*[1<<(xoverDepth-1)];
+  
+  GPNode** dNodes;
   int collected;
 
-  if(xoverDepth!=0)
+  if(xoverDepth!=0){
+    dNodes = new GPNode*[1<<(xoverDepth-1)];
     collected = collectNodesDepth(xoverDepth-1,dNodes,0,0,root);
+  }
   else{
     return NULL;
   }
@@ -316,9 +340,10 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
     else i+=dNodes[parentIndexP++]->currentArity;
   
   *childId = reminderP;
-  cout << "d of x : " << xoverDepth << "/" << depthOfTree(root)<< " n : "<< xoverP << endl;
-  delete dNodes;
-  return dNodes[parentIndexP];
+  //cout << "d of x : " << xoverDepth << "/" << depthOfTree(root)<< " n : "<< xoverP << endl;
+  GPNode* ret = dNodes[parentIndexP];
+  delete[] dNodes;
+  return ret;
 }
 \end
 
@@ -326,9 +351,14 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
 
 \Before everything else function:
 {
+  // load data from csv file.
   cout<<"Before everything else function called "<<endl;
-  fitnessCasesSetLength = load_data(&inputs,&outputs,"data.csv");
+  fitnessCasesSetLength = load_data(&inputs,&outputs,"quadra_reg_data.csv");
   cout << "number of point in fitness cases set : " << fitnessCasesSetLength << endl;
+
+  // Adding another stopping, as we are minimizing, the goal is 0 
+  CGoalCriterion* gc = new CGoalCriterion(0,true);
+  EA->stoppingCriteria.push_back(gc);
 }
 \end
 
@@ -339,8 +369,13 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
     std::ostringstream oss;
     oss << "out/indiv-" << i << "-trees" ;
     toDotFile( ((IndividualImpl*)population->parents[i])->root[0],oss.str().c_str(),0);
-    //toDotFile( ((IndividualImpl*)population->parents[i])->root,oss.str().c_str(),1);
   }
+
+  // not sure that the population is not sorted now. So lets do another time (or check in the code;))
+  // and dump the best individual in a graphviz file.
+  population->sortParentPopulation();
+  toDotFile( ((IndividualImpl*)population->parents[0])->root[0], "best-of-run",0);
+
   free_data();
 }
 \end
@@ -355,6 +390,10 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
 
 \At each generation before reduce function:
   //cout << "At each generation before replacement function called" << endl;
+\end
+
+\Instead evaluation function:
+  cout << "yopyop" << endl;
 \end
 
 \User classes :
@@ -392,12 +431,10 @@ GenomeClass {
   if( GROW_FULL_RATIO==0 ) full=true;
   else full = (id%seg)/(int)(seg*GROW_FULL_RATIO);
 
-  cout << seg << " " <<  currentDepth << " " << full ;
+  //cout << seg << " " <<  currentDepth << " " << full ;
   for( int i=0 ; i<NB_TREES ; i++ ){
     Genome.root[i] = construction_method( constLen, totalLen , 1, currentDepth ,full);
-    cout << " " << depthOfTree(Genome.root[i]);
   }
-  cout << endl;
 }
 \end
 
@@ -409,160 +446,160 @@ GenomeClass {
      It selects depths of cross, then selects which nodes
      will be exchanged at those depths.
    */
+
+  for( int tree=0 ; tree<NB_TREES ; tree++ ){
+    int depthOfStock, depthOfGraft;
+    GPNode** d1Nodes = NULL, ** d2Nodes = NULL;
+    int reminderP1, reminderP2;
+    int parentIndexP1, parentIndexP2;
+
+    bool graftIsRoot = false;
+    bool stockIsRoot = false;
+
+    do{
+      int depthP1 = depthOfTree(parent1.root[tree]);
+      int depthP2 = depthOfTree(parent2.root[tree]);
+    
+      int xoverD1 = random(0,depthP1);
+      int xoverD2 = random(0,depthP2);
+      
+      int maxNode1 = 1<<(depthP1-1);
+      int maxNode2 = 1<<(depthP2-1);
+
+      if( d1Nodes ) delete[] d1Nodes;
+      if( d2Nodes ) delete[] d2Nodes;
+    
+      d1Nodes = new GPNode*[maxNode1];
+      d2Nodes = new GPNode*[maxNode2];
+
+      graftIsRoot = false;
+      stockIsRoot = false;
+    
+      int collected1 = 0;
+      int collected2 = 0;
+      if( xoverD1!=0 )
+	collected1 = collectNodesDepth(xoverD1-1,d1Nodes,0,0,child1.root[tree]);
+      else
+	stockIsRoot = true;
+    
+    
+      if( xoverD2!=0 )
+	collected2 = collectNodesDepth(xoverD2-1,d2Nodes,0,0,parent2.root[tree]);
+      else
+	graftIsRoot = true;
+    
+      int stockPointCountP1=0;
+      for( int i=0 ; i<collected1 ; i++ )
+	stockPointCountP1+=d1Nodes[i]->currentArity;
+    
+      int stockPointCountP2=0;
+      for( int i=0 ; i<collected2 ; i++ )
+	stockPointCountP2+=d2Nodes[i]->currentArity;
+    
+    
+      int xoverP1 = random(0,stockPointCountP1);
+      int xoverP2 = random(0,stockPointCountP2);    
+    
+      reminderP1    = 0; reminderP2    = 0;
+      parentIndexP1 = 0; parentIndexP2 = 0;
+      if( !stockIsRoot )
+	for( int i=0 ; ; ) 
+	  if( (i+(d1Nodes[parentIndexP1]->currentArity))>xoverP1 ){
+	    reminderP1 = xoverP1-i;
+	    break;
+	  }
+	  else i+=d1Nodes[parentIndexP1++]->currentArity;
+
+      if( !graftIsRoot )
+	for( int i=0 ; ; ) 
+	  if( (i+(d2Nodes[parentIndexP2]->currentArity))>xoverP2 ){
+	    reminderP2 = xoverP2-i;
+	    break;
+	  }
+	  else i+=d2Nodes[parentIndexP2++]->currentArity;
+    
+      depthOfStock = xoverD1;
+      if( !graftIsRoot )
+	depthOfGraft = depthOfTree(d2Nodes[parentIndexP2]->children[reminderP2]);
+      else 
+	depthOfGraft = depthOfTree(parent2.root[tree]);
+    }
+    while(depthOfStock+depthOfGraft>MAX_XOVER_DEPTH);
+    
+    GPNode** stockPointPtr = NULL;
+    GPNode* graftPointPtr = NULL;
+
+#if 1
+      toDotFile(parent1.root[0],"out/xover/p1-o",tree);
+      toDotFile(parent2.root[0],"out/xover/p2-o",tree);
+#endif
+
   
-  int depthOfStock, depthOfGraft;
-  GPNode** d1Nodes = NULL, ** d2Nodes = NULL;
-  int reminderP1, reminderP2;
-  int parentIndexP1, parentIndexP2;
-
-  do{
-    int depthP1 = depthOfTree(parent1.root[0]);
-    int depthP2 = depthOfTree(parent2.root[0]);
-    
-    int xoverD1 = random(0,depthP1);
-    int xoverD2 = random(0,depthP2);
-    
-    int maxNode1 = 1<<(depthP1-1);
-    int maxNode2 = 1<<(depthP2-1);
-    
-    if( d1Nodes ) free( d1Nodes );
-    if( d2Nodes ) free( d2Nodes );
-    d1Nodes = new GPNode*[maxNode1];
-    d2Nodes = new GPNode*[maxNode2];
-    
-    int collected1 = 0;
-    int collected2 = 0;
-    if(xoverD1!=0)
-      collected1 = collectNodesDepth(xoverD1-1,d1Nodes,0,0,child1.root[0]);
+    if( !stockIsRoot ){
+      delete d1Nodes[parentIndexP1]->children[reminderP1];
+      d1Nodes[parentIndexP1]->children[reminderP1] = NULL;
+      stockPointPtr = &d1Nodes[parentIndexP1]->children[reminderP1];
+    }
     else{
-      d1Nodes[0]=child1.root[0];
-      collected1=1;
+      delete child1.root[tree];
+      child1.root[tree] = NULL;
+      stockPointPtr = &child1.root[tree];
     }
-    
-    if( xoverD2!=0)
-      collected2 = collectNodesDepth(xoverD2-1,d2Nodes,0,0,parent2.root[0]);
-    else{
-      d2Nodes[0]=parent2.root[0];
-      collected2=1;
+
+#if 1
+      toDotFile(child1.root[tree],"out/xover/p1",tree);
+#endif
+
+    if( !graftIsRoot ){
+      graftPointPtr = d2Nodes[parentIndexP2]->children[reminderP2];
+      d2Nodes[parentIndexP2]->children[reminderP2] = NULL;
     }
-    
-#if 0
-    cout << "dp1 : " << depthP1 << " xovd1 : " << xoverD1  << " maxnodeCount1 : " << maxNode1 << " collected1 : "<< collected1  << endl;
-    cout << "dp2 : " << depthP2 << " xovd2 : " << xoverD2  << " maxnodeCount2 : " << maxNode2 << " collected2 : "<< collected2  << endl;
-    
-    for( int i=0 ; i<collected1 ; i++ )
-      printf("%s | ",opCodeName[(int)d1Nodes[i]->opCode].c_str());
-    printf("\n");
-    
-    for( int i=0 ; i<collected2 ; i++ )
-      printf("%s | ",opCodeName[(int)d2Nodes[i]->opCode].c_str());
-    printf("\n");
+    else {
+      graftPointPtr = parent2.root[tree];
+      parent2.root[tree] = NULL;
+    }
+
+#if 1
+      toDotFile(graftPointPtr,"out/xover/graft",tree);
+#endif
+
+    (*stockPointPtr) = graftPointPtr;
+
+#if 1
+      toDotFile(child1.root[tree],"out/xover/c",tree);
 #endif
     
-    int stockPointCountP1=0;
-    for( int i=0 ; i<collected1 ; i++ ){
-      stockPointCountP1+=d1Nodes[i]->currentArity;
-    }
-    
-    int stockPointCountP2=0;
-    for( int i=0 ; i<collected2 ; i++ ){
-      stockPointCountP2+=d2Nodes[i]->currentArity;
-    }
-    
-#if 0  
-    cout << "stock point count parent 1 : " << stockPointCountP1 << endl;
-    cout << "stock point count parent 2 : " << stockPointCountP2 << endl;
-#endif
-    
-    int xoverP1 = random(0,stockPointCountP1);
-    int xoverP2 = random(0,stockPointCountP2);
-    
-    
-    reminderP1    = 0; reminderP2    = 0;
-    parentIndexP1 = 0; parentIndexP2 = 0;
-
-    for( int i=0 ; ; ) 
-      if( (i+d1Nodes[parentIndexP1]->currentArity)>xoverP1 ){
-	reminderP1 = xoverP1-i;
-	break;
-      }
-      else i+=d1Nodes[parentIndexP1++]->currentArity;
-
-    for( int i=0 ; ; ) 
-      if( (i+d2Nodes[parentIndexP2]->currentArity)>xoverP2 ){
-	reminderP2 = xoverP2-i;
-	break;
-      }
-      else i+=d2Nodes[parentIndexP2++]->currentArity;
-    
-#if 0
-    cout << "r : " << reminderP1 << " parentIndex : " << parentIndexP1 << " xoverPt1 : " << xoverP1<<endl;
-    cout << "r : " << reminderP2 << " parentIndex : " << parentIndexP2 << " xoverPt2 : " << xoverP2<<endl;
-    cout << "xoverPt2 : " << xoverP2 << endl;
-    
-    
-    toDotFile( parent1.root[0],"out/xover/p1-o",0);
-    toDotFile( parent2.root[0],"out/xover/p2-o",0);
-#endif
-    
-    depthOfStock = xoverD1;
-    depthOfGraft = depthOfTree(d2Nodes[parentIndexP2]->children[reminderP2]);
-
-    //cout << "depth of resulting tree comp : " << depthOfGraft+depthOfStock;
+    delete[] d1Nodes;
+    delete[] d2Nodes;
   }
-  while(depthOfStock+depthOfGraft>MAX_XOVER_DEPTH);
-
-  delete d1Nodes[parentIndexP1]->children[reminderP1];
-  d1Nodes[parentIndexP1]->children[reminderP1] = NULL;
-    
-#if 0
-    toDotFile( child1.root[0],"out/xover/p1",0);
-#endif
-    
-    d1Nodes[parentIndexP1]->children[reminderP1] = d2Nodes[parentIndexP2]->children[reminderP2];
-
-#if 0
-    toDotFile(d2Nodes[parentIndexP2]->children[reminderP2],"out/xover/graft",0);
-#endif
-
-  d2Nodes[parentIndexP2]->children[reminderP2] = NULL;
-#if 0
-  toDotFile( parent2.root[0],"out/xover/p2",0);
-
-  toDotFile(d1Nodes[parentIndexP1]->children[reminderP1],"out/xover/stock",0);
-  toDotFile( child1.root[0],"out/xover/c",0);
-#endif
-
-  //cout << " real : " << depthOfTree(child1.root[0]) << endl;
-  assert( depthOfStock+depthOfGraft<=depthOfTree(child1.root[0]));
-
   child1.valid=false;
-  delete[] d1Nodes;
-  delete[] d2Nodes;
 }
 \end
 
 \GenomeClass::mutator : // Must return the number of mutations
 {
-  int mutationPointChildId = 0;
-  int mutationPointDepth = 0;
-  GPNode* mutationPointParent = selectNode(Genome.root[0], &mutationPointChildId, &mutationPointDepth);
 
-  //mutationPointParent = Genome.root[0];
-  if( mutationPointParent ){
-
+  // Cassical  mutation
+  // select a node
+  for( int tree=0 ; tree<NB_TREES ; tree++ ){
+    int mutationPointChildId = 0;
+    int mutationPointDepth = 0;
+    toDotFile( Genome.root[tree], "out/mutation/p", tree);
+    GPNode* mutationPointParent = selectNode(Genome.root[tree], &mutationPointChildId, &mutationPointDepth);
     
-    cout << "mutation output" << endl; 
-    toDotFile( mutationPointParent->children[mutationPointChildId], "out/mutation/mp", 0);
-    toDotFile( Genome.root[0], "out/mutation/p", 0);
-    free( mutationPointParent->children[mutationPointChildId] );
+    
+    if( !mutationPointParent ){
+      mutationPointParent = Genome.root[tree];
+      mutationPointDepth = 0;
+    }
+    toDotFile( Genome.root[tree], "out/mutation/p", tree);
+    delete mutationPointParent->children[mutationPointChildId] ;
     mutationPointParent->children[mutationPointChildId] = NULL;
     mutationPointParent->children[mutationPointChildId] = 
       construction_method( constLen, totalLen , 1, MAX_MUTAT_DEPTH-mutationPointDepth ,0);
-    toDotFile( Genome.root[0], "out/mutation/f", 0);
-    
+    toDotFile( Genome.root[tree], "out/mutation/f", tree);
   }
-  return 0;
+  return NB_TREES;
 }
 \end
 
@@ -574,12 +611,15 @@ GenomeClass {
      the standardized fitness.
    */
   double fitness = 0.;
-  for( int i=0 ; i<fitnessCasesSetLength ; i++ ){
-    double evolvedValue = recEvale(Genome.root[0],inputs[i]);
-    //cout << evolvedValue << ":" << outputs[i] << " ";
-    fitness += fabs(evolvedValue-outputs[i]);
-  }
-  //cout << "->" << fitness <<endl;
+  double fFit [NB_TREES];
+  for( int tree=0 ; tree<NB_TREES ; tree++ ){
+    fFit[tree] = 0.;
+    for( int i=0 ; i<fitnessCasesSetLength ; i++ ){
+      double evolvedValue = recEvale(Genome.root[tree],inputs[i]);
+      fFit[tree] += fabs(evolvedValue-outputs[i][tree]);
+    }
+    fitness += fFit[tree];
+  } 
   Genome.valid = true;
   Genome.fitness = fitness;
   return fitness;
@@ -593,12 +633,12 @@ CPPFLAGS+=
 \Default run parameters :         // Please let the parameters appear in this order
   Number of generations : 1       // NB_GEN
   Time limit: 0 		  // In seconds, 0 to deactivate
-  Population size : 10		  //POP_SIZE
-  Offspring size : 1           // 40% 
-  Mutation probability : 1        // MUT_PROB
-  Crossover probability : 1       // XOVER_PROB
+  Population size : 200	          //POP_SIZE
+  Offspring size : 200            // 40% 
+  Mutation probability : 0.1        // MUT_PROB
+  Crossover probability : 0.9       // XOVER_PROB
   Evaluator goal : minimise       // Maximise
-  Selection operator: Tournament 2.0
+  Selection operator: Tournament 7
   Surviving parents: 100%//percentage or absolute  
   Surviving offspring: 100%
   Reduce parents operator: Tournament 2
@@ -614,3 +654,5 @@ CPPFLAGS+=
   Generate R script:0
   Plot stats:0				//Default: 0
 \end
+  
+  
