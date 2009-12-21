@@ -165,7 +165,7 @@ CPPFLAGS+=
 
   Print stats:1                         //Default: 1
   Plot stats:0                          //Default: 0
-  Generate cvs stats file:0
+  Generate csv stats file:0
   Generate gnuplot script:0
   Generate R script:0
 

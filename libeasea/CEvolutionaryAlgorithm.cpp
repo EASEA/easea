@@ -292,7 +292,12 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
  
 #endif
 
+#ifdef WIN32
   params->timeCriterion->setElapsedTime(duration);
+#else
+  params->timeCriterion->setElapsedTime(res.tv_sec);
+#endif
+
 }
 
 void CEvolutionaryAlgorithm::outputGraph(){

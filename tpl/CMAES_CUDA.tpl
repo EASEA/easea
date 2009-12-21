@@ -2,6 +2,7 @@
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #pragma comment(lib, "libEasea.lib")
+#pragma comment(lib, "Winmm.lib")
 #endif
 /**
  This is program entry for CMAES_CUDA template for EASEA
@@ -28,6 +29,7 @@ float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
 size_t *EZ_NB_GEN;
 size_t *EZ_current_generation;
+CEvolutionaryAlgorithm *EA;
 
 CCmaesCuda *cma;
 
@@ -88,7 +90,7 @@ using namespace std;
 
 
 CRandomGenerator* globalRandomGenerator;
-
+extern CEvolutionaryAlgorithm* EA;
 #define CUDA_TPL
 
 void* d_offspringPopulationcuda;
@@ -138,7 +140,7 @@ void EASEAInit(int argc, char** argv){
 }
 
 void EASEAFinal(CPopulation* pop){
-	\INSERT_FINALIZATION_FCT_CALL
+	\INSERT_FINALIZATION_FCT_CALL;
 	delete(cma);
 }
 
@@ -230,7 +232,7 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 	IndividualImpl** tmp = (IndividualImpl**)ps;
 	IndividualImpl parent1(*this);
 	IndividualImpl parent2(*tmp[0]);
-	IndividualImpl child(*this);
+	IndividualImpl child1(*this);
 
 	////DEBUG_PRT("Xover");
 	/*   cout << "p1 : " << parent1 << endl; */
@@ -241,9 +243,9 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 	for(int i=0; i<\PROBLEM_DIM; ++i)
 		cma->rgdTmp[i] = (float)(cma->rgD[i] * cma->alea.alea_Gauss());
 
-	child.valid = false;
-	/*   cout << "child : " << child << endl; */
-	return new IndividualImpl(child);
+	child1.valid = false;
+	/*   cout << "child1 : " << child1 << endl; */
+	return new IndividualImpl(child1);
 }
 
 
@@ -411,7 +413,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
         this->elitSize = 0;
 
-        offspringReduction = parentReduction = false;
+	offspringReduction = parentReduction = false;
 
         generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
         controlCStopingCriterion = new CControlCStopingCriterion();
@@ -423,7 +425,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->randomGenerator = globalRandomGenerator;
 
         this->printStats = setVariable("printStats",\PRINT_STATS);
-        this->printStatsFile = setVariable("printStatsFile",\PRINT_STATS_FILE);
+        this->generateCVSFile = setVariable("generateCSVFile",\GENERATE_CVS_FILE);
+        this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
+        this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
         this->plotStats = setVariable("plotStats",\PLOT_STATS);
         this->printInitialPopulation = setVariable("printInitialPopulation",0);
         this->printFinalPopulation = setVariable("printFinalPopulation",0);
@@ -617,7 +621,7 @@ $(BIN):$(OBJ)
 	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -Wall
 
 easeaclean: clean
-	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj EASEA.plot EASEA.r EASEA.csv
+	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj
 clean:
 	rm -f $(OBJ) $(BIN) 	
 	
@@ -660,7 +664,7 @@ clean:
 				Name="CUDA Build Rule"
 				Include="\EZ_PATHlibEasea"
 				Keep="false"
-				Runtime="2"
+				Runtime="0"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -677,7 +681,7 @@ clean:
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;\EZ_PATHlibEasea&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -792,7 +796,8 @@ clean:
 --plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---printStatsFile=\PRINT_STATS_FILE #Print stats to File (filename: ProjetName.dat)
-
+--generateCSVFile=\GENERATE_CVS_FILE
+--generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
+--generateRScript=\GENERATE_R_SCRIPT
 
 \TEMPLATE_END
