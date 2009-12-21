@@ -26,7 +26,7 @@ Centre de Mathématiques Appliquées
   bool genomeSizeValidity=false;
   int lineCounter = 0;
 
-  // local functions
+// local functions
   char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
 
   char selectorName[50];  
@@ -75,7 +75,7 @@ Centre de Mathématiques Appliquées
 %start COPY_EO_INITIALISER 
 %start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
-%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL
+%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION
 
  // lexical analyser name and class definition
 %name CEASEALexer {
@@ -184,15 +184,6 @@ exponent  ([Ee][+-]?[0-9]+)
   bBeginGeneration = true;
   bEndGeneration = false;
   BEGIN COPY_BEG_GENERATION_FUNCTION;
- }
-
-
-<TEMPLATE_ANALYSIS>"\\INSTEAD_EVAL_FUNCTION"  {
-  //DEBUG_PRT_PRT("insert beg");
-  yyreset();
-  yyin = fpGenomeFile;
-  if (bVERBOSE) printf ("Evaluation population in a single function!!.\n");
-  BEGIN COPY_INSTEAD_EVAL;
  }
 
 
@@ -506,7 +497,7 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bVERBOSE) printf ("Inserting user functions.\n");
   yyreset();
   yyin = fpGenomeFile;                    
-  lineCounter=2;                                 // switch to .ez file and analyser
+  lineCounter=1;                                 // switch to .ez file and analyser
   BEGIN COPY_USER_FUNCTIONS;
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_EO_INITIALISER"  {        
@@ -540,13 +531,11 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_MUTATOR"  {        
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  lineCounter=1;
   BEGIN COPY_MUTATOR;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_EVALUATOR"  {        
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  lineCounter=1;
   BEGIN COPY_EVALUATOR;   
  }
 
@@ -554,7 +543,6 @@ exponent  ([Ee][+-]?[0-9]+)
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   bWithinCUDA_Evaluator = 1;
-  lineCounter=1;
   BEGIN COPY_EVALUATOR;
  }
 
@@ -972,29 +960,6 @@ if(OPERATING_SYSTEM=WINDOWS)
   }
  }
 
-<COPY_INSTEAD_EVAL>"\\Instead"[ \t\n]+"evaluation"[ \t\n]+"function:" {
-  //DEBUG_PRT_PRT("at each beg");
-  if( (TARGET==CUDA || TARGET==STD)){
-    fprintf (fpOutputFile,"{\n");
-    bFunction=1;
-    BEGIN COPY_USER_GENERATION;
-  }
- }
-
-<COPY_INSTEAD_EVAL>.|\n {}                                      
-
-<COPY_INSTEAD_EVAL><<EOF>> {
-  bBeginGenerationFunction=0; // No Generation function was found in the .ez file
-  if (bVERBOSE) printf("*** No Instead evaluation step function was found. ***\n");
-  fprintf(fpOutputFile,"\n// No Instead evaluation step function.\n");
-
-  rewind(fpGenomeFile);
-  yyin = fpTemplateFile;
-  BEGIN TEMPLATE_ANALYSIS;
-  bNotFinishedYet=1;
- }
-
-
 <COPY_BEG_GENERATION_FUNCTION><<EOF>> {
   bBeginGenerationFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No beginning generation function was found. ***\n");
@@ -1336,23 +1301,16 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_CROSSOVER>\n {lineCounter++;}
 <COPY_MUTATOR>"\\GenomeClass::mutator"[ \t\n]*":" {
   bWithinMutator=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   BEGIN COPY_USER_FUNCTION;
   return USER_MUTATOR;
  }
-<COPY_MUTATOR>. {}
-<COPY_MUTATOR>\n {lineCounter++;}
-
+<COPY_MUTATOR>.|\n {}                                      
 <COPY_EVALUATOR>"\\GenomeClass::evaluator"[ \t\n]*":" {
   BEGIN COPY_USER_FUNCTION;            
   bWithinEvaluator=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   return USER_EVALUATOR;
  }
-<COPY_EVALUATOR>. {}
-<COPY_EVALUATOR>\n {lineCounter++;}
+<COPY_EVALUATOR>.|\n {}                                      
 
 //****************************************
 //  Basic copy to .cpp file with major changes
@@ -1682,7 +1640,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <GET_PARAMETERS>"Print"[ \t\n]+"stats"[ \t\n]*":"[\t\n]* {if (bVERBOSE) printf("\tPrint Stats...\n");return PRINT_STATS;}
 <GET_PARAMETERS>"Plot"[ \t\n]+"stats"[ \t\n]*":"[\t\n]* {if (bVERBOSE) printf("\tPlot Stats with gnuplot...\n");return PLOT_STATS;}
-<GET_PARAMETERS>"Generate"[ \t\n]+"cvs"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to cvs File...\n");return GENERATE_CVS_FILE;}
+<GET_PARAMETERS>"Generate"[ \t\n]+"csv"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to cvs File...\n");return GENERATE_CVS_FILE;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"gnuplot"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate Gnuplot Script...\n");return GENERATE_GNUPLOT_SCRIPT;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"R"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate R Script...\n");return GENERATE_R_SCRIPT;}
 

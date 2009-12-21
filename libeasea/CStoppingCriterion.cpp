@@ -8,7 +8,6 @@
 #include "include/CStoppingCriterion.h"
 #include <iostream>
 #include <signal.h>
-#include "include/global.h"
 #include "include/CEvolutionaryAlgorithm.h"
 
 /* ****************************************
@@ -93,19 +92,3 @@ void signal_handler(int sig){
 }
 
 
-/* ****************************************
-   Goal stopping criterion class
-****************************************/
-CGoalCriterion::CGoalCriterion( double goal, bool minimize ){
-  this->goal = goal;
-  this->minimize = minimize;
-}
-
-bool CGoalCriterion::reached(){
-  if( minimize ){ 
-    //printf("bf : %f\n",bBest->fitness);
-    return bBest->fitness <= goal;
-  }
-  else
-    return bBest->fitness >= goal;
-}
