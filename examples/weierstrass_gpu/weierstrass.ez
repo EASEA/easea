@@ -115,6 +115,7 @@ GenomeClass {
     float alpha = (float)random(0.,1.); // barycentric crossover
      child.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
   }
+
 \end
 
 \GenomeClass::mutator : // Must return the number of mutations

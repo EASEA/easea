@@ -1786,7 +1786,7 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       strcat(sTemp,"CUDA.tpl");
     else if(TARGET_FLAVOR == CUDA_FLAVOR_CMAES )
       strcat(sTemp,"CMAES_CUDA.tpl");
-    else 
+    else
       strcat(sTemp,"CUDA_MO.tpl");
 
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
@@ -1800,6 +1800,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       strcat(sTemp,"STD.tpl");
     else if (TARGET_FLAVOR == STD_FLAVOR_CMAES)
       strcat(sTemp,"CMAES.tpl");
+    else if( TARGET_FLAVOR == CUDA_FLAVOR_GP )
+      strcat(sTemp,"CUDA_GP.tpl");
     else
       strcat(sTemp,"STD_MO.tpl");
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){

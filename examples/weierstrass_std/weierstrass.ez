@@ -118,9 +118,8 @@ GenomeClass {
   for (int i=0; i<SIZE; i++)
   {
     float alpha = (float)random(0.,1.); // barycentric crossover
-     child1.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
+     child.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
   }
-
 \end
 
 \GenomeClass::mutator : // Must return the number of mutations
@@ -167,11 +166,10 @@ CPPFLAGS+=
 
   Elitism: Strong			//Weak or Strong
   Elite: 1
-
   Print stats:1				//Default: 1
   Generate cvs stats file:0			
   Generate gnuplot script:0
-  Generate R script:1
-  Plot stats:1				//Default: 0
+  Generate R script:0
+  Plot stats:0				//Default: 0
 \end
 	
