@@ -597,7 +597,7 @@ easeaclean:
 --plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---generateCVSFile=\GENERATE_CVS_FILE
+--generateCSV=\GENERATE_CVS_FILE
 --generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 \TEMPLATE_END

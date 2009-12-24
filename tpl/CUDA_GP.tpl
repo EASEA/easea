@@ -100,7 +100,6 @@ extern CEvolutionaryAlgorithm* EA;
 \INSERT_BOUND_CHECKING
 
 void evale_pop_chunk(CIndividual** population, int popSize){
-  printf("evalPopChunk\n");
   \INSTEAD_EVAL_FUNCTION
 }
 
@@ -405,9 +404,13 @@ public:
 
 \START_CUDA_MAKEFILE_TPL
 
+NVCC=nvcc
 EASEALIB_PATH=\EZ_PATHlibeasea/#/home/kruger/Bureau/Easea/libeasea/
 
-CXXFLAGS = -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
+CXXFLAGS =  -g  -I$(EASEALIB_PATH)include
+
+\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
+
 
 OBJS = EASEA.o EASEAIndividual.o 
 
@@ -416,11 +419,11 @@ LIBS = -lboost_program_options
 TARGET =	EASEA
 
 $(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a
+	$(NVCC) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a
 
 	
-#%.o:%.cpp
-#	$(CXX) -c $(CXXFLAGS) $^
+%.o:%.cu
+	$(NVCC) -c $(CXXFLAGS) $^ $(NVCC_OPT)
 
 all:	$(TARGET)
 clean:
@@ -597,7 +600,7 @@ easeaclean:
 --plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---generateCVSFile=\GENERATE_CVS_FILE
+--generateCSV=\GENERATE_CVS_FILE
 --generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 \TEMPLATE_END

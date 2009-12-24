@@ -733,7 +733,10 @@ if(OPERATING_SYSTEM=WINDOWS)
   if( TARGET==CUDA )
     strcat(sFileName,"Individual.cu");
   else if( TARGET==STD )
-    strcat(sFileName,"Individual.cpp");
+    if( TARGET_FLAVOR==CUDA_FLAVOR_GP)
+      strcat(sFileName,"Individual.cu");
+    else
+      strcat(sFileName,"Individual.cpp");
   fpOutputFile=fopen(sFileName,"w");    
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  }
