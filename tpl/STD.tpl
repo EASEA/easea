@@ -2,6 +2,7 @@
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #pragma comment(lib, "libEasea.lib")
+#pragma comment(lib, "Winmm.lib")
 #endif
 /**
  This is program entry for STD template for EASEA
@@ -81,7 +82,7 @@ int main(int argc, char** argv){
 using namespace std;
 
 #include "EASEAIndividual.hpp"
-bool INSTEAD_EVAL_STEP = false;
+
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
@@ -98,11 +99,6 @@ extern CEvolutionaryAlgorithm* EA;
 \INSERT_FINALIZATION_FUNCTION
 
 \INSERT_BOUND_CHECKING
-
-void evale_pop_chunk(CIndividual** population, int popSize){
-  printf("evalPopChunk\n");
-  \INSTEAD_EVAL_FUNCTION
-}
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
@@ -286,7 +282,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->randomGenerator = globalRandomGenerator;
 
 	this->printStats = setVariable("printStats",\PRINT_STATS);
-	this->generateCVSFile = setVariable("generateCVSFile",\GENERATE_CVS_FILE);
+	this->generateCVSFile = setVariable("generateCSVFile",\GENERATE_CVS_FILE);
 	this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
 	this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
 	this->plotStats = setVariable("plotStats",\PLOT_STATS);
@@ -475,7 +471,7 @@ easeaclean:
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;\EZ_PATHlibEasea&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"

@@ -9,6 +9,7 @@
 #define CEVOLUTIONARYALGORITHM_H_
 #include <stdlib.h>
 #include <string>
+#include <time.h>
 #include "CEvolutionaryAlgorithm.h"
 #include "CSelectionOperator.h"
 #include "CPopulation.h"
@@ -46,7 +47,11 @@ public:
   size_t reduceParents;
   size_t reduceOffsprings;
 
+#ifdef WIN32
+  void showPopulationStats(clock_t beginTime);
+#else
   void showPopulationStats(struct timeval beginTime);
+#endif
   void generateGnuplotScript();
   void generateRScript();
 
@@ -60,10 +65,5 @@ public:
   std::string* outputfile;
   std::string* inputfile;
 };
-
-#ifdef WIN32
-int gettimeofday(struct timeval* tp, void* tzp);
-void timersub( const timeval * tvp, const timeval * uvp, timeval* vvp );
-#endif
 
 #endif /* CEVOLUTIONARYALGORITHM_H_ */

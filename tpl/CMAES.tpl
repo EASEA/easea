@@ -2,6 +2,7 @@
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #pragma comment(lib, "libEasea.lib")
+#pragma comment(lib, "Winmm.lib")
 #endif
 /**
  This is program entry for CMAES template for EASEA
@@ -28,6 +29,7 @@ float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
 size_t *EZ_NB_GEN;
 size_t *EZ_current_generation;
+CEvolutionaryAlgorithm* EA;
 
 CCmaes *cma;
 //CMA cma;
@@ -85,7 +87,7 @@ using namespace std;
 
 
 CRandomGenerator* globalRandomGenerator;
-
+extern CEvolutionaryAlgorithm* EA;
 #define STD_TPL
 
 \INSERT_USER_DECLARATIONS
@@ -280,14 +282,14 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->randomGenerator = globalRandomGenerator;
 
         this->printStats = setVariable("printStats",\PRINT_STATS);
-        this->generateCVSFile = setVariable("generateCVSFile",\GENERATE_CVS_FILE);
+        this->generateCVSFile = setVariable("generateCSVFile",\GENERATE_CVS_FILE);
         this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
         this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
         this->plotStats = setVariable("plotStats",\PLOT_STATS);
         this->printInitialPopulation = setVariable("printInitialPopulation",0);
         this->printFinalPopulation = setVariable("printFinalPopulation",0);
 
-        this->outputFilename = (char*)"EASEA";
+        this->outputFilename = (char*)"EASEA.dat";
         this->plotOutputFilename = (char*)"EASEA.png";
 }
 
@@ -477,7 +479,7 @@ easeaclean:
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;\EZ_PATHlibEasea&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -591,7 +593,7 @@ easeaclean:
 --plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---generateCVSFile=\GENERATE_CVS_FILE
+--generateCSVFile=\GENERATE_CVS_FILE
 --generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 

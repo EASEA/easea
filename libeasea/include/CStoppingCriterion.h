@@ -59,19 +59,6 @@ class CTimeCriterion : public CStoppingCriterion {
 };
 
 /* ****************************************
-   Goal stopping criterion class
-****************************************/
-class CGoalCriterion : public CStoppingCriterion {
- private:
-  double goal;
-  bool minimize;
- public:
-  virtual bool reached();
-  CGoalCriterion( double goal, bool minimize );
-};
-
-
-/* ****************************************
    ControlCStopingCriterion class
 ****************************************/
 extern void signal_handler(int sig);
