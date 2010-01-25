@@ -33,6 +33,8 @@ public:
   float pMutationPerGene;
 
   CIndividual* Best;
+  float currentAverageFitness;
+  float currentSTDEV;
 
   CIndividual** parents;
   CIndividual** offsprings;

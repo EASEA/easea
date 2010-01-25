@@ -23,15 +23,15 @@ __________________________________________________________*/
 #include <semaphore.h>
 
 #define  OPERAND 0
-int NB_FITNESS_CASES=32;
+int NB_FITNESS_CASES=51000;
+#define DRONE_FCT_ID 7
 // number of input variables
-#define VAR_LEN 1
 #define DRONE_VAR_LEN 19
 
 // Here, some well known parameters for GP.
 #define MAX_ARITY 2          // maximum arrity for GP nodes
 #define NB_TREES 1           // number of co-evolved trees
-#define TREE_DEPTH_MIN 8     // minimum size of (initial) trees (included)
+#define TREE_DEPTH_MIN 4     // minimum size of (initial) trees (included)
 #define TREE_DEPTH_MAX 9     // maximum size of (initial) trees (excluded)
 #define GROW_FULL_RATIO 0.5  // ratio between grow and full construction method
 #define DIV_ERR_VALUE 1.0      // Returned value, in case of non defined input value
@@ -39,7 +39,7 @@ int NB_FITNESS_CASES=32;
 #define MAX_MUTAT_DEPTH 17
 
 // Here, some GPGPGPU parameters
-#define MAX_PROGS_SIZE 20000000
+#define MAX_PROGS_SIZE 40000000
 
 float** inputs;
 float** outputs;
@@ -57,14 +57,15 @@ float* results   = NULL;
 float* results_k = NULL;
 
 
-
+string treeGP_to_c(const GPNode* root);
 int nbGPU = 0;
 #define GPUEVAL 128
-#define GPUMINDIV 1
+#define GPUMINDIV 4
 //#define CPUEVAL
 //#define CPUCMP
 #define MULTI_GPU
-//#define INSTRUMENTED 
+//#define INSTRUMENTED // activate instrumentation
+
 
 #ifdef INSTRUMENTED
 struct stats{
@@ -99,55 +100,32 @@ int fitnessCasesSetLength;
 */
 //#define OP 1
 #if 1
-enum OPCODE               { OP_ERC, OP_W, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OP_SIN, OP_COS, OPCODE_SIZE, OP_RETURN};
-const string opCodeName[]={ "erc" , "w" , "*"   , "+"   , "-"   , "/"   , "sin" , "cos" };
-int opArrity[] =          { 0     , 0   , 2     , 2     , 2     , 2     , 1     , 1     };
+enum OPCODE               { OP_ERC, OP_VAR, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OP_POW, OPCODE_SIZE, OP_RETURN};
+const string opCodeName[]={ "erc" , "x" , "*"   , "+"   , "-"   , "/"     , "^"   };
+int opArrity[] =          { 0     , 0     , 2     , 2     , 2     , 2     , 2     };
 int constLen = 2;
 int totalLen = OPCODE_SIZE;
 #define OP_X -1
 #define OP_Y -2
 #define OP_Z -3
+#define OP_SIN -4
+#define OP_COS -5
 #endif
 
+//#define OP 1
 #if 0
-enum OPCODE               { OP_ERC, OP_W, OP_MUL, OP_ADD, OP_SUB, OPCODE_SIZE, OP_RETURN};
-const string opCodeName[]={ "erc" , "w" , "*"   , "+"   , "-"   };
-int opArrity[] =          { 0     ,  0   , 2     , 2     , 2    };
+enum OPCODE               { OP_ERC, OP_VAR, OP_MUL, OP_ADD, OP_SUB, OP_DIV, OPCODE_SIZE, OP_RETURN};
+const string opCodeName[]={ "erc" , "x" , "*"   , "+"   , "-"   , "/"     };
+int opArrity[] =          { 0     , 0     , 2     , 2     , 2     , 2     };
 int constLen = 2;
 int totalLen = OPCODE_SIZE;
 #define OP_X -1
 #define OP_Y -2
 #define OP_Z -3
+#define OP_SIN -4
+#define OP_COS -5
+#define OP_POW -6
 #endif
-#if 0
-enum OPCODE               { OP_ERC, OP_W, OP_MUL, OP_ADD, OP_SUB,  OP_DIV, OPCODE_SIZE, OP_RETURN};
-const string opCodeName[]={ "erc" , "w" , "*"   , "+"   , "-"   ,  "/"};
-int opArrity[] =          { 0     ,  0   , 2     , 2     , 2    ,  2  };
-int constLen = 2;
-int totalLen = OPCODE_SIZE;
-#define OP_X -1
-#define OP_Y -2
-#define OP_Z -3
-#endif
-
-#if 0
-enum OPCODE               { OP_ERC, OP_W, OP_X, OP_Y, OP_Z, OP_MUL, OP_ADD, OP_SUB,  OP_DIV, OPCODE_SIZE, OP_RETURN};
-const string opCodeName[]={ "erc" , "w" , "x" , "y" , "z" ,"*"   , "+"   , "-"   ,  "/"};
-int opArrity[] =          { 0     ,  0  , 0   , 0   , 0   ,2     , 2     , 2    ,  2  };
-const int constLen = 5;
-const int totalLen = OPCODE_SIZE;
-#endif
-
-
-
-#if 0
-enum OPCODE               { OP_ERC, OP_VAR, OP_MUL, OP_ADD, OP_SUB,  OP_DIV, OPCODE_SIZE, OP_RETURN};
-const string opCodeName[]={ "erc" , "w"   , "*"   , "+"   , "-"   ,  "/"};
-int opArrity[] =          { 0     ,  0    , 2     , 2     , 2     ,  2  };
-const int constLen = 2;
-const int totalLen = OPCODE_SIZE;
-#endif
-
 
 #define OUTPUT_DATA_ID 0
 #include "tgp_regressionEval.cu"
@@ -159,7 +137,7 @@ const int totalLen = OPCODE_SIZE;
 
 struct timeval global_eval_beg, global_eval_end, global_eval_res;
 struct timeval global_eval_acc;    
-//DECLARE_TIME_ACC(global_eval);
+
 
 /* Convert a timeval to microseconds as a long */
 long misc_tv_usec_l(struct timeval *t){
@@ -185,49 +163,6 @@ void publish_mgpu_32(){
 #endif
 
 
-/** This function allows one to load .csv file for 1 input variables.T he file must start with the number
-    of fitness cases, then it has to contain every inputs values, finally outputs values for each point : 
-    x[0,1], x[0,2], ..., x[0,n], f(x[0])
-    x[1,1], x[1,2], ..., x[1,n], f(x[1])
-    ...
-    x[m,1], x[m,2], ..., x[m,n], f(x[m])
-
-    This function allocates inputs and outputs wrt the size written in the file*/
-int load_data(float*** inputs, float*** outputs, string filename){
-  int i;
-  FILE* file = fopen(filename.c_str(),"r");
-  int loaded_size;
-  int match = 0;
-  int variable;
-
-  if( !file ){
-    fprintf(stderr,"ERROR : input file (%s) cannot be opened\n",filename.c_str());
-    exit(-1);
-  }
-
-  match = fscanf(file,"%d\n",&loaded_size);
-  assert(match==1);
-
-  (*inputs) = (float**)malloc(sizeof(**inputs)*loaded_size);
-  (*outputs) = (float**)malloc(sizeof(**outputs)*loaded_size);
-  
-  for( i=0 ; i<loaded_size ; i++){
-    (*inputs)[i] = (float*)malloc(sizeof(**inputs)*VAR_LEN);
-    for( variable=0 ; variable<VAR_LEN ; variable++ ){   
-      match = fscanf(file,"%f,",((*inputs)[i])+variable);
-      assert(match==1);
-    }
-    (*outputs)[i] = (float*)malloc(sizeof(**outputs)*NB_TREES);
-    for( int output_vals = 0 ; output_vals<NB_TREES ; output_vals++ ){
-      match = fscanf(file,"%f,\n",(*outputs)[i]+output_vals);
-      assert(match==1);
-    }
-  }
-  fclose(file);
-  return loaded_size;
-}
-
-
 /**
    This function allows to load data from the Stephane output file format (mostly csv file),
    with multiple input variables and one result.
@@ -240,42 +175,6 @@ int load_data(float*** inputs, float*** outputs, string filename){
 
    @ret number of loaded fitness cases (should be equal to NB_FITNESS_CASES).
  */
-int load_drone_data(float*** inputs, float*** outputs,const string& name){
-
-  FILE* file = fopen(name.c_str(),"r");
-  if( !file ){
-    perror("Opening drone data file");
-    exit(-1);
-  }
-  int match;
-  int loaded_size = NB_FITNESS_CASES;
-  (*inputs) = (float**)malloc(sizeof(**inputs)*loaded_size);
-  (*outputs) = (float**)malloc(sizeof(**outputs)*loaded_size);
-
-  for( int i=0 ; i<loaded_size; i++){
-    (*inputs)[i] = (float*)malloc(sizeof(**inputs)*DRONE_VAR_LEN);
-    for( int variable=0 ; variable<DRONE_VAR_LEN ; variable++ ){
-      match = fscanf(file,"%f,",((*inputs)[i])+variable);
-      assert(match==1);
-    }
-    (*outputs)[i] = (float*)malloc(sizeof(**outputs)*NB_TREES);
-    float useless_input=0;
-    for( int dump_input_data=0 ; dump_input_data<OUTPUT_DATA_ID; dump_input_data++ ){
-      match = fscanf(file,"%f,\n",&useless_input);
-      assert(match==1);
-    }
-    for( int output_vals = 0 ; output_vals<NB_TREES ; output_vals++ ){
-      match = fscanf(file,"%f,\n",(*outputs)[i]+output_vals);
-      assert(match==1);
-    }
-    char dump_junk[512];
-    fgets(dump_junk,512,file);
-  }
-  fclose(file);
-  return loaded_size;
-}
-
-
 int load_drone_data(float*** data, const string& name){
   FILE* file = fopen(name.c_str(),"r");
   if( !file ){
@@ -297,44 +196,10 @@ int load_drone_data(float*** data, const string& name){
 }
 
 
-//#define POLY(x) x*x*x*x*x*x-2*x*x*x*x+x*x
-//#define POLY_NAME "sextic regression"
-#define POLY(x) cos(2*x)
-#define POLY_NAME "cos 2x regression"
-/**
-   This function generates data NB_FITNESS_CASES fitness cases,
-   from the polynome POLY(X) with X randomly picked between (-1,1)
-
-   @inputs address of the inputs array. (array will be allocated here)
-   @outputs adddress of the outputs array. (array will be allocated here)
-
-   @ret number of loaded fitness cases (should be equal to NB_FITNESS_CASES).   
- */
-int generateData(float*** inputs, float*** outputs){
-  int i=0;
-
-  (*inputs) = (float**)malloc(sizeof(**inputs)*NB_FITNESS_CASES);
-  (*outputs) = (float**)malloc(sizeof(**outputs)*NB_FITNESS_CASES);
-
-  for( i=0 ; i<NB_FITNESS_CASES ; i++ ){
-    (*inputs)[i]=(float*)malloc(sizeof(***inputs));
-    (*outputs)[i]=(float*)malloc(sizeof(***outputs));
-    float x = random(0.,(float)2*PI);
-    (*inputs)[i][0] = x;
-    (*outputs)[i][0] = POLY(x);
-  }
-
-  return NB_FITNESS_CASES;
-}
-
-
-void free_data(){
+void free_data_drone(){
   for( int i=0 ; i<fitnessCasesSetLength ;i++ )
     free( inputs[i] );
-  for( int i=0 ; i<NB_TREES ; i++ )
-    free( outputs[i] );
   free( inputs );
-  free( outputs );
 }
 
 /**
@@ -379,6 +244,8 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
   if( node->opCode==OP_ERC ){
     node->erc_value = random(0.,1.);
   }
+  else if( node->opCode==OP_VAR )
+    node->var_id = random(1,DRONE_VAR_LEN);
 
   return node;
 }
@@ -394,10 +261,12 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
 */
 void toDotFile_r(GPNode* root, FILE* outputFile){
   if( root->opCode==OP_ERC )
-    fprintf(outputFile," %ld [label=\"%s : %f\"];\n", (long int)root, opCodeName[(int)root->opCode].c_str(),
+    fprintf(outputFile," %ld [label=\"%d->%s : %f\"];\n", (long int)root, root->opCode, opCodeName[(int)root->opCode].c_str(),
 	    root->erc_value);
+  else if( root->opCode==OP_VAR )
+    fprintf(outputFile," %ld [label=\"%d->%s : %d\"];\n", (long int)root, root->opCode, opCodeName[(int)root->opCode].c_str(), root->var_id);
   else
-    fprintf(outputFile," %ld [label=\"%s\"];\n", (long int)root, opCodeName[(int)root->opCode].c_str());
+    fprintf(outputFile," %ld [label=\"%d->%s\"];\n", (long int)root, root->opCode, opCodeName[(int)root->opCode].c_str());
   
   for( int i=0 ; i<root->currentArity ; i++ ){
     if( root->children[i] ){
@@ -453,27 +322,28 @@ int depthOfTree(GPNode* root){
 /**
    Recursively evaluate tree for given inputs   
 */
-float recEvaleDrone(GPNode* root, float** data) {
+float recEvaleDrone(GPNode* root, float* data) {
   if( root->currentArity==2 ){
-    float a=recEvaleDrone(root->children[0],data);
-    float b=recEvaleDrone(root->children[1],data);
+    float op1=recEvaleDrone(root->children[0],data);
+    float op2=recEvaleDrone(root->children[1],data);
     switch( root->opCode ){
-    case OP_MUL: return a*b;
-    case OP_ADD: return a+b;
-    case OP_SUB: return a-b;
+    case OP_MUL: return op1*op2;
+    case OP_ADD: return op1+op2;
+    case OP_SUB: return op1-op2;
+    case OP_POW: return powf(op1,op2);
     case OP_DIV:
-      if( !b ) return DIV_ERR_VALUE;
-      else return a/b;
+      if( !op2 ) return DIV_ERR_VALUE;
+      else return op1/op2;
     default:
       fprintf(stderr,"unknown binary opcode %d\n",root->opCode);
       exit(-1);
     }
   }
   else if( root->currentArity==1 ){
-    float a=recEvaleDrone(root->children[0],data);
+    float op1=recEvaleDrone(root->children[0],data);
     switch( root->opCode ){
-    case OP_SIN: return sinf(a);
-    case OP_COS: return cosf(a);
+    case OP_SIN: return sinf(op1);
+    case OP_COS: return cosf(op1);
       /*     case OP_EXP: return exp(a); */
     default:
       fprintf(stderr,"unknown unary opcode %d\n",root->opCode);
@@ -483,51 +353,7 @@ float recEvaleDrone(GPNode* root, float** data) {
   else
     switch( root->opCode ){
     case OP_ERC: return root->erc_value;
-      //case OP_VAR: return inputs[0];
-    default:
-      fprintf(stderr,"unknown terminal opcode %d\n",root->opCode);
-      exit(-1);
-    }
-}
-
-
-/**
-   Recursively evaluate tree for given inputs   
-*/
-float recEvale(GPNode* root, float* inputs){
-  if( root->currentArity==2 ){
-    float a=recEvale(root->children[0],inputs);
-    float b=recEvale(root->children[1],inputs);
-    switch( root->opCode ){
-    case OP_MUL: return a*b;
-    case OP_ADD: return a+b;
-    case OP_SUB: return a-b;
-    case OP_DIV:
-      if( b==0 ) return DIV_ERR_VALUE;
-      else return a/b;
-    default:
-      fprintf(stderr,"unknown binary opcode %d\n",root->opCode);
-      exit(-1);
-    }
-  }
-  else if( root->currentArity==1 ){
-    float a=recEvale(root->children[0],inputs);
-    switch( root->opCode ){
-    case OP_SIN: return sinf(a);
-    case OP_COS: return cosf(a);
-      /*     case OP_EXP: return exp(a); */
-    default:
-      fprintf(stderr,"unknown unary opcode %d\n",root->opCode);
-      exit(-1);
-    }
-  }
-  else
-    switch( root->opCode ){
-    case OP_ERC: return root->erc_value;
-    case OP_W: return inputs[0];
-    case OP_X: return inputs[1];
-    case OP_Y: return inputs[2];
-    case OP_Z: return inputs[3];
+    case OP_VAR: return data[root->var_id];
     default:
       fprintf(stderr,"unknown terminal opcode %d\n",root->opCode);
       exit(-1);
@@ -613,8 +439,6 @@ void flattenDatas( float** inputs, int length, int width, float** flat_inputs){
   }
 }
 
-
-
 /**
    Send input and output data on the GPU memory.
    Allocate
@@ -648,16 +472,30 @@ void free_gpu(){
   cout << "GPU freed" << endl;
 }
 
+/**
+   Convert tree individual in flat, rpn representation.
+   Most of operator are just represented by their number, other namely, ERC and VAR
+   use 2 float, one for the OPCODE another for the value of the erc or the id of the variable
 
+   @ARG root : the root node of the individual to convert.
+   @ARG buf : the destination buffer, where the population will be flattened.
+   @ARG index : a pointer to a counter which point to the first available cell in the array.
+
+   @RET : return 1 if the node have been correctly flattened, 0 if the size of the buffer (MAX_PROGS_SIZE)
+   had been exceeded. 
+
+   @TODO : the error control sould not work yet. It could be a problem, but it is indeed faster in this situation.
+ */
 int flattening_tree_rpn( GPNode* root, float* buf, int* index){
   int i;
-
+  assert( (*index)+1 < MAX_PROGS_SIZE );
   for( i=0 ; i<root->currentArity ; i++ ){
     flattening_tree_rpn(root->children[i],buf,index);
   }
-  if( (*index)+2>MAX_PROGS_SIZE )return 0;
+
   buf[(*index)++] = root->opCode;
   if( root->opCode == OP_ERC ) buf[(*index)++] = root->erc_value;
+  if( root->opCode == OP_VAR ) buf[(*index)++] = root->var_id;
   return 1;
 }
 
@@ -786,13 +624,10 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
     c.root[0]  = p2.root[0];
     p2.root[0] = NULL;
   }
-
-  //toDotFile(c.root[0],"out/xover/cf",0);
 }
 
 
 void treeGP_to_cr(const GPNode* root, ostringstream& oss){
-
 
   if( root->currentArity == 2 ){
     oss << "(" ;
@@ -809,8 +644,9 @@ void treeGP_to_cr(const GPNode* root, ostringstream& oss){
   else if( root->currentArity==0 ){
     if( root->opCode==OP_ERC )
       oss << root->erc_value;
-    else 
-      oss << opCodeName[root->opCode] ;
+    else if( root->opCode == OP_VAR )
+      oss << opCodeName[root->opCode] << "[" <<root->var_id << "]";
+    else oss << opCodeName[root->opCode] ;
 
 
   }
@@ -823,15 +659,12 @@ void treeGP_to_cr(const GPNode* root, ostringstream& oss){
 
 string treeGP_to_c(const GPNode* root){
   ostringstream oss;
-  
-  treeGP_to_cr(root,oss);
-  
+  treeGP_to_cr(root,oss);  
   return oss.str();
 }
 
 
-class HitGoal : public CStoppingCriterion{
-  
+class HitGoal : public CStoppingCriterion{  
   bool reached(){
     return false;
   }
@@ -844,41 +677,27 @@ class HitGoal : public CStoppingCriterion{
  
 \Before everything else function:
 {
-global_eval_acc.tv_sec = 0.;                                 
-global_eval_acc.tv_usec = 0.;
-
+  global_eval_acc.tv_sec = 0.;                                 
+  global_eval_acc.tv_usec = 0.;
+  
 #ifdef CPUEVAL
   printf("eval on CPU\n");
 #endif
 #ifdef GPUEVAL
   printf("eval on GPU\n");
 #endif
-
+  
   NB_FITNESS_CASES = setVariable("u3",NB_FITNESS_CASES);
   cout << "nb of ordered fc : " << NB_FITNESS_CASES << endl;
  
   int maxPopSize = MAX(EA->population->parentPopulationSize,EA->population->offspringPopulationSize);
-   // load data from csv file.
-  cout<<"Before everything else function called "<<endl;
-  //fitnessCasesSetLength = load_data(&inputs,&outputs,"data_koza_sextic.csv");
-  fitnessCasesSetLength = generateData(&inputs,&outputs);
-  //fitnessCasesSetLength = load_drone_data(&inputs,&outputs,"data_drone/data_sample1-100.csv");
-  //fitnessCasesSetLength = load_drone_data(&inputs,"data_drone/data_sample1-100.csv");
+  fitnessCasesSetLength = load_drone_data(&inputs,"data/data_sample1-100.csv");
   cout << "number of point in fitness cases set : " << fitnessCasesSetLength << endl;
 
   inputs_f = NULL;
   outputs_f = NULL;
 
-  flattenDatas(inputs,fitnessCasesSetLength,VAR_LEN,&inputs_f);
-  flattenDatas(outputs,fitnessCasesSetLength,NB_TREES,&outputs_f);
-
-  /* for( int i=0 ;i<fitnessCasesSetLength ; i++ ) */
-  /*   printf("%f,",inputs[i][0]); */
-  /* printf("\n"); */
-  /* for( int i=0 ;i<fitnessCasesSetLength ; i++ ) */
-  /*   printf("%f,",outputs[i][0]); */
-  /* printf("\n"); */
-  
+  flattenDatas(inputs,fitnessCasesSetLength,DRONE_VAR_LEN,&inputs_f);
 
   indexes = new int[maxPopSize];
   hits    = new int[maxPopSize];
@@ -890,11 +709,12 @@ global_eval_acc.tv_usec = 0.;
   // Adding another stopping, as we are minimizing, the goal is 0
   /* CGoalCriterion* gc = new CGoalCriterion(0,true); */
   /* EA->stoppingCriteria.push_back(gc); */
+
   HitGoal* hg = new HitGoal();
   EA->stoppingCriteria.push_back(hg);
 
+#ifdef GPUEVAL
 #ifdef MULTI_GPU
-
   // This section implements the multi-gpu approach
   int count;
   cudaGetDeviceCount(&count);
@@ -918,17 +738,27 @@ global_eval_acc.tv_usec = 0.;
   nbGPU=1;
   // Here starts the CUDA parts
   cudaSetDevice(1); // on GTX295 ;) we want to use the second card for computation
-  initialDataToGPU(inputs_f, fitnessCasesSetLength*VAR_LEN, outputs_f, fitnessCasesSetLength*NB_TREES);
+  initialDataToGPU(inputs_f, fitnessCasesSetLength*DRONE_VAR_LEN, NULL, 0);
+#endif
 #endif
   cout << "seed is : " << EA->params->seed << endl;
+  cout <<  "function in the fs are : " << endl;
+  for( int i=0 ; i<OPCODE_SIZE ; i++ )
+    fprintf(stdout,"%s,",opCodeName[i].c_str());
+  fprintf(stdout,"\n");
+  cout << "problem is " << "Drone regression function : " << DRONE_FCT_ID << endl;
 
 #ifdef INSTRUMENTED
   ostringstream output_file_name;
-
   output_file_name << "stats/gpu_stat_file" << "-ps" << EA->params->parentPopulationSize << "-os" << EA->params->offspringPopulationSize 
 		   << "-fc" << NB_FITNESS_CASES << "-s"<< EA->params->seed <<".csv";
   // gpu statistics file
   gpu_stat_file = fopen(output_file_name.str().c_str(),"a");
+  //  gpu_stat_file = stdout;
+  if( !gpu_stat_file ){
+    perror("opening the gpu statistics file");
+    exit(-1);
+  }
   fprintf(gpu_stat_file,"seed,%ld\n",EA->params->seed);
   fprintf(gpu_stat_file,"blockDim,%d\n",GPUEVAL);
   fprintf(gpu_stat_file,"indivPerBlock,%d\n",(GPUEVAL==32?GPUMINDIV:1));
@@ -938,10 +768,9 @@ global_eval_acc.tv_usec = 0.;
   for( int i=0 ; i<OPCODE_SIZE ; i++ )
     fprintf(gpu_stat_file,"%s,",opCodeName[i].c_str());
   fprintf(gpu_stat_file,"\n");
-  
-  fprintf(gpu_stat_file,"problem name,%s\n",POLY_NAME);
-
+  fprintf(gpu_stat_file,"problem name,%s\n","Drone regression function");
   fprintf(gpu_stat_file,",,gen,");
+
 #ifdef MULTI_GPU
   for( int i=0 ; i<nbGPU ; i++ )
     fprintf(gpu_stat_file,"G%d Blezn,",i);
@@ -983,14 +812,16 @@ global_eval_acc.tv_usec = 0.;
   // delete some global arrays
   delete[] indexes; delete[] hits;
   delete[] results; delete[] progs;
-  
+
+#ifdef GPUEVAL  
 #ifdef MULTI_GPU
   freeGPU=true;
   wake_up_gpu_thread(nbGPU);
 #else
   free_gpu();
 #endif
-  free_data();
+#endif
+  free_data_drone();
 
 #ifdef INSTRUMENTED
   fclose(gpu_stat_file);
@@ -1013,6 +844,7 @@ global_eval_acc.tv_usec = 0.;
   currentStats.stdDevF = EA->currentSTDEV;
   publish_mgpu_32();
 #endif
+  fflush(stdout);
 }
 \end
 
@@ -1037,8 +869,9 @@ global_eval_acc.tv_usec = 0.;
     flattening_tree_rpn( ((IndividualImpl*)population[i])->root[0], progs, &index);
     progs[index++] = OP_RETURN;
   }
-  /* TIME_END(flat_trees); */
+
 #ifdef INSTRUMENTED
+  TIME_END(flat_trees); 
   currentStats.bLen = index;
 #endif
 
@@ -1118,88 +951,6 @@ global_eval_acc.tv_usec = 0.;
 #endif
   TIME_END(global_eval);
   TIME_ACC(global_eval);
-
-/*   fprintf(gpu_stat_file,",,%ld,",EA->getCurrentGeneration()); */
-/*   DECLARE_TIME(gpu_eval); */
-/*   TIME_ST(gpu_eval); */
-/*   DECLARE_TIME(flat_trees); */
-/*   TIME_ST(flat_trees); */
-/*   int index = 0; */
-/*   for( int i=0 ; i<popSize ; i++ ){ */
-/*     indexes[i] = index; */
-/*     flattening_tree_rpn( ((IndividualImpl*)population[i])->root[0], progs, &index); */
-/*     progs[index++] = OP_RETURN; */
-/*   } */
-/*   TIME_END(flat_trees); */
-
-/* #ifdef GPUEVAL */
-/* #ifdef MULTI_GPU */
-/*   notify_gpus(progs, indexes, index, population,popSize, nbGPU); */
-/*   TIME_END(gpu_eval); */
-/* #else */
-/*   CUDA_SAFE_CALL(cudaMemcpy( progs_k, progs, sizeof(float)*index, cudaMemcpyHostToDevice )); */
-/*   CUDA_SAFE_CALL(cudaMemcpy( indexes_k, indexes, sizeof(float)*popSize, cudaMemcpyHostToDevice )); */
-/*   // Here we will do the real GPU evaluation */
-/* #if GPUEVAL==128 */
-/*   EvaluatePostFixIndividuals_128_mgpu<<<popSize,128>>>( progs_k, index, popSize, input_k, output_k, fitnessCasesSetLength, results_k, hits_k, indexes_k,0,0); */
-/* #else */
-/*   int indivPerBlock = GPUMINDIV; */
-/*   dim3 numthreads;   */
-/*   numthreads.x = 32;  */
-/*   numthreads.y = indivPerBlock; */
-/*   fastEvaluatePostFixIndividuals_32_mgpu<<<popSize/indivPerBlock,numthreads,NUMTHREAD*sizeof(float)*2*indivPerBlock>>> */
-/*     ( progs_k, index, popSize, input_k, output_k, fitnessCasesSetLength,results_k, hits_k, indivPerBlock, indexes_k,0,0); */
-/* #endif */
-/*   cudaThreadSynchronize(); */
-/*   CUDA_SAFE_CALL(cudaMemcpy( hits, hits_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost)); */
-/*   CUDA_SAFE_CALL(cudaMemcpy( results, results_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost)); */
-/*   TIME_END(gpu_eval); */
-/* #endif */
-/*   fprintf(gpu_stat_file,"%d,",index); */
-/*   COMPUTE_TIME(flat_trees); */
-/*   COMPUTE_TIME(gpu_eval); */
-/*   fprintf(gpu_stat_file,"%ld.%06ld,",flat_trees_res.tv_sec,flat_trees_res.tv_usec); */
-/*   fprintf(gpu_stat_file,"%ld.%06ld,",gpu_eval_res.tv_sec,gpu_eval_res.tv_usec); */
-/* #endif */
-/* #ifdef CPUEVAL   */
-/*   int err=0; */
-/*   DECLARE_TIME(cpu_eval); */
-/*   TIME_ST(cpu_eval); */
-/*   for( int i=0 ; i<popSize ; i++ ){ */
-/*     population[i]->evaluate(); */
-/*     population[i]->valid = true; */
-/*     //cout << "g " << population[i]->getFitness() << " : " << results[i] << endl; */
-/* #ifdef CPUCMP */
-/*     if( fabs(results[i]-population[i]->getFitness())>population[i]->getFitness()*0.01){ */
-/*       err++; */
-/*     } */
-/* #endif */
-/*   } */
-/*   TIME_END(cpu_eval); */
-/*   COMPUTE_TIME(cpu_eval); */
-/*   fprintf(gpu_stat_file,"%ld.%06ld,",cpu_eval_res.tv_sec,cpu_eval_res.tv_usec); */
-/* #endif */
-
-
-/* #ifdef CPUEVAL  */
-/* #ifdef GPUEVAL */
-/*   double speedUp = misc_tv_usec_l(&cpu_eval_res)/misc_tv_usec_l(&gpu_eval_res); */
-/*   fprintf(gpu_stat_file,"%0.2f,%0.2f,",speedUp,(double)(popSize-err)/(double)popSize); */
-/* #endif */
-/* #endif */
-
-/*   fprintf(gpu_stat_file,"%f,%f,",EA->population->currentAverageFitness,EA->population->currentSTDEV); */
-/*   fprintf(gpu_stat_file,"\n"); */
-/*   fflush(gpu_stat_file); */
-
-/* #ifdef GPUEVAL */
-/*   for( int i=0 ; i<popSize ; i++ ){ */
-/*     population[i]->fitness = results[i]; */
-/*     ((IndividualImpl*)population[i])->hits = hits[i]; */
-/*     population[i]->valid = true; */
-/*   } */
-/* #endif */
-
 }
 \end
 
@@ -1209,6 +960,7 @@ GPNode {
   char opCode;
   int currentArity;
   double erc_value;
+  int var_id ;
 }
 
 GenomeClass {
@@ -1290,9 +1042,9 @@ GenomeClass {
   hits=0;
   for( int tree=0 ; tree<NB_TREES ; tree++ ){
     fFit[tree] = 0.;
-    for( int i=0 ; i<fitnessCasesSetLength ; i++ ){
-      float evolvedValue = recEvale(Genome.root[tree],inputs[i]);
-      float result = fabs(evolvedValue-outputs[i][tree]);
+    for( int i=0 ; i<fitnessCasesSetLength-1 ; i++ ){
+      float evolvedValue = recEvaleDrone(Genome.root[tree],inputs[i]);
+      float result = fabs(evolvedValue-inputs[i+1][DRONE_FCT_ID]);
       fFit[tree] += result;
       if (result <= HIT_LEVEL)
 	hits++;
@@ -1301,7 +1053,6 @@ GenomeClass {
   } 
   Genome.valid = true;
   Genome.fitness = fitness;
-
 
   return fitness;
 }

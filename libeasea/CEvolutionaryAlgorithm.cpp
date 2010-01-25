@@ -1,4 +1,6 @@
-
+#ifdef WIN32
+#pragma comment(lib, "WinMM.lib")
+#endif
 /*
  * CEvolutionaryAlgorithm.cpp
  *
@@ -13,8 +15,8 @@
 #endif
 #ifdef WIN32
 #include <windows.h>
-#include <time.h>
 #endif
+#include <time.h>
 #include <math.h>
 #include <string>
 #include "include/CIndividual.h"
@@ -29,6 +31,9 @@ extern CEvolutionaryAlgorithm* EA;
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
+
+extern void evale_pop_chunk(CIndividual** pop, int popSize);
+extern bool INSTEAD_EVAL_STEP;
 /**
  * @DEPRECATED the next contructor has to be used instead of this one.
  */
@@ -73,22 +78,22 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	this->reduceOffsprings = 0;
 	this->gnuplot = NULL;
 	if(params->plotStats || params->generateGnuplotScript){
-		string fichier (params->outputFilename);
+		string fichier = params->outputFilename;
 		fichier.append(".dat");
 		remove(fichier.c_str());
 	}
 	if(params->generateGnuplotScript){
-		string fichier (params->outputFilename);
+		string fichier = params->outputFilename;
 		fichier.append(".plot");
 		remove(fichier.c_str());
 	}
 	if(params->generateRScript || params->generateCVSFile){
-		string fichier (params->outputFilename);
-		fichier.append(".csv");
+		string fichier = params->outputFilename;
+		fichier.append(".cvs");
 		remove(fichier.c_str());
 	}
 	if(params->generateRScript){
-		string fichier (params->outputFilename);
+		string fichier = params->outputFilename;
 		fichier.append(".r");
 		remove(fichier.c_str());
 	}
@@ -110,19 +115,19 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   
   std::cout << "Parent's population initializing "<< std::endl;
   this->initializeParentPopulation();
-  this->population->evaluateParentPopulation();
+  if(!INSTEAD_EVAL_STEP)
+    this->population->evaluateParentPopulation();
+  else
+    evale_pop_chunk(population->parents, population->parentPopulationSize);
+
   this->population->currentEvaluationNb += this->params->parentPopulationSize;
   if(this->params->printInitialPopulation){
   	std::cout << *population << std::endl;
   }
 
-#ifdef WIN32
-   clock_t begin(clock());
-#else
+
   struct timeval begin;
   gettimeofday(&begin,NULL);
-#endif
-
 
   //Initialize elitPopulation
   if(params->elitSize)
@@ -133,9 +138,10 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     EASEABeginningGenerationFunction(this);
 
     population->produceOffspringPopulation();
-
-    population->evaluateOffspringPopulation();
-
+    if(!INSTEAD_EVAL_STEP)
+      population->evaluateOffspringPopulation();
+    else
+      evale_pop_chunk(population->offsprings, population->offspringPopulationSize);
     population->currentEvaluationNb += this->params->offspringPopulationSize;
 
     EASEAGenerationFunctionBeforeReplacement(this);
@@ -162,8 +168,10 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     population->reduceTotalPopulation(elitistPopulation);
 
-    showPopulationStats(begin);
-
+    population->sortParentPopulation();
+    if( this->params->printStats  || this->params->generateCVSFile )
+      showPopulationStats(begin);
+    bBest = population->Best;
     EASEAEndGenerationFunction(this);
 
     currentGeneration += 1;
@@ -191,15 +199,10 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 }
 
 
-
-#ifdef WIN32
-void CEvolutionaryAlgorithm::showPopulationStats(clock_t beginTime){
-#else
 void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
-#endif
-
-  float currentAverageFitness=0.0;
-  float currentSTDEV=0.0;
+  
+  currentAverageFitness=0.0;
+  currentSTDEV=0.0;
 
   //Calcul de la moyenne et de l'ecart type
   population->Best=population->parents[0];
@@ -221,61 +224,37 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   currentSTDEV/=population->parentPopulationSize;
   currentSTDEV=sqrt(currentSTDEV);
 
-
-#ifdef WIN32
-  clock_t end(clock());
-  double duration;
-  duration = (double)(end-beginTime)/CLOCKS_PER_SEC;
-#else
   struct timeval end, res;
   gettimeofday(&end,0);
   timersub(&end,&beginTime,&res);
-#endif
 
   //Affichage
   if(params->printStats){
 	  if(currentGeneration==0)
 	    printf("GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
-#ifdef WIN32
-	    printf("%lu\t%2.6f\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
-#else
 	    printf("%lu\t%ld.%06ld\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
-#endif
 	  //printf("%lu\t%ld.%06ld\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
   }
 
   if((this->params->plotStats && this->gnuplot->valid) || this->params->generateGnuplotScript){
  	FILE *f;
-	string fichier (params->outputFilename);
  	f = fopen(params->outputFilename,"a"); //ajouter .dat
 	if(f!=NULL){
 	  if(currentGeneration==0)
 		fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
-
-#ifdef WIN32
-	  fprintf(f,"%lu\t%2.6f\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
-#else
 	  fprintf(f,"%lu\t%ld.%06ld\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
-#endif
-
 	  fclose(f);
         }
   }
   if(params->generateCVSFile || params->generateRScript){ //Generation du fichier CVS;
  	FILE *f;
-	string fichier (params->outputFilename);
-	fichier.append(".csv");
- 	f = fopen(fichier.c_str(),"a"); //ajouter .csv
+	string fichier = params->outputFilename;
+	fichier.append(".cvs");
+ 	f = fopen(fichier.c_str(),"a"); //ajouter .cvs
 	if(f!=NULL){
 	  if(currentGeneration==0)
 		fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDEV\n");
-
-#ifdef WIN32
-	  fprintf(f,"%lu,%2.6f,%lu,%.15e,%.15e,%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
-#else
 	  fprintf(f,"%lu,%ld.%06ld,%lu,%.15e,%.15e,%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
-#endif
-
 	  fclose(f);
         }
   }
@@ -291,12 +270,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
  
 #endif
 
-#ifdef WIN32
-  params->timeCriterion->setElapsedTime(duration);
-#else
   params->timeCriterion->setElapsedTime(res.tv_sec);
-#endif
-
 }
 
 void CEvolutionaryAlgorithm::outputGraph(){
@@ -311,7 +285,7 @@ void CEvolutionaryAlgorithm::outputGraph(){
 
 void CEvolutionaryAlgorithm::generateGnuplotScript(){
 	FILE* f;
-	string fichier (this->params->outputFilename);
+	string fichier = this->params->outputFilename;
 	fichier.append(".plot");
 	f = fopen(fichier.c_str(),"a");
 	fprintf(f,"set term png\n");
@@ -325,12 +299,12 @@ void CEvolutionaryAlgorithm::generateGnuplotScript(){
 
 void CEvolutionaryAlgorithm::generateRScript(){
 	FILE* f;
-	string fichier (this->params->outputFilename);
+	string fichier = this->params->outputFilename;
 	fichier.append(".r");
 	f=fopen(fichier.c_str(),"a");
 	fprintf(f,"#Plotting for R\n"),
 	fprintf(f,"png(\"%s\")\n",params->plotOutputFilename);
-	fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename);
+	fprintf(f,"data <- read.table(\"./%s.cvs\",sep=\",\")\n",params->outputFilename);
 	fprintf(f,"plot(0, type = \"n\", main = \"Plot Title\", xlab = \"Number of Evaluations\", ylab = \"Fitness\", xlim = c(0,%d) )\n",population->currentEvaluationNb);
 	fprintf(f,"grid() # add grid\n");
 	fprintf(f,"lines(data[,3], data[,4], lty = 1) #draw first dataset\n");
@@ -351,3 +325,27 @@ bool CEvolutionaryAlgorithm::allCriteria(){
   }
   return false;
 }
+
+#ifdef WIN32
+int gettimeofday
+      (struct timeval* tp, void* tzp) {
+    DWORD t;
+    t = timeGetTime();
+    tp->tv_sec = t / 1000;
+    tp->tv_usec = t % 1000;
+    /* 0 indicates success. */
+    return 0;
+}
+
+void timersub( const timeval * tvp, const timeval * uvp, timeval* vvp )
+{
+    vvp->tv_sec = tvp->tv_sec - uvp->tv_sec;
+    vvp->tv_usec = tvp->tv_usec - uvp->tv_usec;
+    if( vvp->tv_usec < 0 )
+    {
+       --vvp->tv_sec;
+       vvp->tv_usec += 1000000;
+    }
+} 
+#endif
+

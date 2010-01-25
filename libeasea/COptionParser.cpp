@@ -144,8 +144,8 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 	("printFinalPopulation",po::value<int>(),"Prints the final population (default : 0)")
 	("u1",po::value<string>(),"User defined parameter 1")
 	("u2",po::value<string>(),"User defined parameter 2")
-	("u3",po::value<string>(),"User defined parameter 3")
-	("u4",po::value<string>(),"User defined parameter 4")
+	("u3",po::value<int>(),"User defined parameter 3")
+	("u4",po::value<int>(),"User defined parameter 4")
 	;
 
   try{

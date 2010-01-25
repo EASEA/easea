@@ -8,6 +8,7 @@
 #include "include/CRandomGenerator.h"
 #include "include/global.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 CRandomGenerator::CRandomGenerator(unsigned int seed){
   srand(seed);

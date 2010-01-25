@@ -59,6 +59,9 @@ public:
   Parameters* params;
 
   CGnuplot* gnuplot;
+  float currentAverageFitness;
+  float currentSTDEV;
+
 
   std::vector<CStoppingCriterion*> stoppingCriteria;
 
