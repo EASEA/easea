@@ -12,7 +12,10 @@ __________________________________________________________*/
 #include <fstream>
 #include <math.h>
 #include <pthread.h>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 
 
 #include <cutil.h>
@@ -23,10 +26,19 @@ __________________________________________________________*/
 #include <semaphore.h>
 
 #define  OPERAND 0
+<<<<<<< HEAD
 int NB_FITNESS_CASES=32;
 // number of input variables
 #define VAR_LEN 1
 #define DRONE_VAR_LEN 19
+=======
+#define NB_FITNESS_CASES 128
+
+
+// number of input variables
+#define VAR_LEN 4
+#define DRONE_VAR_LEN 4
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 
 // Here, some well known parameters for GP.
 #define MAX_ARITY 2          // maximum arrity for GP nodes
@@ -43,8 +55,15 @@ int NB_FITNESS_CASES=32;
 
 float** inputs;
 float** outputs;
+<<<<<<< HEAD
 float* inputs_f = NULL;
 float* outputs_f = NULL;
+=======
+
+float* inputs_f = NULL;
+float* outputs_f = NULL;
+
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 float* input_k;
 float* output_k;
 float* progs     = NULL;
@@ -55,6 +74,11 @@ int* hits      = NULL;
 int* hits_k    = NULL;
 float* results   = NULL;
 float* results_k = NULL;
+
+int nbGPU = 0;
+
+//#define MULTI_GPU
+FILE* gpu_stat_file = NULL;
 
 
 
@@ -115,10 +139,15 @@ const string opCodeName[]={ "erc" , "w" , "*"   , "+"   , "-"   };
 int opArrity[] =          { 0     ,  0   , 2     , 2     , 2    };
 int constLen = 2;
 int totalLen = OPCODE_SIZE;
+<<<<<<< HEAD
 #define OP_X -1
 #define OP_Y -2
 #define OP_Z -3
 #endif
+=======
+#endif
+
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 #if 0
 enum OPCODE               { OP_ERC, OP_W, OP_MUL, OP_ADD, OP_SUB,  OP_DIV, OPCODE_SIZE, OP_RETURN};
 const string opCodeName[]={ "erc" , "w" , "*"   , "+"   , "-"   ,  "/"};
@@ -130,6 +159,7 @@ int totalLen = OPCODE_SIZE;
 #define OP_Z -3
 #endif
 
+<<<<<<< HEAD
 #if 0
 enum OPCODE               { OP_ERC, OP_W, OP_X, OP_Y, OP_Z, OP_MUL, OP_ADD, OP_SUB,  OP_DIV, OPCODE_SIZE, OP_RETURN};
 const string opCodeName[]={ "erc" , "w" , "x" , "y" , "z" ,"*"   , "+"   , "-"   ,  "/"};
@@ -137,6 +167,20 @@ int opArrity[] =          { 0     ,  0  , 0   , 0   , 0   ,2     , 2     , 2    
 const int constLen = 5;
 const int totalLen = OPCODE_SIZE;
 #endif
+=======
+
+#if 1
+enum OPCODE               { OP_ERC, OP_W, OP_X, OP_Y, OP_Z, OP_MUL, OP_ADD, OP_SUB,  OP_DIV, OPCODE_SIZE, OP_RETURN};
+const string opCodeName[]={ "erc" , "w" , "x" , "y" , "z" ,"*"   , "+"   , "-"   ,  "/"};
+int opArrity[] =          { 0     ,  0  , 0   , 0   , 0   ,2     , 2     , 2    ,  2  };
+int constLen = 5;
+int totalLen = OPCODE_SIZE;
+#endif
+
+#define OUTPUT_DATA_ID 0
+
+#include "tgp_regressionEval.cu"
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 
 
 
@@ -227,6 +271,7 @@ int load_data(float*** inputs, float*** outputs, string filename){
   return loaded_size;
 }
 
+<<<<<<< HEAD
 
 /**
    This function allows to load data from the Stephane output file format (mostly csv file),
@@ -308,6 +353,62 @@ int load_drone_data(float*** data, const string& name){
    @inputs address of the inputs array. (array will be allocated here)
    @outputs adddress of the outputs array. (array will be allocated here)
 
+=======
+
+/**
+   This function allows to load data from the Stephane output file format (mostly csv file),
+   with multiple input variables and one result.
+
+   It loads DRONE_VAR_LEN input variables and the the OUTPUT_DATA_ID th output result.
+   
+   @inputs address of the inputs array. (array will be allocated here)
+   @outputs adddress of the outputs array. (array will be allocated here)
+   @name name of the input file.
+
+   @ret number of loaded fitness cases (should be equal to NB_FITNESS_CASES).
+ */
+int load_drone_data(float*** inputs, float*** outputs,const string& name){
+
+  FILE* drone_data_file = fopen(name.c_str(),"r");
+  int match;
+  int loaded_size = NB_FITNESS_CASES;
+  (*inputs) = (float**)malloc(sizeof(**inputs)*loaded_size);
+  (*outputs) = (float**)malloc(sizeof(**outputs)*loaded_size);
+
+  for( int i=0 ; i<loaded_size; i++){
+    (*inputs)[i] = (float*)malloc(sizeof(**inputs)*DRONE_VAR_LEN);
+    for( int variable=0 ; variable<DRONE_VAR_LEN ; variable++ ){
+      match = fscanf(drone_data_file,"%f,",((*inputs)[i])+variable);
+      assert(match==1);
+    }
+    (*outputs)[i] = (float*)malloc(sizeof(**outputs)*NB_TREES);
+    float useless_input=0;
+    for( int dump_input_data=0 ; dump_input_data<OUTPUT_DATA_ID; dump_input_data++ ){
+      match = fscanf(drone_data_file,"%f,\n",&useless_input);
+      assert(match==1);
+    }
+    for( int output_vals = 0 ; output_vals<NB_TREES ; output_vals++ ){
+      match = fscanf(drone_data_file,"%f,\n",(*outputs)[i]+output_vals);
+      assert(match==1);
+    }
+    char dump_junk[512];
+    fgets(dump_junk,512,drone_data_file);
+  }
+  return loaded_size;
+}
+
+
+
+
+#define POLY(x) x*x*x*x*x*x-2*x*x*x*x+x*x
+/**
+   This function generates data NB_FITNESS_CASES fitness cases,
+   from the polynome POLY(X) with X randomly picked between (-1,1)
+
+   @inputs address of the inputs array. (array will be allocated here)
+   @outputs adddress of the outputs array. (array will be allocated here)
+
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
    @ret number of loaded fitness cases (should be equal to NB_FITNESS_CASES).   
  */
 int generateData(float*** inputs, float*** outputs){
@@ -453,6 +554,7 @@ int depthOfTree(GPNode* root){
 /**
    Recursively evaluate tree for given inputs   
 */
+<<<<<<< HEAD
 float recEvaleDrone(GPNode* root, float** data) {
   if( root->currentArity==2 ){
     float a=recEvaleDrone(root->children[0],data);
@@ -494,6 +596,8 @@ float recEvaleDrone(GPNode* root, float** data) {
 /**
    Recursively evaluate tree for given inputs   
 */
+=======
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 float recEvale(GPNode* root, float* inputs){
   if( root->currentArity==2 ){
     float a=recEvale(root->children[0],inputs);
@@ -513,8 +617,13 @@ float recEvale(GPNode* root, float* inputs){
   else if( root->currentArity==1 ){
     float a=recEvale(root->children[0],inputs);
     switch( root->opCode ){
+<<<<<<< HEAD
     case OP_SIN: return sinf(a);
     case OP_COS: return cosf(a);
+=======
+      /*     case OP_SIN: return sin(a); */
+      /*     case OP_COS: return cos(a); */
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
       /*     case OP_EXP: return exp(a); */
     default:
       fprintf(stderr,"unknown unary opcode %d\n",root->opCode);
@@ -790,6 +899,38 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
   //toDotFile(c.root[0],"out/xover/cf",0);
 }
 
+<<<<<<< HEAD
+
+void treeGP_to_cr(const GPNode* root, ostringstream& oss){
+
+
+  if( root->currentArity == 2 ){
+    oss << "(" ;
+    treeGP_to_cr(root->children[0],oss);
+    oss <<  opCodeName[root->opCode] ;
+    treeGP_to_cr(root->children[1],oss);
+    oss << ")";
+  }
+  else if( root->currentArity==1 ){
+    oss << opCodeName[root->opCode] << "(";
+    treeGP_to_cr(root->children[0],oss);
+    oss << ")";
+  }
+  else if( root->currentArity==0 ){
+    if( root->opCode==OP_ERC )
+      oss << root->erc_value;
+    else 
+      oss << opCodeName[root->opCode] ;
+
+
+  }
+  else{
+    cerr << "unexpected arity " << endl;
+    exit(-1);
+  }
+}
+=======
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 
 void treeGP_to_cr(const GPNode* root, ostringstream& oss){
 
@@ -829,6 +970,16 @@ string treeGP_to_c(const GPNode* root){
   return oss.str();
 }
 
+\end
+
+string treeGP_to_c(const GPNode* root){
+  ostringstream oss;
+  
+  treeGP_to_cr(root,oss);
+  
+  return oss.str();
+}
+
 
 class HitGoal : public CStoppingCriterion{
   
@@ -837,10 +988,13 @@ class HitGoal : public CStoppingCriterion{
   }
 };
 
+<<<<<<< HEAD
 
 \end
 // end of user definition body
 
+=======
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
  
 \Before everything else function:
 {
@@ -861,9 +1015,14 @@ global_eval_acc.tv_usec = 0.;
    // load data from csv file.
   cout<<"Before everything else function called "<<endl;
   //fitnessCasesSetLength = load_data(&inputs,&outputs,"data_koza_sextic.csv");
+<<<<<<< HEAD
   fitnessCasesSetLength = generateData(&inputs,&outputs);
   //fitnessCasesSetLength = load_drone_data(&inputs,&outputs,"data_drone/data_sample1-100.csv");
   //fitnessCasesSetLength = load_drone_data(&inputs,"data_drone/data_sample1-100.csv");
+=======
+  //fitnessCasesSetLength = generateData(&inputs,&outputs);
+  fitnessCasesSetLength = load_drone_data(&inputs,&outputs,"data_drone/data_drone.csv");
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
   cout << "number of point in fitness cases set : " << fitnessCasesSetLength << endl;
 
   inputs_f = NULL;
@@ -890,6 +1049,7 @@ global_eval_acc.tv_usec = 0.;
   // Adding another stopping, as we are minimizing, the goal is 0
   /* CGoalCriterion* gc = new CGoalCriterion(0,true); */
   /* EA->stoppingCriteria.push_back(gc); */
+<<<<<<< HEAD
   HitGoal* hg = new HitGoal();
   EA->stoppingCriteria.push_back(hg);
 
@@ -908,12 +1068,35 @@ global_eval_acc.tv_usec = 0.;
   for( int i=0 ; i<count ; i++ ){
     gpuArgs[i].threadId = i;
 
+=======
+
+#ifdef MULTI_GPU
+
+  // This section implements the multi-gpu approach
+  int count;
+  cudaGetDeviceCount(&count);
+  printf("Number of devices : %d\n", count);
+
+  pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*count);
+  gpuArgs = (struct gpuArg*)malloc(sizeof(struct gpuArg)*count);
+
+  nbGPU = count;
+  // here we want to create one thread per GPU
+  for( int i=0 ; i<count ; i++ ){
+    gpuArgs[i].threadId = i;
+
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
     sem_init(&gpuArgs[i].sem_in,0,0);
     sem_init(&gpuArgs[i].sem_out,0,0);
 
     if( pthread_create(t+i,NULL,gpuThreadMain,gpuArgs+i) ) 
       perror("pthread_create : "); 
   }
+<<<<<<< HEAD
+=======
+  
+ 
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 #else
   nbGPU=1;
   // Here starts the CUDA parts
@@ -922,6 +1105,7 @@ global_eval_acc.tv_usec = 0.;
 #endif
   cout << "seed is : " << EA->params->seed << endl;
 
+<<<<<<< HEAD
 #ifdef INSTRUMENTED
   ostringstream output_file_name;
 
@@ -958,6 +1142,18 @@ global_eval_acc.tv_usec = 0.;
   fprintf(gpu_stat_file,"correct ratio,");
 #endif
   fprintf(gpu_stat_file,"bestF,bestH,avgF,stdDevF\n");
+=======
+  // gpu statistics file
+  gpu_stat_file = fopen("gpu_stat_file.csv","w");
+  fprintf(gpu_stat_file,"seed :,%ld\n",EA->params->seed);
+  fprintf(gpu_stat_file,"nbGPU :,%d\n",nbGPU);
+  fprintf(gpu_stat_file,"FitCaseLen :,%d\n",fitnessCasesSetLength);
+
+#ifdef MULTI_GPU
+  fprintf(gpu_stat_file,"gen, G1 Blen, G2 Blen, buf ratio, Ftime, cpu Etime, gpu Etime, speedup, correct ratio\n");
+#else
+  fprintf(gpu_stat_file,"gen, Ftime, cpu Etime, gpu Etime, speedup, correct ratio\n");
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 #endif
 }
 \end
@@ -991,11 +1187,15 @@ global_eval_acc.tv_usec = 0.;
   free_gpu();
 #endif
   free_data();
+<<<<<<< HEAD
 
 #ifdef INSTRUMENTED
   fclose(gpu_stat_file);
 #endif
   SHOW_TIME_ACC(global_eval);
+=======
+  fclose(gpu_stat_file);
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 }
 \end
 
@@ -1022,21 +1222,31 @@ global_eval_acc.tv_usec = 0.;
 
 \Instead evaluation function:
 {
+<<<<<<< HEAD
   TIME_ST(global_eval);
 #ifdef GPUEVAL
 #ifdef INSTRUMENTED
+=======
+  
+  fprintf(gpu_stat_file,"%ld,",EA->getCurrentGeneration());
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
   DECLARE_TIME(gpu_eval);
+
   TIME_ST(gpu_eval);
 
   DECLARE_TIME(flat_trees);
   TIME_ST(flat_trees);
+<<<<<<< HEAD
 #endif
+=======
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
   int index = 0;
   for( int i=0 ; i<popSize ; i++ ){
     indexes[i] = index;
     flattening_tree_rpn( ((IndividualImpl*)population[i])->root[0], progs, &index);
     progs[index++] = OP_RETURN;
   }
+<<<<<<< HEAD
   /* TIME_END(flat_trees); */
 #ifdef INSTRUMENTED
   currentStats.bLen = index;
@@ -1047,11 +1257,20 @@ global_eval_acc.tv_usec = 0.;
 #ifdef INSTRUMENTED
   TIME_END(gpu_eval);
 #endif
+=======
+  TIME_END(flat_trees);
+
+#ifdef MULTI_GPU
+
+  notify_gpus(progs, indexes, index, population,popSize, nbGPU);
+  TIME_END(gpu_eval);
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 #else
   CUDA_SAFE_CALL(cudaMemcpy( progs_k, progs, sizeof(float)*index, cudaMemcpyHostToDevice ));
   CUDA_SAFE_CALL(cudaMemcpy( indexes_k, indexes, sizeof(float)*popSize, cudaMemcpyHostToDevice ));
 
   // Here we will do the real GPU evaluation
+<<<<<<< HEAD
 #if 1
   EvaluatePostFixIndividuals_128_mgpu<<<popSize,128>>>( progs_k, index, popSize, input_k, output_k, fitnessCasesSetLength, results_k, hits_k, indexes_k,0,0);
 #else
@@ -1063,11 +1282,15 @@ global_eval_acc.tv_usec = 0.;
     <<<popSize/indivPerBlock,numthreads,NUMTHREAD*sizeof(float)*2*indivPerBlock>>>
     ( progs_k, index, popSize, input_k, output_k, fitnessCasesSetLength,results_k, hits_k, indivPerBlock, indexes_k,0,0);
 #endif
+=======
+  EvaluatePostFixIndividuals_128<<<popSize,128>>>( progs_k, index, popSize, input_k, output_k, fitnessCasesSetLength, results_k, hits_k, indexes_k);
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
   cudaThreadSynchronize();
 
   CUDA_SAFE_CALL(cudaMemcpy( hits, hits_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost));
   CUDA_SAFE_CALL(cudaMemcpy( results, results_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost));
 
+<<<<<<< HEAD
 #ifdef INSTRUMENTED
   TIME_END(gpu_eval);
 #endif
@@ -1075,6 +1298,17 @@ global_eval_acc.tv_usec = 0.;
 #endif //ifdef GPUEVAL
 
 #ifdef INSTRUMENTED
+=======
+  TIME_END(gpu_eval);
+
+#endif
+
+  /* for( int i=0 ; i<popSize ; i++ ){ */
+  /*   //population[i]->fitness = results[i]; */
+  /*   //population[i]->valid = true; */
+  /* } */
+  
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
   int err=0;
   DECLARE_TIME(cpu_eval);
   TIME_ST(cpu_eval);
@@ -1084,9 +1318,14 @@ global_eval_acc.tv_usec = 0.;
   for( int i=0 ; i<popSize ; i++ ){
     population[i]->evaluate();
     population[i]->valid = true;
+<<<<<<< HEAD
     //printf("%d : %f | %f\n",i,population[i]->getFitness(),results[i]);
 #ifdef CPUCMP
     if( fabs(results[i]-population[i]->getFitness())>population[i]->getFitness()*0.01){
+=======
+    //cout << "g " << population[i]->getFitness() << " : " << results[i] << endl;
+    if( fabs(results[i]-population[i]->getFitness())>population[i]->getFitness()*0.1){
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
       err++;
     }
 #endif
@@ -1096,6 +1335,7 @@ global_eval_acc.tv_usec = 0.;
 
 #ifdef INSTRUMENTED
   TIME_END(cpu_eval);
+<<<<<<< HEAD
   COMPUTE_TIME(flat_trees);
   COMPUTE_TIME(cpu_eval);
   COMPUTE_TIME(gpu_eval);
@@ -1200,6 +1440,21 @@ global_eval_acc.tv_usec = 0.;
 /*   } */
 /* #endif */
 
+=======
+
+  COMPUTE_TIME(flat_trees);
+  COMPUTE_TIME(cpu_eval);
+  COMPUTE_TIME(gpu_eval);
+
+  fprintf(gpu_stat_file,"%ld.%06ld,",flat_trees_res.tv_sec,flat_trees_res.tv_usec);
+  fprintf(gpu_stat_file,"%ld.%06ld,",cpu_eval_res.tv_sec,cpu_eval_res.tv_usec);
+  fprintf(gpu_stat_file,"%ld.%06ld,",gpu_eval_res.tv_sec,gpu_eval_res.tv_usec);
+
+  double speedUp = misc_tv_usec_l(&cpu_eval_res)/misc_tv_usec_l(&gpu_eval_res);
+
+  fprintf(gpu_stat_file,"%0.2f,%0.2f\n",speedUp,(double)(popSize-err)/(double)popSize);
+  fflush(gpu_stat_file);
+>>>>>>> 201de056936e25f50bb64f0c7af8873873c921a7
 }
 \end
 

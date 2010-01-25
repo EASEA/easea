@@ -272,8 +272,22 @@ EvaluatePostFixIndividuals_128_mgpu(const float * k_progs,
     while (codop != OP_RETURN){
       switch(codop)
 	{
-	case OP_W : stack[sp++] = currentW; break;
-	case OP_ERC: stack[sp++] = k_progs[start_prog++]; break;
+	case OP_W :
+	  stack[sp++] = currentW;
+	  break;
+	case OP_X :
+	  stack[sp++] = currentX;
+	  break;
+	case OP_Y :
+	  stack[sp++] = currentY;
+	  break;
+	case OP_Z :
+	  stack[sp++] = currentZ;
+	  break;
+	case OP_ERC:
+	  tmp =  k_progs[start_prog++];
+	  stack[sp++] = tmp;
+	  break;
 	case OP_MUL :
 	  op1 = stack[--sp]; op2 = stack[sp-1];
 	  stack[sp-1] = op1*op2; break;
@@ -326,7 +340,166 @@ EvaluatePostFixIndividuals_128_mgpu(const float * k_progs,
   // here results and hits have been stored in their respective array: we can leave
 }
 
+__global__ static void 
+EvaluatePostFixIndividuals_128_mgpu(const float * k_progs,
+				    const int maxprogssize,
+				    const int popsize,
+				    const float * k_inputs,
+				    const float * k_outputs,
+				    const int trainingSetSize,
+				    float * k_results,
+				    int *k_hits,
+				    int* k_indexes,
+				    int start_index,
+				    int gpu_id
+			       )
+{
+  __shared__ float tmpresult[NUMTHREAD2];
+  __shared__ float tmphits[NUMTHREAD2];
+  
+  const int tid = threadIdx.x; //0 to NUM_THREADS-1
+  const int bid = blockIdx.x; // 0 to NUM_BLOCKS-1
 
+  
+  int index;   // index of the prog processed by the block 
+  float sum = 0.0;
+  int hits = 0 ; // hits number
+
+  float currentW, currentX, currentY, currentZ, currentOutput;
+  float result;
+  int start_prog;
+  int codop;
+  float stack[MAX_STACK];
+  int  sp;
+  float op1, op2;
+  float tmp;
+
+  index = bid; // one program per block => block ID = program number
+ 
+  if (index >= popsize) // idle block (should never occur)
+    return;
+  if (k_progs[index] == -1.0) // already evaluated
+    return;
+
+  // Here, it's a busy thread
+
+  sum = 0.0;
+  hits = 0 ; // hits number
+  
+  // Loop on training cases, per cluster of 32 cases (= number of thread)
+  // (even if there are only 8 stream processors, we must spawn at least 32 threads) 
+  // We loop from 0 to upper bound INCLUDED in case trainingSetSize is not 
+  // a multiple of NUMTHREAD
+  for (int i=0; i < ((trainingSetSize-1)>>LOGNUMTHREAD2)+1; i++) {
+    
+    // are we on a busy thread?
+    if (i*NUMTHREAD2+tid >= trainingSetSize) // no!
+      continue;
+
+    currentW = k_inputs[(i*NUMTHREAD2*VAR_LEN)+tid*VAR_LEN+0];
+    currentX = k_inputs[(i*NUMTHREAD2*VAR_LEN)+tid*VAR_LEN+1];
+    currentY = k_inputs[(i*NUMTHREAD2*VAR_LEN)+tid*VAR_LEN+2];
+    currentZ = k_inputs[(i*NUMTHREAD2*VAR_LEN)+tid*VAR_LEN+3];
+
+    currentOutput = k_outputs[i*NUMTHREAD2+tid];
+
+    start_prog = k_indexes[index]-start_index; // index of first codop
+    codop =  k_progs[start_prog++];
+    
+    sp = 0; // stack and stack pointer
+    
+    while (codop != OP_RETURN){
+      switch(codop)
+	{
+	case OP_W :
+	  stack[sp++] = currentW;
+	  break;
+	case OP_X :
+	  stack[sp++] = currentX;
+	  break;
+	case OP_Y :
+	  stack[sp++] = currentY;
+	  break;
+	case OP_Z :
+	  stack[sp++] = currentZ;
+	  break;
+	case OP_ERC:
+	  tmp =  k_progs[start_prog++];
+	  stack[sp++] = tmp;
+	  break;
+	case OP_MUL :
+	  sp--;
+	  op1 = stack[sp];
+	  sp--;
+	  op2 = stack[sp];
+	  stack[sp] = __fmul_rz(op1, op2);
+	  stack[sp] = op1*op2;
+	  sp++;
+	  break;
+	case OP_ADD :
+	  sp--;
+	  op1 = stack[sp];
+	  sp--;
+	  op2 = stack[sp];
+	  stack[sp] = __fadd_rz(op1, op2);
+	  stack[sp] = op1+op2;
+	  sp++;
+	  break;
+	case OP_SUB :
+	  sp--;
+	  op1 = stack[sp];
+	  sp--;
+	  op2 = stack[sp];
+	  stack[sp] = op2 - op1;
+	  sp++;
+	  break;
+	case OP_DIV :
+	  sp--;
+	  op2 = stack[sp];
+	  sp--;
+	  op1 = stack[sp];
+	  if (op2 == 0.0)
+	    stack[sp] = 1.0;
+	  else
+	    stack[sp] = op1/op2;
+	  sp++;
+	  break;
+	}
+      // get next codop
+      codop =  k_progs[start_prog++];
+    } // codop interpret loop
+    
+    result = fabsf(stack[0] - currentOutput);
+    
+    if (!(result < BIG_NUMBER))
+      result = BIG_NUMBER;
+    else if (result < PROBABLY_ZERO)
+      result = 0.0;
+    
+    if (result <= HIT_LEVEL)
+      hits++;
+    
+    sum += result; // sum raw error on all training cases
+    
+  } // LOOP ON TRAINING CASES
+  
+  // gather results from all threads => we need to synchronize
+  tmpresult[tid] = sum;
+  tmphits[tid] = hits;
+  __syncthreads();
+
+  if (tid == 0) {
+    for (int i = 1; i < NUMTHREAD2; i++) {
+      tmpresult[0] += tmpresult[i];
+      tmphits[0] += tmphits[i];
+    }    
+    k_results[index] = tmpresult[0];
+    k_hits[index] = tmphits[0];
+    //printf("g %d %d %f\n",gpu_id,bid,k_results[index]);
+    //fflush(stdout);
+  }  
+  // here results and hits have been stored in their respective array: we can leave
+}
 
 void wake_up_gpu_thread(int nbGpu){
     for( int i=0 ; i<nbGPU ; i++ ){
@@ -345,10 +518,9 @@ void notify_gpus(float* progs, int* indexes, int length, CIndividual** populatio
   int pop_chunk_len = popSize / nbGpu;
   //cout << " population chunk length : " << pop_chunk_len << "/" << length << endl;
   assert(nbGpu==2);
-#ifdef INSTRUMENTED  
+
   currentStats.gpu0Blen = indexes[pop_chunk_len];
   currentStats.gpu1Blen = length-indexes[pop_chunk_len];
-#endif
   sh_pop_size = pop_chunk_len;
   sh_length = length;
   
@@ -393,7 +565,6 @@ void* gpuThreadMain(void* arg){
 
   // Wait for population to evaluate.
   while(1){
-    //printf("gpu %d is evaluating\n",localArg->threadId);
     sem_wait(&localArg->sem_in);
 
     int indiv_st = localArg->threadId*sh_pop_size;
@@ -413,23 +584,17 @@ void* gpuThreadMain(void* arg){
     CUDA_SAFE_CALL(cudaMemcpy( localArg->indexes_k, indexes+indiv_st, (indiv_end-indiv_st)*sizeof(int), cudaMemcpyHostToDevice ));
     CUDA_SAFE_CALL(cudaMemcpy( localArg->progs_k, progs+index_st, (index_end-index_st)*sizeof(int), cudaMemcpyHostToDevice ));
 
-#if 1
-    EvaluatePostFixIndividuals_128_mgpu<<<sh_pop_size,128>>>(localArg->progs_k, index_end-index_st, sh_pop_size, localArg->inputs_k, localArg->outputs_k,
-							     NB_FITNESS_CASES, localArg->results_k, localArg->hits_k, localArg->indexes_k, index_st, localArg->threadId);
-#else
-  int indivPerBlock = 4;
-  dim3 numthreads;
-  numthreads.x = 32;
-  numthreads.y = indivPerBlock;
-  
-  fastEvaluatePostFixIndividuals_32_mgpu<<<sh_pop_size/indivPerBlock,numthreads,NUMTHREAD*sizeof(float)*2*indivPerBlock>>>
-    (localArg->progs_k, index_end-index_st, sh_pop_size, localArg->inputs_k, localArg->outputs_k, NB_FITNESS_CASES, 
-     localArg->results_k, localArg->hits_k, indivPerBlock, localArg->indexes_k, index_st, localArg->threadId);
-#endif
+    EvaluatePostFixIndividuals_128_mgpu<<<sh_pop_size,128>>>(localArg->progs_k, 
+							     index_end-index_st, 
+							     sh_pop_size, 
+							     localArg->inputs_k, 
+							     localArg->outputs_k,
+							     NB_FITNESS_CASES,
+							     localArg->results_k, 
+							     localArg->hits_k, 
+							     localArg->indexes_k, index_st, localArg->threadId);
     /* cudaThreadSynchronize(); */
     CUDA_SAFE_CALL( cudaMemcpy( results+(localArg->threadId*sh_pop_size), localArg->results_k, (indiv_end-indiv_st)*sizeof(int), cudaMemcpyDeviceToHost));
-    CUDA_SAFE_CALL( cudaMemcpy( hits+(localArg->threadId*sh_pop_size), localArg->hits_k, (indiv_end-indiv_st)*sizeof(int), cudaMemcpyDeviceToHost));
-
     sem_post(&localArg->sem_out);
 
   }
@@ -446,5 +611,3 @@ void* gpuThreadMain(void* arg){
 
   return NULL;
 }
-
-
