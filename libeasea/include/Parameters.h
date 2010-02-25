@@ -50,8 +50,12 @@ public:
 	bool strongElitism;
 	unsigned int elitSize;
 
+	bool optimise;
+	int optimiseIterations;
+	bool baldwinism;
+
 	int printStats;
-	int generateCVSFile;
+	int generateCSVFile;
 	int generateGnuplotScript;
 	int generateRScript;	
 	int plotStats;

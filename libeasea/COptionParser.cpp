@@ -132,6 +132,8 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 	("reduceOffspringPressure",po::value<float>(),"Set the Offspring Reducing Pressure (default : 2.0)")	
 	("reduceFinalOperator",po::value<string>(),"Set the Final Reducing Operator (default : Tournament)")
 	("reduceFinalPressure",po::value<float>(),"Set the Final Reducing Pressure (default : 2.0)")
+	("optimiseIterations",po::value<int>(),"Set the number of optimisation iterations (default : 100)")
+	("baldwinism",po::value<int>(),"Only keep fitness (default : 0)")
 	("outputfile",po::value<string>(),"Set an output file for the final population (default : none)")
 	("inputfile",po::value<string>(),"Set an input file for the initial population (default : none)")
 	("printStats",po::value<int>(),"Print the Stats (default : 1)")

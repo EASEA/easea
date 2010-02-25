@@ -87,7 +87,7 @@ using namespace std;
 
 
 #include "EASEAIndividual.hpp"
-
+bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
@@ -134,6 +134,10 @@ void cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid
 
 \INSERT_BOUND_CHECKING
 
+void evale_pop_chunk(CIndividual** population, int popSize){
+  \INSTEAD_EVAL_FUNCTION
+}
+
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
 	cma = new CCmaesCuda(setVariable("nbOffspring",\OFF_SIZE), setVariable("popSize",\POP_SIZE), \PROBLEM_DIM);
@@ -145,7 +149,7 @@ void EASEAFinal(CPopulation* pop){
 }
 
 void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
-	if(*EZ_current_generation==0){
+	if(*EZ_current_generation==1){
 		cudaPreliminaryProcess(((PopulationImpl*)evolutionaryAlgorithm->population)->offspringPopulationSize,&dimBlockcuda, &dimGridcuda, &d_offspringPopulationcuda,&d_fitnessescuda);
 	}
 	cma->cmaes_UpdateEigensystem(0);
@@ -232,7 +236,7 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 	IndividualImpl** tmp = (IndividualImpl**)ps;
 	IndividualImpl parent1(*this);
 	IndividualImpl parent2(*tmp[0]);
-	IndividualImpl child1(*this);
+	IndividualImpl child(*this);
 
 	////DEBUG_PRT("Xover");
 	/*   cout << "p1 : " << parent1 << endl; */
@@ -243,9 +247,9 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 	for(int i=0; i<\PROBLEM_DIM; ++i)
 		cma->rgdTmp[i] = (float)(cma->rgD[i] * cma->alea.alea_Gauss());
 
-	child1.valid = false;
-	/*   cout << "child1 : " << child1 << endl; */
-	return new IndividualImpl(child1);
+	child.valid = false;
+	/*   cout << "child : " << child << endl; */
+	return new IndividualImpl(child);
 }
 
 
@@ -419,20 +423,21 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         controlCStopingCriterion = new CControlCStopingCriterion();
         timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
 
+	this->optimise = 0;
 
         seed = setVariable("seed",(int)time(0));
         globalRandomGenerator = new CRandomGenerator(seed);
         this->randomGenerator = globalRandomGenerator;
 
         this->printStats = setVariable("printStats",\PRINT_STATS);
-        this->generateCVSFile = setVariable("generateCSVFile",\GENERATE_CVS_FILE);
+        this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
         this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
         this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
         this->plotStats = setVariable("plotStats",\PLOT_STATS);
         this->printInitialPopulation = setVariable("printInitialPopulation",0);
         this->printFinalPopulation = setVariable("printFinalPopulation",0);
 
-        this->outputFilename = (char*)"EASEA.dat";
+        this->outputFilename = (char*)"EASEA";
         this->plotOutputFilename = (char*)"EASEA.png";
 }
 
@@ -621,7 +626,7 @@ $(BIN):$(OBJ)
 	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -Wall
 
 easeaclean: clean
-	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj
+	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj EASEA.plot EASEA.r EASEA.csv
 clean:
 	rm -f $(OBJ) $(BIN) 	
 	
@@ -796,7 +801,7 @@ clean:
 --plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---generateCSVFile=\GENERATE_CVS_FILE
+--generateCSVFile=\GENERATE_CSV_FILE
 --generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 

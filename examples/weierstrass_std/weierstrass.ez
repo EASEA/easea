@@ -152,8 +152,8 @@ CPPFLAGS+=
 \Default run parameters :        // Please let the parameters appear in this order
   Number of generations : 100     	// NB_GEN
   Time limit: 0 			// In seconds, 0 to deactivate
-  Population size : 3840			//POP_SIZE
-  Offspring size : 3840 // 40% 
+  Population size : 10			//POP_SIZE
+  Offspring size : 10 // 40% 
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
   Evaluator goal : minimise      // Maximise

@@ -73,7 +73,7 @@ Centre de Mathématiques Appliquées
 %start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
 %start COPY_USER_DECLARATIONS COPY_INITIALISATION_FUNCTION ANALYSE_USER_CLASSES
 %start COPY_EO_INITIALISER 
-%start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_FINALIZATION_FUNCTION
+%start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_FINALIZATION_FUNCTION COPY_OPTIMISER
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
 %start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL
 
@@ -81,7 +81,7 @@ Centre de Mathématiques Appliquées
 %name CEASEALexer {
  protected:
   CSymbolTable *pSymbolTable;   // the symbol table
-  bool bSymbolInserted,bWithinEvaluator;  // used to change evalutor type from double to float 
+  bool bSymbolInserted,bWithinEvaluator, bWithinOptimiser;  // used to change evalutor type from double to float 
   bool bInitFunction,bDisplayFunction,bFunction, bNotFinishedYet, bWithinEO_Function;
   bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
   bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationReplacementFunction;
@@ -98,7 +98,7 @@ Centre de Mathématiques Appliquées
 
 // constructor
 {                                
-  bFunction=bWithinEvaluator=bDisplayFunction=bInitFunction=bNotFinishedYet=0;
+  bFunction=bWithinEvaluator=bWithinOptimiser=bDisplayFunction=bInitFunction=bNotFinishedYet=0;
   bSymbolInserted=bDoubleQuotes=bWithinDisplayFunction=bWithinInitialiser=bWithinMutator=bWithinXover=0;
   bWaitingForSemiColon=bFinishNB_GEN=bFinishMINIMISE=bFinishMINIMIZE=bGenerationReplacementFunction=0;
   bCatchNextSemiColon,bWaitingToClosePopulation=bMethodsInGenome=0;
@@ -549,6 +549,11 @@ exponent  ([Ee][+-]?[0-9]+)
   lineCounter=1;
   BEGIN COPY_EVALUATOR;   
  }
+<TEMPLATE_ANALYSIS>"\\INSERT_OPTIMISER"  {        
+  yyreset();
+  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  BEGIN COPY_OPTIMISER;   
+ }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_CUDA_EVALUATOR"  {        
   yyreset();
@@ -711,10 +716,12 @@ if(OPERATING_SYSTEM=WINDOWS)
   case STD:
   case CUDA: fprintf(fpOutputFile,"%d",bELITISM);
   }                                 }
+<TEMPLATE_ANALYSIS>"\\NB_OPT_IT"  {fprintf(fpOutputFile,"%d",nNB_OPT_IT);}
+<TEMPLATE_ANALYSIS>"\\BALDWINISM" {fprintf(fpOutputFile,"%d",bBALDWINISM);}
 
 <TEMPLATE_ANALYSIS>"\\PRINT_STATS" {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
 <TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_CVS_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CVS_FILE);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CSV_FILE);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_GNUPLOT_SCRIPT);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_R_SCRIPT);}
 
@@ -1354,6 +1361,15 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_EVALUATOR>. {}
 <COPY_EVALUATOR>\n {lineCounter++;}
 
+<COPY_OPTIMISER>"\\GenomeClass::optimiser"[ \t\n]*":" {
+  BEGIN COPY_USER_FUNCTION;
+  bWithinOptimiser=1;
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  return USER_OPTIMISER;
+ }
+<COPY_OPTIMISER>.|\n {lineCounter++;}
+
 //****************************************
 //  Basic copy to .cpp file with major changes
 //****************************************
@@ -1549,7 +1565,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_USER_FUNCTION>"Genome"  {
 
-  if(bWithinEvaluator || bWithinMutator || bWithinDisplayFunction){ 
+  if(bWithinOptimiser || bWithinEvaluator || bWithinMutator || bWithinDisplayFunction){ 
     if( bWithinCUDA_Evaluator)
       fprintf(fpOutputFile, "(*INDIVIDUAL_ACCESS(devBuffer,id))");
     else fprintf(fpOutputFile, "(*this)");
@@ -1641,7 +1657,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>"\\end" {rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
-  bWithinInitialiser=bWithinXover=bWithinMutator=bWithinEvaluator=bWithinCUDA_Evaluator=0;
+  bWithinInitialiser=bWithinXover=bWithinMutator=bWithinEvaluator=bWithinOptimiser=bWithinCUDA_Evaluator=0;
   if (bWithinDisplayFunction){
     bWithinDisplayFunction=0; // display function
   }
@@ -1680,7 +1696,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <GET_PARAMETERS>"Print"[ \t\n]+"stats"[ \t\n]*":"[\t\n]* {if (bVERBOSE) printf("\tPrint Stats...\n");return PRINT_STATS;}
 <GET_PARAMETERS>"Plot"[ \t\n]+"stats"[ \t\n]*":"[\t\n]* {if (bVERBOSE) printf("\tPlot Stats with gnuplot...\n");return PLOT_STATS;}
-<GET_PARAMETERS>"Generate"[ \t\n]+"cvs"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to cvs File...\n");return GENERATE_CVS_FILE;}
+<GET_PARAMETERS>"Generate"[ \t\n]+"csv"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to csv File...\n");return GENERATE_CSV_FILE;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"gnuplot"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate Gnuplot Script...\n");return GENERATE_GNUPLOT_SCRIPT;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"R"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate R Script...\n");return GENERATE_R_SCRIPT;}
 
@@ -1702,6 +1718,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Final"[ \t\n]+"reduce"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tFinal Reduce Operator...\n");return RED_FINAL;}// DISCARD;}
 <GET_PARAMETERS>"Elitism"[ \t\n]*":" {if (bVERBOSE) printf ("\tElitism...\n");return ELITISM;}
 <GET_PARAMETERS>"Evaluator"[ \t\n]+"goal"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;}
+<GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"optimisation"[ \t\n]+"iterations"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Optimisation It...\n");return NB_OPT_IT;}
+<GET_PARAMETERS>"Baldwinism"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tBaldwinism...\n");return BALDWINISM;}
  
 // number
 <GET_PARAMETERS>[0-9]+"."[0-9]*{exponent}?  |
@@ -1840,6 +1858,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       strcat(sTemp,"STD.tpl");
     else if (TARGET_FLAVOR == STD_FLAVOR_CMAES)
       strcat(sTemp,"CMAES.tpl");
+    else if (TARGET_FLAVOR == STD_FLAVOR_MEMETIC )
+      strcat(sTemp,"STD_MEM.tpl");
     else
       strcat(sTemp,"STD_MO.tpl");
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){

@@ -87,9 +87,9 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		fichier.append(".plot");
 		remove(fichier.c_str());
 	}
-	if(params->generateRScript || params->generateCVSFile){
+	if(params->generateRScript || params->generateCSVFile){
 		string fichier = params->outputFilename;
-		fichier.append(".cvs");
+		fichier.append(".csv");
 		remove(fichier.c_str());
 	}
 	if(params->generateRScript){
@@ -113,6 +113,13 @@ void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   CIndividual** elitistPopulation;
   
+#ifdef WIN32
+   clock_t begin(clock());
+#else
+  struct timeval begin;
+  gettimeofday(&begin,NULL);
+#endif
+
   std::cout << "Parent's population initializing "<< std::endl;
   this->initializeParentPopulation();
   if(!INSTEAD_EVAL_STEP)
@@ -120,14 +127,17 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   else
     evale_pop_chunk(population->parents, population->parentPopulationSize);
 
+  if(this->params->optimise){
+        population->optimiseParentPopulation();
+  }
+
   this->population->currentEvaluationNb += this->params->parentPopulationSize;
   if(this->params->printInitialPopulation){
   	std::cout << *population << std::endl;
   }
 
-
-  struct timeval begin;
-  gettimeofday(&begin,NULL);
+  showPopulationStats(begin);
+  currentGeneration += 1;
 
   //Initialize elitPopulation
   if(params->elitSize)
@@ -143,6 +153,10 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     else
       evale_pop_chunk(population->offsprings, population->offspringPopulationSize);
     population->currentEvaluationNb += this->params->offspringPopulationSize;
+
+    if(this->params->optimise){
+          population->optimiseOffspringPopulation();
+    }
 
     EASEAGenerationFunctionBeforeReplacement(this);
 
@@ -169,7 +183,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     population->reduceTotalPopulation(elitistPopulation);
 
     population->sortParentPopulation();
-    if( this->params->printStats  || this->params->generateCVSFile )
+    if( this->params->printStats  || this->params->generateCSVFile )
       showPopulationStats(begin);
     bBest = population->Best;
     EASEAEndGenerationFunction(this);
@@ -246,11 +260,11 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 	  fclose(f);
         }
   }
-  if(params->generateCVSFile || params->generateRScript){ //Generation du fichier CVS;
+  if(params->generateCSVFile || params->generateRScript){ //Generation du fichier CSV;
  	FILE *f;
 	string fichier = params->outputFilename;
-	fichier.append(".cvs");
- 	f = fopen(fichier.c_str(),"a"); //ajouter .cvs
+	fichier.append(".csv");
+ 	f = fopen(fichier.c_str(),"a"); //ajouter .csv
 	if(f!=NULL){
 	  if(currentGeneration==0)
 		fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDEV\n");
@@ -304,7 +318,7 @@ void CEvolutionaryAlgorithm::generateRScript(){
 	f=fopen(fichier.c_str(),"a");
 	fprintf(f,"#Plotting for R\n"),
 	fprintf(f,"png(\"%s\")\n",params->plotOutputFilename);
-	fprintf(f,"data <- read.table(\"./%s.cvs\",sep=\",\")\n",params->outputFilename);
+	fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename);
 	fprintf(f,"plot(0, type = \"n\", main = \"Plot Title\", xlab = \"Number of Evaluations\", ylab = \"Fitness\", xlim = c(0,%d) )\n",population->currentEvaluationNb);
 	fprintf(f,"grid() # add grid\n");
 	fprintf(f,"lines(data[,3], data[,4], lty = 1) #draw first dataset\n");

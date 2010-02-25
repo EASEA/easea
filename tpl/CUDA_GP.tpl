@@ -280,6 +280,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	controlCStopingCriterion = new CControlCStopingCriterion();
 	timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
 	
+	this->optimise = 0;
 
 	seed = setVariable("seed",(int)time(0));
 	globalRandomGenerator = new CRandomGenerator(seed);

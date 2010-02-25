@@ -39,18 +39,20 @@ float fRED_OFF_PRM;//[50] = {0};
 char sRED_FINAL[50], sRED_FINAL_OPERATOR[50];
 float fRED_FINAL_PRM=0.0;//[50];
 int nMINIMISE=2;
-int nELITE;
+int nELITE=0;
 bool bELITISM=0;
 bool bVERBOSE=0;
 bool bLINE_NUM_EZ_FILE=1;
 bool bPRINT_STATS=1;
 bool bPLOT_STATS=0;
-bool bGENERATE_CVS_FILE=0, bGENERATE_R_SCRIPT=0, bGENERATE_GNUPLOT_SCRIPT=0;
+bool bGENERATE_CSV_FILE=0, bGENERATE_R_SCRIPT=0, bGENERATE_GNUPLOT_SCRIPT=0;
+bool bBALDWINISM=0;
 int nPOP_SIZE, nOFF_SIZE;
 float fSURV_PAR_SIZE=-1.0, fSURV_OFF_SIZE=-1.0;
 char *nGENOME_NAME;
 int nPROBLEM_DIM;
-int nNB_GEN;
+int nNB_GEN=0;
+int nNB_OPT_IT=0;
 int nTIME_LIMIT=0;
 float fMUT_PROB;
 float fXOVER_PROB;
@@ -94,6 +96,7 @@ class CSymbol;
 %token USER_XOVER
 %token USER_MUTATOR
 %token USER_EVALUATOR                   
+%token USER_OPTIMISER
 %token MAKEFILE_OPTION
 %token END_OF_FUNCTION                   
 //%token DELETE
@@ -111,6 +114,8 @@ class CSymbol;
 %token METHODS
 %token STATIC       
 %token NB_GEN       
+%token NB_OPT_IT //Memetic 
+%token BALDWINISM //Memetic
 %token MUT_PROB
 %token XOVER_PROB                       
 %token POP_SIZE
@@ -126,7 +131,7 @@ class CSymbol;
 %token ELITE
 %token PRINT_STATS
 %token PLOT_STATS
-%token GENERATE_CVS_FILE
+%token GENERATE_CSV_FILE
 %token GENERATE_GNUPLOT_SCRIPT
 %token GENERATE_R_SCRIPT
 %token TIME_LIMIT
@@ -446,6 +451,12 @@ StandardFunctionAnalysis
     END_OF_FUNCTION {
       if (TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"}\n");
     }
+  | USER_OPTIMISER { 
+      if (bVERBOSE) printf("Inserting user genome optimiser (taken from .ez file).\n");
+    } 
+    END_OF_FUNCTION {
+      if (TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"}\n");
+    }
    | MAKEFILE_OPTION END_OF_FUNCTION {
      //DEBUG_PRT("User makefile options have been reduced");
      }
@@ -460,6 +471,8 @@ RunParameters
 Parameter
   :  NB_GEN NUMBER2
       {nNB_GEN=(int)$2;}
+  |  NB_OPT_IT NUMBER2
+      {nNB_OPT_IT=(int)$2;}
   |  TIME_LIMIT NUMBER2
       {nTIME_LIMIT=(int)$2;}
   |  MUT_PROB NUMBER2
@@ -576,6 +589,14 @@ Parameter
          fprintf(stderr,"\n%s - Warning line %d: Elitism must be \"Strong\" or \"Weak\".\nDefault value \"Strong\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
          bELITISM=1;
        }}
+  | BALDWINISM IDENTIFIER2{
+      if (!mystricmp($2->sName,"False")) bELITISM=0;
+      else if (!mystricmp($2->sName,"True")) bELITISM=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Lamarckism must be \"True\" or \"False\".\nDefault value \"True\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bELITISM=1;
+       }}
+     
   | PRINT_STATS NUMBER2{
       if((int)$2>=1)
 	 bPRINT_STATS=1;
@@ -588,11 +609,11 @@ Parameter
       else
 	 bPLOT_STATS=0;
     }
-  | GENERATE_CVS_FILE NUMBER2{
+  | GENERATE_CSV_FILE NUMBER2{
       if((int)$2>=1)
-	 bGENERATE_CVS_FILE=1;
+	 bGENERATE_CSV_FILE=1;
       else
-	 bGENERATE_CVS_FILE=0;
+	 bGENERATE_CSV_FILE=0;
     }
   | GENERATE_GNUPLOT_SCRIPT NUMBER2{
       if((int)$2>=1)
@@ -678,11 +699,14 @@ int main(int argc, char *argv[]){
       TARGET=CUDA;
       TARGET_FLAVOR = CUDA_FLAVOR_CMAES;
     }
+    else if (!mystricmp(sTemp,"memetic"))  {
+      TARGET=STD;
+      TARGET_FLAVOR = STD_FLAVOR_MEMETIC;
+    }
 
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
     else if (!mystricmp(sTemp,"tl")){
-      printf("yopyop true line\n");
       bLINE_NUM_EZ_FILE=false;
     }
     else if (!mystricmp(sTemp,"path"))  {

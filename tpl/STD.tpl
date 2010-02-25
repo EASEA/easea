@@ -82,7 +82,7 @@ int main(int argc, char** argv){
 using namespace std;
 
 #include "EASEAIndividual.hpp"
-
+bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
@@ -99,6 +99,10 @@ extern CEvolutionaryAlgorithm* EA;
 \INSERT_FINALIZATION_FUNCTION
 
 \INSERT_BOUND_CHECKING
+
+void evale_pop_chunk(CIndividual** population, int popSize){
+  \INSTEAD_EVAL_FUNCTION
+}
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
@@ -209,9 +213,6 @@ size_t IndividualImpl::mutate( float pMutationPerGene ){
   \INSERT_MUTATOR
 }
 
-
-
-
 void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->minimizing = \MINIMAXI;
@@ -275,14 +276,15 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
 	controlCStopingCriterion = new CControlCStopingCriterion();
 	timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
-	
+
+	this->optimise = 0;
 
 	seed = setVariable("seed",(int)time(0));
 	globalRandomGenerator = new CRandomGenerator(seed);
 	this->randomGenerator = globalRandomGenerator;
 
 	this->printStats = setVariable("printStats",\PRINT_STATS);
-	this->generateCVSFile = setVariable("generateCSVFile",\GENERATE_CVS_FILE);
+	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
 	this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
 	this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
 	this->plotStats = setVariable("plotStats",\PLOT_STATS);
@@ -593,7 +595,7 @@ easeaclean:
 --plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---generateCSV=\GENERATE_CVS_FILE
+--generateCSV=\GENERATE_CSV_FILE
 --generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 \TEMPLATE_END

@@ -106,17 +106,25 @@ void CPopulation::initPopulation(CSelectionOperator* selectionOperator,
 void CPopulation::evaluatePopulation(CIndividual** population, size_t populationSize){
   for( size_t i=0 ; i < populationSize ; i++ )
     population[i]->evaluate();
-  //currentEvaluationNb += populationSize;
 }
 
+void CPopulation::optimisePopulation(CIndividual** population, size_t populationSize){
+}
 
 void CPopulation::evaluateParentPopulation(){
   evaluatePopulation(parents,parentPopulationSize);
 }
 
+void CPopulation::optimiseParentPopulation(){
+  optimisePopulation(parents,parentPopulationSize);
+}
 
 void CPopulation::evaluateOffspringPopulation(){
   evaluatePopulation(offsprings,offspringPopulationSize);
+}
+
+void CPopulation::optimiseOffspringPopulation(){
+  optimisePopulation(offsprings,offspringPopulationSize);
 }
 
 

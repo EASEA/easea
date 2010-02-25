@@ -82,7 +82,7 @@ int main(int argc, char** argv){
 using namespace std;
 
 #include "EASEAIndividual.hpp"
-
+bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
@@ -99,6 +99,10 @@ extern CEvolutionaryAlgorithm* EA;
 \INSERT_FINALIZATION_FUNCTION
 
 \INSERT_BOUND_CHECKING
+
+void evale_pop_chunk(CIndividual** population, int popSize){
+  \INSTEAD_EVAL_FUNCTION
+}
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
