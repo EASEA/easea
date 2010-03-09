@@ -448,15 +448,11 @@ StandardFunctionAnalysis
   | USER_EVALUATOR { 
       if (bVERBOSE) printf("Inserting user genome evaluator (taken from .ez file).\n");
     } 
-    END_OF_FUNCTION {
-      if (TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"}\n");
-    }
+    END_OF_FUNCTION {}
   | USER_OPTIMISER { 
       if (bVERBOSE) printf("Inserting user genome optimiser (taken from .ez file).\n");
     } 
-    END_OF_FUNCTION {
-      if (TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"}\n");
-    }
+    END_OF_FUNCTION {}
    | MAKEFILE_OPTION END_OF_FUNCTION {
      //DEBUG_PRT("User makefile options have been reduced");
      }
@@ -682,7 +678,6 @@ int main(int argc, char *argv[]){
       TARGET=STD;
       TARGET_FLAVOR = CUDA_FLAVOR_GP;
     }
-
     else if (!mystricmp(sTemp,"std"))  {
       TARGET=STD;
       TARGET_FLAVOR = STD_FLAVOR_SO;
@@ -703,7 +698,10 @@ int main(int argc, char *argv[]){
       TARGET=STD;
       TARGET_FLAVOR = STD_FLAVOR_MEMETIC;
     }
-
+    else if (!mystricmp(sTemp,"memetic_cuda"))  {
+      TARGET=CUDA;
+      TARGET_FLAVOR = CUDA_FLAVOR_MEMETIC;
+    }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
     else if (!mystricmp(sTemp,"tl")){

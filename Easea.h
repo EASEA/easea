@@ -29,6 +29,7 @@ Centre de Mathématiques Appliquées
 #define CUDA_FLAVOR_MO 1
 #define CUDA_FLAVOR_CMAES 2
 #define CUDA_FLAVOR_GP 3
+#define CUDA_FLAVOR_MEMETIC 4
 
 
 #define UNIX 1

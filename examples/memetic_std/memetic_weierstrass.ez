@@ -146,10 +146,12 @@ return NbMut;
 \end
 
 \GenomeClass::optimiser : // Optimises the Genome
-  for(int i=0; i<SIZE; i++){
+  /*for(int i=0; i<SIZE; i++){
 	if(random(0.,1.)<0.2)
 		Genome.x[i]+=0.1;	
-  }
+  }*/
+  float pas = .01;
+  Genome.x[currentIteration%SIZE]+=pas;
 \end
 
 \User Makefile options: 

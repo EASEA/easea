@@ -73,7 +73,7 @@ Centre de Mathématiques Appliquées
 %start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
 %start COPY_USER_DECLARATIONS COPY_INITIALISATION_FUNCTION ANALYSE_USER_CLASSES
 %start COPY_EO_INITIALISER 
-%start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_FINALIZATION_FUNCTION COPY_OPTIMISER
+%start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_OPTIMISER COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
 %start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL
 
@@ -398,6 +398,23 @@ exponent  ([Ee][+-]?[0-9]+)
       
   }
  }
+
+<TEMPLATE_ANALYSIS>"\\COPY_CUDA_CTOR"  {
+  CListItem<CSymbol*> *pSym;
+  if (bVERBOSE) printf ("Creating default copy constructor.\n");
+  fprintf (fpOutputFile,"// Memberwise copy\n");             
+  pGENOME->pSymbolList->reset();
+  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
+    if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fpOutputFile,"    dest->%s=src->%s;\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fpOutputFile,"       dest->%s[EASEA_Ndx]=src->%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+      }
+  }
+ }
+
 <TEMPLATE_ANALYSIS>"\\GENOME_DTOR"  {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default destructor.\n");
@@ -552,15 +569,22 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_OPTIMISER"  {        
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  lineCounter=1;
   BEGIN COPY_OPTIMISER;   
  }
-
 <TEMPLATE_ANALYSIS>"\\INSERT_CUDA_EVALUATOR"  {        
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   bWithinCUDA_Evaluator = 1;
   lineCounter=1;
   BEGIN COPY_EVALUATOR;
+ }
+<TEMPLATE_ANALYSIS>"\\INSERT_CUDA_OPTIMISOR"  {        
+  yyreset();
+  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  bWithinCUDA_Evaluator = 1;
+  lineCounter=1;
+  BEGIN COPY_OPTIMISER;
  }
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_PARAMETERS"  {        
@@ -1368,7 +1392,8 @@ if(OPERATING_SYSTEM=WINDOWS)
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   return USER_OPTIMISER;
  }
-<COPY_OPTIMISER>.|\n {lineCounter++;}
+<COPY_OPTIMISER>. {}
+<COPY_OPTIMISER>\n {lineCounter++;}
 
 //****************************************
 //  Basic copy to .cpp file with major changes
@@ -1530,7 +1555,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 // takes care of C++-like comments
 <COPY_USER_FUNCTION>\/\/[^\n]* {fprintf(fpOutputFile,yytext);}         // blah blah on a line containing sth else
 <COPY_USER_FUNCTION>^[ \t]*\/\/[^\n]*\n {fprintf(fpOutputFile,yytext);} // blah blah on its own on a single line
-<COPY_USER_FUNCTION>\/\*[^\*]*\*\/ {fprintf(fpOutputFile,yytext);}  /* blah blah on a line containing sth else */
+<COPY_USER_FUNCTION>\/\*[^\*]*\*\/\n {fprintf(fpOutputFile,yytext);printf("%s\n",yytext);}  /* blah blah on a line containing sth else */
 <COPY_USER_FUNCTION>^[ \t]*\/\*[^\*]*\*\/[ \t]*\n {fprintf(fpOutputFile,yytext);} /* blah blah with nothing before the comment */
 
 <COPY_USER_FUNCTION>"GenomeClass"  {
@@ -1555,7 +1580,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 
 <COPY_USER_FUNCTION>"initOpts."  {
-  if( (bWithinEvaluator && !bWithinCUDA_Evaluator) && ( TARGET==STD || TARGET==CUDA )){
+  if( ((bWithinEvaluator || bWithinOptimiser) && !bWithinCUDA_Evaluator) && ( TARGET==STD || TARGET==CUDA )){
     fprintf(fpOutputFile,"");
   }
   else
@@ -1844,6 +1869,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       strcat(sTemp,"CUDA.tpl");
     else if(TARGET_FLAVOR == CUDA_FLAVOR_CMAES )
       strcat(sTemp,"CMAES_CUDA.tpl");
+    else if(TARGET_FLAVOR == CUDA_FLAVOR_MEMETIC )
+      strcat(sTemp,"CUDA_MEM.tpl");
     else 
       strcat(sTemp,"CUDA_MO.tpl");
 

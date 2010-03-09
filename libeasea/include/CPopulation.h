@@ -67,13 +67,13 @@ public:
   void evaluatePopulation(CIndividual** population, size_t populationSize);
   virtual void optimisePopulation(CIndividual** population, size_t populationSize);
   virtual void evaluateParentPopulation();
-  void optimiseParentPopulation();
+  virtual void optimiseParentPopulation();
 
   void strongElitism(size_t elitismSize, CIndividual** population, size_t populationSize, CIndividual** outPopulation, size_t outPopulationSize);
   void weakElitism(size_t elitismSize, CIndividual** parentsPopulation, CIndividual** offspringPopulation, size_t* parentPopSize, size_t* offPopSize, CIndividual** outPopulation, size_t outPopulationSize);
 
   virtual void evaluateOffspringPopulation();
-  void optimiseOffspringPopulation();
+  virtual void optimiseOffspringPopulation();
   CIndividual** reducePopulations(CIndividual** population, size_t populationSize,
 			       CIndividual** reducedPopulation, size_t obSize);
   CIndividual** reduceParentPopulation(size_t obSize);
