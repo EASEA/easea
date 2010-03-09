@@ -246,7 +246,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   if(params->printStats){
 	  if(currentGeneration==0)
 	    printf("GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
-	    printf("%lu\t%ld.%06ld\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+	    printf("%d\t%ld.%06ld\t%d\t%.15e\t%.15e\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 	  //printf("%lu\t%ld.%06ld\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
   }
 
@@ -256,7 +256,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 	if(f!=NULL){
 	  if(currentGeneration==0)
 		fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
-	  fprintf(f,"%lu\t%ld.%06ld\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+	  fprintf(f,"%d\t%ld.%06ld\t%d\t%.15e\t%.15e\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 	  fclose(f);
         }
   }
@@ -268,7 +268,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 	if(f!=NULL){
 	  if(currentGeneration==0)
 		fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDEV\n");
-	  fprintf(f,"%lu,%ld.%06ld,%lu,%.15e,%.15e,%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+	  fprintf(f,"%d,%ld.%06ld,%d,%.15e,%.15e,%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 	  fclose(f);
         }
   }
