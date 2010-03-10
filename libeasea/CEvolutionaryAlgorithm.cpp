@@ -112,16 +112,17 @@ void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
 
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   CIndividual** elitistPopulation;
-  
+
 #ifdef WIN32
    clock_t begin(clock());
 #else
   struct timeval begin;
-  gettimeofday(&begin,NULL);
+  gettimeofday(&begin,0);
 #endif
 
   std::cout << "Parent's population initializing "<< std::endl;
   this->initializeParentPopulation();
+
   if(!INSTEAD_EVAL_STEP)
     this->population->evaluateParentPopulation();
   else
@@ -148,6 +149,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     EASEABeginningGenerationFunction(this);
 
     population->produceOffspringPopulation();
+
     if(!INSTEAD_EVAL_STEP)
       population->evaluateOffspringPopulation();
     else
@@ -213,7 +215,11 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 }
 
 
+#ifdef WIN32
+void CEvolutionaryAlgorithm::showPopulationStats(clock_t beginTime){
+#else
 void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
+#endif
   
   currentAverageFitness=0.0;
   currentSTDEV=0.0;
@@ -238,15 +244,25 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   currentSTDEV/=population->parentPopulationSize;
   currentSTDEV=sqrt(currentSTDEV);
 
+#ifdef WIN32
+  clock_t end(clock());
+  double duration;
+  duration = (double)(end-beginTime)/CLOCKS_PER_SEC;
+#else
   struct timeval end, res;
   gettimeofday(&end,0);
   timersub(&end,&beginTime,&res);
+#endif
 
   //Affichage
   if(params->printStats){
 	  if(currentGeneration==0)
 	    printf("GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
+#ifdef WIN32
+            printf("%lu\t%2.6f\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+#else
 	    printf("%d\t%ld.%06ld\t%d\t%.15e\t%.15e\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+#endif
 	  //printf("%lu\t%ld.%06ld\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
   }
 
@@ -256,7 +272,11 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 	if(f!=NULL){
 	  if(currentGeneration==0)
 		fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
+#ifdef WIN32
+          fprintf(f,"%lu\t%2.6f\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+#else
 	  fprintf(f,"%d\t%ld.%06ld\t%d\t%.15e\t%.15e\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+#endif
 	  fclose(f);
         }
   }
@@ -268,7 +288,11 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 	if(f!=NULL){
 	  if(currentGeneration==0)
 		fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDEV\n");
+#ifdef WIN32
+          fprintf(f,"%lu,%2.6f,%lu,%.15e,%.15e,%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+#else
 	  fprintf(f,"%d,%ld.%06ld,%d,%.15e,%.15e,%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+#endif
 	  fclose(f);
         }
   }

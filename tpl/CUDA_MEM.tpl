@@ -91,6 +91,11 @@ void* d_offspringPopulationTmpcuda;
 float* d_fitnessescuda;
 dim3 dimBlockcuda, dimGridcuda;
 
+void* allocatedDeviceBuffer;
+void* allocatedDeviceTmpBuffer;
+float* deviceFitness;
+dim3 dimBlock, dimGrid;
+
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
 
@@ -311,11 +316,11 @@ __global__ void cudaOptimisePopulation(void* d_population, void* d_populationTmp
 
 void PopulationImpl::evaluateParentPopulation(){
         float* fitnesses = new float[this->actualParentPopulationSize];
-        void* allocatedDeviceBuffer;
+        /*void* allocatedDeviceBuffer;
 	void* allocatedDeviceTmpBuffer;
-        float* deviceFitness;
+        float* deviceFitness;*/
         cudaError_t lastError;
-        dim3 dimBlock, dimGrid;
+//        dim3 dimBlock, dimGrid;
         size_t actualPopulationSize = this->actualParentPopulationSize;
 
 	// ICI il faut allouer la tailler max (entre parentPopualtionSize et offspringpopulationsize)
@@ -332,9 +337,9 @@ void PopulationImpl::evaluateParentPopulation(){
        lastError = cudaMemcpy(fitnesses,deviceFitness,actualPopulationSize*sizeof(float),cudaMemcpyDeviceToHost);
        //DEBUG_PRT("Parent's fitnesses gathering : %s",cudaGetErrorString(lastError));
 
-       cudaFree(deviceFitness);
+       /*cudaFree(deviceFitness);
        cudaFree(allocatedDeviceBuffer);
-       cudaFree(allocatedDeviceTmpBuffer);
+       cudaFree(allocatedDeviceTmpBuffer);*/
 
 
 #ifdef COMPARE_HOST_DEVICE
@@ -357,14 +362,14 @@ void PopulationImpl::evaluateParentPopulation(){
 
 void PopulationImpl::optimiseParentPopulation(){
   cudaError_t lastError;
-  void* allocatedDeviceBuffer;
+/*  void* allocatedDeviceBuffer;
   void* allocatedDeviceTmpBuffer;
-  float* deviceFitness;
+  float* deviceFitness;*/
   size_t actualPopulationSize = this->actualParentPopulationSize;
-  dim3 dimBlock, dimGrid;
+//  dim3 dimBlock, dimGrid;
 
 // ICI il faut allouer la tailler max (entre parentPopualtionSize et offspringpopulationsize)
-  cudaPreliminaryProcess(actualPopulationSize,&dimBlock,&dimGrid,&allocatedDeviceBuffer,&allocatedDeviceTmpBuffer, &deviceFitness);
+  //cudaPreliminaryProcess(actualPopulationSize,&dimBlock,&dimGrid,&allocatedDeviceBuffer,&allocatedDeviceTmpBuffer, &deviceFitness);
   
 
 //Copy population into buffer

@@ -118,8 +118,8 @@ void cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid
         dimGrid->x = (nbBlock);
 
         dimBlock->x = nbThreadPB;
-        std::cout << "Number of grid : " << dimGrid->x << std::endl;
-        std::cout << "Number of block : " << dimBlock->x << std::endl;
+        //std::cout << "Number of grid : " << dimGrid->x << std::endl;
+        //std::cout << "Number of block : " << dimBlock->x << std::endl;
 }
 
 \INSERT_INITIALISATION_FUNCTION
@@ -133,10 +133,19 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
+
+//Initialiazing GPU
+  printf("Initializing GPU\n");
+  void *allocatedDeviceBuffer;
+  cudaMalloc(&allocatedDeviceBuffer,0);
+  cudaFree(allocatedDeviceBuffer);
+  free(allocatedDeviceBuffer);
 }
 
 void EASEAFinal(CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
+        cudaFree(d_offspringPopulationcuda);
+        cudaFree(d_fitnessescuda);
 }
 
 void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
@@ -325,6 +334,7 @@ void PopulationImpl::evaluateOffspringPopulation(){
 
   cudaEvaluatePopulation<<< dimGridcuda, dimBlockcuda>>>(d_offspringPopulationcuda,actualPopulationSize,d_fitnessescuda,this->cuda->initOpts);
   lastError = cudaGetLastError();
+        lastError = cudaThreadSynchronize();
   //DEBUG_PRT("Kernel execution : %s",cudaGetErrorString(lastError));
 
   lastError = cudaMemcpy(fitnesses,d_fitnessescuda,actualPopulationSize*sizeof(float),cudaMemcpyDeviceToHost);
