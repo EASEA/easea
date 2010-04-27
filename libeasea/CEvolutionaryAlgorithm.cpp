@@ -269,7 +269,9 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
   if((this->params->plotStats && this->gnuplot->valid) || this->params->generateGnuplotScript){
  	FILE *f;
- 	f = fopen(params->outputFilename,"a"); //ajouter .dat
+	string fichier = params->outputFilename;
+	fichier.append(".dat");
+ 	f = fopen(fichier.c_str(),"a"); //ajouter .csv
 	if(f!=NULL){
 	  if(currentGeneration==0)
 		fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
@@ -301,7 +303,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   #ifdef __linux__
   if(this->params->plotStats && this->gnuplot->valid){
 	if(currentGeneration==0)
-		fprintf(this->gnuplot->fWrit,"plot \'%s\' using 3:4 t \'Best Fitness\' w lines, \'%s\' using 3:5 t  \'Average\' w lines, \'%s\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename,params->outputFilename,params->outputFilename);
+		fprintf(this->gnuplot->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines, \'%s.dat\' using 3:5 t  \'Average\' w lines, \'%s.dat\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename,params->outputFilename,params->outputFilename);
 	else
 		fprintf(this->gnuplot->fWrit,"replot\n");
 	fflush(this->gnuplot->fWrit);

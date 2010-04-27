@@ -134,11 +134,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\TEMPLATE_START"  {             
   char sFileName[1000];
   strcpy(sFileName, sRAW_PROJECT_NAME);
-  switch (TARGET) {
-  case STD :
-  case CUDA : strcat(sFileName,".cpp"); break;
-  default : strcat(sFileName,".cpp");
-  } 
+  strcat(sFileName,".cpp"); 
   fpOutputFile=fopen(sFileName,"w");
  }
 <TEMPLATE_ANALYSIS>"AESAE" {fprintf(fpOutputFile,"EASEA");}        
@@ -728,18 +724,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\TIME_LIMIT" {fprintf(fpOutputFile,"%d",nTIME_LIMIT);}
 <TEMPLATE_ANALYSIS>"\\MUT_PROB"  {fprintf(fpOutputFile,"%f",fMUT_PROB);}
 <TEMPLATE_ANALYSIS>"\\XOVER_PROB"  {fprintf(fpOutputFile,"%f",fXOVER_PROB);}
-<TEMPLATE_ANALYSIS>"\\MINIMAXI"  {
-  switch (TARGET) { 
-  case STD:
-  //case CUDA: fprintf(fpOutputFile,"%s",(nMINIMISE? "false" : "true")); break;
-  case CUDA: fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); break;
-  }
- }
-<TEMPLATE_ANALYSIS>"\\ELITISM"  {
-  switch (TARGET) { 
-  case STD:
-  case CUDA: fprintf(fpOutputFile,"%d",bELITISM);
-  }                                 }
+<TEMPLATE_ANALYSIS>"\\MINIMAXI"  {fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); }
+<TEMPLATE_ANALYSIS>"\\ELITISM"  {fprintf(fpOutputFile,"%d",bELITISM);}
 <TEMPLATE_ANALYSIS>"\\NB_OPT_IT"  {fprintf(fpOutputFile,"%d",nNB_OPT_IT);}
 <TEMPLATE_ANALYSIS>"\\BALDWINISM" {fprintf(fpOutputFile,"%d",bBALDWINISM);}
 
@@ -943,16 +929,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 //  Easea GPGPU & EO Finalization function
 //****************************************
 <COPY_FINALIZATION_FUNCTION>"\\After"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
-  switch( TARGET ){
-
-  case STD:
-  case CUDA:
-    fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){");
-    break;
-  default:
-    fprintf (stderr," Error this template doesn't support finalization function ");
-    return -1;
-  }
+  fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){");
   bFunction=1; bFinalizationFunction=1;
   BEGIN COPY;
  }
@@ -1421,38 +1398,24 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_GENERATION>"currentGeneration" |
 <COPY_USER_GENERATION>"currentGeneration"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
-  else switch  (TARGET) {
-    case CUDA:
-    case STD:
-      fprintf(fpOutputFile,"(*EZ_current_generation)");
-      break;
-    }} // local genome name
+  else {
+      fprintf(fpOutputFile,"(*EZ_current_generation)");}} // local genome name
 <COPY_USER_GENERATION>"NB_GEN" |
 <COPY_USER_GENERATION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
-  else switch  (TARGET) {
-    case STD :
-    case CUDA :
-	fprintf(fpOutputFile,"(*EZ_NB_GEN)");
-	break;
-    }} // local genome name                           
+  else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }} // local genome name                           
 <COPY_USER_GENERATION>"POP_SIZE" |
 <COPY_USER_GENERATION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
     } // local genome name
 <COPY_USER_GENERATION>"MUT_PROB" |
 <COPY_USER_GENERATION>"MUT_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
-  else switch  (TARGET) {
-    case STD:
-    case CUDA:
-      fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
+  else {fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
     }
  } // local genome name
 <COPY_USER_GENERATION>"XOVER_PROB" |
 <COPY_USER_GENERATION>"XOVER_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
-  else switch  (TARGET) {
-    case STD:
-    case CUDA: 
+  else {
       fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");     
     }
  } // local genome name
@@ -1476,26 +1439,18 @@ if(OPERATING_SYSTEM=WINDOWS)
   exit(1);
  } 
 <COPY_USER_GENERATION>"NB_GEN"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
-  else switch  (TARGET) {
-    case CUDA :
-    case STD :
+  else {
       fprintf(fpOutputFile,"(*EZ_NB_GEN)=");
-      break;
     }} // local genome name
 <COPY_USER_GENERATION>"POP_SIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     } // local genome name
 <COPY_USER_GENERATION>"MUT_PROB"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
-  else switch  (TARGET) {
-    case CUDA:
-    case STD:
+  else {
       fprintf(fpOutputFile,"(*pEZ_MUT_PROB)=");
-      break;     
     }
  } // local genome name
 <COPY_USER_GENERATION>"XOVER_PROB"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
-  else switch  (TARGET) {
-    case CUDA:
-    case STD:
+  else {
       fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)=");
     }
  } // local genome name
