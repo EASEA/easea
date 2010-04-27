@@ -6,6 +6,7 @@
  */
 
 #include "include/Parameters.h"
+#include <stdio.h>
 
 #ifdef WIN32
 Parameters::Parameters(){

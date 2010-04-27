@@ -1,4 +1,5 @@
 #include "include/CGnuplot.h"
+#include <stdio.h>
 
 CGnuplot::CGnuplot(int nbEval){
 #ifdef __linux__

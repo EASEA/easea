@@ -8,6 +8,7 @@
 #include "include/CStoppingCriterion.h"
 #include <iostream>
 #include <signal.h>
+#include <stdio.h>
 #include "include/CEvolutionaryAlgorithm.h"
 
 /* ****************************************

@@ -23,6 +23,7 @@
 #include "include/Parameters.h"
 #include "include/CGnuplot.h"
 #include "include/global.h"
+#include <stdio.h>
 
 using namespace std;
 
