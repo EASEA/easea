@@ -6,10 +6,12 @@
  */
 
 #include "include/CSelectionOperator.h"
-#ifndef WIN32
-#include <values.h>
-#else
+#ifdef WIN32
 #include <float.h>
+#elif __APPLE__
+#include <float.h>
+#else
+#include <values.h>
 #endif
 #include "include/CPopulation.h"
 #include "include/CRandomGenerator.h"

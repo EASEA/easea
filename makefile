@@ -1,3 +1,4 @@
+UNAME := $(shell uname)
 EXEC = easea 
 CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated -DDEBUG -DLINE_NUM_EZ_FILE
 CPPC = g++ 
@@ -5,9 +6,22 @@ LDFLAGS =
 
 
 
+ifeq ($(UNAME),Darwin)
+$(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o boost/program_options.a libeasea/libeasea.a
+else
 $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libeasea/libeasea.a
+endif
 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
+ifeq ($(UNAME), Darwin)
+	@sed '/EZ_PATH/d' $(HOME)/.profile>$(HOME)/.profile_save
+	@mv $(HOME)/.profile_save $(HOME)/.profile
+	@sed '/EZ2_PATH/d' $(HOME)/.profile>$(HOME)/.profile_save
+	@mv $(HOME)/.profile_save $(HOME)/.profile
+	@echo "export EZ_PATH=\"$(PWD)/\"">>$(HOME)/.profile
+	@echo "export EZ2_PATH=\"$(TEST)/\"">>$(HOME)/.profile
+else
 	@if [ $(EZ_PATH) != "$(PWD)/" ] ; then echo -e "\nexport EZ_PATH=$(PWD)/">>$(HOME)/.bashrc ; fi
+endif
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
 	# 
@@ -58,6 +72,11 @@ alexyacc/libalex.so:alexyacc/*.cpp
 alexyacc/libalex.a:alexyacc/*.cpp
 	cd alexyacc && make libalex.a
 
+ifeq ($(UNAME),Darwin)
+boost/program_options.a:boost/*.cpp
+	cd boost && make program_options.a
+endif #OS
+
 #compile libeasea
 libeasea/libeasea.a:libeasea/*.cpp
 	cd libeasea && make libeasea.a
@@ -66,10 +85,14 @@ clean:
 	rm -f *.o $(EXEC) $(EXEC)_bin
 	cd alexyacc && make clean
 	cd libeasea && make clean
+ifeq ($(UNAME),Darwin)
+	cd boost && make clean
+endif
 
 install:$(EXEC)
 	sudo cp $< /usr/bin/dev-easea
 
+ifeq ($(UNAME),Linux)
 realclean: clean
 	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
 
@@ -79,3 +102,4 @@ EaseaParse.cpp: EaseaParse.y
 
 EaseaLex.cpp: EaseaLex.l
 	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i
+endif

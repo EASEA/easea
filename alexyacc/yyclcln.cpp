@@ -9,7 +9,6 @@ Copyright (c) 1999-2001 Bumble-Bee Software Ltd.
 ************************************************************/
 
 #include <stdlib.h>
-#include <malloc.h>
 #include "clex.h"
 
 void yylexer::yycleanup()

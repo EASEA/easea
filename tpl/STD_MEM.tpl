@@ -444,13 +444,27 @@ public:
 
 \START_CUDA_MAKEFILE_TPL
 
-EASEALIB_PATH=\EZ_PATHlibeasea/#/home/kruger/Bureau/Easea/libeasea/
+UNAME := $(shell uname)
 
-CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
+ifeq ($(UNAME),Darwin)
+EASEALIB_PATH=$(EZ_PATH)libeasea/
+else
+EASEALIB_PATH=\EZ_PATHlibeasea/
+endif
+
+ifeq ($(UNAME),Darwin)
+CXXFLAGS =      -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
+else
+CXXFLAGS =      -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
+endif
 
 OBJS = EASEA.o EASEAIndividual.o 
 
-LIBS = -lboost_program_options 
+ifeq ($(UNAME),Darwin)
+LIBS = $(EZ_PATH)boost/program_options.a
+else
+LIBS = -lboost_program_options
+endif
 
 TARGET =	EASEA
 
