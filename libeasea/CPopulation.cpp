@@ -171,7 +171,7 @@ CIndividual** CPopulation::reduceParentPopulation(size_t obSize){
   	nextGeneration = new CIndividual*[obSize];
 
   reducePopulation(parents,actualParentPopulationSize,nextGeneration,obSize,
-		   CPopulation::replacementOperator);
+		   CPopulation::parentReductionOperator);
 
   // free no longer needed CIndividuals
   for( size_t i=0 ; i<actualParentPopulationSize-obSize ; i++ )
@@ -193,7 +193,7 @@ CIndividual** CPopulation::reduceOffspringPopulation(size_t obSize){
   CIndividual** nextGeneration = new CIndividual*[offspringPopulationSize];
 
   reducePopulation(offsprings,actualOffspringPopulationSize,nextGeneration,obSize,
-		   CPopulation::replacementOperator);
+		   CPopulation::offspringReductionOperator);
 
   //printf("POPULATION SIZE %d\n",actualOffspringPopulationSize-obSize);
   // free no longer needed CIndividuals
