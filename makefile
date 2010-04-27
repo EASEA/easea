@@ -15,10 +15,7 @@ endif
 ifeq ($(UNAME), Darwin)
 	@sed '/EZ_PATH/d' $(HOME)/.profile>$(HOME)/.profile_save
 	@mv $(HOME)/.profile_save $(HOME)/.profile
-	@sed '/EZ2_PATH/d' $(HOME)/.profile>$(HOME)/.profile_save
-	@mv $(HOME)/.profile_save $(HOME)/.profile
 	@echo "export EZ_PATH=\"$(PWD)/\"">>$(HOME)/.profile
-	@echo "export EZ2_PATH=\"$(TEST)/\"">>$(HOME)/.profile
 else
 	@if [ $(EZ_PATH) != "$(PWD)/" ] ; then echo -e "\nexport EZ_PATH=$(PWD)/">>$(HOME)/.bashrc ; fi
 endif
@@ -46,6 +43,9 @@ endif
 	#       For example : 
 	#       ./easea examples/weierstrass_std/weierstrass.ez
 	# Go to the taget directory and type make
+	#
+	# To Activate the EZ_PATH variable type:
+	# source ~/.profile
 	#
 	# Thanks for using EASEA.
 	#
