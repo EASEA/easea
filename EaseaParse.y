@@ -569,13 +569,9 @@ Parameter
        }
       }
   |  ELITE NUMBER2 {
-        if ($2!=0) bELITISM=1;
-        else bELITISM=0;
         nELITE=(int)$2;
         }
   |  ELITE NUMBER2 '%' {
-        if ($2!=0) bELITISM=1;
-        else bELITISM=0;
         nELITE=(int)$2*nPOP_SIZE/100;
         }
   |  ELITISM IDENTIFIER2{
@@ -586,11 +582,11 @@ Parameter
          bELITISM=1;
        }}
   | BALDWINISM IDENTIFIER2{
-      if (!mystricmp($2->sName,"False")) bELITISM=0;
-      else if (!mystricmp($2->sName,"True")) bELITISM=1;
+      if (!mystricmp($2->sName,"False")) bBALDWINISM=0;
+      else if (!mystricmp($2->sName,"True")) bBALDWINISM=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: Lamarckism must be \"True\" or \"False\".\nDefault value \"True\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-         bELITISM=1;
+         fprintf(stderr,"\n%s - Warning line %d: Baldwinism must be \"True\" or \"False\".\nDefault value \"True\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bBALDWINISM=1;
        }}
      
   | PRINT_STATS NUMBER2{

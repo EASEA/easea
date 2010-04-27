@@ -133,13 +133,6 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
-
-//Initialiazing GPU
-  printf("Initializing GPU\n");
-  void *allocatedDeviceBuffer;
-  cudaMalloc(&allocatedDeviceBuffer,0);
-  cudaFree(allocatedDeviceBuffer);
-  free(allocatedDeviceBuffer);
 }
 
 void EASEAFinal(CPopulation* pop){

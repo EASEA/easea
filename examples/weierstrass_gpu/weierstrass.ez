@@ -27,6 +27,23 @@ struct gpuOptions;
 //fitness function
 #include <math.h>
 
+__device__ __host__ inline static float SQR(float d)
+{
+  return (d*d);
+}
+
+__device__ __host__ inline float rosenbrock( float const *x)
+{
+  float qualitaet;
+  int i;
+  int DIM = SIZE;
+        qualitaet = 0.0;
+
+        for( i = DIM-2; i >= 0; --i)
+          qualitaet += 100.*SQR(SQR(x[i])-x[i+1]) + SQR(1.-x[i]);
+        return ( qualitaet);
+} /* f_rosenbrock() */
+
 __device__ __host__ inline float Weierstrass(float *x, int n)  // Weierstrass multimidmensionnel h = 0.25
 {
    float res = 0.;
@@ -138,6 +155,7 @@ return NbMut;
 \GenomeClass::evaluator : // Returns the score
   float Score= 0.0;
   Score= Weierstrass(Genome.x, SIZE);         
+  //Score= rosenbrock(Genome.x);         
   return Score;
 \end
 

@@ -158,8 +158,8 @@ return NbMut;
 
 \GenomeClass::evaluator : // Returns the score
   float Score= 0.0;
-  //Score= Weierstrass(Genome.x, SIZE);         
-  Score= rosenbrock(Genome.x);         
+  Score= Weierstrass(Genome.x, SIZE);         
+//  Score= rosenbrock(Genome.x);         
   return Score;
 \end
 
@@ -175,8 +175,8 @@ return NbMut;
 	for(int i=0; i<100; i++){
 		tmp[index] += pas;		
 
-		//fitnesstmp = Weierstrass(tmp, SIZE);
-		fitnesstmp = rosenbrock(tmp);
+		fitnesstmp = Weierstrass(tmp, SIZE);
+		//fitnesstmp = rosenbrock(tmp);
 
 		if(fitnesstmp < Genome.fitness){
 			Genome.fitness = fitnesstmp;
