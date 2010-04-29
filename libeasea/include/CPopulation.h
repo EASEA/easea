@@ -63,7 +63,7 @@ public:
   virtual ~CPopulation();
 
   //virtual void initializeParentPopulation() = 0;
-  void addIndividualParentPopulation(CIndividual* indiv);
+  void addIndividualParentPopulation(CIndividual* indiv, size_t id);
   void evaluatePopulation(CIndividual** population, size_t populationSize);
   virtual void optimisePopulation(CIndividual** population, size_t populationSize);
   virtual void evaluateParentPopulation();

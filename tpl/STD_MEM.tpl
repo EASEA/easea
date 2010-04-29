@@ -342,8 +342,9 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-		this->population->addIndividualParentPopulation(new IndividualImpl());
+		this->population->addIndividualParentPopulation(new IndividualImpl(),i);
 	}
+        this->population->actualParentPopulationSize = this->params->parentPopulationSize
 }
 
 

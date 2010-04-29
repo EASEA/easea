@@ -9,13 +9,35 @@
 #define CCUDA_H_
 
 #include <iostream>
+#include <semaphore.h>
 
 struct gpuOptions{};
 
+struct my_struct_gpu{
+   int indiv_start;
+   int sh_pop_size;
+   
+   int num_MP;
+   int num_thread_max;
+   int num_Warp;
+   
+   int dimGrid;
+   int dimBlock;
+};
+
+struct gpuArg{
+  int threadId;
+  sem_t sem_in;
+  sem_t sem_out;
+  
+  void* d_population;
+  float* d_fitness;
+
+};
+
 class CCuda {
 public:
-	void* cudaParentBuffer;
-	void* cudaOffspringBuffer;
+	void* cudaBuffer;
 	size_t sizeOfIndividualImpl;
 	struct gpuOptions initOpts;
 public:
@@ -23,8 +45,6 @@ public:
 	~CCuda();
 };
 
-size_t partieEntiereSup(float E);
-int puissanceDeuxSup(float n);
-bool repartition(size_t popSize, size_t* nbBlock, size_t* nbThreadPB, size_t* nbThreadLB, size_t nbMP, size_t maxBlockSize);
+bool repartition(struct my_struct_gpu* gpu_infos);
 
 #endif /* CCUDA_H_ */

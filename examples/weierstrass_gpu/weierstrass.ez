@@ -89,9 +89,9 @@ float gauss()
 \end
 
 \GenomeClass::display:
-	for(int i=0; i<SIZE; i++){
+	/*for(int i=0; i<SIZE; i++){
 		cout << Genome.x[i] << ":" << Genome.sigma[i] << "|";
-	}
+	}*/
 \end
 
 \Before everything else function:

@@ -1,69 +1,44 @@
 #include <math.h>
 #include <stdlib.h>
 #include "include/CCuda.h"
-#define NB_MP 16
+#include <stdio.h>
 
 CCuda::CCuda(size_t parentSize, size_t offSize, size_t individualImplSize){
 	this->sizeOfIndividualImpl = individualImplSize;
-	this->cudaParentBuffer = (void*)malloc(this->sizeOfIndividualImpl*parentSize);
-	this->cudaOffspringBuffer = (void*)malloc(this->sizeOfIndividualImpl*offSize);
+	this->cudaBuffer = (void*)malloc(this->sizeOfIndividualImpl*( (parentSize>offSize) ? parentSize : offSize));
 }
 
 CCuda::~CCuda(){
 }
 
-inline size_t partieEntiereSup(float E){
-        int fl = floor(E);
-        if(fl==E)
-                return E;
-        else
-                return floor(E=1);
-}
+bool repartition(struct my_struct_gpu* gpu_infos){
+	
+	//There is an implied minimum number of threads for each block
+        if(gpu_infos->num_Warp > gpu_infos->num_thread_max){
+            printf("You need to authorized at least %d threads on each block!\n",gpu_infos->num_Warp);
+            exit(1);
+        }
 
-inline int puissanceDeuxSup(float n){
-        int tmp=2;
-        while(tmp<n) tmp*=2;
-        return tmp;
-}
+        gpu_infos->dimGrid = gpu_infos->num_MP;
+        gpu_infos->dimBlock = gpu_infos->num_Warp;;
+  	
+        //While each element of the population can't be placed on the card
+        while(gpu_infos->dimBlock * gpu_infos->dimGrid < gpu_infos->sh_pop_size) {
+             //Every time we add the number of Warp to the value of dimBlock
+             if( (gpu_infos->dimBlock += gpu_infos->num_Warp) > gpu_infos->num_thread_max ) {
+                  //If the number of dimBlock exceeds the number of threads max, we add the number of MP to the value of dimGrid and we reset the value of dimBlock with the number of Warp
+                  gpu_infos->dimGrid += gpu_infos->num_MP;
+                  gpu_infos->dimBlock = gpu_infos->num_Warp;
+             }
+        }
 
-bool repartition(size_t popSize, size_t* nbBlock, size_t* nbThreadPB, size_t* nbThreadLB, size_t nbMP, size_t maxBlockSize){
-	(*nbThreadLB) = 0;
-  
-  	//DEBUG_PRT("repartition : %d",popSize);
-  
-  	if( ((float)popSize / (float)nbMP) <= maxBlockSize ){
-	//la population repartie sur les MP tient dans une bloc par MP
-		(*nbThreadPB) = partieEntiereSup( (float)popSize/(float)nbMP);
-		(*nbBlock) = popSize/(*nbThreadPB);
-		if( popSize%nbMP != 0 ){
-		//on fait MP-1 block de equivalent et un plus petit
-			(*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
-		}
-	}
-	else{
-	//la population est trop grande pour etre repartie sur les MP
-	//directement
-		//(*nbBlock) = partieEntiereSup( (float)popSize/((float)maxBlockSize*NB_MP));
-		(*nbBlock) = puissanceDeuxSup( (float)popSize/((float)maxBlockSize*NB_MP));
-		(*nbBlock) *= NB_MP;
-		(*nbThreadPB) = popSize/(*nbBlock);
-		if( popSize%maxBlockSize!=0){
-			(*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
-                                                                        
-			// Le rest est trop grand pour etre place dans un seul block (c'est possible uniquement qd 
-			// le nombre de block depasse maxBlockSize 
-			while( (*nbThreadLB) > maxBlockSize ){
-			//on augmente le nombre de blocs principaux jusqu'a ce que nbthreadLB retombe en dessous de maxBlockSize
-				//(*nbBlock) += nbMP;
-				(*nbBlock) *= 2;
-				(*nbThreadPB) = popSize/(*nbBlock);
-				(*nbThreadLB) = popSize - (*nbThreadPB)*(*nbBlock);
-			}
-		}
-	}
-	if((((*nbBlock)*(*nbThreadPB) + (*nbThreadLB))  == popSize) && ((*nbThreadLB) <= maxBlockSize) && ((*nbThreadPB) <= maxBlockSize))
+
+	//Verification that we have enough place for all the population and that every constraints are respected
+	if( (gpu_infos->dimBlock*gpu_infos->dimGrid >= gpu_infos->sh_pop_size) && (gpu_infos->dimBlock <= gpu_infos->num_thread_max))
 		return true;
 	else 
 		return false;
 }
+
+
 

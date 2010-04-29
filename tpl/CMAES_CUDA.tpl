@@ -470,7 +470,7 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 
   //DEBUG_PRT("Creation of %lu/%lu parents (other could have been loaded from input file)",this->params->parentPopulationSize-this->params->actualParentPopulationSize,this->params->parentPopulationSize);
   for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-	this->population->addIndividualParentPopulation(new IndividualImpl());
+	this->population->addIndividualParentPopulation(new IndividualImpl(),i);
   }
 
   this->population->actualParentPopulationSize = this->params->parentPopulationSize;
