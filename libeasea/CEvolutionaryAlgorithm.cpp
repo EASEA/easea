@@ -105,6 +105,9 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	#endif
 }
 
+CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
+  delete population;
+}
 void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
   this->stoppingCriteria.push_back(sc);
 }

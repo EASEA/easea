@@ -110,8 +110,13 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 		    po::variables_map& vm, po::variables_map& vm_file){
 
   char** argv;
-  int argc = loadParametersFile(parametersFileName,&argv);
-
+  int argc;
+  if( parametersFileName )
+    argc = loadParametersFile(parametersFileName,&argv);
+  else{ 
+    argc = 0;
+    argv = NULL;
+  }
   po::options_description desc("Allowed options ");
   desc.add_options()
 	("help", "produce help message")
@@ -149,11 +154,13 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 	("u2",po::value<string>(),"User defined parameter 2")
 	("u3",po::value<int>(),"User defined parameter 3")
 	("u4",po::value<int>(),"User defined parameter 4")
+	("u5",po::value<int>(),"User defined parameter 5")
 	;
 
   try{
     po::store(po::parse_command_line(ac, av, desc,0), vm);
-    po::store(po::parse_command_line(argc, argv, desc,0), vm_file);
+    if( parametersFileName )
+      po::store(po::parse_command_line(argc, argv, desc,0), vm_file);
   }
   catch(po::unknown_option& e){
     cerr << "Unknown option  : " << e.what() << endl;
@@ -171,7 +178,8 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 
   for( int i = 0 ; i<argc ; i++ )
     free(argv[i]);
-  free(argv);
+  if( argv )
+    free(argv);
 
 }
 

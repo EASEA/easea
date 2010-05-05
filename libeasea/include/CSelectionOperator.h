@@ -17,6 +17,7 @@ public:
   virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
   virtual size_t selectNext(size_t populationSize);
   virtual float getExtremum() = 0 ;
+  virtual ~CSelectionOperator(){;}
 protected:
   CIndividual** population;
   float currentSelectionPressure;

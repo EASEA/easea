@@ -64,6 +64,7 @@ public:
 
   //virtual void initializeParentPopulation() = 0;
   void addIndividualParentPopulation(CIndividual* indiv, size_t id);
+  void addIndividualParentPopulation(CIndividual* indiv);
   void evaluatePopulation(CIndividual** population, size_t populationSize);
   virtual void optimisePopulation(CIndividual** population, size_t populationSize);
   virtual void evaluateParentPopulation();
@@ -100,7 +101,7 @@ public:
 
   void sortParentPopulation(){ CPopulation::sortPopulation(parents,actualParentPopulationSize);}
 
-  void produceOffspringPopulation();
+  virtual void produceOffspringPopulation();
 
   friend std::ostream& operator << (std::ostream& O, const CPopulation& B);
 

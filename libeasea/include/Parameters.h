@@ -70,6 +70,7 @@ public:
 	Parameters();
 	~Parameters();
 #endif
+	virtual ~Parameters(){;}
 	virtual void setDefaultParameters(int argc, char** argv) = 0;
 	virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;
 	int setReductionSizes(int popSize, float popReducSize);

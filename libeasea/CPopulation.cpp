@@ -418,6 +418,9 @@ void CPopulation::weakElitism(size_t elitismSize, CIndividual** parentsPopulatio
 void CPopulation::addIndividualParentPopulation(CIndividual* indiv, size_t id){
 	parents[id] = indiv;
 }
+void CPopulation::addIndividualParentPopulation(CIndividual* indiv){
+	parents[actualParentPopulationSize++] = indiv;
+}
 
 std::ostream& operator << (std::ostream& O, const CPopulation& B)
 {

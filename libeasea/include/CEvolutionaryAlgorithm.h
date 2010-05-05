@@ -62,6 +62,7 @@ public:
   float currentAverageFitness;
   float currentSTDEV;
 
+  virtual ~CEvolutionaryAlgorithm();
 
   std::vector<CStoppingCriterion*> stoppingCriteria;
 
