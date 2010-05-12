@@ -1,0 +1,47 @@
+
+
+EASEA Quick Installation Guidelines
+-----------------------------------
+
+1. Check dependencies: the following packages must be installed:
+
+g++ compiler
+libboost: to install it on ubuntu:
+  sudo apt-get install libboost-program-options-dev
+
+2. EASEA source code:
+
+The source code can be obtained either from sourceforge or, for
+programmers invoved in the EASEA development, from its GIT repository.
+
+2.1 Downloading it from sourceforge:
+
+http://sourceforge.net/projects/easea/
+
+2.2 Retrieving it from GIT (for developers in the EASEA team only):
+
+generating a public-private SSH-RSA key pair:
+
+ssh-keygen -t rsa
+
+make sure that your public SSH is registered with the manager of the
+repository (currently Ogier Maitre), and that he has granted access to
+you.
+
+retrieving the latest version from the GIT repository:
+
+git clone git@atia.u-strasbg.fr:easea.git
+
+3. Compiling EASEA:
+
+cd <EASEAdir>
+make
+export EZ_PATH=`pwd`/
+
+4. Running an example:
+
+cd examples/weierstrass_std/
+$EZ_PATH/easea weierstrass.ez
+make
+./weierstrass
+
