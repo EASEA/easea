@@ -17,6 +17,10 @@ CRandomGenerator::CRandomGenerator(unsigned int seed){
 	//srand(seed);
 }
 
+CRandomGenerator::~CRandomGenerator(){
+	delete this->mt_rnd;
+}
+
 int CRandomGenerator::randInt(){
   //return rand();
 	return mt_rnd->randInt();

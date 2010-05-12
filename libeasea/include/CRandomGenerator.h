@@ -16,6 +16,7 @@ class CRandomGenerator {
   MTRand* mt_rnd;
 public:
   CRandomGenerator(unsigned int seed);
+  ~CRandomGenerator();
   int randInt();
   bool tossCoin();
   bool tossCoin(float bias);

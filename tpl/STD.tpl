@@ -215,6 +215,11 @@ size_t IndividualImpl::mutate( float pMutationPerGene ){
 
 void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
+	seed = setVariable("seed",(int)time(0));
+	globalRandomGenerator = new CRandomGenerator(seed);
+	this->randomGenerator = globalRandomGenerator;
+
+
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 
@@ -279,9 +284,6 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->optimise = 0;
 
-	seed = setVariable("seed",(int)time(0));
-	globalRandomGenerator = new CRandomGenerator(seed);
-	this->randomGenerator = globalRandomGenerator;
 
 	this->printStats = setVariable("printStats",\PRINT_STATS);
 	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
