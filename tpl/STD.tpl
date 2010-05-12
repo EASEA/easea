@@ -409,7 +409,8 @@ UNAME := $(shell uname)
 ifeq ($(UNAME),Darwin)
 EASEALIB_PATH=$(EZ_PATH)libeasea/
 else
-EASEALIB_PATH=\EZ_PATHlibeasea/
+#EASEALIB_PATH=\EZ_PATH/libeasea/
+EASEALIB_PATH=$(EZ_PATH)/libeasea/
 endif
 
 ifeq ($(UNAME),Darwin)
@@ -423,7 +424,7 @@ OBJS = EASEA.o EASEAIndividual.o
 ifeq ($(UNAME),Darwin)
 LIBS = $(EZ_PATH)boost/program_options.a
 else
-LIBS = -lboost_program_options 
+LIBS = -lboost_program_options-mt 
 endif
 
 TARGET =	EASEA
