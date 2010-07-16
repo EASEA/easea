@@ -1,4 +1,3 @@
-
 %{
 /****************************************************************************
 EaseaLex.l
@@ -21,6 +20,8 @@ Centre de Mathématiques Appliquées
 #include <unistd.h>
 #endif
 #include "debug.h"
+#include <iostream>
+#include <sstream>
 
   size_t genomeSize;
   bool genomeSizeValidity=false;
@@ -60,7 +61,6 @@ Centre de Mathématiques Appliquées
 
   return ret;
 }
-
   %}
 
 // include file
@@ -68,14 +68,15 @@ Centre de Mathématiques Appliquées
   // forward references
   class CEASEAParser;
   class CSymbolTable;
+  class OPCodeDesc;
  }                                                     
                                          
 %start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
 %start COPY_USER_DECLARATIONS COPY_INITIALISATION_FUNCTION ANALYSE_USER_CLASSES
-%start COPY_EO_INITIALISER 
+%start COPY_EO_INITIALISER COPY_GP_OPCODE
 %start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_OPTIMISER COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
-%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL
+%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL GP_RULE_ANALYSIS GP_COPY_OPCODE_CODE COPY_GP_EVAL
 
  // lexical analyser name and class definition
 %name CEASEALexer {
@@ -88,7 +89,16 @@ Centre de Mathématiques Appliquées
   bool bCatchNextSemiColon,bWaitingToClosePopulation, bMethodsInGenome, bFinalizationFunction;
   bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION, bWithinCUDA_Evaluator, bBoundCheckingFunction;
   bool bIsParentReduce, bIsOffspringReduce, bEndGeneration, bBeginGeneration, bEndGenerationFunction, bBeginGenerationFunction, bGenerationFunctionBeforeReplacement;
+  bool bGPOPCODE_ANALYSIS,bCOPY_GP_EVAL_GPU;
   CSymbol *pASymbol;
+
+  unsigned iGP_OPCODE_FIELD, accolade_counter;
+  OPCodeDesc* opDesc[128];
+  unsigned iNoOp;
+
+  enum COPY_GP_EVAL_STATUS {EVAL_HDR,EVAL_BDY,EVAL_FTR};
+  unsigned iCOPY_GP_EVAL_STATUS;
+  bool bIsCopyingGPEval;
 
  public:
   int create(CEASEAParser* pParser, CSymbolTable* pSymbolTable);
@@ -104,7 +114,10 @@ Centre de Mathématiques Appliquées
   bCatchNextSemiColon,bWaitingToClosePopulation=bMethodsInGenome=0;
   bBoundCheckingFunction = bWithinCUDA_Initializer=bWithinMAKEFILEOPTION =bWithinCUDA_Evaluator=0;
   bIsParentReduce = bIsOffspringReduce = false;
-  bGenerationFunctionBeforeReplacement = bEndGeneration = bBeginGeneration = bEndGenerationFunction = bBeginGenerationFunction = false;
+  bGPOPCODE_ANALYSIS = bGenerationFunctionBeforeReplacement = bEndGeneration = bBeginGeneration = bEndGenerationFunction = bBeginGenerationFunction = false;
+  iGP_OPCODE_FIELD = accolade_counter = 0;
+  iNoOp = 0;
+  bCOPY_GP_EVAL_GPU,bIsCopyingGPEval = false;
 }
 
 // macros
@@ -183,6 +196,364 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 
+
+/*
+  Here we will insert parmeters for GP template.
+*/
+<TEMPLATE_ANALYSIS>"\\INSERT_GP_PARAMETERS" {
+  if( bVERBOSE )printf("inserting gp parameters\n");
+  //  fprintf(fpOutputFile,"#define MAX_XOVER_DEPTH",%d
+  fprintf(fpOutputFile,"#define TREE_DEPTH_MAX %d\n",iMAX_TREE_D);
+  fprintf(fpOutputFile,"#define INIT_TREE_DEPTH_MAX %d\n",iMAX_INIT_TREE_D);
+  fprintf(fpOutputFile,"#define INIT_TREE_DEPTH_MIN %d\n",iMIN_INIT_TREE_D);
+
+  fprintf(fpOutputFile,"#define MAX_PROGS_SIZE %d\n",iPRG_BUF_SIZE);
+  fprintf(fpOutputFile,"#define NB_GPU %d\n",iNB_GPU);
+
+  fprintf(fpOutputFile,"#define NO_FITNESS_CASES %d\n",iNO_FITNESS_CASES);
+}
+
+/*
+  This part dump every declaration related to gp opcode.
+  the enumeration, the array of name (to plot trees)
+  and the arity of every opcode.
+ */
+<TEMPLATE_ANALYSIS>"\\INSERT_GP_OPCODE_DECL" {
+  
+  fprintf(fpOutputFile,"enum OPCODE              {"); 
+  for( unsigned i=0 ; i<iNoOp ; i++ ){
+    fprintf(fpOutputFile,"%s,",opDesc[i]->opcode->c_str());
+  }
+  fprintf(fpOutputFile,"OPCODE_SIZE, OP_RETURN};\n");
+
+
+  fprintf(fpOutputFile,"const char* opCodeName[]={"); 
+  for( unsigned i=0 ; i<iNoOp ; i++ ){
+    fprintf(fpOutputFile,"%s",opDesc[i]->realName->c_str());
+    if( i<(iNoOp-1) )fprintf(fpOutputFile,",");
+  }
+  fprintf(fpOutputFile,"};\n"); 
+  fprintf(fpOutputFile,"unsigned opArity[]=     {"); 
+  for( unsigned i=0 ; i<iNoOp ; i++ ){
+    fprintf(fpOutputFile,"%d",opDesc[i]->arity);
+    if( i<(iNoOp-1) )fprintf(fpOutputFile,",");
+  }
+  fprintf(fpOutputFile,"};\n"); 
+
+
+  // count the number of variable (arity zero and non-erc operator)
+  unsigned var_len = 0;
+  for( unsigned i=0 ; i<iNoOp ; i++ ){
+    if( opDesc[i]->arity==0 && !opDesc[i]->isERC ) var_len++;
+  }
+  if( bVERBOSE ) printf("var length is %d\n",var_len);
+  fprintf(fpOutputFile,"#define VAR_LEN %d\n",var_len); 
+ }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_GP_GPU_SWITCH" {
+  for( unsigned i=0 ; i<iNoOp ; i++ ){
+    fprintf(fpOutputFile,"    case %s :\n",opDesc[i]->opcode->c_str());
+    fprintf(fpOutputFile,"      %s",opDesc[i]->gpuCodeStream.str().c_str());
+    fprintf(fpOutputFile,"      break;\n");
+
+  }
+ }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_GP_CPU_SWITCH" {
+  for( unsigned i=0 ; i<iNoOp ; i++ ){
+    fprintf(fpOutputFile,"  case %s :\n",opDesc[i]->opcode->c_str());
+    fprintf(fpOutputFile,"    %s\n",opDesc[i]->cpuCodeStream.str().c_str());
+    fprintf(fpOutputFile,"    break;\n");
+  }
+ }
+
+
+<TEMPLATE_ANALYSIS>"\\ANALYSE_GP_OPCODE"  {
+  yyreset();
+  rewind(fpGenomeFile);
+  yyin = fpGenomeFile;
+  if (bVERBOSE) printf ("Analysing GP OP code from ez file\n");
+  BEGIN COPY_GP_OPCODE;
+ }
+
+
+<COPY_GP_OPCODE>"\\begin operator description :" {
+  if (bVERBOSE) printf ("found begin section\n");
+  bGPOPCODE_ANALYSIS = true;
+  BEGIN GP_RULE_ANALYSIS;
+ }
+
+<GP_RULE_ANALYSIS>"\\end" { 
+  if (bVERBOSE) printf ("found end section\n");
+  if( bGPOPCODE_ANALYSIS ){
+    rewind(fpGenomeFile);
+    yyin = fpTemplateFile;
+    bGPOPCODE_ANALYSIS = false;
+    
+    OPCodeDesc::sort(opDesc,iNoOp);
+    /*for( unsigned i=0 ; i<iNoOp ; i++ ){
+      opDesc[i]->show();
+      }*/
+    BEGIN TEMPLATE_ANALYSIS; 
+  }  
+ }
+
+<COPY_GP_OPCODE><<EOF>> {
+  if (bVERBOSE) printf("*** No GP OP codes were found. ***\n");
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  BEGIN TEMPLATE_ANALYSIS;
+ }
+<COPY_GP_OPCODE>. {} //if( bGPOPCODE_ANALYSIS ) printf("%c",yytext[0]);}                                      
+<COPY_GP_OPCODE>\n {if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;}
+
+/*
+  This section analyse a GP rule which is written as : 
+  OP_NAME, "realopname", arity (a number), { the c code for this operator};
+  OP_NAME, "realopname", arity (a number), { the c code for this operator};
+ */
+<GP_RULE_ANALYSIS>[A-Za-z_][a-zA-Z0-9_]* {
+  // this rule match the OP_NAME
+  if( iGP_OPCODE_FIELD != 0 ){
+    fprintf(stderr,"Error, OP_CODE name must be given first\n");
+    exit(-1);
+  }
+  opDesc[iNoOp] = new OPCodeDesc();
+  opDesc[iNoOp]->opcode = new string(yytext);
+ }
+
+<GP_RULE_ANALYSIS>"\""([a-zA-Z0-9]|\*|\+|\-|\/|\%)*"\"" {
+  if( iGP_OPCODE_FIELD != 1 ){
+    fprintf(stderr,"Error, op code real name must be given at the second place\n");
+    exit(-1);
+  }
+  opDesc[iNoOp]->realName = new string(yytext);
+ }
+
+
+<GP_RULE_ANALYSIS>[0-9]* {
+  if( iGP_OPCODE_FIELD != 2 ){
+    fprintf(stderr,"Error, arity must be given at the third place\n");
+    exit(-1);
+  }
+  char* endptr;
+  
+  opDesc[iNoOp]->arity = strtol(yytext,&endptr,10);
+  if( endptr==yytext ){
+    fprintf(stderr, "warning, unable to translate this arity %s assuming 0\n",yytext);
+    opDesc[iNoOp]->arity = 0;
+  }
+ }
+
+<GP_RULE_ANALYSIS>[ \t\n] {}
+<GP_RULE_ANALYSIS>";"  {
+  iGP_OPCODE_FIELD = 0;
+  iNoOp++;
+ }
+
+<GP_RULE_ANALYSIS>"," {
+  if( bGPOPCODE_ANALYSIS ) iGP_OPCODE_FIELD++;
+ }
+
+
+<GP_RULE_ANALYSIS>"{" {
+  if( iGP_OPCODE_FIELD != 3 ){
+    fprintf(stderr,"Error, code must be given at the forth place\n");
+    exit(-1);
+  }
+  if( bVERBOSE ) printf("begining of the code part\n");
+  accolade_counter=1;
+
+  printf("arity : %d\n",opDesc[iNoOp]->arity);
+  if( opDesc[iNoOp]->arity>=2 )
+    opDesc[iNoOp]->gpuCodeStream << "OP2 = stack[--sp];\n      ";
+  if( opDesc[iNoOp]->arity>=1 )
+    opDesc[iNoOp]->gpuCodeStream << "OP1 = stack[--sp];\n      ";
+
+  BEGIN GP_COPY_OPCODE_CODE;
+ }
+
+/*
+  This section copy the code contained in the code part of the GP opcode rule
+  It count the number of curly bracket, when it reaches 0, the code part is finished.
+ */
+<GP_COPY_OPCODE_CODE>"{" {
+  accolade_counter++;
+  opDesc[iNoOp]->cpuCodeStream << "{";
+  opDesc[iNoOp]->gpuCodeStream << "{";
+ }
+
+<GP_COPY_OPCODE_CODE>"}" {
+  accolade_counter--;
+  if( accolade_counter==0 ){
+    opDesc[iNoOp]->gpuCodeStream << "\n      stack[sp++] = RESULT;\n";
+
+    BEGIN GP_RULE_ANALYSIS;
+  }
+  else{
+    opDesc[iNoOp]->cpuCodeStream << "}";
+    opDesc[iNoOp]->gpuCodeStream << "}";
+  }
+ }
+
+<GP_COPY_OPCODE_CODE>"INPUT["[0-9]*"]" {
+  char* endptr;
+  unsigned no_input = strtol(yytext+strlen("INPUT["),&endptr,10);
+  printf("input no : %d\n",no_input);
+  opDesc[iNoOp]->cpuCodeStream << "input["<< no_input <<"]" ;
+  opDesc[iNoOp]->gpuCodeStream << "input["<< no_input << "]";  
+ }
+
+<GP_COPY_OPCODE_CODE>"ERC" {
+  opDesc[iNoOp]->isERC = true;
+  opDesc[iNoOp]->cpuCodeStream << "root->erc_value" ;
+  opDesc[iNoOp]->gpuCodeStream << "k_progs[start_prog++];" ;
+  printf("ERC matched\n");
+}
+
+<GP_COPY_OPCODE_CODE>\n {
+  opDesc[iNoOp]->cpuCodeStream << "\n  ";
+  opDesc[iNoOp]->gpuCodeStream << "\n    ";
+ }
+
+
+<GP_COPY_OPCODE_CODE>. {
+  opDesc[iNoOp]->cpuCodeStream << yytext;
+  opDesc[iNoOp]->gpuCodeStream << yytext;
+ }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_HDR" { 
+  yyreset();
+  rewind(fpGenomeFile);
+  yyin = fpGenomeFile;
+  bIsCopyingGPEval = false;
+  if( bVERBOSE ) printf("Insert GP eval header\n");
+  iCOPY_GP_EVAL_STATUS = EVAL_HDR;
+  fprintf(fpOutputFile,"  ");
+  BEGIN COPY_GP_EVAL;
+ }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_BDY" {
+  yyreset();
+  rewind(fpGenomeFile);
+  yyin = fpGenomeFile;
+  bIsCopyingGPEval = false;
+  iCOPY_GP_EVAL_STATUS = EVAL_BDY;
+  if( bVERBOSE ) printf("Insert GP eval body\n");
+  fprintf(fpOutputFile,"      ");
+  BEGIN COPY_GP_EVAL;
+ }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_FTR" {
+  yyreset();
+  rewind(fpGenomeFile);
+  yyin = fpGenomeFile;
+  bIsCopyingGPEval = false;
+  iCOPY_GP_EVAL_STATUS = EVAL_FTR;
+  if( bVERBOSE ) printf("Insert GP eval footer\n");
+  fprintf(fpOutputFile,"  ");
+  BEGIN COPY_GP_EVAL;
+ }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_FTR_GPU" {
+  yyreset();
+  rewind(fpGenomeFile);
+  yyin = fpGenomeFile;
+  bIsCopyingGPEval = false;
+  iCOPY_GP_EVAL_STATUS = EVAL_FTR;
+  if( bVERBOSE ) printf("Insert GP eval footer\n");
+  fprintf(fpOutputFile,"  ");
+  bCOPY_GP_EVAL_GPU = true;
+  BEGIN COPY_GP_EVAL;
+ }
+
+
+<COPY_GP_EVAL><<EOF>> {
+  switch(iCOPY_GP_EVAL_STATUS){
+  case EVAL_HDR:
+    fprintf(stderr,"Error, no evaluator header has been defined\n");
+    exit(-1);
+  case EVAL_BDY:
+    fprintf(stderr,"Error, no evaluator body has been defined\n");
+    exit(-1);
+  case EVAL_FTR:
+    fprintf(stderr,"Error, no evaluator footer has been defined\n");
+    exit(-1);
+  }
+ }
+
+
+<COPY_GP_EVAL>"\\GenomeClass::evaluator"[ \t]*"header"[ \t]*":" {
+  if( iCOPY_GP_EVAL_STATUS==EVAL_HDR){
+    bIsCopyingGPEval = true;
+  }
+ }
+
+<COPY_GP_EVAL>"\\GenomeClass::evaluator"[ \t]*"for"[ \t]*"each"[ \t]*"fc"[ \t]*":" {
+  if( iCOPY_GP_EVAL_STATUS==EVAL_BDY){
+    bIsCopyingGPEval = true;
+  }
+ }
+
+
+
+<COPY_GP_EVAL>"\\GenomeClass::evaluator"[ \t]*"accumulator"[ \t]*":" {
+  if( iCOPY_GP_EVAL_STATUS==EVAL_FTR){
+    bIsCopyingGPEval = true;
+  }
+ }
+
+<COPY_GP_EVAL>"\\end" {
+  if( bIsCopyingGPEval ){
+    bIsCopyingGPEval = false;
+    bCOPY_GP_EVAL_GPU = false;
+    rewind(fpGenomeFile);
+    yyin = fpTemplateFile;
+    BEGIN TEMPLATE_ANALYSIS;
+  }
+ }
+
+<COPY_GP_EVAL>. {
+  if( bIsCopyingGPEval ) fprintf(fpOutputFile,"%s",yytext);
+ }
+
+<COPY_GP_EVAL>"OUTPUT" {
+  if( bIsCopyingGPEval) fprintf(fpOutputFile, "outputs[i]" );
+ }
+
+<COPY_GP_EVAL>"return " {
+  if( bIsCopyingGPEval )
+    if( iCOPY_GP_EVAL_STATUS==EVAL_FTR )
+      if( bCOPY_GP_EVAL_GPU ){
+	fprintf(fpOutputFile,"k_results[index] =");
+      }
+      else fprintf(fpOutputFile,"%s",yytext);
+ }
+
+
+
+
+<COPY_GP_EVAL>\n {
+  if( bIsCopyingGPEval )
+    switch(iCOPY_GP_EVAL_STATUS){
+    case EVAL_FTR:
+    case EVAL_HDR:
+      fprintf(fpOutputFile,"\n  ");
+      break;
+    case EVAL_BDY:
+      fprintf(fpOutputFile,"\n      ");
+      break;
+    }
+ }
+
+
+<COPY_GP_EVAL>"return"	{
+  if( bIsCopyingGPEval )
+    fprintf(fpOutputFile,"return fitness = "); 
+ }
+
+
+
 <TEMPLATE_ANALYSIS>"\\INSTEAD_EVAL_FUNCTION"  {
   //DEBUG_PRT_PRT("insert beg");
   yyreset();
@@ -191,9 +562,7 @@ exponent  ([Ee][+-]?[0-9]+)
   BEGIN COPY_INSTEAD_EVAL;
  }
 
-
 <TEMPLATE_ANALYSIS>"\\INSERT_END_GENERATION_FUNCTION"  {
-  //DEBUG_PRT_PRT("insert end");
   if (bVERBOSE) printf ("Inserting at the end of each generation function.\n");
   yyreset();
   yyin = fpGenomeFile;
@@ -202,14 +571,12 @@ exponent  ([Ee][+-]?[0-9]+)
   BEGIN COPY_END_GENERATION_FUNCTION;
  }
 
-
 <TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING"  {
   if (bVERBOSE) printf ("Inserting Bound Checking function.\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_BOUND_CHECKING_FUNCTION;
  }
-
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_USER_CLASSES"  {
   if (bVERBOSE) printf ("Analysing user classes.\n");
@@ -228,7 +595,6 @@ exponent  ([Ee][+-]?[0-9]+)
       //DEBUG_PRT_PRT("%p",pSym->Object->pType);
       pSym->Object->pType->printClasses(fpOutputFile);
     }
-
 
   if( TARGET == CUDA ){
     //DEBUG_PRT_PRT("User classes are :");
@@ -562,7 +928,8 @@ exponent  ([Ee][+-]?[0-9]+)
   lineCounter=1;
   BEGIN COPY_EVALUATOR;   
  }
-<TEMPLATE_ANALYSIS>"\\INSERT_OPTIMISER"  {        
+<TEMPLATE_ANALYSIS>"\\INSERT_OPTIMISER"  {      
+  if( bVERBOSE ) fprintf(stdout,"Inserting optimization function\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   lineCounter=1;
@@ -575,7 +942,8 @@ exponent  ([Ee][+-]?[0-9]+)
   lineCounter=1;
   BEGIN COPY_EVALUATOR;
  }
-<TEMPLATE_ANALYSIS>"\\INSERT_CUDA_OPTIMISOR"  {        
+<TEMPLATE_ANALYSIS>"\\INSERT_CUDA_OPTIMISOR"  { 
+  if( bVERBOSE ) fprintf(stdout,"Inserting cuda optimization function\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   bWithinCUDA_Evaluator = 1;
@@ -750,7 +1118,10 @@ if(OPERATING_SYSTEM=WINDOWS)
   if( TARGET==CUDA )
     strcat(sFileName,"Individual.cu");
   else if( TARGET==STD )
-    strcat(sFileName,"Individual.cpp");
+    if( TARGET_FLAVOR==CUDA_FLAVOR_GP )
+      strcat(sFileName,"Individual.cu");
+    else
+      strcat(sFileName,"Individual.cpp");
   fpOutputFile=fopen(sFileName,"w");    
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  }
@@ -1237,6 +1608,13 @@ if(OPERATING_SYSTEM=WINDOWS)
     yylval.pSymbol = new CSymbol(yytext);
     return IDENTIFIER;
     }
+<GENOME_ANALYSIS>"GPNode"            {
+  yylval.pSymbol = new CSymbol("GPNode");
+  //yylval.pSymbol->ObjectType = oPointer;
+  printf("match gpnode\n");
+  return GPNODE;
+ }
+
 <GENOME_ANALYSIS>"static"                  {return STATIC;}
 <GENOME_ANALYSIS>"int"                  {yylval.pSymbol = pSymbolTable->find("int"); return INT;}
 <GENOME_ANALYSIS>"double"                  {yylval.pSymbol = pSymbolTable->find("double"); return DOUBLE;}
@@ -1511,6 +1889,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>\/\/[^\n]* {fprintf(fpOutputFile,yytext);}         // blah blah on a line containing sth else
 <COPY_USER_FUNCTION>^[ \t]*\/\/[^\n]*\n {fprintf(fpOutputFile,yytext);} // blah blah on its own on a single line
 <COPY_USER_FUNCTION>\/\*[^\*]*\*\/\n {fprintf(fpOutputFile,yytext);printf("%s\n",yytext);}  /* blah blah on a line containing sth else */
+<COPY_USER_FUNCTION>\/\*[^\*]*\*\/ {fprintf(fpOutputFile,yytext);}  /* blah blah on a line containing sth else */
 <COPY_USER_FUNCTION>^[ \t]*\/\*[^\*]*\*\/[ \t]*\n {fprintf(fpOutputFile,yytext);} /* blah blah with nothing before the comment */
 
 <COPY_USER_FUNCTION>"GenomeClass"  {
@@ -1715,7 +2094,37 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 \n {
   lineCounter++;
-}                                      
+}                          
+<GET_PARAMETERS>[Mm]"ax"[ \t\n]+"init"[ \t\n]+"tree"[ \t\n]+"depth"[ \t\n]+":" {
+  if( bVERBOSE ) printf("\tMax init tree depth...\n");
+  return MAX_INIT_TREE_D;
+ }            
+
+<GET_PARAMETERS>[Mm]"in"[ \t\n]+"init"[ \t\n]+"tree"[ \t\n]+"depth"[ \t\n]+":" {
+  if( bVERBOSE ) printf("\tMin init tree depth...\n");
+  return MIN_INIT_TREE_D;
+ }            
+
+<GET_PARAMETERS>[Mm]"ax"[ \t\n]+"tree"[ \t\n]+"depth"[ \t\n]+":" {
+  if( bVERBOSE ) printf("\tMax tree depth...\n");
+  return MAX_TREE_D;
+ }            
+
+<GET_PARAMETERS>[Nn]"b"[ \t\n]+"of"[ \t\n]+"GPUs"[ \t\n]+":" {
+  if( bVERBOSE ) printf("\tNo of GPUs...\n");
+  return NB_GPU;
+ }            
+
+<GET_PARAMETERS>[Ss]"ize"[ \t\n]+"of"[ \t\n]+"prog"[ \t\n]+"buffer"[ \t\n]+":" {
+  if( bVERBOSE ) printf("\tProgramm length buffer...\n");
+  return PRG_BUF_SIZE;
+ }            
+
+<GET_PARAMETERS>[Nn]"b"[ \t\n]+"of"[ \t\n]+"fitness"[ \t\n]+"cases"[ \t\n]+":" {
+  if( bVERBOSE ) printf("\tNo of fitness cases...\n");
+  return NO_FITNESS_CASES;
+ }            
+
 
 
 //****************************************
@@ -1824,11 +2233,13 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       strcat(sTemp,"CUDA.tpl");
     else if(TARGET_FLAVOR == CUDA_FLAVOR_CMAES )
       strcat(sTemp,"CMAES_CUDA.tpl");
+    else if( TARGET_FLAVOR == CUDA_FLAVOR_GP )
+      strcat(sTemp,"CUDA_GP.tpl");
     else if(TARGET_FLAVOR == CUDA_FLAVOR_MEMETIC )
       strcat(sTemp,"CUDA_MEM.tpl");
     else 
       strcat(sTemp,"CUDA_MO.tpl");
-
+    printf("tpl file : %s\n",sTemp);
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
       fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
       fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
@@ -1848,7 +2259,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
       fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
       exit(1);
-    } }
+    }
+  }
   
   
   if ((sRAW_PROJECT_NAME[0]=='"')&&(OPERATING_SYSTEM!=WINDOWS)){

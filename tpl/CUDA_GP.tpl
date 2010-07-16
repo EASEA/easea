@@ -29,6 +29,11 @@ size_t *EZ_NB_GEN;
 size_t *EZ_current_generation;
 CEvolutionaryAlgorithm* EA;
 
+
+
+\ANALYSE_GP_OPCODE
+
+
 int main(int argc, char** argv){
 
 
@@ -77,16 +82,367 @@ int main(int argc, char** argv){
 #include "CEvolutionaryAlgorithm.h"
 #include "global.h"
 #include "CIndividual.h"
+#include "CCuda.h"
+#include "CGPNode.h"
+
+float* input_k;
+float* output_k;
+int* indexes_k;
+float* progs_k;
+float* results_k;
+int* hits_k;
 
 using namespace std;
 
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
+int fitnessCasesSetLength;
+
+
+float** inputs;
+float* outputs;
+int* indexes;
+int* hits;
+float* results;
+float* progs;
+
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
-#define STD_TPL
 #define CUDA_GP_TPL
+#define GROW_FULL_RATIO 0.5
+
+
+#define NUMTHREAD2 128
+#define MAX_STACK 50
+#define LOGNUMTHREAD2 7
+
+#define HIT_LEVEL  0.01f
+#define PROBABLY_ZERO  1.11E-15f
+#define BIG_NUMBER 1.0E15f
+
+
+/* Insert declarations about opcodes*/
+\INSERT_GP_OPCODE_DECL
+
+float recEvaleDrone(GPNode* root, float* input) {
+  float OP1=0, OP2= 0, RESULT = 0;
+  if( opArity[root->opCode]>=1) OP1 = recEvaleDrone(root->children[0],input);
+  if( opArity[root->opCode]>=2) OP2 = recEvaleDrone(root->children[1],input);
+  switch( root->opCode ){
+\INSERT_GP_CPU_SWITCH
+  default:
+    fprintf(stderr,"error unknown terminal opcode %d\n",root->opCode);
+    exit(-1);
+  }
+  return RESULT;
+}
+
+__device__ float eval_tree_gpu(unsigned fc_id, const float * k_progs, const float * input){
+  float RESULT;
+  float OP1, OP2;
+  float stack[MAX_STACK];
+  int sp=0;
+  int start_prog = 0;
+  int codop =  k_progs[start_prog++];
+
+
+  while (codop != OP_RETURN){
+    switch(codop){
+
+\INSERT_GP_GPU_SWITCH
+    }
+    codop =  k_progs[start_prog++];
+  }
+
+  
+  return stack[0];
+}
+
+
+/**
+   Send input and output data on the GPU memory.
+   Allocate
+ */
+void initialDataToGPU(float* input_f, int length_input, float* output_f, int length_output){
+  // allocate and copy input/output arrays
+  CUDA_SAFE_CALL(cudaMalloc((void**)(&input_k),sizeof(float)*length_input));
+  CUDA_SAFE_CALL(cudaMalloc((void**)(&output_k),sizeof(float)*length_output));
+  CUDA_SAFE_CALL(cudaMemcpy(input_k,input_f,sizeof(float)*length_input,cudaMemcpyHostToDevice));
+  CUDA_SAFE_CALL(cudaMemcpy(output_k,output_f,sizeof(float)*length_output,cudaMemcpyHostToDevice));
+
+  // allocate indexes and programs arrays
+  int maxPopSize = MAX(EA->population->parentPopulationSize,EA->population->offspringPopulationSize);
+  CUDA_SAFE_CALL(cudaMalloc((void**)&indexes_k,sizeof(*indexes_k)*maxPopSize));
+  CUDA_SAFE_CALL( cudaMalloc((void**)&progs_k,sizeof(*progs_k)*MAX_PROGS_SIZE));
+
+  // allocate hits and results arrays
+  CUDA_SAFE_CALL(cudaMalloc((void**)&results_k,sizeof(*indexes_k)*maxPopSize));
+  CUDA_SAFE_CALL(cudaMalloc((void**)&hits_k,sizeof(*indexes_k)*maxPopSize));
+}
+
+/**
+   Free gpu memory from the input and ouput arrays.
+ */
+void free_gpu(){
+  cudaFree(input_k);
+  cudaFree(output_k);
+  cudaFree(progs_k);
+  cudaFree(indexes_k);
+  cout << "GPU freed" << endl;
+}
+
+
+
+
+
+
+
+
+__global__ static void 
+EvaluatePostFixIndividuals_128(const float * k_progs,
+			       const int maxprogssize,
+			       const int popsize,
+			       const float * k_inputs,
+			       const float * outputs,
+			       const int trainingSetSize,
+			       float * k_results,
+			       int *k_hits,
+			       int* k_indexes
+			       )
+{
+  __shared__ float tmpresult[NUMTHREAD2];
+  __shared__ float tmphits[NUMTHREAD2];
+  
+  const int tid = threadIdx.x; //0 to NUM_THREADS-1
+  const int bid = blockIdx.x; // 0 to NUM_BLOCKS-1
+
+  
+  int index;   // index of the prog processed by the block 
+  float sum = 0.0;
+  int hits = 0 ; // hits number
+
+  float currentOutput;
+  float ERROR;
+
+  index = bid; // one program per block => block ID = program number
+ 
+  if (index >= popsize) // idle block (should never occur)
+    return;
+  if (k_progs[index] == -1.0) // already evaluated
+    return;
+
+  // Here, it's a busy thread
+
+  sum = 0.0;
+  hits = 0 ; // hits number
+  
+  // Loop on training cases, per cluster of 32 cases (= number of thread)
+  // (even if there are only 8 stream processors, we must spawn at least 32 threads) 
+  // We loop from 0 to upper bound INCLUDED in case trainingSetSize is not 
+  // a multiple of NUMTHREAD
+
+  \INSERT_GENOME_EVAL_HDR
+
+  for (int i=0; i < ((trainingSetSize-1)>>LOGNUMTHREAD2)+1; i++) {
+    
+    // are we on a busy thread?
+    if (i*NUMTHREAD2+tid >= trainingSetSize) // no!
+      continue;
+    currentOutput = outputs[i*NUMTHREAD2+tid];
+
+    float EVOLVED_VALUE = eval_tree_gpu(i, k_progs+k_indexes[index], k_inputs+(i*NUMTHREAD2+tid));
+\INSERT_GENOME_EVAL_BDY
+
+    
+    if (!(ERROR < BIG_NUMBER))
+      ERROR = BIG_NUMBER;
+    else if (ERROR < PROBABLY_ZERO)
+      ERROR = 0.0;
+    
+    if (ERROR <= HIT_LEVEL)
+      hits++;
+    
+    sum += ERROR; // sum raw error on all training cases
+    
+  } // LOOP ON TRAINING CASES
+  
+  // gather results from all threads => we need to synchronize
+  tmpresult[tid] = sum;
+  tmphits[tid] = hits;
+  __syncthreads();
+
+  if (tid == 0) {
+    for (int i = 1; i < NUMTHREAD2; i++) {
+      tmpresult[0] += tmpresult[i];
+      tmphits[0] += tmphits[i];
+    }    
+    ERROR = tmpresult[0];
+    \INSERT_GENOME_EVAL_FTR_GPU
+    k_results[index] = sqrtf(tmpresult[0]/512);
+    k_hits[index] = tmphits[0];
+  }  
+  // here results and hits have been stored in their respective array: we can leave
+}
+
+int flattening_tree_rpn( GPNode* root, float* buf, int* index){
+  int i;
+
+  for( i=0 ; i<opArity[(int)root->opCode] ; i++ ){
+    flattening_tree_rpn(root->children[i],buf,index);
+  }
+  if( (*index)+2>MAX_PROGS_SIZE )return 0;
+  buf[(*index)++] = root->opCode;
+  if( root->opCode == OP_ERC ) buf[(*index)++] = root->erc_value;
+  return 1;
+}
+
+
+
+GPNode* pickNthNode(GPNode* root, int N, int* childId){
+
+  GPNode* stack[TREE_DEPTH_MAX*MAX_ARITY];
+  GPNode* parentStack[TREE_DEPTH_MAX*MAX_ARITY];
+  int stackPointer = 0;
+
+  parentStack[stackPointer] = NULL;
+  stack[stackPointer++] = root;
+
+  for( int i=0 ; i<N ; i++ ){
+    GPNode* currentNode = stack[stackPointer-1];
+    //cout <<  currentNode << endl;
+    stackPointer--;
+    for( int j=opArity[currentNode->opCode] ; j>0 ; j--){
+      parentStack[stackPointer] = currentNode;
+      stack[stackPointer++] = currentNode->children[j-1];
+    }
+  }
+
+  //assert(stackPointer>0);
+  if( stackPointer )
+    stackPointer--;
+
+  //cout << "f : \n\t n :" << stack[stackPointer ] << "\n\t p :" << parentStack[stackPointer] << " cId : " << \
+  //(*childId) << endl;
+
+  for( int i=0 ; i<opArity[parentStack[stackPointer]->opCode] ; i++ ){
+    if( parentStack[stackPointer]->children[i]==stack[stackPointer] ){
+      (*childId)=i;
+      break;
+    }
+  }
+  return parentStack[stackPointer];
+}
+
+
+void simple_mutator(IndividualImpl* Genome){
+
+  // Cassical  mutation
+  // select a node
+  int mutationPointChildId = 0;
+  int mutationPointDepth = 0;
+  //toDotFile( Genome.root[tree], "out/mutation/p", tree);
+  GPNode* mutationPointParent = selectNode(Genome->root, &mutationPointChildId, &mutationPointDepth);
+  
+  
+  if( !mutationPointParent ){
+    mutationPointParent = Genome->root;
+    mutationPointDepth = 0;
+  }
+  delete mutationPointParent->children[mutationPointChildId] ;
+  mutationPointParent->children[mutationPointChildId] = NULL;
+  mutationPointParent->children[mutationPointChildId] =
+    construction_method( VAR_LEN+1, OPCODE_SIZE , 1, TREE_DEPTH_MAX-mutationPointDepth ,0,opArity,OP_ERC);
+
+}
+
+void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
+  int depthP1 = depthOfTree(p1.root);
+  int depthP2 = depthOfTree(p2.root);
+
+  int nbNodeP1 = enumTreeNodes(p1.root);
+   int nbNodeP2 = enumTreeNodes(p2.root);
+
+  int stockPointChildId=0;
+  int graftPointChildId=0;
+
+  bool stockCouldBeTerminal = globalRandomGenerator->tossCoin(0.1);
+  bool graftCouldBeTerminal = globalRandomGenerator->tossCoin(0.1);
+
+  int childrenDepth = 0, Np1 = 0 , Np2 = 0;
+  GPNode* stockParentNode = NULL;
+  GPNode* graftParentNode = NULL;
+
+  do{
+  choose_node:
+    /* Np1 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP1); */
+    /* Np2 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP2); */
+
+    if( nbNodeP1<2 ) Np1=0;
+    else Np1 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP1);
+    if( nbNodeP2<2 ) Np2=0;
+    else Np2 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP2);
+
+    
+    if( Np1!=0 ) stockParentNode = pickNthNode(c.root, MIN(Np1,nbNodeP1) ,&stockPointChildId);
+    if( Np2!=0 ) graftParentNode = pickNthNode(p2.root, MIN(Np2,nbNodeP1) ,&graftPointChildId);
+
+    // is the stock and the graft an authorized type of node (leaf or inner-node)
+    if( Np1 && !stockCouldBeTerminal && opArity[stockParentNode->children[stockPointChildId]->opCode]==0 ) goto choose_node;
+    if( Np2 && !graftCouldBeTerminal && opArity[graftParentNode->children[graftPointChildId]->opCode]==0 ) goto choose_node;
+    
+    if( Np2 && Np1)
+      childrenDepth = depthOfNode(c.root,stockParentNode)+depthOfTree(graftParentNode->children[graftPointChildId]);
+    else if( Np1 ) childrenDepth = depthOfNode(c.root,stockParentNode)+depthP1;
+    else if( Np2 ) childrenDepth = depthOfTree(graftParentNode->children[graftPointChildId]);
+    else childrenDepth = depthP2;
+    
+  }while( childrenDepth>TREE_DEPTH_MAX );
+  
+  if( Np1 && Np2 ){
+    delete stockParentNode->children[stockPointChildId];
+    stockParentNode->children[stockPointChildId] = graftParentNode->children[graftPointChildId];
+    graftParentNode->children[graftPointChildId] = NULL;
+  }
+  else if( Np1 ){ // && Np2==NULL
+    // We want to use the root of the parent 2 as graft
+    delete stockParentNode->children[stockPointChildId];
+    stockParentNode->children[stockPointChildId] = p2.root;
+    p2.root = NULL;
+  }else if( Np2 ){ // && Np1==NULL
+    // We want to use the root of the parent 1 as stock
+    delete c.root;
+    c.root = graftParentNode->children[graftPointChildId];
+    graftParentNode->children[graftPointChildId] = NULL;
+  }else{
+    // We want to switch root nodes between parents
+    delete c.root;
+    c.root  = p2.root;
+    p2.root = NULL;
+  }
+}
+
+
+
+
+
+
+float IndividualImpl::evaluate(){
+  float ERROR;
+  float sum = 0;
+  \INSERT_GENOME_EVAL_HDR
+
+   for( int i=0 ; i<fitnessCasesSetLength-1 ; i++ ){
+     float EVOLVED_VALUE = recEvaleDrone(this->root,inputs[i]);
+     \INSERT_GENOME_EVAL_BDY
+     sum += ERROR;
+   }
+  this->valid = true;
+  ERROR = sum;
+  \INSERT_GENOME_EVAL_FTR    
+}
+
+
 
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
@@ -101,15 +457,85 @@ extern CEvolutionaryAlgorithm* EA;
 \INSERT_BOUND_CHECKING
 
 void evale_pop_chunk(CIndividual** population, int popSize){
+  int index = 0;
+  for( int i=0 ; i<popSize ; i++ ){
+    indexes[i] = index;
+    flattening_tree_rpn( ((IndividualImpl*)population[i])->root, progs, &index);
+    progs[index++] = OP_RETURN;
+  }
+
+  CUDA_SAFE_CALL(cudaMemcpy( progs_k, progs, sizeof(float)*index, cudaMemcpyHostToDevice ));
+  CUDA_SAFE_CALL(cudaMemcpy( indexes_k, indexes, sizeof(float)*popSize, cudaMemcpyHostToDevice ));
+
+  cudaStream_t st;
+  cudaStreamCreate(&st);
+
+  // Here we will do the real GPU evaluation
+  EvaluatePostFixIndividuals_128<<<popSize,128,st>>>( progs_k, index, popSize, input_k, output_k, fitnessCasesSetLength, results_k, hits_k, indexes_k);
+  CUDA_SAFE_CALL(cudaStreamSynchronize(st));
+
+
+  //CUDA_SAFE_CALL(cudaMemcpy( hits, hits_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost));
+  CUDA_SAFE_CALL(cudaMemcpy( results, results_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost));
+
+
+  for( int i=0 ; i<popSize ; i++ ){
+    population[i]->fitness = results[i];
+    //population[i]->valid = false;
+    //float res = population[i]->evaluate();
+    //float err = sqrtf(res-results[i]);
+    //if( err>res*0.1 )
+    //printf("error in evaluation of %d : %f\n",i,err);
+    population[i]->valid = true;
+  }
+  
+
+
   \INSTEAD_EVAL_FUNCTION
 }
 
 void EASEAInit(int argc, char** argv){
-	\INSERT_INIT_FCT_CALL
+
+  int maxPopSize = MAX(EA->population->parentPopulationSize,EA->population->offspringPopulationSize);
+
+  // load data from csv file.
+  cout<<"Before everything else function called "<<endl;
+  //fitnessCasesSetLength = load_data(&inputs,&outputs,"data_koza_sextic.csv");
+  fitnessCasesSetLength = generateData(&inputs,&outputs);
+  cout << "number of point in fitness cases set : " << fitnessCasesSetLength << endl;
+
+  float* inputs_f = NULL;
+
+  flattenDatas2D(inputs,fitnessCasesSetLength,VAR_LEN,&inputs_f);
+
+  indexes = new int[maxPopSize];
+  hits    = new int[maxPopSize];
+  results = new float[maxPopSize];
+  progs   = new float[MAX_PROGS_SIZE];
+  
+  INSTEAD_EVAL_STEP=true;
+
+  initialDataToGPU(inputs_f, fitnessCasesSetLength*VAR_LEN, outputs, fitnessCasesSetLength);
+
+
+
+  \INSERT_INIT_FCT_CALL
 }
 
 void EASEAFinal(CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
+
+  // not sure that the population is sorted now. So lets do another time (or check in the code;))
+  // and dump the best individual in a graphviz file.
+  //population->sortParentPopulation();
+  //toDotFile( ((IndividualImpl*)population->parents[0])->root[0], "best-of-run",0);
+  
+  // delete some global arrays
+  delete[] indexes; delete[] hits;
+  delete[] results; delete[] progs;
+  
+  //free_gpu();
+  free_data();
 }
 
 void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
@@ -139,15 +565,6 @@ IndividualImpl::~IndividualImpl(){
   \GENOME_DTOR
 }
 
-
-float IndividualImpl::evaluate(){
-  if(valid)
-    return fitness;
-  else{
-    valid = true;
-    \INSERT_EVALUATOR
-  }
-}
 
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 
@@ -218,6 +635,11 @@ size_t IndividualImpl::mutate( float pMutationPerGene ){
 
 void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
+	seed = setVariable("seed",(int)time(0));
+	globalRandomGenerator = new CRandomGenerator(seed);
+	this->randomGenerator = globalRandomGenerator;
+
+
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 
@@ -282,12 +704,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	
 	this->optimise = 0;
 
-	seed = setVariable("seed",(int)time(0));
-	globalRandomGenerator = new CRandomGenerator(seed);
-	this->randomGenerator = globalRandomGenerator;
 
 	this->printStats = setVariable("printStats",\PRINT_STATS);
-	this->generateCVSFile = setVariable("generateCVSFile",\GENERATE_CVS_FILE);
+	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
 	this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
 	this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
 	this->plotStats = setVariable("plotStats",\PLOT_STATS);
@@ -329,7 +748,7 @@ EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvol
 }
 
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
-
+  
 }
 
 \START_CUDA_GENOME_H_TPL
@@ -337,11 +756,14 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #ifndef PROBLEM_DEP_H
 #define PROBLEM_DEP_H
 
+\INSERT_GP_PARAMETERS
+
 //#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
 #include <CIndividual.h>
 #include <Parameters.h>
+#include <CGPNode.h>
 class CRandomGenerator;
 class CSelectionOperator;
 class CGenerationalCriterion;
@@ -602,7 +1024,7 @@ easeaclean:
 --plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---generateCSV=\GENERATE_CVS_FILE
+--generateCSV=\GENERATE_CSV_FILE
 --generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 \TEMPLATE_END

@@ -61,7 +61,9 @@ float fMUT_PROB;
 float fXOVER_PROB;
 FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile;//, *fpExplodedGenomeFile;
 
-#line 65 "EaseaParse.cpp"
+ unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_SIZE,iMAX_TREE_DEPTH,iMAX_XOVER_DEPTH,iNO_FITNESS_CASES;
+
+#line 67 "EaseaParse.cpp"
 // repeated because of possible precompiled header
 #include <cyacc.h>
 
@@ -73,7 +75,7 @@ FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile;//, *fpExplodedGenomeFile;
 YYPARSENAME::YYPARSENAME()
 {
 	yytables();
-#line 161 "EaseaParse.y"
+#line 172 "EaseaParse.y"
 
       CSymbol *pNewBaseType;
 
@@ -107,7 +109,7 @@ YYPARSENAME::YYPARSENAME()
       pNewBaseType->ObjectType=oBaseClass;
       SymbolTable.insert(pNewBaseType);
 
-#line 111 "EaseaParse.cpp"
+#line 113 "EaseaParse.cpp"
 }
 
 #ifndef YYSTYPE
@@ -152,12 +154,12 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 201 "EaseaParse.y"
+#line 212 "EaseaParse.y"
 
         if (bVERBOSE){ printf("                    _______________________________________\n");
         printf ("\nGeneration of the C++ source file for %s.\n\n",sPROJECT_NAME);}
       
-#line 161 "EaseaParse.cpp"
+#line 163 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -168,12 +170,12 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 206 "EaseaParse.y"
+#line 217 "EaseaParse.y"
 
         if (bVERBOSE) printf("                    _______________________________________\n");
         if (bVERBOSE) printf ("\nGeneration of the C++ source file for %s.\n\n",sPROJECT_NAME);
       
-#line 177 "EaseaParse.cpp"
+#line 179 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -184,10 +186,10 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 214 "EaseaParse.y"
+#line 225 "EaseaParse.y"
 
     if (bVERBOSE) printf("Declaration of user classes :\n\n");
-#line 191 "EaseaParse.cpp"
+#line 193 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -198,10 +200,10 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 217 "EaseaParse.y"
+#line 228 "EaseaParse.y"
 
       if (bVERBOSE) printf("No user class declaration found other than GenomeClass.\n");
-#line 205 "EaseaParse.cpp"
+#line 207 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -212,7 +214,7 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 227 "EaseaParse.y"
+#line 238 "EaseaParse.y"
 
       pCURRENT_CLASS=SymbolTable.insert(yyattribute(1 - 1).pSymbol);  
       pCURRENT_CLASS->pSymbolList=new CLList<CSymbol *>();
@@ -220,7 +222,7 @@ void YYPARSENAME::yyaction(int action)
       //DEBUG_PRT("Yacc Symbol declaration %s %d",$1->sName,$1->nSize);
       pCLASSES[nClasses_nb++] = yyattribute(1 - 1).pSymbol;
     
-#line 224 "EaseaParse.cpp"
+#line 226 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -231,12 +233,12 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 6);
 #endif
 			{
-#line 234 "EaseaParse.y"
+#line 245 "EaseaParse.y"
 
       if (bVERBOSE) printf("Class %s declared for %d bytes.\n\n",yyattribute(1 - 5).pSymbol->sName,yyattribute(1 - 5).pSymbol->nSize);
       //DEBUG_PRT("Yacc variable declaration %s %d",$1->sName,$1->nSize);
     
-#line 240 "EaseaParse.cpp"
+#line 242 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -247,9 +249,9 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 247 "EaseaParse.y"
+#line 258 "EaseaParse.y"
 pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattribute(1 - 2).ObjectQualifier;
-#line 253 "EaseaParse.cpp"
+#line 255 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -260,9 +262,9 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 247 "EaseaParse.y"
+#line 258 "EaseaParse.y"
 
-#line 266 "EaseaParse.cpp"
+#line 268 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -273,9 +275,9 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 248 "EaseaParse.y"
+#line 259 "EaseaParse.y"
 pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattribute(1 - 2).ObjectQualifier;
-#line 279 "EaseaParse.cpp"
+#line 281 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -286,9 +288,9 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 248 "EaseaParse.y"
+#line 259 "EaseaParse.y"
 
-#line 292 "EaseaParse.cpp"
+#line 294 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -299,13 +301,13 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 253 "EaseaParse.y"
+#line 264 "EaseaParse.y"
 
     pCURRENT_CLASS->sString = new char[strlen(yyattribute(2 - 2).szString) + 1];
     strcpy(pCURRENT_CLASS->sString, yyattribute(2 - 2).szString);      
     if (bVERBOSE) printf("\n    The following methods have been declared:\n\n%s\n\n",pCURRENT_CLASS->sString);
     
-#line 309 "EaseaParse.cpp"
+#line 311 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -316,17 +318,17 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 261 "EaseaParse.y"
+#line 272 "EaseaParse.y"
 (*(YYSTYPE YYFAR*)yyvalptr).ObjectQualifier=1;
-#line 322 "EaseaParse.cpp"
+#line 324 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 12:
 		{
-#line 262 "EaseaParse.y"
+#line 273 "EaseaParse.y"
 (*(YYSTYPE YYFAR*)yyvalptr).ObjectQualifier=0;
-#line 330 "EaseaParse.cpp"
+#line 332 "EaseaParse.cpp"
 		}
 		break;
 	case 13:
@@ -336,9 +338,9 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 267 "EaseaParse.y"
+#line 278 "EaseaParse.y"
 
-#line 342 "EaseaParse.cpp"
+#line 344 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -349,9 +351,9 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 271 "EaseaParse.y"
+#line 282 "EaseaParse.y"
 
-#line 355 "EaseaParse.cpp"
+#line 357 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -362,9 +364,9 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 272 "EaseaParse.y"
+#line 283 "EaseaParse.y"
 
-#line 368 "EaseaParse.cpp"
+#line 370 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -375,7 +377,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 285 "EaseaParse.y"
+#line 297 "EaseaParse.y"
   
       CSymbol *pSym=SymbolTable.find(yyattribute(1 - 1).pSymbol->sName);
       if (pSym==NULL) {
@@ -385,7 +387,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
       }       
       else (*(YYSTYPE YYFAR*)yyvalptr).pSymbol=pSym;
     
-#line 389 "EaseaParse.cpp"
+#line 391 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -396,7 +398,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 306 "EaseaParse.y"
+#line 318 "EaseaParse.y"
 
 //      CSymbol *pSym;
 //      pSym=$1;
@@ -409,7 +411,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
         pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)(yyattribute(1 - 1).pSymbol));
         if (bVERBOSE) printf("    %s variable declared (%d bytes)\n",yyattribute(1 - 1).pSymbol->sName,yyattribute(1 - 1).pSymbol->nSize);
     
-#line 413 "EaseaParse.cpp"
+#line 415 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -420,7 +422,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 318 "EaseaParse.y"
+#line 330 "EaseaParse.y"
 
       yyattribute(2 - 2).pSymbol->nSize=sizeof (char *);
       yyattribute(2 - 2).pSymbol->pClass=pCURRENT_CLASS;
@@ -431,18 +433,40 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
       pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)(yyattribute(2 - 2).pSymbol));
       if (bVERBOSE) printf("    %s pointer declared (%d bytes)\n",yyattribute(2 - 2).pSymbol->sName,yyattribute(2 - 2).pSymbol->nSize);
     
-#line 435 "EaseaParse.cpp"
+#line 437 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 19:
 		{
 #ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
+#endif
+			{
+#line 340 "EaseaParse.y"
+
+      yyattribute(2 - 2).pSymbol->nSize=sizeof (char *);
+      yyattribute(2 - 2).pSymbol->pClass=pCURRENT_CLASS;
+      yyattribute(2 - 2).pSymbol->pType=pCURRENT_TYPE;
+      yyattribute(2 - 2).pSymbol->ObjectType=oPointer;
+      yyattribute(2 - 2).pSymbol->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+      pCURRENT_CLASS->nSize+=yyattribute(2 - 2).pSymbol->nSize;
+      pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)(yyattribute(2 - 2).pSymbol));
+      if (bVERBOSE) printf("    %s NULL pointer declared (%d bytes)\n",yyattribute(2 - 2).pSymbol->sName,yyattribute(2 - 2).pSymbol->nSize);
+    
+#line 459 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 20:
+		{
+#ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[4];
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 328 "EaseaParse.y"
+#line 350 "EaseaParse.y"
 
       yyattribute(3 - 3).pSymbol->nSize=sizeof (char *);
       yyattribute(3 - 3).pSymbol->pClass=pCURRENT_CLASS;
@@ -455,18 +479,18 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
       fprintf(stderr,"Pointer of pointer doesn't work properly yet\n");
       exit(-1);
     
-#line 459 "EaseaParse.cpp"
+#line 483 "EaseaParse.cpp"
 			}
 		}
 		break;
-	case 20:
+	case 21:
 		{
 #ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[5];
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 341 "EaseaParse.y"
+#line 363 "EaseaParse.y"
 
       if((TARGET_FLAVOR==STD_FLAVOR_CMAES || TARGET_FLAVOR==CUDA_FLAVOR_CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=yyattribute(1 - 4).pSymbol->sName; nPROBLEM_DIM=(int)yyattribute(3 - 4).dValue;}
 
@@ -481,18 +505,18 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
       pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)(yyattribute(1 - 4).pSymbol));
       if (bVERBOSE) printf("    %s array declared (%d bytes)\n",yyattribute(1 - 4).pSymbol->sName,yyattribute(1 - 4).pSymbol->nSize);
     
-#line 485 "EaseaParse.cpp"
+#line 509 "EaseaParse.cpp"
 			}
 		}
 		break;
-	case 21:
+	case 22:
 		{
 #ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[6];
 			yyinitdebug((void YYFAR**)yya, 6);
 #endif
 			{
-#line 355 "EaseaParse.y"
+#line 377 "EaseaParse.y"
 
 
     // this is for support of pointer array. This should be done in a more generic way in a later version
@@ -513,20 +537,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
       printf("DEBUG : size of $4 %d nSize %d\n",(int)yyattribute(4 - 5).dValue,pCURRENT_TYPE->nSize);
       if (bVERBOSE) printf("    %s array of pointers declared (%d bytes)\n",yyattribute(2 - 5).pSymbol->sName,yyattribute(2 - 5).pSymbol->nSize);
     
-#line 517 "EaseaParse.cpp"
-			}
-		}
-		break;
-	case 22:
-		{
-#ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[2];
-			yyinitdebug((void YYFAR**)yya, 2);
-#endif
-			{
-#line 383 "EaseaParse.y"
-
-#line 530 "EaseaParse.cpp"
+#line 541 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -537,7 +548,20 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 396 "EaseaParse.y"
+#line 405 "EaseaParse.y"
+
+#line 554 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 24:
+		{
+#ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[2];
+			yyinitdebug((void YYFAR**)yya, 2);
+#endif
+			{
+#line 418 "EaseaParse.y"
 
     ////DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName);
       if (bVERBOSE) printf ("\nGenome declaration analysis :\n\n");
@@ -548,33 +572,20 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
       pGENOME->ObjectQualifier=0;
       pGENOME->sString=NULL;
     
-#line 552 "EaseaParse.cpp"
-			}
-		}
-		break;
-	case 24:
-		{
-#ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[6];
-			yyinitdebug((void YYFAR**)yya, 6);
-#endif
-			{
-#line 406 "EaseaParse.y"
-
-#line 565 "EaseaParse.cpp"
+#line 576 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 25:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[2];
-			yyinitdebug((void YYFAR**)yya, 2);
+			YYSTYPE YYFAR* yya[6];
+			yyinitdebug((void YYFAR**)yya, 6);
 #endif
 			{
-#line 423 "EaseaParse.y"
+#line 428 "EaseaParse.y"
 
-#line 578 "EaseaParse.cpp"
+#line 589 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -585,9 +596,9 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 427 "EaseaParse.y"
-(*(YYSTYPE YYFAR*)yyvalptr).pSymbol=yyattribute(1 - 1).pSymbol;
-#line 591 "EaseaParse.cpp"
+#line 445 "EaseaParse.y"
+
+#line 602 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -598,177 +609,177 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 436 "EaseaParse.y"
-         
-      if (bVERBOSE) printf("Inserting genome initialiser (taken from .ez file).\n");
-    
-#line 606 "EaseaParse.cpp"
+#line 449 "EaseaParse.y"
+(*(YYSTYPE YYFAR*)yyvalptr).pSymbol=yyattribute(1 - 1).pSymbol;
+#line 615 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 28:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[2];
+			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 439 "EaseaParse.y"
-
-#line 619 "EaseaParse.cpp"
+#line 458 "EaseaParse.y"
+         
+      if (bVERBOSE) printf("Inserting genome initialiser (taken from .ez file).\n");
+    
+#line 630 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 29:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[2];
-			yyinitdebug((void YYFAR**)yya, 2);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 440 "EaseaParse.y"
+#line 461 "EaseaParse.y"
 
-      if (bVERBOSE) printf("Inserting user genome crossover (taken from .ez file).\n");
-    
-#line 634 "EaseaParse.cpp"
+#line 643 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 30:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[2];
+			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 443 "EaseaParse.y"
+#line 462 "EaseaParse.y"
 
-#line 647 "EaseaParse.cpp"
+      if (bVERBOSE) printf("Inserting user genome crossover (taken from .ez file).\n");
+    
+#line 658 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 31:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[2];
-			yyinitdebug((void YYFAR**)yya, 2);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 444 "EaseaParse.y"
+#line 465 "EaseaParse.y"
 
-      if (bVERBOSE) printf("Inserting user genome mutator (taken from .ez file).\n");
-    
-#line 662 "EaseaParse.cpp"
+#line 671 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 32:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[2];
+			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 447 "EaseaParse.y"
+#line 466 "EaseaParse.y"
 
-#line 675 "EaseaParse.cpp"
+      if (bVERBOSE) printf("Inserting user genome mutator (taken from .ez file).\n");
+    
+#line 686 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 33:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[2];
-			yyinitdebug((void YYFAR**)yya, 2);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 448 "EaseaParse.y"
- 
-      if (bVERBOSE) printf("Inserting user genome evaluator (taken from .ez file).\n");
-    
-#line 690 "EaseaParse.cpp"
+#line 469 "EaseaParse.y"
+
+#line 699 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 34:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[2];
+			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 451 "EaseaParse.y"
-
-#line 703 "EaseaParse.cpp"
+#line 470 "EaseaParse.y"
+ 
+      if (bVERBOSE) printf("Inserting user genome evaluator (taken from .ez file).\n");
+    
+#line 714 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 35:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[2];
-			yyinitdebug((void YYFAR**)yya, 2);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 452 "EaseaParse.y"
- 
-      if (bVERBOSE) printf("Inserting user genome optimiser (taken from .ez file).\n");
-    
-#line 718 "EaseaParse.cpp"
+#line 473 "EaseaParse.y"
+
+#line 727 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 36:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[2];
+			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 455 "EaseaParse.y"
-
-#line 731 "EaseaParse.cpp"
+#line 474 "EaseaParse.y"
+ 
+      if (bVERBOSE) printf("Inserting user genome optimiser (taken from .ez file).\n");
+    
+#line 742 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 37:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[3];
-			yyinitdebug((void YYFAR**)yya, 3);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 456 "EaseaParse.y"
+#line 477 "EaseaParse.y"
 
-     //DEBUG_PRT("User makefile options have been reduced");
-     
-#line 746 "EaseaParse.cpp"
+#line 755 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 38:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[2];
-			yyinitdebug((void YYFAR**)yya, 2);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 459 "EaseaParse.y"
+#line 478 "EaseaParse.y"
 
-#line 759 "EaseaParse.cpp"
+     //DEBUG_PRT("User makefile options have been reduced");
+     
+#line 770 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 39:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[3];
-			yyinitdebug((void YYFAR**)yya, 3);
+			YYSTYPE YYFAR* yya[2];
+			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 469 "EaseaParse.y"
-nNB_GEN=(int)yyattribute(2 - 2).dValue;
-#line 772 "EaseaParse.cpp"
+#line 481 "EaseaParse.y"
+
+#line 783 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -779,9 +790,9 @@ nNB_GEN=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 471 "EaseaParse.y"
-nNB_OPT_IT=(int)yyattribute(2 - 2).dValue;
-#line 785 "EaseaParse.cpp"
+#line 491 "EaseaParse.y"
+nNB_GEN=(int)yyattribute(2 - 2).dValue;
+#line 796 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -792,9 +803,9 @@ nNB_OPT_IT=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 473 "EaseaParse.y"
-nTIME_LIMIT=(int)yyattribute(2 - 2).dValue;
-#line 798 "EaseaParse.cpp"
+#line 493 "EaseaParse.y"
+nNB_OPT_IT=(int)yyattribute(2 - 2).dValue;
+#line 809 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -805,9 +816,9 @@ nTIME_LIMIT=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 475 "EaseaParse.y"
-fMUT_PROB=(float)yyattribute(2 - 2).dValue;
-#line 811 "EaseaParse.cpp"
+#line 495 "EaseaParse.y"
+nTIME_LIMIT=(int)yyattribute(2 - 2).dValue;
+#line 822 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -818,9 +829,9 @@ fMUT_PROB=(float)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 477 "EaseaParse.y"
-fXOVER_PROB=(float)yyattribute(2 - 2).dValue;
-#line 824 "EaseaParse.cpp"
+#line 497 "EaseaParse.y"
+fMUT_PROB=(float)yyattribute(2 - 2).dValue;
+#line 835 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -831,9 +842,9 @@ fXOVER_PROB=(float)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 479 "EaseaParse.y"
-nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
-#line 837 "EaseaParse.cpp"
+#line 499 "EaseaParse.y"
+fXOVER_PROB=(float)yyattribute(2 - 2).dValue;
+#line 848 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -844,7 +855,20 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 480 "EaseaParse.y"
+#line 501 "EaseaParse.y"
+nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
+#line 861 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 46:
+		{
+#ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
+#endif
+			{
+#line 502 "EaseaParse.y"
 
       strcpy(sSELECTOR, yyattribute(2 - 2).pSymbol->sName);
       strcpy(sSELECTOR_OPERATOR, yyattribute(2 - 2).pSymbol->sName);
@@ -855,18 +879,18 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 	break;
       }
     
-#line 859 "EaseaParse.cpp"
+#line 883 "EaseaParse.cpp"
 			}
 		}
 		break;
-	case 46:
+	case 47:
 		{
 #ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[4];
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 490 "EaseaParse.y"
+#line 512 "EaseaParse.y"
 
       sprintf(sSELECTOR, yyattribute(2 - 3).pSymbol->sName);   
       sprintf(sSELECTOR_OPERATOR, yyattribute(2 - 3).pSymbol->sName);   
@@ -877,18 +901,18 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 	break;
       }
     
-#line 881 "EaseaParse.cpp"
+#line 905 "EaseaParse.cpp"
 			}
 		}
 		break;
-	case 47:
+	case 48:
 		{
 #ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[3];
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 500 "EaseaParse.y"
+#line 522 "EaseaParse.y"
 
         sprintf(sRED_PAR, yyattribute(2 - 2).pSymbol->sName);
 	sprintf(sRED_PAR_OPERATOR, yyattribute(2 - 2).pSymbol->sName);
@@ -899,18 +923,18 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 	  break;
 	}
     
-#line 903 "EaseaParse.cpp"
+#line 927 "EaseaParse.cpp"
 			}
 		}
 		break;
-	case 48:
+	case 49:
 		{
 #ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[4];
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 510 "EaseaParse.y"
+#line 532 "EaseaParse.y"
 
         sprintf(sRED_PAR, yyattribute(2 - 3).pSymbol->sName);
 	sprintf(sRED_PAR_OPERATOR, yyattribute(2 - 3).pSymbol->sName);
@@ -921,18 +945,18 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 	  break;
 	}
     
-#line 925 "EaseaParse.cpp"
+#line 949 "EaseaParse.cpp"
 			}
 		}
 		break;
-	case 49:
+	case 50:
 		{
 #ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[3];
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 520 "EaseaParse.y"
+#line 542 "EaseaParse.y"
 
 	sprintf(sRED_OFF, yyattribute(2 - 2).pSymbol->sName);
 	sprintf(sRED_OFF_OPERATOR, yyattribute(2 - 2).pSymbol->sName);
@@ -943,18 +967,18 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 	break;
       }
     
-#line 947 "EaseaParse.cpp"
+#line 971 "EaseaParse.cpp"
 			}
 		}
 		break;
-	case 50:
+	case 51:
 		{
 #ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[4];
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 530 "EaseaParse.y"
+#line 552 "EaseaParse.y"
 
         sprintf(sRED_OFF, yyattribute(2 - 3).pSymbol->sName);
 	sprintf(sRED_OFF_OPERATOR, yyattribute(2 - 3).pSymbol->sName);
@@ -963,18 +987,18 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 	case CUDA:
 	  pickupSTDSelectorArgument(sRED_OFF,&fRED_OFF_PRM,sEZ_FILE_NAME,yyattribute(3 - 3).dValue,&EASEALexer);
        }
-#line 967 "EaseaParse.cpp"
+#line 991 "EaseaParse.cpp"
 			}
 		}
 		break;
-	case 51:
+	case 52:
 		{
 #ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[3];
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 538 "EaseaParse.y"
+#line 560 "EaseaParse.y"
 
         sprintf(sRED_FINAL, yyattribute(2 - 2).pSymbol->sName);
         sprintf(sRED_FINAL_OPERATOR, yyattribute(2 - 2).pSymbol->sName);
@@ -984,18 +1008,18 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 	  pickupSTDSelector(sRED_FINAL,&fRED_FINAL_PRM,sEZ_FILE_NAME,&EASEALexer);
 	  break;
        }
-#line 988 "EaseaParse.cpp"
+#line 1012 "EaseaParse.cpp"
 			}
 		}
 		break;
-	case 52:
+	case 53:
 		{
 #ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[4];
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 547 "EaseaParse.y"
+#line 569 "EaseaParse.y"
 
         sprintf(sRED_FINAL, yyattribute(2 - 3).pSymbol->sName);
         sprintf(sRED_FINAL_OPERATOR, yyattribute(2 - 3).pSymbol->sName);
@@ -1005,106 +1029,85 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 	  pickupSTDSelectorArgument(sRED_FINAL,&fRED_FINAL_PRM,sEZ_FILE_NAME,yyattribute(3 - 3).dValue,&EASEALexer);
 	  break;
 	}
-#line 1009 "EaseaParse.cpp"
-			}
-		}
-		break;
-	case 53:
-		{
-#ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[3];
-			yyinitdebug((void YYFAR**)yya, 3);
-#endif
-			{
-#line 556 "EaseaParse.y"
-nOFF_SIZE=(int)yyattribute(2 - 2).dValue;
-#line 1022 "EaseaParse.cpp"
+#line 1033 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 54:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 557 "EaseaParse.y"
-nOFF_SIZE=(int)(yyattribute(2 - 3).dValue*nPOP_SIZE/100);
-#line 1035 "EaseaParse.cpp"
+#line 578 "EaseaParse.y"
+nOFF_SIZE=(int)yyattribute(2 - 2).dValue;
+#line 1046 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 55:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[3];
-			yyinitdebug((void YYFAR**)yya, 3);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 558 "EaseaParse.y"
-fSURV_PAR_SIZE=(float)yyattribute(2 - 2).dValue;
-#line 1048 "EaseaParse.cpp"
+#line 579 "EaseaParse.y"
+nOFF_SIZE=(int)(yyattribute(2 - 3).dValue*nPOP_SIZE/100);
+#line 1059 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 56:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 559 "EaseaParse.y"
-fSURV_PAR_SIZE=(float)(yyattribute(2 - 3).dValue/100);
-#line 1061 "EaseaParse.cpp"
+#line 580 "EaseaParse.y"
+fSURV_PAR_SIZE=(float)yyattribute(2 - 2).dValue;
+#line 1072 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 57:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[3];
-			yyinitdebug((void YYFAR**)yya, 3);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 560 "EaseaParse.y"
-fSURV_OFF_SIZE=(float)yyattribute(2 - 2).dValue;
-#line 1074 "EaseaParse.cpp"
+#line 581 "EaseaParse.y"
+fSURV_PAR_SIZE=(float)(yyattribute(2 - 3).dValue/100);
+#line 1085 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 58:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 561 "EaseaParse.y"
-fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
-#line 1087 "EaseaParse.cpp"
+#line 582 "EaseaParse.y"
+fSURV_OFF_SIZE=(float)yyattribute(2 - 2).dValue;
+#line 1098 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 59:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[3];
-			yyinitdebug((void YYFAR**)yya, 3);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 562 "EaseaParse.y"
-
-      if ((!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Maximise")) || (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Maximize"))) nMINIMISE=0;
-      else if ((!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Minimise")) || (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Minimize"))) nMINIMISE=1;
-      else {
-         fprintf(stderr,"\n%s - Error line %d: The evaluator goal default parameter can only take\n",sEZ_FILE_NAME,EASEALexer.yylineno);
-         fprintf(stderr,"two values : maximi[sz]e or minimi[sz]e.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
-         exit(1);
-       }
-      
-#line 1108 "EaseaParse.cpp"
+#line 583 "EaseaParse.y"
+fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
+#line 1111 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1115,45 +1118,47 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 571 "EaseaParse.y"
+#line 584 "EaseaParse.y"
 
-        nELITE=(int)yyattribute(2 - 2).dValue;
-        
-#line 1123 "EaseaParse.cpp"
+      if ((!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Maximise")) || (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Maximize"))) nMINIMISE=0;
+      else if ((!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Minimise")) || (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Minimize"))) nMINIMISE=1;
+      else {
+         fprintf(stderr,"\n%s - Error line %d: The evaluator goal default parameter can only take\n",sEZ_FILE_NAME,EASEALexer.yylineno);
+         fprintf(stderr,"two values : maximi[sz]e or minimi[sz]e.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
+         exit(1);
+       }
+      
+#line 1132 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 61:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 574 "EaseaParse.y"
+#line 593 "EaseaParse.y"
 
-        nELITE=(int)yyattribute(2 - 3).dValue*nPOP_SIZE/100;
+        nELITE=(int)yyattribute(2 - 2).dValue;
         
-#line 1138 "EaseaParse.cpp"
+#line 1147 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 62:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[3];
-			yyinitdebug((void YYFAR**)yya, 3);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 577 "EaseaParse.y"
+#line 596 "EaseaParse.y"
 
-      if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Weak")) bELITISM=0;
-      else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Strong")) bELITISM=1;
-      else {
-         fprintf(stderr,"\n%s - Warning line %d: Elitism must be \"Strong\" or \"Weak\".\nDefault value \"Strong\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-         bELITISM=1;
-       }
-#line 1157 "EaseaParse.cpp"
+        nELITE=(int)yyattribute(2 - 3).dValue*nPOP_SIZE/100;
+        
+#line 1162 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1164,15 +1169,15 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 584 "EaseaParse.y"
+#line 599 "EaseaParse.y"
 
-      if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bBALDWINISM=0;
-      else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bBALDWINISM=1;
+      if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Weak")) bELITISM=0;
+      else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Strong")) bELITISM=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: Baldwinism must be \"True\" or \"False\".\nDefault value \"True\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
-         bBALDWINISM=1;
+         fprintf(stderr,"\n%s - Warning line %d: Elitism must be \"Strong\" or \"Weak\".\nDefault value \"Strong\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bELITISM=1;
        }
-#line 1176 "EaseaParse.cpp"
+#line 1181 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1183,14 +1188,15 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 592 "EaseaParse.y"
+#line 606 "EaseaParse.y"
 
-      if((int)yyattribute(2 - 2).dValue>=1)
-	 bPRINT_STATS=1;
-      else
-	 bPRINT_STATS=0;
-    
-#line 1194 "EaseaParse.cpp"
+      if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bBALDWINISM=0;
+      else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bBALDWINISM=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Baldwinism must be \"True\" or \"False\".\nDefault value \"True\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bBALDWINISM=1;
+       }
+#line 1200 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1201,14 +1207,14 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 598 "EaseaParse.y"
+#line 614 "EaseaParse.y"
 
       if((int)yyattribute(2 - 2).dValue>=1)
-	 bPLOT_STATS=1;
+	 bPRINT_STATS=1;
       else
-	 bPLOT_STATS=0;
+	 bPRINT_STATS=0;
     
-#line 1212 "EaseaParse.cpp"
+#line 1218 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1219,14 +1225,14 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 604 "EaseaParse.y"
+#line 620 "EaseaParse.y"
 
       if((int)yyattribute(2 - 2).dValue>=1)
-	 bGENERATE_CSV_FILE=1;
+	 bPLOT_STATS=1;
       else
-	 bGENERATE_CSV_FILE=0;
+	 bPLOT_STATS=0;
     
-#line 1230 "EaseaParse.cpp"
+#line 1236 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1237,14 +1243,14 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 610 "EaseaParse.y"
+#line 626 "EaseaParse.y"
 
       if((int)yyattribute(2 - 2).dValue>=1)
-	 bGENERATE_GNUPLOT_SCRIPT=1;
+	 bGENERATE_CSV_FILE=1;
       else
-	 bGENERATE_GNUPLOT_SCRIPT=0;
+	 bGENERATE_CSV_FILE=0;
     
-#line 1248 "EaseaParse.cpp"
+#line 1254 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1255,98 +1261,97 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 616 "EaseaParse.y"
+#line 632 "EaseaParse.y"
 
       if((int)yyattribute(2 - 2).dValue>=1)
-	 bGENERATE_R_SCRIPT=1;
+	 bGENERATE_GNUPLOT_SCRIPT=1;
       else
-	 bGENERATE_R_SCRIPT=0;
+	 bGENERATE_GNUPLOT_SCRIPT=0;
     
-#line 1266 "EaseaParse.cpp"
+#line 1272 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 69:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 625 "EaseaParse.y"
- 
-      if (SymbolTable.find(yyattribute(1 - 3).pSymbol->sName)==NULL){
-         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,yyattribute(1 - 3).pSymbol->sName);
-         exit(1);
-      }
-      (*(YYSTYPE YYFAR*)yyvalptr).dValue = assign(SymbolTable.find(yyattribute(1 - 3).pSymbol->sName), yyattribute(3 - 3).dValue);
+#line 638 "EaseaParse.y"
+
+      if((int)yyattribute(2 - 2).dValue>=1)
+	 bGENERATE_R_SCRIPT=1;
+      else
+	 bGENERATE_R_SCRIPT=0;
     
-#line 1285 "EaseaParse.cpp"
+#line 1290 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 70:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 632 "EaseaParse.y"
- (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue + yyattribute(3 - 3).dValue; 
-#line 1298 "EaseaParse.cpp"
+#line 644 "EaseaParse.y"
+iMAX_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
+#line 1303 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 71:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 633 "EaseaParse.y"
- (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue - yyattribute(3 - 3).dValue; 
-#line 1311 "EaseaParse.cpp"
+#line 645 "EaseaParse.y"
+iMIN_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
+#line 1316 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 72:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 634 "EaseaParse.y"
- (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue * yyattribute(3 - 3).dValue; 
-#line 1324 "EaseaParse.cpp"
+#line 646 "EaseaParse.y"
+iMAX_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
+#line 1329 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 73:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 635 "EaseaParse.y"
- (*(YYSTYPE YYFAR*)yyvalptr).dValue = divide(yyattribute(1 - 3).dValue, yyattribute(3 - 3).dValue); 
-#line 1337 "EaseaParse.cpp"
+#line 647 "EaseaParse.y"
+iNB_GPU = (unsigned)yyattribute(2 - 2).dValue;
+#line 1342 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 74:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[4];
-			yyinitdebug((void YYFAR**)yya, 4);
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 636 "EaseaParse.y"
- (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(2 - 3).dValue; 
-#line 1350 "EaseaParse.cpp"
+#line 648 "EaseaParse.y"
+iPRG_BUF_SIZE = (unsigned)yyattribute(2 - 2).dValue;
+#line 1355 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1357,33 +1362,130 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 637 "EaseaParse.y"
- (*(YYSTYPE YYFAR*)yyvalptr).dValue = -yyattribute(2 - 2).dValue; 
-#line 1363 "EaseaParse.cpp"
+#line 651 "EaseaParse.y"
+iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
+#line 1368 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 76:
 		{
 #ifdef YYDEBUG
-			YYSTYPE YYFAR* yya[2];
-			yyinitdebug((void YYFAR**)yya, 2);
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 638 "EaseaParse.y"
- (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 1).dValue; 
-#line 1376 "EaseaParse.cpp"
+#line 655 "EaseaParse.y"
+ 
+      if (SymbolTable.find(yyattribute(1 - 3).pSymbol->sName)==NULL){
+         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,yyattribute(1 - 3).pSymbol->sName);
+         exit(1);
+      }
+      (*(YYSTYPE YYFAR*)yyvalptr).dValue = assign(SymbolTable.find(yyattribute(1 - 3).pSymbol->sName), yyattribute(3 - 3).dValue);
+    
+#line 1387 "EaseaParse.cpp"
 			}
 		}
 		break;
 	case 77:
 		{
 #ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
+#endif
+			{
+#line 662 "EaseaParse.y"
+ (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue + yyattribute(3 - 3).dValue; 
+#line 1400 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 78:
+		{
+#ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
+#endif
+			{
+#line 663 "EaseaParse.y"
+ (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue - yyattribute(3 - 3).dValue; 
+#line 1413 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 79:
+		{
+#ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
+#endif
+			{
+#line 664 "EaseaParse.y"
+ (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue * yyattribute(3 - 3).dValue; 
+#line 1426 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 80:
+		{
+#ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
+#endif
+			{
+#line 665 "EaseaParse.y"
+ (*(YYSTYPE YYFAR*)yyvalptr).dValue = divide(yyattribute(1 - 3).dValue, yyattribute(3 - 3).dValue); 
+#line 1439 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 81:
+		{
+#ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[4];
+			yyinitdebug((void YYFAR**)yya, 4);
+#endif
+			{
+#line 666 "EaseaParse.y"
+ (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(2 - 3).dValue; 
+#line 1452 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 82:
+		{
+#ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[3];
+			yyinitdebug((void YYFAR**)yya, 3);
+#endif
+			{
+#line 667 "EaseaParse.y"
+ (*(YYSTYPE YYFAR*)yyvalptr).dValue = -yyattribute(2 - 2).dValue; 
+#line 1465 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 83:
+		{
+#ifdef YYDEBUG
 			YYSTYPE YYFAR* yya[2];
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 639 "EaseaParse.y"
+#line 668 "EaseaParse.y"
+ (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 1).dValue; 
+#line 1478 "EaseaParse.cpp"
+			}
+		}
+		break;
+	case 84:
+		{
+#ifdef YYDEBUG
+			YYSTYPE YYFAR* yya[2];
+			yyinitdebug((void YYFAR**)yya, 2);
+#endif
+			{
+#line 669 "EaseaParse.y"
 
       if (SymbolTable.find(yyattribute(1 - 1).pSymbol->sName)==NULL){
          fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,yyattribute(1 - 1).pSymbol->sName);
@@ -1391,7 +1493,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
       }
       (*(YYSTYPE YYFAR*)yyvalptr).dValue = (SymbolTable.find(yyattribute(1 - 1).pSymbol->sName))->dValue;
     
-#line 1395 "EaseaParse.cpp"
+#line 1497 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1400,7 +1502,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 		break;
 	}
 }
-#line 648 "EaseaParse.y"
+#line 678 "EaseaParse.y"
 
                        
 /////////////////////////////////////////////////////////////////////////////
@@ -1427,7 +1529,8 @@ int main(int argc, char *argv[]){
       TARGET_FLAVOR = CUDA_FLAVOR_MO;
     }
     else if( !mystricmp(sTemp,"cuda_gp") ){
-      TARGET=STD;
+      printf("tpl argu : is gp\n");
+      TARGET=CUDA;
       TARGET_FLAVOR = CUDA_FLAVOR_GP;
     }
     else if (!mystricmp(sTemp,"std"))  {
@@ -1531,7 +1634,7 @@ double CEASEAParser::divide(double a, double b)
   }
 }
 
-#line 1535 "EaseaParse.cpp"
+#line 1638 "EaseaParse.cpp"
 void YYPARSENAME::yytables()
 {
 	yyattribute_size = sizeof(YYSTYPE);
@@ -1548,6 +1651,7 @@ void YYPARSENAME::yytables()
 		{ "\',\'", 44 },
 		{ "\'-\'", 45 },
 		{ "\'/\'", 47 },
+		{ "\'0\'", 48 },
 		{ "\':\'", 58 },
 		{ "\';\'", 59 },
 		{ "\'=\'", 61 },
@@ -1573,34 +1677,41 @@ void YYPARSENAME::yytables()
 		{ "INT", 271 },
 		{ "DOUBLE", 272 },
 		{ "FLOAT", 273 },
-		{ "CHAR", 274 },
-		{ "POINTER", 275 },
-		{ "NUMBER", 276 },
-		{ "NUMBER2", 277 },
-		{ "METHODS", 278 },
-		{ "STATIC", 279 },
-		{ "NB_GEN", 280 },
-		{ "NB_OPT_IT", 281 },
-		{ "BALDWINISM", 282 },
-		{ "MUT_PROB", 283 },
-		{ "XOVER_PROB", 284 },
-		{ "POP_SIZE", 285 },
-		{ "SELECTOR", 286 },
-		{ "RED_PAR", 287 },
-		{ "RED_OFF", 288 },
-		{ "RED_FINAL", 289 },
-		{ "OFFSPRING", 290 },
-		{ "SURVPAR", 291 },
-		{ "SURVOFF", 292 },
-		{ "MINIMAXI", 293 },
-		{ "ELITISM", 294 },
-		{ "ELITE", 295 },
-		{ "PRINT_STATS", 296 },
-		{ "PLOT_STATS", 297 },
-		{ "GENERATE_CSV_FILE", 298 },
-		{ "GENERATE_GNUPLOT_SCRIPT", 299 },
-		{ "GENERATE_R_SCRIPT", 300 },
-		{ "TIME_LIMIT", 301 },
+		{ "GPNODE", 274 },
+		{ "CHAR", 275 },
+		{ "POINTER", 276 },
+		{ "NUMBER", 277 },
+		{ "NUMBER2", 278 },
+		{ "METHODS", 279 },
+		{ "STATIC", 280 },
+		{ "NB_GEN", 281 },
+		{ "NB_OPT_IT", 282 },
+		{ "BALDWINISM", 283 },
+		{ "MUT_PROB", 284 },
+		{ "XOVER_PROB", 285 },
+		{ "POP_SIZE", 286 },
+		{ "SELECTOR", 287 },
+		{ "RED_PAR", 288 },
+		{ "RED_OFF", 289 },
+		{ "RED_FINAL", 290 },
+		{ "OFFSPRING", 291 },
+		{ "SURVPAR", 292 },
+		{ "SURVOFF", 293 },
+		{ "MINIMAXI", 294 },
+		{ "ELITISM", 295 },
+		{ "ELITE", 296 },
+		{ "PRINT_STATS", 297 },
+		{ "PLOT_STATS", 298 },
+		{ "GENERATE_CSV_FILE", 299 },
+		{ "GENERATE_GNUPLOT_SCRIPT", 300 },
+		{ "GENERATE_R_SCRIPT", 301 },
+		{ "TIME_LIMIT", 302 },
+		{ "MAX_INIT_TREE_D", 303 },
+		{ "MIN_INIT_TREE_D", 304 },
+		{ "MAX_TREE_D", 307 },
+		{ "NB_GPU", 308 },
+		{ "PRG_BUF_SIZE", 309 },
+		{ "NO_FITNESS_CASES", 310 },
 		{ NULL, 0 }
 	};
 	yysymbol = symbol;
@@ -1639,11 +1750,13 @@ void YYPARSENAME::yytables()
 		"BaseType: FLOAT",
 		"BaseType: CHAR",
 		"BaseType: POINTER",
+		"BaseType: GPNODE",
 		"UserType: Symbol",
 		"Objects: Object",
 		"Objects: Objects \',\' Object",
 		"Object: Symbol",
 		"Object: \'*\' Symbol",
+		"Object: \'0\' Symbol",
 		"Object: \'*\' \'*\' Symbol",
 		"Object: Symbol \'[\' Expr \']\'",
 		"Object: \'*\' Symbol \'[\' Expr \']\'",
@@ -1702,6 +1815,12 @@ void YYPARSENAME::yytables()
 		"Parameter: GENERATE_CSV_FILE NUMBER2",
 		"Parameter: GENERATE_GNUPLOT_SCRIPT NUMBER2",
 		"Parameter: GENERATE_R_SCRIPT NUMBER2",
+		"Parameter: MAX_INIT_TREE_D NUMBER2",
+		"Parameter: MIN_INIT_TREE_D NUMBER2",
+		"Parameter: MAX_TREE_D NUMBER2",
+		"Parameter: NB_GPU NUMBER2",
+		"Parameter: PRG_BUF_SIZE NUMBER2",
+		"Parameter: NO_FITNESS_CASES NUMBER2",
 		"Expr: IDENTIFIER \'=\' Expr",
 		"Expr: Expr \'+\' Expr",
 		"Expr: Expr \'-\' Expr",
@@ -1749,209 +1868,231 @@ void YYPARSENAME::yytables()
 		{ 18, 1, -1 },
 		{ 18, 1, -1 },
 		{ 18, 1, -1 },
+		{ 18, 1, -1 },
 		{ 19, 1, 16 },
 		{ 20, 1, -1 },
 		{ 20, 3, -1 },
 		{ 21, 1, 17 },
 		{ 21, 2, 18 },
-		{ 21, 3, 19 },
-		{ 21, 4, 20 },
-		{ 21, 5, 21 },
+		{ 21, 2, 19 },
+		{ 21, 3, 20 },
+		{ 21, 4, 21 },
+		{ 21, 5, 22 },
 		{ 22, 1, -1 },
 		{ 22, 2, -1 },
-		{ 23, 1, 22 },
-		{ 25, 0, 23 },
-		{ 24, 5, 24 },
+		{ 23, 1, 23 },
+		{ 25, 0, 24 },
+		{ 24, 5, 25 },
 		{ 26, 1, -1 },
 		{ 26, 2, -1 },
-		{ 27, 1, 25 },
-		{ 28, 1, 26 },
+		{ 27, 1, 26 },
+		{ 28, 1, 27 },
 		{ 29, 1, -1 },
 		{ 29, 2, -1 },
-		{ 31, 0, 27 },
-		{ 30, 3, 28 },
-		{ 32, 0, 29 },
-		{ 30, 3, 30 },
-		{ 33, 0, 31 },
-		{ 30, 3, 32 },
-		{ 34, 0, 33 },
-		{ 30, 3, 34 },
-		{ 35, 0, 35 },
-		{ 30, 3, 36 },
-		{ 30, 2, 37 },
-		{ 30, 1, 38 },
+		{ 31, 0, 28 },
+		{ 30, 3, 29 },
+		{ 32, 0, 30 },
+		{ 30, 3, 31 },
+		{ 33, 0, 32 },
+		{ 30, 3, 33 },
+		{ 34, 0, 34 },
+		{ 30, 3, 35 },
+		{ 35, 0, 36 },
+		{ 30, 3, 37 },
+		{ 30, 2, 38 },
+		{ 30, 1, 39 },
 		{ 36, 1, -1 },
 		{ 36, 2, -1 },
-		{ 37, 2, 39 },
 		{ 37, 2, 40 },
 		{ 37, 2, 41 },
 		{ 37, 2, 42 },
 		{ 37, 2, 43 },
 		{ 37, 2, 44 },
 		{ 37, 2, 45 },
-		{ 37, 3, 46 },
-		{ 37, 2, 47 },
-		{ 37, 3, 48 },
-		{ 37, 2, 49 },
-		{ 37, 3, 50 },
-		{ 37, 2, 51 },
-		{ 37, 3, 52 },
-		{ 37, 2, 53 },
-		{ 37, 3, 54 },
-		{ 37, 2, 55 },
-		{ 37, 3, 56 },
-		{ 37, 2, 57 },
-		{ 37, 3, 58 },
-		{ 37, 2, 59 },
+		{ 37, 2, 46 },
+		{ 37, 3, 47 },
+		{ 37, 2, 48 },
+		{ 37, 3, 49 },
+		{ 37, 2, 50 },
+		{ 37, 3, 51 },
+		{ 37, 2, 52 },
+		{ 37, 3, 53 },
+		{ 37, 2, 54 },
+		{ 37, 3, 55 },
+		{ 37, 2, 56 },
+		{ 37, 3, 57 },
+		{ 37, 2, 58 },
+		{ 37, 3, 59 },
 		{ 37, 2, 60 },
-		{ 37, 3, 61 },
-		{ 37, 2, 62 },
+		{ 37, 2, 61 },
+		{ 37, 3, 62 },
 		{ 37, 2, 63 },
 		{ 37, 2, 64 },
 		{ 37, 2, 65 },
 		{ 37, 2, 66 },
 		{ 37, 2, 67 },
 		{ 37, 2, 68 },
-		{ 38, 3, 69 },
-		{ 38, 3, 70 },
-		{ 38, 3, 71 },
-		{ 38, 3, 72 },
-		{ 38, 3, 73 },
-		{ 38, 3, 74 },
-		{ 38, 2, 75 },
-		{ 38, 1, 76 },
-		{ 38, 1, 77 }
+		{ 37, 2, 69 },
+		{ 37, 2, 70 },
+		{ 37, 2, 71 },
+		{ 37, 2, 72 },
+		{ 37, 2, 73 },
+		{ 37, 2, 74 },
+		{ 37, 2, 75 },
+		{ 38, 3, 76 },
+		{ 38, 3, 77 },
+		{ 38, 3, 78 },
+		{ 38, 3, 79 },
+		{ 38, 3, 80 },
+		{ 38, 3, 81 },
+		{ 38, 2, 82 },
+		{ 38, 1, 83 },
+		{ 38, 1, 84 }
 	};
 	yyreduction = reduction;
 
 	static const yytokenaction_t YYNEARFAR YYBASED_CODE tokenaction[] = {
-		{ 24, YYAT_SHIFT, 48 },
-		{ 154, YYAT_SHIFT, 135 },
-		{ 142, YYAT_SHIFT, 156 },
-		{ 145, YYAT_SHIFT, 158 },
-		{ 114, YYAT_SHIFT, 117 },
-		{ 147, YYAT_ERROR, 0 },
-		{ 154, YYAT_SHIFT, 136 },
-		{ 88, YYAT_SHIFT, 72 },
-		{ 88, YYAT_SHIFT, 73 },
-		{ 88, YYAT_SHIFT, 74 },
-		{ 88, YYAT_SHIFT, 75 },
-		{ 88, YYAT_SHIFT, 76 },
-		{ 88, YYAT_SHIFT, 77 },
-		{ 84, YYAT_SHIFT, 98 },
-		{ 84, YYAT_SHIFT, 99 },
-		{ 84, YYAT_SHIFT, 100 },
-		{ 84, YYAT_SHIFT, 101 },
-		{ 84, YYAT_SHIFT, 102 },
-		{ 84, YYAT_SHIFT, 103 },
-		{ 121, YYAT_SHIFT, 129 },
-		{ 121, YYAT_SHIFT, 130 },
-		{ 139, YYAT_SHIFT, 155 },
-		{ 24, YYAT_SHIFT, 1 },
-		{ 24, YYAT_SHIFT, 2 },
-		{ 24, YYAT_SHIFT, 3 },
-		{ 24, YYAT_SHIFT, 4 },
-		{ 24, YYAT_SHIFT, 5 },
-		{ 24, YYAT_SHIFT, 6 },
-		{ 24, YYAT_SHIFT, 7 },
-		{ 24, YYAT_SHIFT, 8 },
-		{ 24, YYAT_SHIFT, 9 },
-		{ 24, YYAT_SHIFT, 10 },
-		{ 24, YYAT_SHIFT, 11 },
-		{ 24, YYAT_SHIFT, 12 },
-		{ 24, YYAT_SHIFT, 13 },
-		{ 24, YYAT_SHIFT, 14 },
-		{ 24, YYAT_SHIFT, 15 },
-		{ 24, YYAT_SHIFT, 16 },
-		{ 24, YYAT_SHIFT, 17 },
-		{ 24, YYAT_SHIFT, 18 },
-		{ 24, YYAT_SHIFT, 19 },
-		{ 24, YYAT_SHIFT, 20 },
-		{ 24, YYAT_SHIFT, 21 },
-		{ 24, YYAT_SHIFT, 22 },
-		{ 78, YYAT_SHIFT, 72 },
-		{ 78, YYAT_SHIFT, 73 },
-		{ 78, YYAT_SHIFT, 74 },
-		{ 78, YYAT_SHIFT, 75 },
-		{ 78, YYAT_SHIFT, 76 },
-		{ 78, YYAT_SHIFT, 77 },
-		{ 71, YYAT_SHIFT, 72 },
-		{ 71, YYAT_SHIFT, 73 },
-		{ 71, YYAT_SHIFT, 74 },
-		{ 71, YYAT_SHIFT, 75 },
-		{ 71, YYAT_SHIFT, 76 },
-		{ 71, YYAT_SHIFT, 77 },
-		{ 124, YYAT_SHIFT, 128 },
-		{ 147, YYAT_SHIFT, 160 },
-		{ 148, YYAT_SHIFT, 161 },
-		{ 148, YYAT_SHIFT, 151 },
-		{ 148, YYAT_SHIFT, 152 },
-		{ 165, YYAT_SHIFT, 151 },
-		{ 148, YYAT_SHIFT, 153 },
-		{ 164, YYAT_SHIFT, 151 },
-		{ 148, YYAT_SHIFT, 154 },
-		{ 137, YYAT_SHIFT, 150 },
-		{ 165, YYAT_SHIFT, 154 },
-		{ 131, YYAT_ERROR, 0 },
-		{ 164, YYAT_SHIFT, 154 },
-		{ 129, YYAT_ERROR, 0 },
-		{ 124, YYAT_SHIFT, 131 },
-		{ 124, YYAT_SHIFT, 132 },
-		{ 162, YYAT_SHIFT, 151 },
-		{ 162, YYAT_SHIFT, 152 },
-		{ 128, YYAT_SHIFT, 118 },
-		{ 162, YYAT_SHIFT, 153 },
-		{ 126, YYAT_SHIFT, 134 },
-		{ 162, YYAT_SHIFT, 154 },
+		{ 30, YYAT_SHIFT, 60 },
+		{ 169, YYAT_SHIFT, 150 },
+		{ 157, YYAT_SHIFT, 171 },
+		{ 160, YYAT_SHIFT, 173 },
+		{ 127, YYAT_SHIFT, 130 },
+		{ 162, YYAT_ERROR, 0 },
+		{ 169, YYAT_SHIFT, 151 },
+		{ 96, YYAT_SHIFT, 110 },
+		{ 96, YYAT_SHIFT, 111 },
+		{ 96, YYAT_SHIFT, 112 },
+		{ 96, YYAT_SHIFT, 113 },
+		{ 96, YYAT_SHIFT, 114 },
+		{ 96, YYAT_SHIFT, 115 },
+		{ 96, YYAT_SHIFT, 116 },
+		{ 100, YYAT_SHIFT, 84 },
+		{ 100, YYAT_SHIFT, 85 },
+		{ 100, YYAT_SHIFT, 86 },
+		{ 100, YYAT_SHIFT, 87 },
+		{ 100, YYAT_SHIFT, 88 },
+		{ 100, YYAT_SHIFT, 89 },
+		{ 135, YYAT_SHIFT, 144 },
+		{ 135, YYAT_SHIFT, 145 },
+		{ 154, YYAT_SHIFT, 170 },
+		{ 30, YYAT_SHIFT, 1 },
+		{ 30, YYAT_SHIFT, 2 },
+		{ 30, YYAT_SHIFT, 3 },
+		{ 30, YYAT_SHIFT, 4 },
+		{ 30, YYAT_SHIFT, 5 },
+		{ 30, YYAT_SHIFT, 6 },
+		{ 30, YYAT_SHIFT, 7 },
+		{ 30, YYAT_SHIFT, 8 },
+		{ 30, YYAT_SHIFT, 9 },
+		{ 30, YYAT_SHIFT, 10 },
+		{ 30, YYAT_SHIFT, 11 },
+		{ 30, YYAT_SHIFT, 12 },
+		{ 30, YYAT_SHIFT, 13 },
+		{ 30, YYAT_SHIFT, 14 },
+		{ 30, YYAT_SHIFT, 15 },
+		{ 30, YYAT_SHIFT, 16 },
+		{ 30, YYAT_SHIFT, 17 },
+		{ 30, YYAT_SHIFT, 18 },
+		{ 30, YYAT_SHIFT, 19 },
+		{ 30, YYAT_SHIFT, 20 },
+		{ 30, YYAT_SHIFT, 21 },
+		{ 30, YYAT_SHIFT, 22 },
+		{ 30, YYAT_SHIFT, 23 },
+		{ 30, YYAT_SHIFT, 24 },
+		{ 143, YYAT_SHIFT, 131 },
+		{ 152, YYAT_SHIFT, 165 },
+		{ 30, YYAT_SHIFT, 25 },
+		{ 30, YYAT_SHIFT, 26 },
+		{ 30, YYAT_SHIFT, 27 },
+		{ 30, YYAT_SHIFT, 28 },
+		{ 143, YYAT_SHIFT, 132 },
 		{ 0, YYAT_ERROR, 0 },
 		{ 0, YYAT_ERROR, 0 },
-		{ 119, YYAT_SHIFT, 127 },
-		{ 118, YYAT_SHIFT, 125 },
-		{ 96, YYAT_REDUCE, 22 },
-		{ 93, YYAT_SHIFT, 113 },
-		{ 92, YYAT_SHIFT, 112 },
-		{ 91, YYAT_SHIFT, 111 },
-		{ 90, YYAT_SHIFT, 110 },
-		{ 89, YYAT_SHIFT, 109 },
-		{ 85, YYAT_SHIFT, 107 },
-		{ 82, YYAT_SHIFT, 97 },
-		{ 80, YYAT_SHIFT, 96 },
-		{ 77, YYAT_SHIFT, 94 },
-		{ 68, YYAT_SHIFT, 66 },
-		{ 63, YYAT_SHIFT, 70 },
-		{ 51, YYAT_SHIFT, 49 },
-		{ 48, YYAT_REDUCE, 6 },
-		{ 41, YYAT_SHIFT, 61 },
-		{ 38, YYAT_SHIFT, 60 },
-		{ 37, YYAT_SHIFT, 59 },
-		{ 36, YYAT_SHIFT, 58 },
-		{ 35, YYAT_SHIFT, 57 },
-		{ 34, YYAT_SHIFT, 56 },
-		{ 33, YYAT_SHIFT, 55 },
-		{ 32, YYAT_SHIFT, 54 },
-		{ 23, YYAT_ACCEPT, 0 },
-		{ 22, YYAT_SHIFT, 47 },
-		{ 21, YYAT_SHIFT, 46 },
-		{ 20, YYAT_SHIFT, 45 },
-		{ 19, YYAT_SHIFT, 44 },
-		{ 18, YYAT_SHIFT, 43 },
-		{ 17, YYAT_SHIFT, 42 },
-		{ 16, YYAT_SHIFT, 41 },
-		{ 15, YYAT_SHIFT, 40 },
-		{ 14, YYAT_SHIFT, 39 },
-		{ 13, YYAT_SHIFT, 38 },
-		{ 12, YYAT_SHIFT, 37 },
-		{ 11, YYAT_SHIFT, 36 },
-		{ 10, YYAT_SHIFT, 35 },
-		{ 9, YYAT_SHIFT, 34 },
-		{ 8, YYAT_SHIFT, 33 },
-		{ 7, YYAT_SHIFT, 32 },
-		{ 6, YYAT_SHIFT, 31 },
-		{ 5, YYAT_SHIFT, 30 },
-		{ 4, YYAT_SHIFT, 29 },
-		{ 3, YYAT_SHIFT, 28 },
-		{ 2, YYAT_SHIFT, 27 },
-		{ 1, YYAT_SHIFT, 26 },
+		{ 138, YYAT_SHIFT, 143 },
+		{ 162, YYAT_SHIFT, 175 },
+		{ 90, YYAT_SHIFT, 84 },
+		{ 90, YYAT_SHIFT, 85 },
+		{ 90, YYAT_SHIFT, 86 },
+		{ 90, YYAT_SHIFT, 87 },
+		{ 90, YYAT_SHIFT, 88 },
+		{ 90, YYAT_SHIFT, 89 },
+		{ 83, YYAT_SHIFT, 84 },
+		{ 83, YYAT_SHIFT, 85 },
+		{ 83, YYAT_SHIFT, 86 },
+		{ 83, YYAT_SHIFT, 87 },
+		{ 83, YYAT_SHIFT, 88 },
+		{ 83, YYAT_SHIFT, 89 },
+		{ 138, YYAT_SHIFT, 146 },
+		{ 138, YYAT_SHIFT, 147 },
+		{ 163, YYAT_SHIFT, 176 },
+		{ 163, YYAT_SHIFT, 166 },
+		{ 163, YYAT_SHIFT, 167 },
+		{ 146, YYAT_ERROR, 0 },
+		{ 163, YYAT_SHIFT, 168 },
+		{ 144, YYAT_ERROR, 0 },
+		{ 163, YYAT_SHIFT, 169 },
+		{ 177, YYAT_SHIFT, 166 },
+		{ 177, YYAT_SHIFT, 167 },
+		{ 180, YYAT_SHIFT, 166 },
+		{ 177, YYAT_SHIFT, 168 },
+		{ 179, YYAT_SHIFT, 166 },
+		{ 177, YYAT_SHIFT, 169 },
+		{ 140, YYAT_SHIFT, 149 },
+		{ 180, YYAT_SHIFT, 169 },
+		{ 133, YYAT_SHIFT, 142 },
+		{ 179, YYAT_SHIFT, 169 },
+		{ 131, YYAT_SHIFT, 139 },
+		{ 108, YYAT_REDUCE, 22 },
+		{ 105, YYAT_SHIFT, 126 },
+		{ 104, YYAT_SHIFT, 125 },
+		{ 103, YYAT_SHIFT, 124 },
+		{ 102, YYAT_SHIFT, 123 },
+		{ 101, YYAT_SHIFT, 122 },
+		{ 97, YYAT_SHIFT, 120 },
+		{ 94, YYAT_SHIFT, 109 },
+		{ 92, YYAT_SHIFT, 108 },
+		{ 89, YYAT_SHIFT, 106 },
+		{ 80, YYAT_SHIFT, 78 },
+		{ 75, YYAT_SHIFT, 82 },
+		{ 63, YYAT_SHIFT, 61 },
+		{ 60, YYAT_REDUCE, 6 },
+		{ 47, YYAT_SHIFT, 73 },
+		{ 44, YYAT_SHIFT, 72 },
+		{ 43, YYAT_SHIFT, 71 },
+		{ 42, YYAT_SHIFT, 70 },
+		{ 41, YYAT_SHIFT, 69 },
+		{ 40, YYAT_SHIFT, 68 },
+		{ 39, YYAT_SHIFT, 67 },
+		{ 38, YYAT_SHIFT, 66 },
+		{ 29, YYAT_ACCEPT, 0 },
+		{ 28, YYAT_SHIFT, 59 },
+		{ 27, YYAT_SHIFT, 58 },
+		{ 26, YYAT_SHIFT, 57 },
+		{ 25, YYAT_SHIFT, 56 },
+		{ 24, YYAT_SHIFT, 55 },
+		{ 23, YYAT_SHIFT, 54 },
+		{ 22, YYAT_SHIFT, 53 },
+		{ 21, YYAT_SHIFT, 52 },
+		{ 20, YYAT_SHIFT, 51 },
+		{ 19, YYAT_SHIFT, 50 },
+		{ 18, YYAT_SHIFT, 49 },
+		{ 17, YYAT_SHIFT, 48 },
+		{ 16, YYAT_SHIFT, 47 },
+		{ 15, YYAT_SHIFT, 46 },
+		{ 14, YYAT_SHIFT, 45 },
+		{ 13, YYAT_SHIFT, 44 },
+		{ 12, YYAT_SHIFT, 43 },
+		{ 11, YYAT_SHIFT, 42 },
+		{ 10, YYAT_SHIFT, 41 },
+		{ 9, YYAT_SHIFT, 40 },
+		{ 8, YYAT_SHIFT, 39 },
+		{ 7, YYAT_SHIFT, 38 },
+		{ 6, YYAT_SHIFT, 37 },
+		{ 5, YYAT_SHIFT, 36 },
+		{ 4, YYAT_SHIFT, 35 },
+		{ 3, YYAT_SHIFT, 34 },
+		{ 2, YYAT_SHIFT, 33 },
+		{ 1, YYAT_SHIFT, 32 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
@@ -1969,6 +2110,8 @@ void YYPARSENAME::yytables()
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
+		{ 127, YYAT_SHIFT, 94 },
+		{ 127, YYAT_SHIFT, 95 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
@@ -1982,8 +2125,6 @@ void YYPARSENAME::yytables()
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
-		{ 114, YYAT_SHIFT, 82 },
-		{ 114, YYAT_SHIFT, 83 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
@@ -2023,6 +2164,7 @@ void YYPARSENAME::yytables()
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
+		{ 160, YYAT_SHIFT, 78 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
@@ -2030,6 +2172,7 @@ void YYPARSENAME::yytables()
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
+		{ 157, YYAT_SHIFT, 156 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
@@ -2037,276 +2180,283 @@ void YYPARSENAME::yytables()
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
-		{ 145, YYAT_SHIFT, 66 },
 		{ -1, YYAT_ERROR, 0 },
+		{ 169, YYAT_SHIFT, 152 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
-		{ 142, YYAT_SHIFT, 141 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
 		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ 154, YYAT_SHIFT, 137 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ -1, YYAT_ERROR, 0 },
-		{ 154, YYAT_SHIFT, 138 }
+		{ 169, YYAT_SHIFT, 153 }
 	};
 	yytokenaction = tokenaction;
-	yytokenaction_size = 238;
+	yytokenaction_size = 239;
 
 	static const yystateaction_t YYNEARFAR YYBASED_CODE stateaction[] = {
-		{ -180, 1, YYAT_DEFAULT, 24 },
-		{ -151, 1, YYAT_DEFAULT, 22 },
-		{ -152, 1, YYAT_DEFAULT, 22 },
-		{ -145, 1, YYAT_DEFAULT, 15 },
-		{ -154, 1, YYAT_DEFAULT, 22 },
-		{ -155, 1, YYAT_DEFAULT, 22 },
-		{ -156, 1, YYAT_DEFAULT, 22 },
-		{ -149, 1, YYAT_DEFAULT, 15 },
-		{ -150, 1, YYAT_DEFAULT, 15 },
-		{ -151, 1, YYAT_DEFAULT, 15 },
-		{ -152, 1, YYAT_DEFAULT, 15 },
-		{ -161, 1, YYAT_DEFAULT, 22 },
-		{ -162, 1, YYAT_DEFAULT, 22 },
-		{ -163, 1, YYAT_DEFAULT, 22 },
-		{ -156, 1, YYAT_DEFAULT, 15 },
-		{ -157, 1, YYAT_ERROR, 0 },
-		{ -166, 1, YYAT_DEFAULT, 22 },
-		{ -167, 1, YYAT_DEFAULT, 22 },
-		{ -168, 1, YYAT_DEFAULT, 22 },
-		{ -169, 1, YYAT_DEFAULT, 22 },
-		{ -170, 1, YYAT_DEFAULT, 22 },
-		{ -171, 1, YYAT_DEFAULT, 22 },
-		{ -172, 1, YYAT_ERROR, 0 },
-		{ 104, 1, YYAT_ERROR, 0 },
-		{ -258, 1, YYAT_DEFAULT, 51 },
-		{ 0, 0, YYAT_REDUCE, 64 },
+		{ -204, 1, YYAT_DEFAULT, 30 },
+		{ -138, 1, YYAT_DEFAULT, 28 },
+		{ -139, 1, YYAT_DEFAULT, 28 },
+		{ -131, 1, YYAT_DEFAULT, 15 },
+		{ -141, 1, YYAT_DEFAULT, 28 },
+		{ -142, 1, YYAT_DEFAULT, 28 },
+		{ -143, 1, YYAT_DEFAULT, 28 },
+		{ -135, 1, YYAT_DEFAULT, 15 },
+		{ -136, 1, YYAT_DEFAULT, 15 },
+		{ -137, 1, YYAT_DEFAULT, 15 },
+		{ -138, 1, YYAT_DEFAULT, 15 },
+		{ -148, 1, YYAT_DEFAULT, 28 },
+		{ -149, 1, YYAT_DEFAULT, 28 },
+		{ -150, 1, YYAT_DEFAULT, 28 },
+		{ -142, 1, YYAT_DEFAULT, 15 },
+		{ -143, 1, YYAT_ERROR, 0 },
+		{ -153, 1, YYAT_DEFAULT, 28 },
+		{ -154, 1, YYAT_DEFAULT, 28 },
+		{ -155, 1, YYAT_DEFAULT, 28 },
+		{ -156, 1, YYAT_DEFAULT, 28 },
+		{ -157, 1, YYAT_DEFAULT, 28 },
+		{ -158, 1, YYAT_DEFAULT, 28 },
+		{ -159, 1, YYAT_DEFAULT, 28 },
+		{ -160, 1, YYAT_DEFAULT, 28 },
+		{ -161, 1, YYAT_DEFAULT, 28 },
+		{ -162, 1, YYAT_DEFAULT, 28 },
+		{ -163, 1, YYAT_DEFAULT, 28 },
+		{ -164, 1, YYAT_DEFAULT, 28 },
+		{ -165, 1, YYAT_ERROR, 0 },
+		{ 112, 1, YYAT_ERROR, 0 },
+		{ -258, 1, YYAT_DEFAULT, 63 },
 		{ 0, 0, YYAT_REDUCE, 66 },
-		{ 0, 0, YYAT_REDUCE, 67 },
-		{ 0, 0, YYAT_REDUCE, 90 },
+		{ 0, 0, YYAT_REDUCE, 68 },
 		{ 0, 0, YYAT_REDUCE, 69 },
-		{ 0, 0, YYAT_REDUCE, 70 },
-		{ 0, 0, YYAT_REDUCE, 71 },
-		{ -174, 1, YYAT_REDUCE, 72 },
-		{ -175, 1, YYAT_REDUCE, 74 },
-		{ -176, 1, YYAT_REDUCE, 76 },
-		{ -177, 1, YYAT_REDUCE, 78 },
-		{ 62, 1, YYAT_REDUCE, 80 },
-		{ 61, 1, YYAT_REDUCE, 82 },
-		{ 60, 1, YYAT_REDUCE, 84 },
-		{ 0, 0, YYAT_REDUCE, 86 },
-		{ 0, 0, YYAT_REDUCE, 89 },
-		{ 59, 1, YYAT_REDUCE, 87 },
-		{ 0, 0, YYAT_REDUCE, 91 },
 		{ 0, 0, YYAT_REDUCE, 92 },
+		{ 0, 0, YYAT_REDUCE, 71 },
+		{ 0, 0, YYAT_REDUCE, 72 },
+		{ 0, 0, YYAT_REDUCE, 73 },
+		{ -167, 1, YYAT_REDUCE, 74 },
+		{ -168, 1, YYAT_REDUCE, 76 },
+		{ -169, 1, YYAT_REDUCE, 78 },
+		{ -170, 1, YYAT_REDUCE, 80 },
+		{ 70, 1, YYAT_REDUCE, 82 },
+		{ 69, 1, YYAT_REDUCE, 84 },
+		{ 68, 1, YYAT_REDUCE, 86 },
+		{ 0, 0, YYAT_REDUCE, 88 },
+		{ 0, 0, YYAT_REDUCE, 91 },
+		{ 67, 1, YYAT_REDUCE, 89 },
 		{ 0, 0, YYAT_REDUCE, 93 },
 		{ 0, 0, YYAT_REDUCE, 94 },
 		{ 0, 0, YYAT_REDUCE, 95 },
-		{ 0, 0, YYAT_REDUCE, 68 },
-		{ -173, 1, YYAT_REDUCE, 8 },
-		{ 0, 0, YYAT_REDUCE, 44 },
+		{ 0, 0, YYAT_REDUCE, 96 },
+		{ 0, 0, YYAT_REDUCE, 97 },
+		{ 0, 0, YYAT_REDUCE, 70 },
+		{ 0, 0, YYAT_REDUCE, 98 },
+		{ 0, 0, YYAT_REDUCE, 99 },
+		{ 0, 0, YYAT_REDUCE, 100 },
+		{ 0, 0, YYAT_REDUCE, 101 },
+		{ 0, 0, YYAT_REDUCE, 102 },
+		{ 0, 0, YYAT_REDUCE, 103 },
+		{ -165, 1, YYAT_REDUCE, 8 },
+		{ 0, 0, YYAT_REDUCE, 46 },
 		{ 0, 0, YYAT_REDUCE, 1 },
-		{ -165, 1, YYAT_ERROR, 0 },
+		{ -157, 1, YYAT_ERROR, 0 },
 		{ 0, 0, YYAT_REDUCE, 4 },
-		{ 0, 0, YYAT_REDUCE, 65 },
-		{ 0, 0, YYAT_REDUCE, 73 },
+		{ 0, 0, YYAT_REDUCE, 67 },
 		{ 0, 0, YYAT_REDUCE, 75 },
 		{ 0, 0, YYAT_REDUCE, 77 },
 		{ 0, 0, YYAT_REDUCE, 79 },
 		{ 0, 0, YYAT_REDUCE, 81 },
 		{ 0, 0, YYAT_REDUCE, 83 },
 		{ 0, 0, YYAT_REDUCE, 85 },
-		{ 0, 0, YYAT_REDUCE, 88 },
-		{ 0, 0, YYAT_DEFAULT, 131 },
-		{ -30, 1, YYAT_DEFAULT, 80 },
+		{ 0, 0, YYAT_REDUCE, 87 },
+		{ 0, 0, YYAT_REDUCE, 90 },
+		{ 0, 0, YYAT_DEFAULT, 146 },
+		{ -22, 1, YYAT_DEFAULT, 92 },
 		{ 0, 0, YYAT_REDUCE, 2 },
-		{ 0, 0, YYAT_DEFAULT, 71 },
-		{ 0, 0, YYAT_REDUCE, 49 },
+		{ 0, 0, YYAT_DEFAULT, 83 },
+		{ 0, 0, YYAT_REDUCE, 51 },
 		{ 0, 0, YYAT_REDUCE, 11 },
-		{ -176, 1, YYAT_REDUCE, 7 },
+		{ -168, 1, YYAT_REDUCE, 7 },
 		{ 0, 0, YYAT_REDUCE, 9 },
-		{ 0, 0, YYAT_DEFAULT, 96 },
-		{ -210, 1, YYAT_ERROR, 0 },
-		{ 0, 0, YYAT_REDUCE, 52 },
+		{ 0, 0, YYAT_DEFAULT, 108 },
+		{ -196, 1, YYAT_ERROR, 0 },
 		{ 0, 0, YYAT_REDUCE, 54 },
 		{ 0, 0, YYAT_REDUCE, 56 },
 		{ 0, 0, YYAT_REDUCE, 58 },
 		{ 0, 0, YYAT_REDUCE, 60 },
-		{ -175, 1, YYAT_REDUCE, 63 },
-		{ -216, 1, YYAT_REDUCE, 5 },
-		{ 0, 0, YYAT_REDUCE, 50 },
-		{ -33, 1, YYAT_ERROR, 0 },
+		{ 0, 0, YYAT_REDUCE, 62 },
+		{ -167, 1, YYAT_REDUCE, 65 },
+		{ -202, 1, YYAT_REDUCE, 5 },
+		{ 0, 0, YYAT_REDUCE, 52 },
+		{ -25, 1, YYAT_ERROR, 0 },
 		{ 0, 0, YYAT_REDUCE, 10 },
-		{ -178, 1, YYAT_ERROR, 0 },
+		{ -170, 1, YYAT_ERROR, 0 },
 		{ 0, 0, YYAT_REDUCE, 21 },
-		{ -257, 1, YYAT_DEFAULT, 131 },
-		{ -37, 1, YYAT_DEFAULT, 114 },
+		{ -263, 1, YYAT_DEFAULT, 146 },
+		{ -29, 1, YYAT_DEFAULT, 127 },
 		{ 0, 0, YYAT_REDUCE, 13 },
 		{ 0, 0, YYAT_REDUCE, 19 },
-		{ -253, 1, YYAT_REDUCE, 3 },
-		{ -179, 1, YYAT_DEFAULT, 93 },
-		{ -180, 1, YYAT_DEFAULT, 93 },
-		{ -181, 1, YYAT_DEFAULT, 93 },
-		{ -182, 1, YYAT_DEFAULT, 93 },
-		{ -183, 1, YYAT_ERROR, 0 },
-		{ 0, 0, YYAT_REDUCE, 62 },
-		{ 0, 0, YYAT_REDUCE, 51 },
-		{ -43, 1, YYAT_DEFAULT, 114 },
+		{ -246, 1, YYAT_REDUCE, 3 },
+		{ -171, 1, YYAT_DEFAULT, 105 },
+		{ -172, 1, YYAT_DEFAULT, 105 },
+		{ -173, 1, YYAT_DEFAULT, 105 },
+		{ -174, 1, YYAT_DEFAULT, 105 },
+		{ -175, 1, YYAT_ERROR, 0 },
+		{ 0, 0, YYAT_REDUCE, 64 },
+		{ 0, 0, YYAT_REDUCE, 53 },
+		{ -35, 1, YYAT_DEFAULT, 127 },
 		{ 0, 0, YYAT_REDUCE, 20 },
 		{ 0, 0, YYAT_REDUCE, 27 },
 		{ 0, 0, YYAT_REDUCE, 28 },
 		{ 0, 0, YYAT_REDUCE, 29 },
 		{ 0, 0, YYAT_REDUCE, 30 },
+		{ 0, 0, YYAT_REDUCE, 33 },
 		{ 0, 0, YYAT_REDUCE, 31 },
 		{ 0, 0, YYAT_REDUCE, 32 },
 		{ 0, 0, YYAT_REDUCE, 15 },
 		{ 0, 0, YYAT_REDUCE, 17 },
-		{ 0, 0, YYAT_REDUCE, 33 },
-		{ 0, 0, YYAT_REDUCE, 45 },
+		{ 0, 0, YYAT_REDUCE, 34 },
+		{ 0, 0, YYAT_REDUCE, 47 },
 		{ 0, 0, YYAT_REDUCE, 14 },
-		{ 0, 0, YYAT_REDUCE, 53 },
 		{ 0, 0, YYAT_REDUCE, 55 },
 		{ 0, 0, YYAT_REDUCE, 57 },
 		{ 0, 0, YYAT_REDUCE, 59 },
 		{ 0, 0, YYAT_REDUCE, 61 },
+		{ 0, 0, YYAT_REDUCE, 63 },
 		{ -121, 1, YYAT_REDUCE, 22 },
-		{ 0, 0, YYAT_DEFAULT, 128 },
-		{ 0, 0, YYAT_DEFAULT, 128 },
+		{ 0, 0, YYAT_DEFAULT, 143 },
+		{ 0, 0, YYAT_DEFAULT, 143 },
 		{ 0, 0, YYAT_REDUCE, 12 },
-		{ 39, 1, YYAT_DEFAULT, 131 },
-		{ -11, 1, YYAT_REDUCE, 36 },
+		{ 47, 1, YYAT_DEFAULT, 146 },
+		{ 0, 0, YYAT_DEFAULT, 146 },
+		{ -4, 1, YYAT_REDUCE, 37 },
 		{ 0, 0, YYAT_REDUCE, 16 },
-		{ -39, 1, YYAT_DEFAULT, 124 },
-		{ 0, 0, YYAT_REDUCE, 34 },
+		{ -38, 1, YYAT_DEFAULT, 138 },
+		{ 0, 0, YYAT_REDUCE, 35 },
 		{ 0, 0, YYAT_REDUCE, 18 },
 		{ 12, 1, YYAT_ERROR, 0 },
-		{ 0, 0, YYAT_DEFAULT, 131 },
-		{ -15, 1, YYAT_REDUCE, 37 },
-		{ 0, 0, YYAT_DEFAULT, 154 },
-		{ 32, 1, YYAT_DEFAULT, 131 },
-		{ 10, 1, YYAT_DEFAULT, 142 },
-		{ 0, 0, YYAT_REDUCE, 23 },
-		{ 8, 1, YYAT_DEFAULT, 145 },
-		{ 0, 0, YYAT_REDUCE, 25 },
-		{ 0, 0, YYAT_REDUCE, 38 },
-		{ 0, 0, YYAT_DEFAULT, 154 },
-		{ 0, 0, YYAT_DEFAULT, 154 },
-		{ 0, 0, YYAT_DEFAULT, 154 },
-		{ 4, 1, YYAT_REDUCE, 104 },
-		{ 0, 0, YYAT_REDUCE, 103 },
-		{ -72, 1, YYAT_DEFAULT, 147 },
-		{ 0, 0, YYAT_REDUCE, 35 },
-		{ 0, 0, YYAT_REDUCE, 43 },
-		{ -57, 1, YYAT_ERROR, 0 },
-		{ 0, 0, YYAT_REDUCE, 41 },
-		{ 0, 0, YYAT_REDUCE, 48 },
-		{ -56, 1, YYAT_ERROR, 0 },
-		{ 0, 0, YYAT_REDUCE, 46 },
-		{ -36, 1, YYAT_DEFAULT, 148 },
-		{ 17, 1, YYAT_ERROR, 0 },
-		{ 0, 0, YYAT_REDUCE, 102 },
-		{ 0, 0, YYAT_DEFAULT, 154 },
-		{ 0, 0, YYAT_DEFAULT, 154 },
-		{ 0, 0, YYAT_DEFAULT, 154 },
-		{ 0, 0, YYAT_DEFAULT, 154 },
-		{ -39, 1, YYAT_DEFAULT, 131 },
+		{ 0, 0, YYAT_DEFAULT, 146 },
+		{ -6, 1, YYAT_REDUCE, 38 },
 		{ 0, 0, YYAT_REDUCE, 39 },
-		{ 0, 0, YYAT_REDUCE, 24 },
-		{ 0, 0, YYAT_REDUCE, 42 },
-		{ 0, 0, YYAT_REDUCE, 26 },
-		{ 0, 0, YYAT_REDUCE, 47 },
+		{ 0, 0, YYAT_DEFAULT, 169 },
+		{ 5, 1, YYAT_DEFAULT, 146 },
+		{ 18, 1, YYAT_DEFAULT, 157 },
+		{ 0, 0, YYAT_REDUCE, 23 },
+		{ 16, 1, YYAT_DEFAULT, 160 },
+		{ 0, 0, YYAT_REDUCE, 25 },
 		{ 0, 0, YYAT_REDUCE, 40 },
-		{ 0, 0, YYAT_REDUCE, 101 },
-		{ 30, 1, YYAT_REDUCE, 96 },
-		{ 0, 0, YYAT_REDUCE, 99 },
-		{ 21, 1, YYAT_REDUCE, 97 },
-		{ 19, 1, YYAT_REDUCE, 98 },
-		{ 0, 0, YYAT_REDUCE, 100 }
+		{ 0, 0, YYAT_DEFAULT, 169 },
+		{ 0, 0, YYAT_DEFAULT, 169 },
+		{ 0, 0, YYAT_DEFAULT, 169 },
+		{ -13, 1, YYAT_REDUCE, 112 },
+		{ 0, 0, YYAT_REDUCE, 111 },
+		{ -71, 1, YYAT_DEFAULT, 162 },
+		{ 0, 0, YYAT_REDUCE, 36 },
+		{ 0, 0, YYAT_REDUCE, 45 },
+		{ -57, 1, YYAT_ERROR, 0 },
+		{ 0, 0, YYAT_REDUCE, 43 },
+		{ 0, 0, YYAT_REDUCE, 50 },
+		{ -56, 1, YYAT_ERROR, 0 },
+		{ 0, 0, YYAT_REDUCE, 48 },
+		{ -36, 1, YYAT_DEFAULT, 163 },
+		{ 31, 1, YYAT_ERROR, 0 },
+		{ 0, 0, YYAT_REDUCE, 110 },
+		{ 0, 0, YYAT_DEFAULT, 169 },
+		{ 0, 0, YYAT_DEFAULT, 169 },
+		{ 0, 0, YYAT_DEFAULT, 169 },
+		{ 0, 0, YYAT_DEFAULT, 169 },
+		{ -39, 1, YYAT_DEFAULT, 146 },
+		{ 0, 0, YYAT_REDUCE, 41 },
+		{ 0, 0, YYAT_REDUCE, 24 },
+		{ 0, 0, YYAT_REDUCE, 44 },
+		{ 0, 0, YYAT_REDUCE, 26 },
+		{ 0, 0, YYAT_REDUCE, 49 },
+		{ 0, 0, YYAT_REDUCE, 42 },
+		{ 0, 0, YYAT_REDUCE, 109 },
+		{ 37, 1, YYAT_REDUCE, 104 },
+		{ 0, 0, YYAT_REDUCE, 107 },
+		{ 41, 1, YYAT_REDUCE, 105 },
+		{ 39, 1, YYAT_REDUCE, 106 },
+		{ 0, 0, YYAT_REDUCE, 108 }
 	};
 	yystateaction = stateaction;
 
 	static const yynontermgoto_t YYNEARFAR YYBASED_CODE nontermgoto[] = {
-		{ 24, 50 },
-		{ 0, 23 },
-		{ 128, 140 },
-		{ 24, 51 },
-		{ 68, 81 },
-		{ 84, 104 },
-		{ 84, 105 },
-		{ 115, 120 },
-		{ 154, 166 },
-		{ 128, 119 },
-		{ 116, 123 },
-		{ 115, 121 },
-		{ 115, 122 },
-		{ 116, 124 },
-		{ 116, 122 },
-		{ 84, 106 },
-		{ 114, 108 },
-		{ 145, 159 },
-		{ 145, 144 },
-		{ 114, 87 },
-		{ 114, 84 },
-		{ 153, 165 },
-		{ 24, 52 },
-		{ 152, 164 },
-		{ 68, 67 },
-		{ 131, 145 },
-		{ 131, 146 },
-		{ 129, 142 },
-		{ 129, 143 },
-		{ 96, 114 },
-		{ 96, 86 },
-		{ 71, 88 },
-		{ 71, 79 },
-		{ 62, 68 },
-		{ 62, 69 },
-		{ 24, 53 },
-		{ 0, 24 },
-		{ 0, 25 },
-		{ 151, 163 },
-		{ 150, 162 },
-		{ 142, 157 },
-		{ 136, 149 },
-		{ 135, 148 },
-		{ 134, 147 },
-		{ 127, 139 },
-		{ 125, 133 },
-		{ 118, 126 },
-		{ 105, 116 },
-		{ 104, 115 },
-		{ 88, 95 },
-		{ 76, 93 },
-		{ 75, 92 },
-		{ 74, 91 },
-		{ 73, 90 },
-		{ 72, 89 },
-		{ 70, 85 },
-		{ 67, 80 },
-		{ 65, 78 },
-		{ 64, 71 },
-		{ 52, 65 },
-		{ 51, 64 },
-		{ 49, 63 },
-		{ 48, 62 }
+		{ 30, 62 },
+		{ 0, 29 },
+		{ 143, 155 },
+		{ 30, 63 },
+		{ 80, 93 },
+		{ 96, 117 },
+		{ 96, 118 },
+		{ 128, 134 },
+		{ 169, 181 },
+		{ 143, 133 },
+		{ 129, 137 },
+		{ 128, 135 },
+		{ 128, 136 },
+		{ 129, 138 },
+		{ 129, 136 },
+		{ 96, 119 },
+		{ 127, 121 },
+		{ 160, 174 },
+		{ 160, 159 },
+		{ 127, 99 },
+		{ 127, 96 },
+		{ 168, 180 },
+		{ 30, 64 },
+		{ 167, 179 },
+		{ 80, 79 },
+		{ 146, 160 },
+		{ 146, 161 },
+		{ 144, 157 },
+		{ 144, 158 },
+		{ 108, 127 },
+		{ 108, 98 },
+		{ 83, 100 },
+		{ 83, 91 },
+		{ 74, 80 },
+		{ 74, 81 },
+		{ 30, 65 },
+		{ 0, 30 },
+		{ 0, 31 },
+		{ 166, 178 },
+		{ 165, 177 },
+		{ 157, 172 },
+		{ 151, 164 },
+		{ 150, 163 },
+		{ 149, 162 },
+		{ 142, 154 },
+		{ 139, 148 },
+		{ 132, 141 },
+		{ 131, 140 },
+		{ 118, 129 },
+		{ 117, 128 },
+		{ 100, 107 },
+		{ 88, 105 },
+		{ 87, 104 },
+		{ 86, 103 },
+		{ 85, 102 },
+		{ 84, 101 },
+		{ 82, 97 },
+		{ 79, 92 },
+		{ 77, 90 },
+		{ 76, 83 },
+		{ 64, 77 },
+		{ 63, 76 },
+		{ 61, 75 },
+		{ 60, 74 }
 	};
 	yynontermgoto = nontermgoto;
-	yynontermgoto_size = 63;
+	yynontermgoto_size = 64;
 
 	static const yystategoto_t YYNEARFAR YYBASED_CODE stategoto[] = {
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
@@ -2355,11 +2505,17 @@ void YYPARSENAME::yytables()
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 57, -1 },
+		{ 37, -1 },
+		{ 0, -1 },
+		{ 37, -1 },
 		{ 56, -1 },
-		{ 36, -1 },
-		{ 0, -1 },
-		{ 36, -1 },
-		{ 55, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
@@ -2369,41 +2525,33 @@ void YYPARSENAME::yytables()
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
-		{ 26, 68 },
+		{ 26, 80 },
 		{ 0, -1 },
-		{ 55, -1 },
-		{ 28, 71 },
+		{ 56, -1 },
+		{ 29, 83 },
 		{ 0, -1 },
-		{ 47, -1 },
+		{ 48, -1 },
 		{ -4, -1 },
 		{ 0, -1 },
-		{ 45, 96 },
+		{ 46, 108 },
 		{ 2, -1 },
-		{ 23, -1 },
-		{ 21, -1 },
-		{ 19, -1 },
-		{ 17, -1 },
-		{ 15, -1 },
+		{ 24, -1 },
+		{ 22, -1 },
+		{ 20, -1 },
+		{ 18, -1 },
+		{ 16, -1 },
 		{ 0, -1 },
-		{ 0, 88 },
+		{ 0, 100 },
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
 		{ -13, -1 },
-		{ 0, 114 },
+		{ 0, 127 },
 		{ 0, -1 },
 		{ 0, -1 },
-		{ 19, -1 },
-		{ 0, -1 },
-		{ 0, -1 },
-		{ 0, -1 },
-		{ 0, -1 },
-		{ 0, -1 },
-		{ 0, -1 },
-		{ 0, -1 },
-		{ 19, 114 },
+		{ 20, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
@@ -2411,8 +2559,17 @@ void YYPARSENAME::yytables()
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
-		{ 36, -1 },
-		{ 34, -1 },
+		{ 19, 127 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 0, -1 },
+		{ 37, -1 },
+		{ 35, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
@@ -2422,9 +2579,10 @@ void YYPARSENAME::yytables()
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 5, -1 },
-		{ -9, 128 },
-		{ -7, 128 },
+		{ -9, 143 },
+		{ -7, 143 },
 		{ 0, -1 },
+		{ 19, -1 },
 		{ 18, -1 },
 		{ 0, -1 },
 		{ 0, -1 },
@@ -2434,11 +2592,12 @@ void YYPARSENAME::yytables()
 		{ 0, -1 },
 		{ 17, -1 },
 		{ 0, -1 },
+		{ 0, -1 },
 		{ 6, -1 },
 		{ -19, -1 },
 		{ 5, -1 },
 		{ 0, -1 },
-		{ -1, 145 },
+		{ -1, 160 },
 		{ 0, -1 },
 		{ 0, -1 },
 		{ 5, -1 },

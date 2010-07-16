@@ -3,7 +3,7 @@
 
 #include <cyacc.h>
 
-#line 63 "EaseaParse.y"
+#line 65 "EaseaParse.y"
 
 // forward references
 class CSymbol;
@@ -11,7 +11,7 @@ class CSymbol;
 #line 12 "EaseaParse.h"
 #ifndef YYSTYPE
 union tagYYSTYPE {
-#line 69 "EaseaParse.y"
+#line 71 "EaseaParse.y"
 
   CSymbol* pSymbol;
   double dValue;
@@ -42,40 +42,49 @@ union tagYYSTYPE {
 #define INT 271
 #define DOUBLE 272
 #define FLOAT 273
-#define CHAR 274
-#define POINTER 275
-#define NUMBER 276
-#define NUMBER2 277
-#define METHODS 278
-#define STATIC 279
-#define NB_GEN 280
-#define NB_OPT_IT 281
-#define BALDWINISM 282
-#define MUT_PROB 283
-#define XOVER_PROB 284
-#define POP_SIZE 285
-#define SELECTOR 286
-#define RED_PAR 287
-#define RED_OFF 288
-#define RED_FINAL 289
-#define OFFSPRING 290
-#define SURVPAR 291
-#define SURVOFF 292
-#define MINIMAXI 293
-#define ELITISM 294
-#define ELITE 295
-#define PRINT_STATS 296
-#define PLOT_STATS 297
-#define GENERATE_CSV_FILE 298
-#define GENERATE_GNUPLOT_SCRIPT 299
-#define GENERATE_R_SCRIPT 300
-#define TIME_LIMIT 301
-#line 139 "EaseaParse.y"
+#define GPNODE 274
+#define CHAR 275
+#define POINTER 276
+#define NUMBER 277
+#define NUMBER2 278
+#define METHODS 279
+#define STATIC 280
+#define NB_GEN 281
+#define NB_OPT_IT 282
+#define BALDWINISM 283
+#define MUT_PROB 284
+#define XOVER_PROB 285
+#define POP_SIZE 286
+#define SELECTOR 287
+#define RED_PAR 288
+#define RED_OFF 289
+#define RED_FINAL 290
+#define OFFSPRING 291
+#define SURVPAR 292
+#define SURVOFF 293
+#define MINIMAXI 294
+#define ELITISM 295
+#define ELITE 296
+#define PRINT_STATS 297
+#define PLOT_STATS 298
+#define GENERATE_CSV_FILE 299
+#define GENERATE_GNUPLOT_SCRIPT 300
+#define GENERATE_R_SCRIPT 301
+#define TIME_LIMIT 302
+#define MAX_INIT_TREE_D 303
+#define MIN_INIT_TREE_D 304
+#define MAX_XOVER_DEPTH 305
+#define MAX_MUTAT_DEPTH 306
+#define MAX_TREE_D 307
+#define NB_GPU 308
+#define PRG_BUF_SIZE 309
+#define NO_FITNESS_CASES 310
+#line 150 "EaseaParse.y"
 
 #include "EaseaSym.h"
 #include "EaseaLex.h"
 
-#line 79 "EaseaParse.h"
+#line 88 "EaseaParse.h"
 /////////////////////////////////////////////////////////////////////////////
 // CEASEAParser
 
@@ -96,7 +105,7 @@ protected:
 #endif
 
 public:
-#line 146 "EaseaParse.y"
+#line 157 "EaseaParse.y"
 
 protected:
   CEASEALexer EASEALexer;       // the lexical analyser
@@ -110,7 +119,7 @@ public:
   double divide(double dDividend, double dDivisor);
   CSymbol* insert() const;
 
-#line 114 "EaseaParse.h"
+#line 123 "EaseaParse.h"
 };
 
 #ifndef YYPARSENAME

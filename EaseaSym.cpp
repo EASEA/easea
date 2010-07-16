@@ -20,12 +20,12 @@ Rocquencourt BP 105
 #include "debug.h"
                   
 void debug(char *s){
-  #ifdef _DEBUG
+#ifdef _DEBUG
   printf (s);
   getchar ();
-  #endif
+#endif
   return;
-  }
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // LinkedList commands
@@ -43,11 +43,11 @@ template <class T> CListItem<T> *CLList<T>::walkToNextItem(){
   if (pNextItem==pHead){
     pNextItem=pHead->pNext;
     return pHead;
-    }
+  }
   pCurrentObject=pNextItem;
   pNextItem=pNextItem->pNext;
   return pCurrentObject;
-  }
+}
   
 /////////////////////////////////////////////////////////////////////////////
 // symbol construction/destruction
@@ -65,11 +65,11 @@ CSymbol::CSymbol(char *s){
   pNextInBucket = NULL;
   pSymbolList=NULL;
   sString=NULL;
-  }
+}
   
 CSymbol::~CSymbol(){
   delete[] sName;
-  }
+}
 
 
 
@@ -85,15 +85,15 @@ void CSymbol::print(FILE *fp){
     fprintf(fp,"\nclass %s {\npublic:\n// Default methods for class %s\n",sName,sName); // class  header
 
     /*fprintf(fp,"// Class members \n"); // Now, we must print the class members
-    pSymbolList->reset();
-    while (pSym=pSymbolList->walkToNextItem()){
+      pSymbolList->reset();
+      while (pSym=pSymbolList->walkToNextItem()){
       if (pSym->Object->ObjectType==oObject)
-        fprintf(fp,"  %s %s;\n",pSym->Object->pType->sName,pSym->Object->sName);
+      fprintf(fp,"  %s %s;\n",pSym->Object->pType->sName,pSym->Object->sName);
       if (pSym->Object->ObjectType==oPointer)
-        fprintf(fp,"  %s *%s;\n",pSym->Object->pType->sName,pSym->Object->sName);
+      fprintf(fp,"  %s *%s;\n",pSym->Object->pType->sName,pSym->Object->sName);
       if (pSym->Object->ObjectType==oArray)
-        fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
-    }*/
+      fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
+      }*/
 
 
     if( TARGET==CUDA ){ // here we we are generating function to copy objects from host memory to gpu's.
@@ -139,131 +139,131 @@ void CSymbol::print(FILE *fp){
 	fprintf(fp,"    cudaMemcpy(ret,dev_ptr,sizeof(%s),cudaMemcpyDeviceToHost);\n",sName);
 	//while (pSym=pSymbolList->walkToNextItem())
 	//fprintf(fp,"    this->%s=ret->%s;\n",pSym->Object->sName,pSym->Object->sName);      
-      fprintf(fp,"  }\n\n");
+	fprintf(fp,"  }\n\n");
       }
     }
     
     fprintf(fp,"  %s(){  // Constructor\n",sName); // constructor
-          pSymbolList->reset(); // in which we initialise all pointers to NULL
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oPointer)
-              fprintf(fp,"    %s=NULL;\n",pSym->Object->sName);
-	    if (pSym->Object->ObjectType==oArrayPointer){
-	      fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
-	      fprintf(fp,"         %s[EASEA_Ndx]=NULL;\n",pSym->Object->sName);
-	    }
-	  }
-	  fprintf(fp,"  }\n"); // constructor
+    pSymbolList->reset(); // in which we initialise all pointers to NULL
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    %s=NULL;\n",pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArrayPointer){
+	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"         %s[EASEA_Ndx]=NULL;\n",pSym->Object->sName);
+      }
+    }
+    fprintf(fp,"  }\n"); // constructor
 
-	  fprintf(fp,"  %s(%s &EASEA_Var) {  // Copy constructor\n",sName,sName); // copy constructor
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oObject)
-              fprintf(fp,"    %s=EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
-            if (pSym->Object->ObjectType==oArray){
-              fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              fprintf(fp,"       %s[EASEA_Ndx]=EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
-            }
-            if (pSym->Object->ObjectType==oPointer){
-              fprintf(fp,"    %s=(EASEA_Var.%s ? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-            }
-	    if( pSym->Object->ObjectType==oArrayPointer ){
-	      fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
-	      fprintf(fp,"        if( EASEA_Var.%s[EASEA_Ndx] ) %s[EASEA_Ndx] = new %s(*(EASEA_Var.%s[EASEA_Ndx]));\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-	      fprintf(fp,"        else  %s[EASEA_Ndx] = NULL;\n",pSym->Object->sName);
-	    }
-          }
+    fprintf(fp,"  %s(const %s &EASEA_Var) {  // Copy constructor\n",sName,sName); // copy constructor
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    %s=EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       %s[EASEA_Ndx]=EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer){
+	fprintf(fp,"    %s=(EASEA_Var.%s ? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      }
+      if( pSym->Object->ObjectType==oArrayPointer ){
+	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"        if( EASEA_Var.%s[EASEA_Ndx] ) %s[EASEA_Ndx] = new %s(*(EASEA_Var.%s[EASEA_Ndx]));\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+	fprintf(fp,"        else  %s[EASEA_Ndx] = NULL;\n",pSym->Object->sName);
+      }
+    }
     fprintf(fp,"  }\n"); // copy constructor
 
     fprintf(fp,"  virtual ~%s() {  // Destructor\n",sName); // destructor
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oPointer)
-              fprintf(fp,"    if (%s) delete %s;\n    %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
-	    if( pSym->Object->ObjectType==oArrayPointer ){
-	      fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
-	      fprintf(fp,"        if( %s[EASEA_Ndx] ) delete %s[EASEA_Ndx];\n",pSym->Object->sName,pSym->Object->sName);
-	    }
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    if (%s) delete %s;\n    %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+      if( pSym->Object->ObjectType==oArrayPointer ){
+	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"        if( %s[EASEA_Ndx] ) delete %s[EASEA_Ndx];\n",pSym->Object->sName,pSym->Object->sName);
+      }
+    }
 	  
     fprintf(fp,"  }\n"); // destructor
 
-    fprintf(fp,"  %s& operator=(%s &EASEA_Var) {  // Operator=\n",sName,sName); // operator=
+    fprintf(fp,"  %s& operator=(const %s &EASEA_Var) {  // Operator=\n",sName,sName); // operator=
     fprintf(fp,"    if (&EASEA_Var == this) return *this;\n");
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oObject)
-              fprintf(fp,"    %s = EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
-            if (pSym->Object->ObjectType==oArray){
-              fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              fprintf(fp,"       %s[EASEA_Ndx] = EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
-            }
-            if (pSym->Object->ObjectType==oArrayPointer){
-              fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
-              fprintf(fp,"      if(EASEA_Var.%s[EASEA_Ndx]) %s[EASEA_Ndx] = new %s(*(EASEA_Var.%s[EASEA_Ndx]));\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-            }
-             if (pSym->Object->ObjectType==oPointer){
-              fprintf(fp,"    if (%s) delete %s;\n",pSym->Object->sName,pSym->Object->sName);
-              fprintf(fp,"    %s = (EASEA_Var.%s? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-            }
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    %s = EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray){
+	fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       %s[EASEA_Ndx] = EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oArrayPointer){
+	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"      if(EASEA_Var.%s[EASEA_Ndx]) %s[EASEA_Ndx] = new %s(*(EASEA_Var.%s[EASEA_Ndx]));\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer){
+	fprintf(fp,"    if (%s) delete %s;\n",pSym->Object->sName,pSym->Object->sName);
+	fprintf(fp,"    %s = (EASEA_Var.%s? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      }
+    }
     fprintf(fp,"  return *this;\n  }\n\n"); // operator<=
 
     fprintf(fp,"  bool operator==(%s &EASEA_Var) const {  // Operator==\n",sName); // operator==
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (TARGET==CUDA || TARGET==STD){
-              if (pSym->Object->ObjectType==oObject)
-                fprintf(fp,"    if (%s!=EASEA_Var.%s) return false;\n",pSym->Object->sName,pSym->Object->sName);
-              if (pSym->Object->ObjectType==oArray ){
-                fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-                fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return false;}\n",pSym->Object->sName,pSym->Object->sName);
-              }
-              if ( pSym->Object->ObjectType==oArrayPointer){
-                fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
-                fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return false;}\n",pSym->Object->sName,pSym->Object->sName);
-              }
-               if (pSym->Object->ObjectType==oPointer){
-                fprintf(fp,"    if (((%s) && (!EASEA_Var.%s)) || ((!%s) && (EASEA_Var.%s))) return false;\n",pSym->Object->sName,pSym->Object->sName, pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
-                fprintf(fp,"    if ((%s)&&(%s!=EASEA_Var.%s)) return false;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName, pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->sName);
-              }                                               
-            }
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (TARGET==CUDA || TARGET==STD){
+	if (pSym->Object->ObjectType==oObject)
+	  fprintf(fp,"    if (%s!=EASEA_Var.%s) return false;\n",pSym->Object->sName,pSym->Object->sName);
+	if (pSym->Object->ObjectType==oArray ){
+	  fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	  fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return false;}\n",pSym->Object->sName,pSym->Object->sName);
+	}
+	if ( pSym->Object->ObjectType==oArrayPointer){
+	  fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	  fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return false;}\n",pSym->Object->sName,pSym->Object->sName);
+	}
+	if (pSym->Object->ObjectType==oPointer){
+	  fprintf(fp,"    if (((%s) && (!EASEA_Var.%s)) || ((!%s) && (EASEA_Var.%s))) return false;\n",pSym->Object->sName,pSym->Object->sName, pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+	  fprintf(fp,"    if ((%s)&&(%s!=EASEA_Var.%s)) return false;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName, pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->sName);
+	}                                               
+      }
+    }
     if (TARGET==CUDA || TARGET==STD)  fprintf(fp,"  return true;\n  }\n\n"); // operator==
 
     fprintf(fp,"  bool operator!=(%s &EASEA_Var) const {return !(*this==EASEA_Var);} // operator!=\n\n",sName); // operator!=
 
     fprintf(fp,"  friend ostream& operator<< (ostream& os, const %s& EASEA_Var) { // Output stream insertion operator\n",sName); // Output stream insertion operator
-          pSymbolList->reset();
-          while (pSym=pSymbolList->walkToNextItem()){
-            if (pSym->Object->ObjectType==oObject)
-              fprintf(fp,"    os <<  \"%s:\" << EASEA_Var.%s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
-            if (pSym->Object->ObjectType==oArray ){
-              fprintf(fp,"    {os << \"Array %s : \";\n",pSym->Object->sName);
-              fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-              fprintf(fp,"       os << \"[\" << EASEA_Ndx << \"]:\" << EASEA_Var.%s[EASEA_Ndx] << \"\\t\";}\n    os << \"\\n\";\n",pSym->Object->sName);
-            }
-	    if( pSym->Object->ObjectType==oArrayPointer){
-              fprintf(fp,"    {os << \"Array %s : \";\n",pSym->Object->sName);
-              fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
-              fprintf(fp,"       if( EASEA_Var.%s[EASEA_Ndx] ) os << \"[\" << EASEA_Ndx << \"]:\" << *(EASEA_Var.%s[EASEA_Ndx]) << \"\\t\";}\n    os << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
-	    }
-            if (pSym->Object->ObjectType==oPointer)
-              fprintf(fp,"    if (EASEA_Var.%s) os << \"%s:\" << *(EASEA_Var.%s) << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
-          }
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+      if (pSym->Object->ObjectType==oObject)
+	fprintf(fp,"    os <<  \"%s:\" << EASEA_Var.%s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
+      if (pSym->Object->ObjectType==oArray ){
+	fprintf(fp,"    {os << \"Array %s : \";\n",pSym->Object->sName);
+	fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	fprintf(fp,"       os << \"[\" << EASEA_Ndx << \"]:\" << EASEA_Var.%s[EASEA_Ndx] << \"\\t\";}\n    os << \"\\n\";\n",pSym->Object->sName);
+      }
+      if( pSym->Object->ObjectType==oArrayPointer){
+	fprintf(fp,"    {os << \"Array %s : \";\n",pSym->Object->sName);
+	fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"       if( EASEA_Var.%s[EASEA_Ndx] ) os << \"[\" << EASEA_Ndx << \"]:\" << *(EASEA_Var.%s[EASEA_Ndx]) << \"\\t\";}\n    os << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
+      }
+      if (pSym->Object->ObjectType==oPointer)
+	fprintf(fp,"    if (EASEA_Var.%s) os << \"%s:\" << *(EASEA_Var.%s) << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+    }
     fprintf(fp,"    return os;\n  }\n\n"); // Output stream insertion operator
 
-//     fprintf(fp,"  friend istream& operator>> (istream& is, %s& EASEA_Var) { // Input stream extraction operator\n",sName); // Output stream insertion operator
-//           pSymbolList->reset();
-//           while (pSym=pSymbolList->walkToNextItem()){
-//             if ((pSym->Object->ObjectType==oObject)&&(strcmp(pSym->Object->pType->sName, "bool"))) 
-//               fprintf(fp,"    is >> EASEA_Var.%s;\n",pSym->Object->sName);
-//             if ((pSym->Object->ObjectType==oArray)&&(strcmp(pSym->Object->pType->sName, "bool"))) {
-//               fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-//               fprintf(fp,"       is >> EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName);
-//             }                                         
-//           }
-//     fprintf(fp,"    return is;\n  }\n\n"); // Input stream extraction operator
+    //     fprintf(fp,"  friend istream& operator>> (istream& is, %s& EASEA_Var) { // Input stream extraction operator\n",sName); // Output stream insertion operator
+    //           pSymbolList->reset();
+    //           while (pSym=pSymbolList->walkToNextItem()){
+    //             if ((pSym->Object->ObjectType==oObject)&&(strcmp(pSym->Object->pType->sName, "bool"))) 
+    //               fprintf(fp,"    is >> EASEA_Var.%s;\n",pSym->Object->sName);
+    //             if ((pSym->Object->ObjectType==oArray)&&(strcmp(pSym->Object->pType->sName, "bool"))) {
+    //               fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+    //               fprintf(fp,"       is >> EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName);
+    //             }                                         
+    //           }
+    //     fprintf(fp,"    return is;\n  }\n\n"); // Input stream extraction operator
 
     if (sString) {
       if (bVERBOSE) printf ("Inserting Methods into %s Class.\n",sName);
@@ -272,21 +272,21 @@ void CSymbol::print(FILE *fp){
     }
   }
 
-    fprintf(fp,"// Class members \n"); // Now, we must print the class members
-    pSymbolList->reset();
-    while (pSym=pSymbolList->walkToNextItem()){
-      if (pSym->Object->ObjectQualifier==1) // 1=Static
-        fprintf(fp,"  static");
-      if (pSym->Object->ObjectType==oObject)
-        fprintf(fp,"  %s %s;\n",pSym->Object->pType->sName,pSym->Object->sName);
-      if ((pSym->Object->ObjectType==oPointer))
-        fprintf(fp,"  %s *%s;\n",pSym->Object->pType->sName,pSym->Object->sName);
-      if ((pSym->Object->ObjectType==oArray))
-        fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
-      if ((pSym->Object->ObjectType==oArrayPointer))
-        fprintf(fp,"  %s* %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/sizeof(char*));
+  fprintf(fp,"// Class members \n"); // Now, we must print the class members
+  pSymbolList->reset();
+  while (pSym=pSymbolList->walkToNextItem()){
+    if (pSym->Object->ObjectQualifier==1) // 1=Static
+      fprintf(fp,"  static");
+    if (pSym->Object->ObjectType==oObject)
+      fprintf(fp,"  %s %s;\n",pSym->Object->pType->sName,pSym->Object->sName);
+    if ((pSym->Object->ObjectType==oPointer))
+      fprintf(fp,"  %s *%s;\n",pSym->Object->pType->sName,pSym->Object->sName);
+    if ((pSym->Object->ObjectType==oArray))
+      fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
+    if ((pSym->Object->ObjectType==oArrayPointer))
+      fprintf(fp,"  %s* %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/sizeof(char*));
 
-    }
+  }
 
   if (strcmp(sName,"Genome"))
     fprintf(fp,"};\n",sName);
@@ -321,7 +321,7 @@ void CSymbol::printUserClasses(FILE *fp){
   bAlreadyPrinted=true;  
   while (pSym=pSymbolList->walkToNextItem()){
     if ((pSym->Object->pType->ObjectType==oUserClass))
-	pSym->Object->pType->printUC(fp);
+      pSym->Object->pType->printUC(fp);
   }
 }
 
@@ -347,7 +347,7 @@ void CSymbol::printAllSymbols(FILE *fp, char *sCompleteName, EObjectType FatherT
       strcpy(sNewCompleteName, sCompleteName);
     }
     else {
-       if (FatherType==oPointer) 
+      if (FatherType==oPointer) 
         strcat(sNewCompleteName,"->");
       else strcat(sNewCompleteName,".");
       strcat(sNewCompleteName,pSym->Object->sName);
@@ -355,7 +355,7 @@ void CSymbol::printAllSymbols(FILE *fp, char *sCompleteName, EObjectType FatherT
         strcat(sNewCompleteName,"[");
         sprintf(s,"%d",pSym->Object->nSize/pSym->Object->pType->nSize);
         strcat(sNewCompleteName,s);
-         strcat(sNewCompleteName,"]");
+	strcat(sNewCompleteName,"]");
       }
       fprintf(fp,"%s\n",sNewCompleteName);
       strcpy(sNewCompleteName, sCompleteName);
@@ -370,8 +370,8 @@ void CSymbol::printAllSymbols(FILE *fp, char *sCompleteName, EObjectType FatherT
 CSymbolTable::CSymbolTable(){
   for (int i = 0; i < BUCKET_SIZE; i++) {
     saBucket[i] = NULL;
-    }
   }
+}
 
 CSymbolTable::~CSymbolTable(){
   for (int i = 0; i < BUCKET_SIZE; i++) {
@@ -380,9 +380,9 @@ CSymbolTable::~CSymbolTable(){
       CSymbol* pNextSym = pSym->pNextInBucket;
       delete pSym;
       pSym = pNextSym;
-      }
     }
   }
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -393,11 +393,11 @@ int CSymbolTable::hash(const char* s) const{
   int i = 0;
   while (*s != '\0') {
     i = i << 1 ^ *s++;
-    }
+  }
   i %= BUCKET_SIZE;
   if (i < 0)  i *= -1;
   return i;
-  }
+}
 
 CSymbol* CSymbolTable::insert(CSymbol *pSymbol){
   int i = hash(pSymbol->sName);
@@ -406,12 +406,12 @@ CSymbol* CSymbolTable::insert(CSymbol *pSymbol){
     if (strcmp(pSym->sName, pSymbol->sName) == 0){
       delete pSymbol;
       return pSym;
-      }
+    }
   pSym = pSymbol;
   pSym->pNextInBucket = saBucket[i];
   saBucket[i] = pSym;
   return pSym;
-  }
+}
 
 CSymbol* CSymbolTable::find(const char *s){
   int i = hash(s);
@@ -419,4 +419,36 @@ CSymbol* CSymbolTable::find(const char *s){
     if (strcmp(pSym->sName,s) == 0)
       return pSym;     
   return NULL;
+}
+
+
+OPCodeDesc::OPCodeDesc(){
+  isERC = false;
+  arity = 0;
+}
+int OPCodeDescCompare(const void* a, const void* b){
+  OPCodeDesc** f1, ** f2;
+  f1 = (OPCodeDesc**)a;
+  f2 = (OPCodeDesc**)b;
+    
+  if( (*f1)->arity==(*f2)->arity && (*f1)->arity==0 ){
+    return (*f1)->isERC-(*f2)->isERC;
   }
+  else{
+    return (*f1)->arity-(*f2)->arity;
+  }
+}
+
+void OPCodeDesc::sort(OPCodeDesc** opDescs, unsigned len){
+  qsort(opDescs,len,sizeof(OPCodeDesc*),OPCodeDescCompare);
+}
+
+void OPCodeDesc::show(void){
+  
+  cout << "OPCode : " << *this->opcode << endl;
+  cout << "Real name : " << *this->realName << endl;
+  cout << "Arity : " << this->arity << endl;
+  cout << "cpu code : \n" << this->cpuCodeStream.str() << endl;
+  cout << "gpu code : \n" << this->gpuCodeStream.str() << endl;
+  
+}

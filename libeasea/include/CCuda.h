@@ -10,6 +10,20 @@
 
 #include <iostream>
 #include <semaphore.h>
+#include <cuda_runtime_api.h>
+
+
+
+#define CUDA_SAFE_CALL(f)				\
+  {							\
+  cudaError_t err;					\
+    err = f;						\
+    if( err != cudaSuccess ){				\
+      printf("Error : %s\n",cudaGetErrorString(err));	\
+      exit(-1);						\
+    }							\
+  }
+   
 
 struct gpuOptions{};
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "include/CCuda.h"
 #include <stdio.h>
+ 
 
 CCuda::CCuda(size_t parentSize, size_t offSize, size_t individualImplSize){
 	this->sizeOfIndividualImpl = individualImplSize;

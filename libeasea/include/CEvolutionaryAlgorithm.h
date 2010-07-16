@@ -59,8 +59,8 @@ public:
   Parameters* params;
 
   CGnuplot* gnuplot;
-  float currentAverageFitness;
-  float currentSTDEV;
+  double currentAverageFitness;
+  double currentSTDEV;
 
   virtual ~CEvolutionaryAlgorithm();
 

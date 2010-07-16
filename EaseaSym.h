@@ -14,6 +14,10 @@ Rocquencourt BP 105
 #define SYMBOL_H
 #include "Easea.h"
 
+
+#include <iostream>
+#include <sstream>
+
 extern void debug (char *);
 
 enum EObjectType {oUserClass, oBaseClass, oObject, oPointer, oArray, oMacro, oUndefined, oArrayPointer};
@@ -110,6 +114,23 @@ protected:
 public:
   CSymbol* insert(CSymbol *pSymbol);
   CSymbol* find(const char* s);
+};
+
+
+using namespace std;
+
+class OPCodeDesc {
+ public:
+  unsigned arity;
+  string* opcode;
+  string* realName;
+  ostringstream cpuCodeStream;
+  ostringstream gpuCodeStream;
+  bool isERC;
+
+  void show(void);
+  static void sort(OPCodeDesc** opDescs, unsigned len);
+  OPCodeDesc();
 };
 
 #endif

@@ -17,7 +17,8 @@ ifeq ($(UNAME), Darwin)
 	@mv $(HOME)/.profile_save $(HOME)/.profile
 	@echo "export EZ_PATH=\"$(PWD)/\"">>$(HOME)/.profile
 else
-	@if [ "$(EZ_PATH)" != "$(PWD)/" ] ; then echo -e "\nexport EZ_PATH=$(PWD)/">>$(HOME)/.bashrc ; fi
+	echo "this one"
+	@if [ $(EZ_PATH) != $(PWD)/ ] ; then echo -e "\nexport EZ_PATH=$(PWD)/">>$(HOME)/.bashrc ; fi
 endif
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.

@@ -57,6 +57,8 @@ int nTIME_LIMIT=0;
 float fMUT_PROB;
 float fXOVER_PROB;
 FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile;//, *fpExplodedGenomeFile;
+
+ unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_SIZE,iMAX_TREE_DEPTH,iMAX_XOVER_DEPTH,iNO_FITNESS_CASES;
 %}
 
 // include file
@@ -107,6 +109,7 @@ class CSymbol;
 %token <pSymbol> INT
 %token <pSymbol> DOUBLE
 %token <pSymbol> FLOAT
+%token <pSymbol> GPNODE
 %token <pSymbol> CHAR
 %token <pSymbol> POINTER
 %token <dValue> NUMBER
@@ -135,6 +138,14 @@ class CSymbol;
 %token GENERATE_GNUPLOT_SCRIPT
 %token GENERATE_R_SCRIPT
 %token TIME_LIMIT
+%token MAX_INIT_TREE_D
+%token MIN_INIT_TREE_D
+%token MAX_XOVER_DEPTH
+   %token MAX_MUTAT_DEPTH
+%token MAX_TREE_D
+%token NB_GPU
+%token PRG_BUF_SIZE
+%token NO_FITNESS_CASES
 // include file
 %include {
 #include "EaseaSym.h"
@@ -279,6 +290,7 @@ BaseType
   | FLOAT
   | CHAR
   | POINTER
+  | GPNODE
   ;
   
 UserType
@@ -324,6 +336,16 @@ Object
       pCURRENT_CLASS->nSize+=$2->nSize;
       pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($2));
       if (bVERBOSE) printf("    %s pointer declared (%d bytes)\n",$2->sName,$2->nSize);
+    }
+  | '0' Symbol {
+      $2->nSize=sizeof (char *);
+      $2->pClass=pCURRENT_CLASS;
+      $2->pType=pCURRENT_TYPE;
+      $2->ObjectType=oPointer;
+      $2->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+      pCURRENT_CLASS->nSize+=$2->nSize;
+      pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($2));
+      if (bVERBOSE) printf("    %s NULL pointer declared (%d bytes)\n",$2->sName,$2->nSize);
     }
   | '*''*' Symbol {
       $3->nSize=sizeof (char *);
@@ -619,6 +641,14 @@ Parameter
       else
 	 bGENERATE_R_SCRIPT=0;
     }
+| MAX_INIT_TREE_D NUMBER2 {iMAX_INIT_TREE_D = (unsigned)$2;}
+| MIN_INIT_TREE_D NUMBER2 {iMIN_INIT_TREE_D = (unsigned)$2;}
+| MAX_TREE_D NUMBER2 {iMAX_TREE_D = (unsigned)$2;}
+| NB_GPU NUMBER2 {iNB_GPU = (unsigned)$2;}
+| PRG_BUF_SIZE NUMBER2 {iPRG_BUF_SIZE = (unsigned)$2;}
+//| MAX_XOVER_DEPTH NUMBER2 {iMAX_TREE_DEPTH = (unsigned)$2;}
+ //| MAX_MUTAT_DEPTH NUMBER2 {iMAX_MUTAT_DEPTH = (unsigned)$2;}  
+| NO_FITNESS_CASES NUMBER2 {iNO_FITNESS_CASES = (unsigned)$2;}
   ;
   
 Expr
@@ -671,7 +701,8 @@ int main(int argc, char *argv[]){
       TARGET_FLAVOR = CUDA_FLAVOR_MO;
     }
     else if( !mystricmp(sTemp,"cuda_gp") ){
-      TARGET=STD;
+      printf("tpl argu : is gp\n");
+      TARGET=CUDA;
       TARGET_FLAVOR = CUDA_FLAVOR_GP;
     }
     else if (!mystricmp(sTemp,"std"))  {
