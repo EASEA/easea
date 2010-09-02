@@ -3,7 +3,7 @@ UNAME := $(shell uname)
 ifeq ($(UNAME),Darwin)
 CXXFLAGS = -g -Wall -fmessage-length=0 -I../boost/
 else ifeq ($(UNAME),Linux)
-CXXFLAGS = -g -Wall -fmessage-length=0
+CXXFLAGS = -g -Wall -fmessage-length=0 
 endif #OS
 
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
@@ -17,11 +17,11 @@ LIBS = -lboost_program_options
 endif #OS
 
 TARGET =	libeasea.a
-CPPFLAGS=-I/usr/local/cuda/include/
+CPPFLAGS=-I/usr/local/cuda/include/ 
 
 $(TARGET): $(OBJS)
 ifeq ($(UNAME),Darwin)
-	ar rcs $@ $^ ../boost/program_options.a
+	ar rcs $@ $^ ../boost/program_options.a 
 else ifeq ($(UNAME),Linux)
 	ar rcs $@ $^
 endif #OS

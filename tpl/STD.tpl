@@ -406,6 +406,7 @@ public:
 
 \START_CUDA_MAKEFILE_TPL
 
+
 UNAME := $(shell uname)
 
 ifeq ($(UNAME),Darwin)
@@ -421,6 +422,10 @@ else
 CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
 endif
 
+#USER MAKEFILE OPTIONS :
+\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
+
+
 OBJS = EASEA.o EASEAIndividual.o 
 
 ifeq ($(UNAME),Darwin)
@@ -432,7 +437,7 @@ endif
 TARGET =	EASEA
 
 $(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a
+	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a
 
 	
 #%.o:%.cpp
