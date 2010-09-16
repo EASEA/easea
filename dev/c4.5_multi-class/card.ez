@@ -1,0 +1,371 @@
+/*_________________________________________________________
+
+Test functions
+log normal adaptive mutation
+Selection operator: Tournament
+__________________________________________________________*/
+
+
+\User functions:
+
+\end
+
+\At the beginning of each generation function:
+{
+  generate_k_fold(K,packets_size,t1,k_tables);
+}
+\end
+
+\At the end of each generation function:
+\end
+
+\At each generation before reduce function:
+\end
+
+\GenomeClass::display:
+\end
+
+
+\User declarations :
+#include <base.h>
+#include <genome.h>
+#include <tree.h>
+#include <omp.h>
+#include <assert.h>
+
+
+#define K 5
+#define GENE_SIZE 3
+#define GENOME_SIZE 30
+
+ 
+float pMutPerGene=0.1;
+float pMutDesCard = 0.05;
+float pMutDesThre = 0.5;
+
+struct base* t1 = NULL;
+struct base* t2 = NULL;
+
+float* uniq_instances[2];
+unsigned uniq_cnt[2];
+
+struct base* k_tables[K];
+unsigned packets_size[K];
+
+\end
+
+\User classes :
+GenomeClass { 
+  float x[GENOME_SIZE];
+}
+\end
+
+
+\Before everything else function:
+{
+  srand(globalRandomGenerator->get_seed());
+  INSTEAD_EVAL_STEP = true;
+
+  cout << "Seed : " << globalRandomGenerator->get_seed() << endl;
+  srand(globalRandomGenerator->get_seed());
+
+  t1 = ba_postgres_load_train_multi();
+  t2 = ba_postgres_load_car_multi();
+  ba_set_links(t1,t2);
+  
+  //printf("+ %d - %d\n",t1->class_repartition[1],t1->class_repartition[0]);
+  for( unsigned i=0 ; i<t1->hdr->attributes[t1->hdr->whichis_class]->no_values; i++ )
+    printf("%s : %d\n",t1->hdr->attributes[t1->hdr->whichis_class]->values[i],t1->class_repartition[i]);
+  
+  uniq_instances[0] = ba_compute_uniq_values(t2, 1, uniq_cnt+0);
+  uniq_instances[1] = ba_compute_uniq_values(t2, 2, uniq_cnt+1);
+
+  printf("%d %d\n",uniq_cnt[0],uniq_cnt[1]);
+
+  // allocating K packets 
+  generate_k_fold(K,packets_size,t1,k_tables);
+
+
+#if 1
+  // try the perfect solution
+  IndividualImpl* i = new IndividualImpl();
+  i->x[0] = 30;
+  i->x[1] = 40;
+  i->x[GENE_SIZE-1] = 1;
+ 
+  for( unsigned j=3 ; j<GENE_SIZE-1 ; j++ )
+    i->x[j] = INFINITY;
+
+  float f = i->evaluate();
+  printf("fitness : %f\n",f);
+
+  struct base* tc = table_from_genome(i->x,t1,t2,GENOME_SIZE,GENE_SIZE);
+  cTreeNode* t = genereate_decision_tree(tc);
+
+
+  unsigned error = 0;
+  for( unsigned i=0 ; i<tc->no_instances ; i++ ){
+    unsigned predicted_class = t->classify_instance(tc->instances[i]);
+    unsigned real_class = (unsigned)tc->instances[i][tc->hdr->whichis_class];
+    if( predicted_class != real_class ){
+      error++;
+      printf("p : %d\t",predicted_class);
+      DBG_print_instances(tc->instances+i,1,10);
+    }
+  }
+  printf(" error on the whole set : %d\n",error);
+
+
+
+#endif
+}
+\end
+
+\After everything else function:
+{
+
+  EA->population->sortParentPopulation();
+  IndividualImpl* best = (IndividualImpl*)EA->population->parents[0];
+    
+  printf("best fitness %f\n",best->evaluate());
+  for( unsigned i=0 ; i<GENOME_SIZE ; i+=GENE_SIZE ){
+    for( unsigned j=0 ; j<GENE_SIZE-1 ; j++ ){
+      printf("a_%d <= %3.0f ,",j,best->x[i+j]);
+    }
+    printf(" >= %3.0f\n",best->x[i+GENE_SIZE-1]);
+  }
+  printf("\n");
+
+  
+
+  cTreeNode* root = generate_tree(best->x,t1,t2,GENOME_SIZE,GENE_SIZE);
+  struct base* tmp_table = table_from_genome(best->x,t1,t2,GENOME_SIZE,GENE_SIZE);
+  show_tree(tmp_table,root);
+
+  printf("depth of resulting tree %d\n",root->tree_depth());
+
+#if 1
+  unsigned error = 0;
+  for( unsigned i=0 ; i<tmp_table->no_instances ; i++ ){
+    unsigned predicted_class = root->classify_instance(tmp_table->instances[i]);
+    unsigned real_class = (unsigned)tmp_table->instances[i][t1->hdr->whichis_class];
+    if( predicted_class != real_class )
+      error++;
+  }
+  printf(" error on the whole set : %d\n",error);
+#endif
+
+  
+  delete root;
+  ba_delete( tmp_table );
+}
+\end
+
+\GenomeClass::initialiser : 
+{
+  for( unsigned i=0; i<GENOME_SIZE ; i+=GENE_SIZE ) {
+    for( unsigned j=0 ; j<GENE_SIZE-1 ; j++ ){
+      Genome.x[i+j] = random(0,100);
+    }
+    Genome.x[i+GENE_SIZE-1] = random(0,5);
+  }
+}
+\end
+
+\GenomeClass::crossover :
+{
+  for (int i=0; i<GENOME_SIZE; i+=GENE_SIZE){
+    if( tossCoin(0.5) )
+      for( unsigned j=0 ; j<GENE_SIZE ; j++ )
+	child.x[i+j] = parent1.x[i+j];
+    else
+      for( unsigned j=0 ; j<GENE_SIZE ; j++ )
+	child.x[i+j] = parent2.x[i+j];
+  }
+}
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+{
+  int NbMut=0;
+  for (int i=0; i<GENOME_SIZE; i+=GENE_SIZE){
+    // mutate the cardinality
+    if( tossCoin(pMutPerGene) ){
+      if( tossCoin(pMutDesCard) ){
+	Genome.x[i+GENE_SIZE-1] = 0;
+	NbMut++;
+      }
+      else{
+	float value = random_gauss(Genome.x[i+GENE_SIZE-1],2);
+	value = (value<0 ? 0 : value); //if value less than 0, then value is 0
+	value = (value>10 ? 10 :value); // if value grether than 10 then value is 10
+	Genome.x[i+GENE_SIZE-1] = roundf(value);
+	NbMut++;
+      }
+    }
+
+    for( unsigned j=0 ; j<GENE_SIZE-1 ; j++ ){
+      if( tossCoin(pMutPerGene) ){
+	if( tossCoin(pMutDesThre) ){
+	  Genome.x[i+j] = INFINITY;
+	}
+	else{
+	  if( __isinf(Genome.x[i+j]) ) Genome.x[i+j] = random(0,100);
+	  float value = random_gauss(Genome.x[i+j],2);
+	  Genome.x[i+j] = roundf(value);
+	}
+	NbMut++;
+      }
+    } // for each threshold
+    
+  }// for each gene
+  return NbMut;
+}
+\end
+
+// The population evaluation.
+\Instead evaluation function: 
+{
+#pragma omp parallel for
+  for( int i=0 ; i<popSize ; i++ ){
+    population[i]->evaluate();
+  }
+}
+\end
+
+\GenomeClass::evaluator : // Returns the score
+{
+
+  struct base* k_tmp_tables[K];
+
+  unsigned error = 0;
+  unsigned tree_size = 0;
+
+  // generate tmp tables from genome, for every packets
+  float fitness_value = 0;
+  for( unsigned i=0 ; i<K ; i++ ){
+    k_tmp_tables[i] = table_from_genome(Genome.x,k_tables[i],t2,GENOME_SIZE,GENE_SIZE);
+  }
+
+  // cross validation
+  for( unsigned i=0 ; i<K ; i++ ){
+    
+    struct base* tmp_learning_table= (struct base*)malloc(sizeof(*tmp_learning_table));
+    struct base* tmp_test_table = (struct base*)malloc(sizeof(*tmp_test_table));
+    
+    tmp_learning_table->instances = 
+      (float**)malloc(sizeof(*tmp_learning_table->instances)*t1->no_instances-k_tables[i]->no_instances);
+
+    tmp_learning_table->hdr = ba_partial_copy_hdr(k_tmp_tables[i]->hdr);
+    tmp_test_table->hdr = ba_partial_copy_hdr(k_tmp_tables[i]->hdr);
+    
+
+    // create a learning set with k-1 packets
+    unsigned copied_instances = 0;
+    for( unsigned j=0 ; j<K ; j++ ){
+      if(j==i)continue;
+      memcpy( (tmp_learning_table->instances)+copied_instances,
+	      k_tmp_tables[j]->instances,
+	      sizeof(*tmp_learning_table->instances)*(k_tmp_tables[j]->no_instances));
+      copied_instances += k_tmp_tables[j]->no_instances;
+    }
+    tmp_learning_table->no_instances = copied_instances;
+    
+
+    // create the test set with 1 packet
+    tmp_test_table->instances = (float**)malloc(sizeof(*tmp_test_table->instances)*k_tmp_tables[i]->no_instances);
+    memcpy(tmp_test_table->instances,k_tmp_tables[i]->instances,
+	   sizeof(*tmp_test_table->instances)*k_tmp_tables[i]->no_instances);
+    tmp_test_table->no_instances = k_tmp_tables[i]->no_instances;
+
+
+    // set threshold, from t1 for standard attribute
+    for( unsigned j=0 ; j<t1->hdr->no_attributes ; j++ ){
+      tmp_test_table->hdr->attributes[j]->threshold = t1->hdr->attributes[j]->threshold;
+      tmp_test_table->hdr->attributes[j]->no_threshold = t1->hdr->attributes[j]->no_threshold;
+    }
+    // compute threshold for attribute generated by genome
+    ba_compute_threshold_from(tmp_test_table,t1->hdr->no_attributes);
+
+    // set threshold, from t1 for standard attribute
+    for( unsigned j=0 ; j<t1->hdr->no_attributes ; j++ ){
+      tmp_learning_table->hdr->attributes[j]->threshold = t1->hdr->attributes[j]->threshold;
+      tmp_learning_table->hdr->attributes[j]->no_threshold = t1->hdr->attributes[j]->no_threshold;
+    }
+    // compute threshold for attribute generated by genome
+    ba_compute_threshold_from(tmp_learning_table,t1->hdr->no_attributes);
+
+
+    cTreeNode* t = genereate_decision_tree(tmp_learning_table);
+
+    //show_tree(k_tmp_tables[0],t,0);
+    
+    //DBG_print_instances(tmp_test_table->instances,tmp_test_table->no_instances,tmp_test_table->hdr->no_attributes);
+    for( unsigned j=0 ; j<tmp_test_table->no_instances ; j++ ){
+      unsigned predicted_class = t->classify_instance(tmp_test_table->instances[j]);
+      unsigned real_class = (unsigned)tmp_test_table->instances[j][t1->hdr->whichis_class];
+      
+      //printf("%3.0f : %d, %d\n",tmp_test_table->instances[j][1],predicted_class,real_class);
+      // here compute classification error, or any quality measurment
+      if( predicted_class!=real_class ){
+	error++;
+      }
+    }
+
+    //printf("err : %f %d\n",fitness_value,t->tree_depth());    
+    tree_size += t->tree_depth();
+
+    delete t;
+
+
+    // free current sets
+    // first un-assignate instances
+    for( unsigned i=0 ; i<tmp_learning_table->no_instances ; i++ ){tmp_learning_table->instances[i] = NULL;}
+    for( unsigned i=0 ; i<tmp_test_table->no_instances ; i++ ){tmp_test_table->instances[i] = NULL;}
+    tmp_learning_table->no_instances = 0;
+    tmp_test_table->no_instances = 0;
+    // then delete tmp tables
+    ba_partial_copy_delete(tmp_learning_table);
+    ba_partial_copy_delete(tmp_test_table);
+    
+  }
+
+  fitness_value = (((float)error) / t1->no_instances)*100 + ((float)tree_size)/K;
+
+  for( unsigned i=0 ; i<K ; i++ ){
+    ba_delete(k_tmp_tables[i]);
+  }
+  //exit(-1);
+  return fitness_value;
+}
+\end
+
+\User Makefile options: 
+CXXFLAGS+=-I/home/maitre/sources/c4.5/include/ -fopenmp 
+LDFLAGS+= -lpq  -lm  -fopenmp ../c4.5_common/libc45.a 
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 100     	// NB_GEN
+  Time limit: 0 			// In seconds, 0 to deactivate
+  Population size : 200			//POP_SIZE
+  Offspring size : 100 // 40% 
+  Mutation probability : 1       // MUT_PROB
+  Crossover probability : 1      // XOVER_PROB
+  Evaluator goal : minimise      // Maximise
+  Selection operator: Tournament 6.0
+  Surviving parents: 100%//percentage or absolute  
+  Surviving offspring: 100%
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+  Final reduce operator: Tournament 2
+  
+  Elitism: Strong			//Weak or Strong
+  Elite: 1
+  Print stats:1				//Default: 1
+  Generate csv stats file:0			
+  Generate gnuplot script:0
+  Generate R script:0
+  Plot stats:0				//Default: 0
+\end
+	
