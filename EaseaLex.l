@@ -173,6 +173,7 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bVERBOSE) printf ("Inserting initialisation function.\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  lineCounter = 1;
   BEGIN COPY_INITIALISATION_FUNCTION;
  }
 
@@ -188,10 +189,14 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_BEGIN_GENERATION_FUNCTION"  {
   //DEBUG_PRT_PRT("insert beg");
   if (bVERBOSE) printf ("Inserting at the begining of each generation function.\n");
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter+1, sRAW_PROJECT_NAME);
+
   yyreset();
   yyin = fpGenomeFile;
   bBeginGeneration = true;
   bEndGeneration = false;
+  lineCounter = 1;
   BEGIN COPY_BEG_GENERATION_FUNCTION;
  }
 
@@ -559,6 +564,7 @@ exponent  ([Ee][+-]?[0-9]+)
   yyreset();
   yyin = fpGenomeFile;
   if (bVERBOSE) printf ("Evaluation population in a single function!!.\n");
+  lineCounter = 1;
   BEGIN COPY_INSTEAD_EVAL;
  }
 
@@ -908,6 +914,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISER"  {        
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  lineCounter = 1;
   BEGIN COPY_INITIALISER;   
  }
 
@@ -915,6 +922,7 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bVERBOSE) printf ("Inserting Finalization function.\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  lineCounter=1;
   BEGIN COPY_FINALIZATION_FUNCTION;
  }
 
@@ -1295,9 +1303,11 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 
 <COPY_INITIALISATION_FUNCTION>"\\Before"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
-    fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){");
+    fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){\n");
   bFunction=1; bInitFunction=1;
-      
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  
   BEGIN COPY;
  }
 <COPY_INITIALISATION_FUNCTION><<EOF>> {bInitFunction=0; // No before everything else function was found in the .ez file
@@ -1305,16 +1315,21 @@ if(OPERATING_SYSTEM=WINDOWS)
   fprintf(fpOutputFile,"\n// No before everything else function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
-<COPY_INITIALISATION_FUNCTION>.|\n {}                                      
+<COPY_INITIALISATION_FUNCTION>. {}                                      
+<COPY_INITIALISATION_FUNCTION>\n {lineCounter++;} 
 
 //****************************************
 //  Easea GPGPU & EO Finalization function
 //****************************************
 <COPY_FINALIZATION_FUNCTION>"\\After"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
-  fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){");
+  fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n");
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+
   bFunction=1; bFinalizationFunction=1;
   BEGIN COPY;
  }
@@ -1327,7 +1342,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
-<COPY_FINALIZATION_FUNCTION>.|\n {}                                      
+<COPY_FINALIZATION_FUNCTION>. {}                                      
+<COPY_FINALIZATION_FUNCTION>\n {lineCounter++;}                                      
 
 
 <COPY_END_GENERATION_FUNCTION>"\\At"[ \t\n]+"the"[ \t\n]+"end"[ \t\n]+"of"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"function"[ \t\n]*":" {
@@ -1361,6 +1377,8 @@ if(OPERATING_SYSTEM=WINDOWS)
     bFunction=1;
     bBeginGeneration = 0;
     bBeginGenerationFunction = 1;
+    if( bLINE_NUM_EZ_FILE )
+      fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
     BEGIN COPY_USER_GENERATION;
   }
  }
@@ -1370,11 +1388,15 @@ if(OPERATING_SYSTEM=WINDOWS)
   if( (TARGET==CUDA || TARGET==STD)){
     fprintf (fpOutputFile,"{\n");
     bFunction=1;
+    if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+
     BEGIN COPY_USER_GENERATION;
   }
  }
 
-<COPY_INSTEAD_EVAL>.|\n {}                                      
+<COPY_INSTEAD_EVAL>. {}                                      
+<COPY_INSTEAD_EVAL>\n {lineCounter++;}                                      
 
 <COPY_INSTEAD_EVAL><<EOF>> {
   bBeginGenerationFunction=0; // No Generation function was found in the .ez file
@@ -1398,7 +1420,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
-<COPY_BEG_GENERATION_FUNCTION>.|\n {}                                      
+<COPY_BEG_GENERATION_FUNCTION>\n {lineCounter++;}
+<COPY_BEG_GENERATION_FUNCTION>. {}
 
 
 

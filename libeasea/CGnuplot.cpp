@@ -49,7 +49,7 @@ CGnuplot::CGnuplot(int nbEval){
                         	this->fWrit = (FILE *)fdopen(toFils[1],"w");
                         	this->fRead = (FILE *)fdopen(toPere[0],"r");
                         	this->pid = sonPid;
-				fprintf(this->fWrit,"set term x11 persist\n");
+				fprintf(this->fWrit,"set term wxt persist\n");
 				fprintf(this->fWrit,"set grid\n");
 				fprintf(this->fWrit,"set xrange[0:%d]\n",nbEval);
 				fprintf(this->fWrit,"set xlabel	\"Number of Evaluations\"\n");
