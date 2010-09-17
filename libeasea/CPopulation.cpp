@@ -6,10 +6,14 @@
  */
 
 #include "include/CPopulation.h"
+#include <iostream>
+#include <fstream>
 #include <string.h>
 #include "include/CRandomGenerator.h"
 #include "include/CIndividual.h"
 #include "include/Parameters.h"
+
+using namespace std;
 
 CSelectionOperator* CPopulation::selectionOperator;
 CSelectionOperator* CPopulation::replacementOperator;
@@ -234,6 +238,19 @@ void CPopulation::sortRPopulation(CIndividual** population, size_t populationSiz
   qsort(population,populationSize,sizeof(CIndividual*),CIndividualRCompare);
 }
 
+/* Fonction qui va serializer la population */
+void CPopulation::serializePopulation(){
+  ofstream EASEA_File;
+  std::string fichier = params->outputFilename;
+  fichier.append(".pop");
+  EASEA_File.open(fichier.c_str(), ios::app); 
+  for(int i=0; (unsigned)i<parentPopulationSize; i++){
+	EASEA_File << parents[i]->serialize() << endl;
+	
+  }
+  EASEA_File.close();
+}
+
 
 /**
    Reduit les populations en faisant l'operation de remplacement.
@@ -381,35 +398,39 @@ void CPopulation::weakElitism(size_t elitismSize, CIndividual** parentsPopulatio
   }
  
   for(int i = 0 ; (unsigned)i<elitismSize ; i++ ){
- 	if((!params->minimizing && bestParentFitness > bestOffspringFitness) || (params->minimizing && bestParentFitness<bestOffspringFitness)){
+ 	if(((!params->minimizing && bestParentFitness > bestOffspringFitness) || (params->minimizing && bestParentFitness<bestOffspringFitness) || (*offPopSize)==0) && (*parentPopSize)>0){
 		outPopulation[i] = parentsPopulation[bestParentIndiv];
 		parentsPopulation[bestParentIndiv] = parentsPopulation[(*parentPopSize)-1];
 		parentsPopulation[(*parentPopSize)-1] = NULL;
 		(*parentPopSize)-=1; 
-  		bestParentFitness = parentsPopulation[0]->getFitness();
-		bestParentIndiv=0;
-		for(int j=1; (unsigned)j<(*parentPopSize); j++){
-		        if( (params->minimizing && bestParentFitness > parentsPopulation[j]->getFitness() ) ||
-        	                ( !params->minimizing && bestParentFitness < parentsPopulation[j]->getFitness() )){
-        	        	bestParentFitness = parentsPopulation[j]->getFitness();
-        	        	bestParentIndiv = j;
-       			}
-  		}
+		if((*parentPopSize)>0){
+	  		bestParentFitness = parentsPopulation[0]->getFitness();
+			bestParentIndiv=0;
+			for(int j=1; (unsigned)j<(*parentPopSize); j++){
+			        if( (params->minimizing && bestParentFitness > parentsPopulation[j]->getFitness() ) ||
+	        	                ( !params->minimizing && bestParentFitness < parentsPopulation[j]->getFitness() )){
+	        	        	bestParentFitness = parentsPopulation[j]->getFitness();
+	        	        	bestParentIndiv = j;
+	       			}
+	  		}
+		}
 	}
 	else{
 		outPopulation[i] = offspringPopulation[bestOffspringIndiv];
 		offspringPopulation[bestOffspringIndiv] = offspringPopulation[(*offPopSize)-1];
 		offspringPopulation[(*offPopSize)-1] = NULL;
 		(*offPopSize)-=1;
-  		bestOffspringFitness = offspringPopulation[0]->getFitness();
-		bestOffspringIndiv = 0;	
-		for(int j=1; (unsigned)j<(*offPopSize); j++){
-		        if( (params->minimizing && bestOffspringFitness > offspringPopulation[j]->getFitness() ) ||
-        	                ( !params->minimizing && bestOffspringFitness < offspringPopulation[j]->getFitness() )){
-        	        	bestOffspringFitness = offspringPopulation[j]->getFitness();
-        	        	bestOffspringIndiv = j;
-       			}
-  		}
+		if((*offPopSize)>0){
+	  		bestOffspringFitness = offspringPopulation[0]->getFitness();
+			bestOffspringIndiv = 0;	
+			for(int j=1; (unsigned)j<(*offPopSize); j++){
+			        if( (params->minimizing && bestOffspringFitness > offspringPopulation[j]->getFitness() ) ||
+	        	                ( !params->minimizing && bestOffspringFitness < offspringPopulation[j]->getFitness() )){
+	        	        	bestOffspringFitness = offspringPopulation[j]->getFitness();
+	        	        	bestOffspringIndiv = j;
+	       			}
+	  		}
+		}	
 	}
   }
 }

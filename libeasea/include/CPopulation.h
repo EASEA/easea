@@ -98,6 +98,7 @@ public:
 
   static void sortRPopulation(CIndividual** population, size_t populationSize);
 
+  void serializePopulation();
 
   void sortParentPopulation(){ CPopulation::sortPopulation(parents,actualParentPopulationSize);}
 

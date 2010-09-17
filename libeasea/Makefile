@@ -8,7 +8,8 @@ endif #OS
 
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
-	CGnuplot.o CCmaes.o CCuda.o CCmaesCuda.o Parameters.o CGPNode.o
+	CGnuplot.o CCmaes.o CCuda.o CCmaesCuda.o Parameters.o CGPNode.o\
+	CComUDPLayer.o
 
 ifeq ($(UNAME),Darwin)
 LIBS = 

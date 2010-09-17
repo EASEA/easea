@@ -9,7 +9,6 @@
  */
 
 #include "include/CEvolutionaryAlgorithm.h"
-#include <string>
 #ifndef WIN32
 #include <sys/time.h>
 #endif
@@ -18,12 +17,16 @@
 #endif
 #include <time.h>
 #include <math.h>
-#include <string>
+#include <string.h>
 #include "include/CIndividual.h"
 #include "include/Parameters.h"
 #include "include/CGnuplot.h"
 #include "include/global.h"
+#include "include/CComUDPLayer.h"
+#include "include/CRandomGenerator.h"
 #include <stdio.h>
+#include <sstream>
+#include <fstream>
 
 using namespace std;
 
@@ -35,10 +38,11 @@ void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 
 extern void evale_pop_chunk(CIndividual** pop, int popSize);
 extern bool INSTEAD_EVAL_STEP;
+
 /**
  * @DEPRECATED the next contructor has to be used instead of this one.
  */
-CEvolutionaryAlgorithm::CEvolutionaryAlgorithm( size_t parentPopulationSize,
+/*CEvolutionaryAlgorithm::CEvolutionaryAlgorithm( size_t parentPopulationSize,
 					      size_t offspringPopulationSize,
 					      float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
 					      CSelectionOperator* selectionOperator, CSelectionOperator* replacementOperator,
@@ -62,8 +66,19 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm( size_t parentPopulationSize,
   this->reduceParents = 0;
   this->reduceOffsprings = 0;
   
-}
+  // INITIALIZE SERVER OBJECT ISLAND MODEL
+  if(params->remoteIslandModel){
+  	this->server = new CComUDPServer(2909,0);
+	this->treatedIndividuals = 0;
+	this->numberOfClients = 0;
 
+	this->initializeClients();
+  }
+}*/
+
+/*****
+ * REAL CONSTRUCTOR
+ */
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	this->params = params;
 
@@ -103,17 +118,35 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		this->gnuplot = new CGnuplot((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize);
 	}
 	#endif
+
+
+	// INITIALIZE SERVER OBJECT ISLAND MODEL
+	if(params->remoteIslandModel){
+		server = new CComUDPServer(2909,0); //1 if debug
+		this->treatedIndividuals = 0;
+		this->numberOfClients = 0;
+	
+		this->initializeClients();
+	}
 }
 
+/* DESTRUCTOR */
 CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
-  delete population;
+	delete population;
+        if(this->params->remoteIslandModel){
+                delete this->server;
+                if(this->numberOfClients>1){
+                        for(int i=0; (unsigned)i<this->numberOfClients; i++)
+                                delete this->Clients[i];
+                        delete this->Clients;
+                }
+        }
 }
 void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
   this->stoppingCriteria.push_back(sc);
 }
 
-
-
+/* MAIN FUNCTION TO RUN THE EVOLUTIONARY LOOP */
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   CIndividual** elitistPopulation;
 
@@ -148,9 +181,14 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   if(params->elitSize)
 		elitistPopulation = (CIndividual**)malloc(params->elitSize*sizeof(CIndividual*));	
 
+  // EVOLUTIONARY LOOP
   while( this->allCriteria() == false){
 
     EASEABeginningGenerationFunction(this);
+
+    // Sending individuals if remote island model
+    if(params->remoteIslandModel && this->numberOfClients>0)
+	    this->sendIndividual();
 
     population->produceOffspringPopulation();
 
@@ -194,6 +232,11 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     bBest = population->Best;
     EASEAEndGenerationFunction(this);
 
+    //Receiving individuals if cluster island model
+    if(params->remoteIslandModel){
+	this->receiveIndividuals();
+    }
+
     currentGeneration += 1;
   }
 #ifdef __linux__
@@ -206,6 +249,15 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   if(this->params->printFinalPopulation){
   	population->sortParentPopulation();
   	std::cout << *population << std::endl;
+  }
+
+  //IF SAVING THE POPULATION, ERASE THE OLD FILE
+  if(params->savePopulation){
+	
+	string fichier = params->outputFilename;
+	fichier.append(".pop");
+	remove(fichier.c_str());
+  	population->serializePopulation();
   }
 
   if(this->params->generateGnuplotScript || !this->params->plotStats)
@@ -297,7 +349,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #ifdef WIN32
           fprintf(f,"%lu,%2.6f,%lu,%.15e,%.15e,%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #else
-	  fprintf(f,"%d,%ld.%06ld,%d,%f,%f,%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+	  fprintf(f,"%d,%ld.%06ld,%d,%.15e,%.15e,%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #endif
 	  fclose(f);
         }
@@ -315,6 +367,76 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #endif
 
   params->timeCriterion->setElapsedTime(res.tv_sec);
+}
+
+//REMOTE ISLAND MODEL FUNCTIONS
+void CEvolutionaryAlgorithm::initializeClients(){
+	char (*clients)[16] = (char(*)[16])calloc(1,sizeof(char)*16);
+//	string clients[256];
+	
+	cout << "Reading IP address file" << endl;
+	ifstream IP_File("ip.txt");
+	string line;
+	while(getline(IP_File, line)){
+		if(!isLocalMachine(line.c_str())){
+		memmove(clients[this->numberOfClients],line.c_str(),sizeof(char)*16);
+		//clients[this->numberOfClients] = line;
+		this->numberOfClients++;
+		clients = (char(*)[16])realloc(clients,sizeof(char)*16*(this->numberOfClients*16));
+	}
+	}
+
+	this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
+	for(int i=0; i<(signed)this->numberOfClients; i++){
+		//this->Clients[i] = new CComUDPClient(2909,clients[i].c_str(),0);
+		this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);
+	//	cout << "Client " << i << " IP is " << this->Clients[i]->getIP() << endl;
+	}
+	free(clients);
+}
+
+void CEvolutionaryAlgorithm::sendIndividual(){
+	//Sending an individual every n generations	
+	if(this->currentGeneration%10==0){
+		//cout << "I'm going to send an Individual now" << endl;
+		this->population->selectionOperator->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
+		size_t index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
+		//cout << "Going to send individual " << index << " with fitness " << this->population->parents[index]->fitness << endl;
+	
+		//selecting a client randomly
+		int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
+		cout << "Going to send and individual to client " << client << endl;
+		cout << "His IP is " << this->Clients[client]->getIP() << endl;
+		//cout << "Sending individual " << index << " to client " << client << " nomw" << endl;
+		//cout << this->population->parents[index]->serialize() << endl;
+		this->Clients[client]->CComUDP_client_send((char*)this->population->parents[index]->serialize().c_str());
+		
+	}
+}
+
+void CEvolutionaryAlgorithm::receiveIndividuals(){
+	//Checking every generation for received individuals
+	if(this->treatedIndividuals<(unsigned)this->server->nb_data){
+		//cout << "number of received individuals :" << this->server->nb_data << endl;
+		//cout << "number of treated individuals :" << this->treatedIndividuals << endl;
+
+		//Treating all the individuals before continuing
+		while(this->treatedIndividuals < (unsigned)this->server->nb_data){
+			//selecting the individual to erase
+			CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
+			antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
+			size_t index = antiTournament->selectNext(this->population->actualParentPopulationSize);
+
+			//cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
+			//cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
+			this->server->read_data_lock();
+			string line = this->server->parm->data[this->treatedIndividuals].data;
+			this->population->parents[index]->deserialize(line);
+			this->server->read_data_unlock();
+			//cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
+			this->treatedIndividuals++;
+		}
+	}
 }
 
 void CEvolutionaryAlgorithm::outputGraph(){
@@ -361,35 +483,35 @@ void CEvolutionaryAlgorithm::generateRScript(){
 
 bool CEvolutionaryAlgorithm::allCriteria(){
 
-  for( size_t i=0 ; i<stoppingCriteria.size(); i++ ){
-    if( stoppingCriteria.at(i)->reached() ){
-      std::cout << "Stopping criterion reached : " << i << std::endl;
-      return true;
-    }
-  }
-  return false;
+	for( size_t i=0 ; i<stoppingCriteria.size(); i++ ){
+		if( stoppingCriteria.at(i)->reached() ){
+			std::cout << "Stopping criterion reached : " << i << std::endl;
+			return true;
+		}
+	}
+	return false;
 }
 
 #ifdef WIN32
 int gettimeofday
-      (struct timeval* tp, void* tzp) {
-    DWORD t;
-    t = timeGetTime();
-    tp->tv_sec = t / 1000;
-    tp->tv_usec = t % 1000;
-    /* 0 indicates success. */
-    return 0;
+(struct timeval* tp, void* tzp) {
+	DWORD t;
+	t = timeGetTime();
+	tp->tv_sec = t / 1000;
+	tp->tv_usec = t % 1000;
+	/* 0 indicates success. */
+	return 0;
 }
 
 void timersub( const timeval * tvp, const timeval * uvp, timeval* vvp )
 {
-    vvp->tv_sec = tvp->tv_sec - uvp->tv_sec;
-    vvp->tv_usec = tvp->tv_usec - uvp->tv_usec;
-    if( vvp->tv_usec < 0 )
-    {
-       --vvp->tv_sec;
-       vvp->tv_usec += 1000000;
-    }
+	vvp->tv_sec = tvp->tv_sec - uvp->tv_sec;
+	vvp->tv_usec = tvp->tv_usec - uvp->tv_usec;
+	if( vvp->tv_usec < 0 )
+	{
+		--vvp->tv_sec;
+		vvp->tv_usec += 1000000;
+	}
 } 
 #endif
 

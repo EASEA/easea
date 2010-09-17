@@ -31,6 +31,7 @@ public:
 	float parentReductionPressure;
 	float offspringReductionPressure;
 
+	//Genetic operators parameters
 	float pCrossover;
 	float pMutation;
 	float pMutationPerGene;
@@ -47,13 +48,16 @@ public:
 	bool offspringReduction;
 	bool parentReduction ;
 
+	//Elitism parameters
 	bool strongElitism;
 	unsigned int elitSize;
 
+	//Parameters for memetic algorithm
 	bool optimise;
 	int optimiseIterations;
 	bool baldwinism;
 
+	//Miscalleous parameters
 	int printStats;
 	int generateCSVFile;
 	int generateGnuplotScript;
@@ -61,6 +65,12 @@ public:
 	int plotStats;
 	int printInitialPopulation;
 	int printFinalPopulation;
+
+	bool savePopulation;
+	bool startFromFile;
+
+	//Parameters for the Island Model
+	bool remoteIslandModel;
 
 	char* outputFilename;
 	char* plotOutputFilename;

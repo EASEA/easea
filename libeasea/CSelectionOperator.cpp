@@ -52,6 +52,7 @@ CSelectionOperator* getSelectionOperator(std::string selectop, int minimizing, C
   }
 }
 
+
 /* ****************************************
    SelectionOperator class
 ****************************************/
@@ -62,12 +63,14 @@ void CSelectionOperator::initialize(CIndividual** population, float selectionPre
 
 size_t CSelectionOperator::selectNext(size_t populationSize){ return 0; }
 
+/* ****************************************
+   MaxDeterministic class
+****************************************/
 void MaxDeterministic::initialize(CIndividual** population, float selectionPressure,size_t populationSize){
   CSelectionOperator::initialize(population,selectionPressure,populationSize);
   CPopulation::sortPopulation(population,populationSize);
   populationSize = populationSize;
 }
-
 
 size_t MaxDeterministic::selectNext(size_t populationSize){
   return populationSize-1;
@@ -77,13 +80,14 @@ float MaxDeterministic::getExtremum(){
   return -FLT_MAX;
 }
 
-
+/* ****************************************
+   MinDeterministic class
+****************************************/
 void MinDeterministic::initialize(CIndividual** population, float selectionPressure,size_t populationSize){
   CSelectionOperator::initialize(population,selectionPressure,populationSize);
   CPopulation::sortRPopulation(population,populationSize);
   populationSize = populationSize;
 }
-
 
 size_t MinDeterministic::selectNext(size_t populationSize){
   return populationSize-1;
@@ -93,6 +97,9 @@ float MinDeterministic::getExtremum(){
   return FLT_MAX;
 }
 
+/* ****************************************
+   MaxRandom class
+****************************************/
 MaxRandom::MaxRandom(CRandomGenerator* globalRandomGenerator){
   rg = globalRandomGenerator;
 }
@@ -109,6 +116,9 @@ float MaxRandom::getExtremum(){
   return -FLT_MAX;
 }
 
+/* ****************************************
+   MinRandom class
+****************************************/
 MinRandom::MinRandom(CRandomGenerator* globalRandomGenerator){
   rg = globalRandomGenerator;
 }
@@ -126,7 +136,9 @@ float MinRandom::getExtremum(){
 }
 
 
-
+/* ****************************************
+   MinTournament class
+****************************************/
 void MinTournament::initialize(CIndividual** population, float selectionPressure, size_t populationSize) {
   CSelectionOperator::initialize(population,selectionPressure,populationSize);
 }
@@ -134,7 +146,6 @@ void MinTournament::initialize(CIndividual** population, float selectionPressure
 float MinTournament::getExtremum(){
   return FLT_MAX;
 }
-
 
 size_t MinTournament::selectNext(size_t populationSize){
   size_t bestIndex = 0;
@@ -178,6 +189,10 @@ size_t MinTournament::selectNext(size_t populationSize){
   return bestIndex;
 
 }
+
+/* ****************************************
+   MaxTournament class
+****************************************/
 void MaxTournament::initialize(CIndividual** population, float selectionPressure, size_t populationSize) {
   CSelectionOperator::initialize(population,selectionPressure,populationSize);
 }
@@ -186,10 +201,9 @@ float MaxTournament::getExtremum(){
   return -FLT_MAX;
 }
 
-
 size_t MaxTournament::selectNext(size_t populationSize){
   size_t bestIndex = 0;
-  float bestFitness = FLT_MAX;
+  float bestFitness = -FLT_MAX;
 
   //std::cout << "MinTournament selection " ;
   if( currentSelectionPressure >= 2 ){
