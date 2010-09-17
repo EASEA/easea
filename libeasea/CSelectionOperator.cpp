@@ -183,7 +183,7 @@ void MaxTournament::initialize(CIndividual** population, float selectionPressure
 }
 
 float MaxTournament::getExtremum(){
-  return FLT_MAX;
+  return -FLT_MAX;
 }
 
 

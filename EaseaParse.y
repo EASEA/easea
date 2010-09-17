@@ -46,7 +46,9 @@ bool bLINE_NUM_EZ_FILE=1;
 bool bPRINT_STATS=1;
 bool bPLOT_STATS=0;
 bool bGENERATE_CSV_FILE=0, bGENERATE_R_SCRIPT=0, bGENERATE_GNUPLOT_SCRIPT=0;
+bool bSAVE_POPULATION=0, bSTART_FROM_FILE=0;
 bool bBALDWINISM=0;
+bool bREMOTE_ISLAND_MODEL=0;
 int nPOP_SIZE, nOFF_SIZE;
 float fSURV_PAR_SIZE=-1.0, fSURV_OFF_SIZE=-1.0;
 char *nGENOME_NAME;
@@ -132,11 +134,14 @@ class CSymbol;
 %token MINIMAXI
 %token ELITISM
 %token ELITE
+%token REMOTE_ISLAND_MODEL //island model
 %token PRINT_STATS
 %token PLOT_STATS
 %token GENERATE_CSV_FILE
 %token GENERATE_GNUPLOT_SCRIPT
 %token GENERATE_R_SCRIPT
+%token SAVE_POPULATION
+%token START_FROM_FILE
 %token TIME_LIMIT
 %token MAX_INIT_TREE_D
 %token MIN_INIT_TREE_D
@@ -610,6 +615,14 @@ Parameter
          fprintf(stderr,"\n%s - Warning line %d: Baldwinism must be \"True\" or \"False\".\nDefault value \"True\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
          bBALDWINISM=1;
        }}
+
+  | REMOTE_ISLAND_MODEL IDENTIFIER2{
+	if (!mystricmp($2->sName,"False")) bREMOTE_ISLAND_MODEL=0;
+	else if (!mystricmp($2->sName,"True")) bREMOTE_ISLAND_MODEL=1;
+	else {
+	  fprintf(stderr,"\n%s - Warning line %d: remote island model must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+	  bREMOTE_ISLAND_MODEL=0;
+	}}
      
   | PRINT_STATS NUMBER2{
       if((int)$2>=1)
@@ -641,6 +654,20 @@ Parameter
       else
 	 bGENERATE_R_SCRIPT=0;
     }
+  | SAVE_POPULATION IDENTIFIER2{
+      if (!mystricmp($2->sName,"False")) bSAVE_POPULATION=0;
+      else if (!mystricmp($2->sName,"True")) bSAVE_POPULATION=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: SavePopulation must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bSAVE_POPULATION=0;
+       }}
+  | START_FROM_FILE IDENTIFIER2{
+      if (!mystricmp($2->sName,"False")) bSTART_FROM_FILE=0;
+      else if (!mystricmp($2->sName,"True")) bSTART_FROM_FILE=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: StartFromFile must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bSTART_FROM_FILE=0;
+       }}
 | MAX_INIT_TREE_D NUMBER2 {iMAX_INIT_TREE_D = (unsigned)$2;}
 | MIN_INIT_TREE_D NUMBER2 {iMIN_INIT_TREE_D = (unsigned)$2;}
 | MAX_TREE_D NUMBER2 {iMAX_TREE_D = (unsigned)$2;}

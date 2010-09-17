@@ -516,17 +516,17 @@
   
   \GenomeClass::crossover:
   
-  int locusC = random(0,child1.Size-1);
+  int locusC = random(0,child.Size-1);
   int locusP2 = random(0,parent2.Size-1);
   
-  Element * elt1=chercheNoeud(child1.arbre,locusC);
+  Element * elt1=chercheNoeud(child.arbre,locusC);
   Element * eltParent2=chercheNoeud(parent2.arbre,locusP2);
   
   Element *elt11 = copierSousArbreRec(eltParent2, elt1->profondeur,profondeurMax1);
   
-  remplace(child1.arbre,elt11,locusC);
-  regenSize(child1.arbre);
-  child1.Size=SIZE;
+  remplace(child.arbre,elt11,locusC);
+  regenSize(child.arbre);
+  child.Size=SIZE;
   
   \end
   
@@ -643,6 +643,8 @@
     Surviving offspring: 96
     Final reduce operator: Tournament 2
     Elitism: Weak
+
+   Save population:true 
     
     \end
     

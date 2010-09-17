@@ -185,8 +185,58 @@ void CSymbol::print(FILE *fp){
 	fprintf(fp,"        if( %s[EASEA_Ndx] ) delete %s[EASEA_Ndx];\n",pSym->Object->sName,pSym->Object->sName);
       }
     }
-	  
     fprintf(fp,"  }\n"); // destructor
+
+   fprintf(fp,"  string serializer() {  // serialize\n"); // serializer
+    fprintf(fp,"  \tostringstream EASEA_Line(ios_base::app);\n");
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+        if((pSym->Object->pType->ObjectType==oUserClass)){
+                fprintf(fpOutputFile,"\tif(this->%s != NULL){\n",pSym->Object->sName);
+                fprintf(fpOutputFile,"\t\tEASEA_Line << \"\\a \";\n");
+                fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s->serializer() << \" \";\n",pSym->Object->sName);
+                fprintf(fpOutputFile,"}\n");
+                fprintf(fpOutputFile,"\telse\n");
+                fprintf(fpOutputFile,"\t\tEASEA_Line << \"NULL\" << \" \";\n");
+        }
+        else{
+                if (pSym->Object->ObjectType==oObject){
+                        fprintf(fpOutputFile,"\tEASEA_Line << this->%s << \" \";\n",pSym->Object->sName);
+                }
+                if(pSym->Object->ObjectType==oArray){
+                        fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+                        fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s[EASEA_Ndx] <<\" \";\n", pSym->Object->sName);
+                }
+        }
+    }
+    fprintf(fp,"  \treturn EASEA_Line.str();\n");
+    fprintf(fp,"  }\n"); // serializer
+
+    fprintf(fp,"  void deserializer(istringstream* EASEA_Line) {  // deserialize\n"); // deserializer
+    fprintf(fp,"  \tstring line;\n");
+    pSymbolList->reset();
+    while (pSym=pSymbolList->walkToNextItem()){
+        if((pSym->Object->pType->ObjectType==oUserClass)){
+                fprintf(fpOutputFile,"\t(*EASEA_Line) >> line;\n");
+                fprintf(fpOutputFile,"\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
+                fprintf(fpOutputFile,"\t\tthis->%s = NULL;\n",pSym->Object->sName);
+                fprintf(fpOutputFile,"\telse{\n");
+                fprintf(fpOutputFile,"\t\tthis->%s = new %s;\n",pSym->Object->sName, sName);
+                fprintf(fpOutputFile,"\t\tthis->%s->deserializer(EASEA_Line);\n",pSym->Object->sName);
+                fprintf(fpOutputFile,"\t}");
+        }
+        else{
+                if (pSym->Object->ObjectType==oObject){
+                        fprintf(fpOutputFile,"\t(*EASEA_Line) >> this->%s;\n",pSym->Object->sName);
+                }
+                if(pSym->Object->ObjectType==oArray){
+                        fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+                        fprintf(fpOutputFile,"\t\t(*EASEA_Line) >> this->%s[EASEA_Ndx];\n", pSym->Object->sName);
+                }
+        }
+    }
+    fprintf(fp,"  }\n"); // deserializer
+
 
     fprintf(fp,"  %s& operator=(const %s &EASEA_Var) {  // Operator=\n",sName,sName); // operator=
     fprintf(fp,"    if (&EASEA_Var == this) return *this;\n");
@@ -323,6 +373,57 @@ void CSymbol::printUserClasses(FILE *fp){
     if ((pSym->Object->pType->ObjectType==oUserClass))
       pSym->Object->pType->printUC(fp);
   }
+}
+
+void CSymbol::serializeIndividual(FILE *fp, char* sCompleteName){
+  CListItem<CSymbol*> *pSym;
+  pSymbolList->reset();
+  char sNewCompleteName[1000];
+  strcpy(sNewCompleteName, sCompleteName);
+  while(pSym=pSymbolList->walkToNextItem()){
+        if((pSym->Object->pType->ObjectType==oUserClass)){
+                fprintf(fpOutputFile,"\tif(this->%s != NULL){\n",pSym->Object->sName);
+                fprintf(fpOutputFile,"\t\tEASEA_Line << \"\\a \";\n");
+                fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s->serializer() << \" \";\n",pSym->Object->sName);
+                fprintf(fpOutputFile,"\t}\n");
+                fprintf(fpOutputFile,"\telse\n");
+                fprintf(fpOutputFile,"\t\tEASEA_Line << \"NULL\" << \" \";\n");
+                }
+        else{
+                if (pSym->Object->ObjectType==oObject){
+                        fprintf(fpOutputFile,"\tEASEA_Line << this->%s << \" \";\n",pSym->Object->sName);
+                }
+                if(pSym->Object->ObjectType==oArray){
+                        fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+                        fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s[EASEA_Ndx] <<\" \";\n", pSym->Object->sName);
+                }
+        }
+  }
+}
+
+void CSymbol::deserializeIndividual(FILE *fp, char* sCompleteName){
+  CListItem<CSymbol*> *pSym;
+  pSymbolList->reset();
+  while (pSym=pSymbolList->walkToNextItem()){
+        if((pSym->Object->pType->ObjectType==oUserClass)){
+                fprintf(fpOutputFile,"\tEASEA_Line >> line;\n");
+                fprintf(fpOutputFile,"\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
+                fprintf(fpOutputFile,"\t\tthis->%s = NULL;\n",pSym->Object->sName);
+                fprintf(fpOutputFile,"\telse{\n");
+                fprintf(fpOutputFile,"\t\tthis->%s = new %s;\n",pSym->Object->sName, pSym->Object->pType->sName);
+                fprintf(fpOutputFile,"\t\tthis->%s->deserializer(&EASEA_Line);\n",pSym->Object->sName);
+                fprintf(fpOutputFile,"\t}");
+        }
+        else{
+                if (pSym->Object->ObjectType==oObject){
+                        fprintf(fpOutputFile,"\tEASEA_Line >> this->%s;\n",pSym->Object->sName);
+                }
+                if(pSym->Object->ObjectType==oArray){
+                        fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+                        fprintf(fpOutputFile,"\t\tEASEA_Line >> this->%s[EASEA_Ndx];\n", pSym->Object->sName);
+                }
+        }
+    }
 }
 
 
