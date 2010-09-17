@@ -448,6 +448,11 @@ clean:
 	rm -f $(OBJS) $(TARGET)
 easeaclean:
 	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot
+gen:
+	../../easea EASEA
+gent:
+	../../easea tl EASEA
+
 	
 \START_VISUAL_TPL<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject

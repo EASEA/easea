@@ -306,7 +306,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   #ifdef __linux__
   if(this->params->plotStats && this->gnuplot->valid){
 	if(currentGeneration==0)
-		fprintf(this->gnuplot->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines, \'%s.dat\' using 3:5 t  \'Average\' w lines, \'%s.dat\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename,params->outputFilename,params->outputFilename);
+		fprintf(this->gnuplot->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
 	else
 		fprintf(this->gnuplot->fWrit,"replot\n");
 	fflush(this->gnuplot->fWrit);

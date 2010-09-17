@@ -623,7 +623,7 @@ LDFLAGS=-lboost_program_options $(LIBAESAE)libeasea.a
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
-CPPFLAGS+= -I$(LIBAESAE)include
+CPPFLAGS+= -I$(LIBAESAE)include -I/usr/local/cuda/include/
 NVCCFLAGS+=
 
 
