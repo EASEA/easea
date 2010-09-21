@@ -125,7 +125,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		server = new CComUDPServer(2909,0); //1 if debug
 		this->treatedIndividuals = 0;
 		this->numberOfClients = 0;
-	
+		this->myClientNumber=0;	
 		this->initializeClients();
 	}
 }
@@ -371,33 +371,34 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
 //REMOTE ISLAND MODEL FUNCTIONS
 void CEvolutionaryAlgorithm::initializeClients(){
+	int clientNumber=0;
 	char (*clients)[16] = (char(*)[16])calloc(1,sizeof(char)*16);
-//	string clients[256];
 	
 	cout << "Reading IP address file" << endl;
-	ifstream IP_File("ip.txt");
+	ifstream IP_File(this->params->ipFile);
 	string line;
 	while(getline(IP_File, line)){
 		if(!isLocalMachine(line.c_str())){
-		memmove(clients[this->numberOfClients],line.c_str(),sizeof(char)*16);
-		//clients[this->numberOfClients] = line;
-		this->numberOfClients++;
-		clients = (char(*)[16])realloc(clients,sizeof(char)*16*(this->numberOfClients*16));
-	}
+			memmove(clients[this->numberOfClients],line.c_str(),sizeof(char)*16);
+			this->numberOfClients++;
+			clients = (char(*)[16])realloc(clients,sizeof(char)*16*(this->numberOfClients*16));
+			clientNumber++;
+		}
+		else{
+			this->myClientNumber = clientNumber;	
+		}
 	}
 
 	this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
 	for(int i=0; i<(signed)this->numberOfClients; i++){
-		//this->Clients[i] = new CComUDPClient(2909,clients[i].c_str(),0);
 		this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);
-	//	cout << "Client " << i << " IP is " << this->Clients[i]->getIP() << endl;
 	}
 	free(clients);
 }
 
 void CEvolutionaryAlgorithm::sendIndividual(){
 	//Sending an individual every n generations	
-	if(this->currentGeneration%10==0){
+	if(this->currentGeneration%(10+this->myClientNumber)==0){
 		//cout << "I'm going to send an Individual now" << endl;
 		this->population->selectionOperator->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
 		size_t index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
@@ -432,6 +433,8 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 			this->server->read_data_lock();
 			string line = this->server->parm->data[this->treatedIndividuals].data;
 			this->population->parents[index]->deserialize(line);
+			this->population->parents[index]->valid = false;
+			this->population->parents[index]->evaluate();
 			this->server->read_data_unlock();
 			//cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
 			this->treatedIndividuals++;

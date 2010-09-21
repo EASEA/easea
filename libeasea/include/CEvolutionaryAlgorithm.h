@@ -51,6 +51,7 @@ public:
   //methods and variables for remote island model
   size_t treatedIndividuals;
   size_t numberOfClients;
+  size_t myClientNumber;
   CComUDPServer *server;
   CComUDPClient **Clients;
   void initializeClients();

@@ -1115,6 +1115,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\BALDWINISM" {fprintf(fpOutputFile,"%d",bBALDWINISM);}
 
 <TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {fprintf(fpOutputFile,"%d",bREMOTE_ISLAND_MODEL);}
+<TEMPLATE_ANALYSIS>"\\IP_FILE" {if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
 
 <TEMPLATE_ANALYSIS>"\\PRINT_STATS" {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
 <TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
@@ -2121,6 +2122,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Baldwinism"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tBaldwinism...\n");return BALDWINISM;}
 
 <GET_PARAMETERS>"Remote"[ \t\n]+"island"[ \t\n]+"model"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf ("\tRemote Island Model...\n"); return REMOTE_ISLAND_MODEL;}
+<GET_PARAMETERS>"IP"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tIP File...\n"); return IP_FILE;}
 
  
 // number
@@ -2274,11 +2276,11 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (TARGET==CUDA){
     if(TARGET_FLAVOR == CUDA_FLAVOR_SO )
       strcat(sTemp,"CUDA.tpl");
-    else if(TARGET_FLAVOR == CUDA_FLAVOR_CMAES )
+    else if(TARGET_FLAVOR == CMAES )
       strcat(sTemp,"CMAES_CUDA.tpl");
     else if( TARGET_FLAVOR == CUDA_FLAVOR_GP )
       strcat(sTemp,"CUDA_GP.tpl");
-    else if(TARGET_FLAVOR == CUDA_FLAVOR_MEMETIC )
+    else if(TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"CUDA_MEM.tpl");
     else 
       strcat(sTemp,"CUDA_MO.tpl");
@@ -2292,9 +2294,9 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (TARGET==STD){
     if(TARGET_FLAVOR == STD_FLAVOR_SO)
       strcat(sTemp,"STD.tpl");
-    else if (TARGET_FLAVOR == STD_FLAVOR_CMAES)
+    else if (TARGET_FLAVOR == CMAES)
       strcat(sTemp,"CMAES.tpl");
-    else if (TARGET_FLAVOR == STD_FLAVOR_MEMETIC )
+    else if (TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"STD_MEM.tpl");
     else
       strcat(sTemp,"STD_MO.tpl");

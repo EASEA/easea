@@ -8,8 +8,12 @@ endif #OS
 
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
-	CGnuplot.o CCmaes.o CCuda.o CCmaesCuda.o Parameters.o CGPNode.o\
+	CGnuplot.o CCmaes.o CCmaesCuda.o Parameters.o CGPNode.o\
 	CComUDPLayer.o
+
+ifeq ($(EZ_CUDA),1)
+OBJS += CCuda.o
+endif
 
 ifeq ($(UNAME),Darwin)
 LIBS = 
@@ -32,7 +36,6 @@ endif #OS
 %.o:%.cpp
 	$(CXX)  -c $(CXXFLAGS) $(CPPFLAGS) $^
 
-
 all:	$(TARGET)
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET)  CCuda.o

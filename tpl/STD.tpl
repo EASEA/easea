@@ -311,6 +311,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
+	this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -368,9 +369,9 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 //#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
-#include <string>
 #include <CIndividual.h>
 #include <Parameters.h>
+#include <string>
 
 using namespace std;
 
@@ -658,4 +659,8 @@ easeaclean:
 #### Population save	####
 --savePopulation=\SAVE_POPULATION #save population to EASEA.pop file
 --startFromFile=\START_FROM_FILE #start optimisation from EASEA.pop file
+
+#### Remote Island Model ####
+--remoteIslandModel=\REMOTE_ISLAND_MODEL #To initialize communications with remote AESAE's
+--ipFile=\IP_FILE
 \TEMPLATE_END

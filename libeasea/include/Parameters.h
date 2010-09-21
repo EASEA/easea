@@ -71,6 +71,7 @@ public:
 
 	//Parameters for the Island Model
 	bool remoteIslandModel;
+	char* ipFile;
 
 	char* outputFilename;
 	char* plotOutputFilename;

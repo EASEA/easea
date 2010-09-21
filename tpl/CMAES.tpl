@@ -42,6 +42,8 @@ int main(int argc, char** argv){
 	p.setDefaultParameters(argc,argv);
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
+	EA = ea;
+
 	EASEAInit(argc,argv);
 
 	CPopulation* pop = ea->getPopulation();
@@ -65,13 +67,14 @@ int main(int argc, char** argv){
 #pragma comment(lib, "libEasea.lib")
 #endif
 
-#include <string.h>
 #include <fstream>
 #ifndef WIN32
 #include <sys/time.h>
 #else
 #include <time.h>
 #endif
+#include <string>
+#include <sstream>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
@@ -181,6 +184,18 @@ float IndividualImpl::evaluate(){
   }
 }
 
+string IndividualImpl::serialize(){
+    ostringstream AESAE_Line(ios_base::app);
+    \GENOME_SERIAL
+    return AESAE_Line.str();
+}
+
+void IndividualImpl::deserialize(string Line){
+    istringstream AESAE_Line(Line);
+    string line;
+    \GENOME_DESERIAL
+}
+
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 
   // ********************
@@ -260,6 +275,10 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->minimizing =1;
         this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 
+        seed = setVariable("seed",(int)time(0));
+        globalRandomGenerator = new CRandomGenerator(seed);
+        this->randomGenerator = globalRandomGenerator;
+
         selectionOperator = getSelectionOperator(setVariable("selectionOperator","Tournament"), this->minimizing, globalRandomGenerator);
         replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
         selectionPressure = 1;
@@ -281,10 +300,6 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->optimise = 0;
 
-        seed = setVariable("seed",(int)time(0));
-        globalRandomGenerator = new CRandomGenerator(seed);
-        this->randomGenerator = globalRandomGenerator;
-
         this->printStats = setVariable("printStats",\PRINT_STATS);
         this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
         this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
@@ -292,9 +307,14 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->plotStats = setVariable("plotStats",\PLOT_STATS);
         this->printInitialPopulation = setVariable("printInitialPopulation",0);
         this->printFinalPopulation = setVariable("printFinalPopulation",0);
+        this->savePopulation = setVariable("savePopulation",\SAVE_POPULATION);
+        this->startFromFile = setVariable("startFromFile",\START_FROM_FILE);
 
         this->outputFilename = (char*)"EASEA";
         this->plotOutputFilename = (char*)"EASEA.png";
+
+        this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
+        this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -317,9 +337,21 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 }
 
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
-	for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-		this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-	}
+        if(this->params->startFromFile){
+          ifstream AESAE_File("EASEA.pop");
+          string AESAE_Line;
+          for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
+                  getline(AESAE_File, AESAE_Line);
+                  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
+                  ((IndividualImpl*)this->population->parents[i])->deserialize(AESAE_Line);
+          }
+
+        }
+        else{
+          for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
+                  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
+          }
+        }
         this->population->actualParentPopulationSize = this->params->parentPopulationSize;
 }
 
@@ -340,9 +372,13 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 //#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
+#include <string>
 #include <CIndividual.h>
 #include <Parameters.h>
 #include <CCmaes.h>
+
+using namespace std;
+
 class CRandomGenerator;
 class CSelectionOperator;
 class CGenerationalCriterion;
@@ -374,6 +410,8 @@ public:
 	CIndividual* clone();
 
 	size_t mutate(float pMutationPerGene);
+        string serialize();
+        void deserialize(string AESAE_Line);
 
 	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
 	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
@@ -412,11 +450,11 @@ public:
 
 UNAME := $(shell uname)
 
-ifeq ($(UNAME),Darwin)
+#ifeq ($(UNAME),Darwin)
 EASEALIB_PATH=$(EZ_PATH)libeasea/
-else
-EASEALIB_PATH=\EZ_PATHlibeasea/
-endif
+#else
+#EASEALIB_PATH=\EZ_PATHlibeasea/
+#endif
 
 ifeq ($(UNAME),Darwin)
 CXXFLAGS =      -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
@@ -429,7 +467,7 @@ OBJS = EASEA.o EASEAIndividual.o
 ifeq ($(UNAME),Darwin)
 LIBS = $(EZ_PATH)boost/program_options.a
 else
-LIBS = -lboost_program_options
+LIBS = -lboost_program_options -lpthread
 endif
 
 \INSERT_MAKEFILE_OPTION
@@ -447,7 +485,7 @@ all:	$(TARGET)
 clean:
 	rm -f $(OBJS) $(TARGET)
 easeaclean:
-	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.r EASEA.plot EASEA.csv
+	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.r EASEA.plot EASEA.csv EASEA.plo EASEA.pop
 	
 	
 	
@@ -616,4 +654,11 @@ easeaclean:
 --generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 
+#### Population save    ####
+--savePopulation=\SAVE_POPULATION #save population to EASEA.pop file
+--startFromFile=\START_FROM_FILE #start optimisation from EASEA.pop file
+
+#### Remote Island Model ####
+--remoteIslandModel=\REMOTE_ISLAND_MODEL #To initialize communications with remote AESAE's
+--ipFile=\IP_FILE
 \TEMPLATE_END
