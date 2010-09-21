@@ -16,6 +16,8 @@
 #ifdef WIN32
 #include <windows.h>
 #endif
+
+#include <stdio.h>
 #include <time.h>
 #include <math.h>
 #include <string>

@@ -12,7 +12,7 @@ __________________________________________________________*/
 
 \At the beginning of each generation function:
 {
-  generate_k_fold(K,packets_size,t1,k_tables);
+  generate_k_fold(K,packets_size,t1,k_tables,t2);
 }
 \end
 
@@ -39,7 +39,7 @@ __________________________________________________________*/
 #define GENOME_SIZE 128
 
  
-float pMutPerGene=0.01;
+float pMutPerGene=0.05;
 float pMutDesCard = 0.05;
 float pMutDesThre = 0.5;
 
@@ -69,11 +69,10 @@ GenomeClass {
   cout << "Seed : " << globalRandomGenerator->get_seed() << endl;
   srand(globalRandomGenerator->get_seed());
 
-  t1 = ba_postgres_load_ilot(2);
-  t2 = ba_postgres_load_batiment(2);
+  t1 = ba_postgres_load_ilot(1);
+  t2 = ba_postgres_load_batiment(1);
   ba_set_links(t1,t2);
   //ba_print_links(t1);
-  
   //printf("+ %d - %d\n",t1->class_repartition[1],t1->class_repartition[0]);
   for( unsigned i=0 ; i<t1->hdr->attributes[t1->hdr->whichis_class]->no_values; i++ )
     printf("%s : %d\n",t1->hdr->attributes[t1->hdr->whichis_class]->values[i],t1->class_repartition[i]);
@@ -84,7 +83,7 @@ GenomeClass {
   printf("%d %d\n",uniq_cnt[0],uniq_cnt[1]);
 
   // allocating K packets 
-  generate_k_fold(K,packets_size,t1,k_tables);
+  generate_k_fold(K,packets_size,t1,k_tables,t2);
   
 
 #if 0
@@ -347,7 +346,7 @@ GenomeClass {
     
   }
 
-  fitness_value = (((float)error) / t1->no_instances)*100 ;//+ ((float)tree_size)/K;
+  fitness_value = (((float)error) / t1->no_instances)*100;// + ((float)tree_size)/K;
   
   for( unsigned i=0 ; i<K ; i++ ){
     ba_delete(k_tmp_tables[i]);
@@ -369,7 +368,7 @@ LDFLAGS+= -lpq  -lm  -fopenmp ../c4.5_common/libc45.a
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
   Evaluator goal : minimise      // Maximise
-  Selection operator: Tournament 4.0
+  Selection operator: Tournament 2.0
   Surviving parents: 100%//percentage or absolute  
   Surviving offspring: 100%
   Reduce parents operator: Tournament 2

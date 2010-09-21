@@ -12,7 +12,7 @@ __________________________________________________________*/
 
 \At the beginning of each generation function:
 {
-  generate_k_fold(K,packets_size,t1,k_tables);
+  generate_k_fold(K,packets_size,t1,k_tables,t2);
 }
 \end
 
@@ -83,7 +83,7 @@ GenomeClass {
   printf("%d %d\n",uniq_cnt[0],uniq_cnt[1]);
 
   // allocating K packets 
-  generate_k_fold(K,packets_size,t1,k_tables);
+  generate_k_fold(K,packets_size,t1,k_tables,t2);
 
 
 #if 1
@@ -113,8 +113,9 @@ GenomeClass {
       DBG_print_instances(tc->instances+i,1,10);
     }
   }
+  show_tree(tc,t);
   printf(" error on the whole set : %d\n",error);
-
+  //exit(-1);
 
 
 #endif
@@ -330,7 +331,7 @@ GenomeClass {
     
   }
 
-  fitness_value = (((float)error) / t1->no_instances)*100 + ((float)tree_size)/K;
+  fitness_value = (((float)error) / t1->no_instances)*100;// + ((float)tree_size)/K;
 
   for( unsigned i=0 ; i<K ; i++ ){
     ba_delete(k_tmp_tables[i]);
