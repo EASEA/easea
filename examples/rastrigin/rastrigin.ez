@@ -31,33 +31,12 @@ __device__ __host__ inline static float SQR(float d)
   return (d*d);
 }
 
-__device__ __host__ inline float rosenbrock( float const *x)
-{
-  float qualitaet;
-  int i;
-  int DIM = SIZE;
-        qualitaet = 0.0;
-
-        for( i = DIM-2; i >= 0; --i)
-          qualitaet += 100.*SQR(SQR(x[i])-x[i+1]) + SQR(1.-x[i]);
-        return ( qualitaet);
-} /* f_rosenbrock() */
-
-__device__ __host__ inline float Weierstrass(float x[SIZE], int n)  // Weierstrass multimidmensionnel h = 0.25
-{
-   float res = 0.;
-   float val[SIZE];
-   float b=2.;
-   float h = 0.25;
-
-   for (int i = 0;i<n; i++) {
-	val[i] = 0.;
-    	for (int k=0;k<ITER;k++)
-		val[i] += pow(b,-(float)k*h) * sin(pow(b,(float)k)*x[i]);
-	res += Abs(val[i]);
-	}
-   return (res);
-} 
+__host__ __device__ inline float Rastrigin(float x[SIZE], int n) {
+	float res = 0.;
+	float Scale = 5.12; //pour matcher avec les limites [-1;1]
+	for (int i = 0;i<n; i++) res += ((Scale*Scale*x[i]*x[i])-10*cos( 2*PI*Scale*x[i]));
+	return (10.*SIZE + res);
+}
 
 float gauss()
 /* Generates a normally distributed random value with variance 1 and 0 mean.
@@ -158,8 +137,7 @@ return NbMut;
 
 \GenomeClass::evaluator : // Returns the score
   float Score= 0.0;
-  Score= Weierstrass(Genome.x, SIZE);         
-  //Score= rosenbrock(Genome.x);         
+  Score= Rastrigin(Genome.x, SIZE);         
   return Score;
 \end
 
@@ -170,8 +148,8 @@ CPPFLAGS+=
 \Default run parameters :        // Please let the parameters appear in this order
   Number of generations : 100     	// NB_GEN
   Time limit: 0 			// In seconds, 0 to deactivate
-  Population size : 100			//POP_SIZE
-  Offspring size : 100 // 40% 
+  Population size : 2000			//POP_SIZE
+  Offspring size : 1600 // 40% 
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
   Evaluator goal : minimise      // Maximise

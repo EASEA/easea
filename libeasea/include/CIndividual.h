@@ -26,6 +26,8 @@ public:
 	virtual CIndividual* crossover(CIndividual** p2) = 0;
 	virtual CIndividual* clone() = 0;
 
+        virtual std::string serialize() = 0;
+        virtual void deserialize(std::string EASEA_Line) = 0;
 
 	static size_t getCrossoverArrity(){ return 2; }
 	float getFitness(){ return this->fitness; }

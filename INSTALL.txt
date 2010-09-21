@@ -12,7 +12,7 @@ libboost: to install it on ubuntu:
 2. EASEA source code:
 
 The source code can be obtained either from sourceforge or, for
-programmers invoved in the EASEA development, from its GIT repository.
+programmers involved in the EASEA development, from its GIT repository.
 
 2.1 Downloading it from sourceforge:
 

@@ -632,17 +632,19 @@
     
     // Evolution Engine:
     Evaluator goal: minimize
-    Number of generations: 100
-    Population size: 100
-    Elite: 4
+    Number of generations: 5
+    Population size: 10
+    Elite: 5
     Selection operator: Tournament 7
-    Offspring size: 50%
+    Offspring size: 100%
     Reduce parents operator: Tournament 4 
-    Surviving parents: 50
+    Surviving parents: 50%
     Reduce offspring operator: Tournament 2
-    Surviving offspring: 96
+    Surviving offspring: 96%
     Final reduce operator: Tournament 2
     Elitism: Weak
+
+   Save population:true 
     
     \end
     

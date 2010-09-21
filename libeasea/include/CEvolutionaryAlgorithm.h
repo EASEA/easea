@@ -14,6 +14,7 @@
 #include "CSelectionOperator.h"
 #include "CPopulation.h"
 #include "CStoppingCriterion.h"
+#include "CComUDPLayer.h"
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -24,13 +25,13 @@ class CGnuplot;
 class CEvolutionaryAlgorithm {
 public:
 
-  CEvolutionaryAlgorithm( size_t parentPopulationSize,
+ /* CEvolutionaryAlgorithm( size_t parentPopulationSize,
 			 size_t offspringPopulationSize,
 			 float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
 			 CSelectionOperator* selectionOperator, CSelectionOperator* replacementOperator,
 			 CSelectionOperator* parentReductionOperator, CSelectionOperator* offspringReductionOperator,
 			 float pCrossover, float pMutation,
-			 float pMutationPerGene);
+			 float pMutationPerGene);*/
 
   CEvolutionaryAlgorithm( Parameters* params );
   virtual void initializeParentPopulation() = 0;
@@ -46,6 +47,16 @@ public:
   CPopulation* population;
   size_t reduceParents;
   size_t reduceOffsprings;
+
+  //methods and variables for remote island model
+  size_t treatedIndividuals;
+  size_t numberOfClients;
+  size_t myClientNumber;
+  CComUDPServer *server;
+  CComUDPClient **Clients;
+  void initializeClients();
+  void receiveIndividuals();
+  void sendIndividual();
 
 #ifdef WIN32
   void showPopulationStats(clock_t beginTime);

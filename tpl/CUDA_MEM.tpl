@@ -38,6 +38,8 @@ int main(int argc, char** argv){
 	p.setDefaultParameters(argc,argv);
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
+	EA = ea;
+
 	EASEAInit(argc,argv);
 
 	CPopulation* pop = ea->getPopulation();
@@ -60,13 +62,14 @@ int main(int argc, char** argv){
 #define WIN32
 #endif
 
-#include <string.h>
 #include <fstream>
 #ifndef WIN32
 #include <sys/time.h>
 #else
 #include <time.h>
 #endif
+#include <string>
+#include <sstream>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
@@ -83,8 +86,11 @@ using namespace std;
 bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
+extern CEvolutionaryAlgorithm *EA:
 
 #define CUDA_TPL
+
+struct gpuArg* gpuArgs;
 
 void* d_offspringPopulationcuda;
 void* d_offspringPopulationTmpcuda;
@@ -187,6 +193,18 @@ float IndividualImpl::evaluate(){
     valid = true;
     \INSERT_EVALUATOR
   }
+}
+
+string IndividualImpl::serialize(){
+    ostringstream AESAE_Line(ios_base::app);
+    \GENOME_SERIAL
+    return AESAE_Line.str();
+}
+
+void IndividualImpl::deserialize(string Line){
+    istringstream AESAE_Line(Line);
+    string line;
+    \GENOME_DESERIAL
 }
 
 void IndividualImpl::optimise(int currentIteration){
@@ -475,6 +493,10 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->minimizing = \MINIMAXI;
         this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 
+        seed = setVariable("seed",(int)time(0));
+        globalRandomGenerator = new CRandomGenerator(seed);
+        this->randomGenerator = globalRandomGenerator;
+
         selectionOperator = getSelectionOperator(setVariable("selectionOperator","\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
         replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
         parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator","\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
@@ -532,10 +554,6 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->optimiseIterations = setVariable("optimiseIterations",(int)\NB_OPT_IT);
         this->baldwinism = setVariable("baldwinism",(int)\BALDWINISM);
 
-        seed = setVariable("seed",(int)time(0));
-        globalRandomGenerator = new CRandomGenerator(seed);
-        this->randomGenerator = globalRandomGenerator;
-
         this->printStats = setVariable("printStats",\PRINT_STATS);
         this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
         this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
@@ -543,10 +561,14 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->plotStats = setVariable("plotStats",\PLOT_STATS);
         this->printInitialPopulation = setVariable("printInitialPopulation",0);
         this->printFinalPopulation = setVariable("printFinalPopulation",0);
+        this->savePopulation = setVariable("savePopulation",\SAVE_POPULATION);
+        this->startFromFile = setVariable("startFromFile",\START_FROM_FILE);
 
         this->outputFilename = (char*)"EASEA";
         this->plotOutputFilename = (char*)"EASEA.png";
 
+        this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
+	this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -583,17 +605,28 @@ inline void IndividualImpl::copyFromCudaBuffer(void* buffer, size_t id){
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 
   //DEBUG_PRT("Creation of %lu/%lu parents (other could have been loaded from input file)",this->params->parentPopulationSize-this->params->actualParentPopulationSize,this->params->parentPopulationSize);
-  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-	this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-  }
+    int index,Size = this->params->parentPopulationSize;
 
-  this->population->actualParentPopulationSize = this->params->parentPopulationSize;
-  this->population->actualOffspringPopulationSize = 0;
-  
-  // Copy parent population in the cuda buffer.
-  for( size_t i=0 ; i<this->population->actualParentPopulationSize ; i++ ){
-    ((IndividualImpl*)this->population->parents[i])->copyToCudaBuffer(((PopulationImpl*)this->population)->cuda->cudaParentBuffer,i); 
-  }
+    if(this->params->startFromFile){
+          ifstream AESAE_File("EASEA.pop");
+          string AESAE_Line;
+          for( index=(Size-1); index>=0; index--) {
+             getline(AESAE_File, AESAE_Line);
+            this->population->addIndividualParentPopulation(new IndividualImpl(),index);
+            ((IndividualImpl*)this->population->parents[index])->deserialize(AESAE_Line);
+            ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cuda->cudaBuffer,index);
+         }
+
+        }
+        else{
+                for( index=(Size-1); index>=0; index--) {
+                         this->population->addIndividualParentPopulation(new IndividualImpl(),index);
+                        ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cuda->cudaBuffer,index);
+                }
+    }
+
+    this->population->actualOffspringPopulationSize = 0;
+    this->population->actualParentPopulationSize = Size;
 
 }
 
@@ -624,9 +657,13 @@ PopulationImpl::~PopulationImpl(){
 //#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
+#include <string>
 #include <CIndividual.h>
 #include <Parameters.h>
 #include <CCuda.h>
+
+using namespace std;
+
 class CRandomGenerator;
 class CSelectionOperator;
 class CGenerationalCriterion;
@@ -660,6 +697,8 @@ public:
 	CIndividual* clone();
 
 	size_t mutate(float pMutationPerGene);
+        string serialize();
+        void deserialize(string AESAE_Line);
 	void copyToCudaBuffer(void* buffer, size_t id);
 	void copyFromCudaBuffer(void* buffer, size_t id);
 
@@ -712,7 +751,7 @@ NVCC= nvcc
 CPPC= g++
 LIBAESAE=\EZ_PATHlibeasea/
 CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include
-LDFLAGS=-lboost_program_options $(LIBAESAE)libeasea.a
+LDFLAGS=-lboost_program_options $(LIBAESAE)libeasea.a -lpthread
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
@@ -743,7 +782,7 @@ $(BIN):$(OBJ)
 	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -Wall
 
 easeaclean: clean
-	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj EASEA.plot EASEA.r EASEA.csv
+	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj EASEA.plot EASEA.r EASEA.csv EASEA.pop
 clean:
 	rm -f $(OBJ) $(BIN) 	
 	
@@ -934,4 +973,10 @@ clean:
 --generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 
+#### Population save    ####
+--savePopulation=\SAVE_POPULATION #save population to EASEA.pop file
+--startFromFile=\START_FROM_FILE #start optimisation from EASEA.pop file
+
+#### Remote Island Model ####
+--remoteIslandModel=\REMOTE_ISLAND_MODEL #To initialize communications with remote AESAE's
 \TEMPLATE_END

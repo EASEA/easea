@@ -686,15 +686,6 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 
-<TEMPLATE_ANALYSIS>"\\GENOME_SERIAL"  {
-  CListItem<CSymbol*> *pSym;
-  if (bVERBOSE) printf ("Inserting default genome serializer.\n");
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    //DEBUG_PRT_PRT("found new symbol %s",pSym->Object->sName);
-    fprintf(fpOutputFile," ar & %s;\n",pSym->Object->sName);
-  }
- }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME"  {        
   if (pGENOME->sString) {
@@ -765,6 +756,23 @@ exponent  ([Ee][+-]?[0-9]+)
       }
       
   }
+ }
+
+<TEMPLATE_ANALYSIS>"\\GENOME_SERIAL"  {
+  CListItem<CSymbol*> *pSym;
+  if (bVERBOSE) printf ("Inserting default genome serializer.\n");
+  fprintf (fpOutputFile,"// Memberwise serialization\n");
+  pGENOME->pSymbolList->reset();
+  pGENOME->serializeIndividual(fpOutputFile, "this");
+  //fprintf(fpOutputFile,"\tEASEA_Line << endl;\n");
+ }
+
+<TEMPLATE_ANALYSIS>"\\GENOME_DESERIAL"  {
+  CListItem<CSymbol*> *pSym;
+  if (bVERBOSE) printf ("Inserting default genome deserializer.\n");
+  fprintf (fpOutputFile,"// Memberwise deserialization\n");
+  pGENOME->pSymbolList->reset();
+  pGENOME->deserializeIndividual(fpOutputFile, "this");
  }
 
 <TEMPLATE_ANALYSIS>"\\COPY_CUDA_CTOR"  {
@@ -1102,14 +1110,21 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\XOVER_PROB"  {fprintf(fpOutputFile,"%f",fXOVER_PROB);}
 <TEMPLATE_ANALYSIS>"\\MINIMAXI"  {fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); }
 <TEMPLATE_ANALYSIS>"\\ELITISM"  {fprintf(fpOutputFile,"%d",bELITISM);}
+
 <TEMPLATE_ANALYSIS>"\\NB_OPT_IT"  {fprintf(fpOutputFile,"%d",nNB_OPT_IT);}
 <TEMPLATE_ANALYSIS>"\\BALDWINISM" {fprintf(fpOutputFile,"%d",bBALDWINISM);}
+
+<TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {fprintf(fpOutputFile,"%d",bREMOTE_ISLAND_MODEL);}
+<TEMPLATE_ANALYSIS>"\\IP_FILE" {if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
 
 <TEMPLATE_ANALYSIS>"\\PRINT_STATS" {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
 <TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CSV_FILE);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_GNUPLOT_SCRIPT);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_R_SCRIPT);}
+
+<TEMPLATE_ANALYSIS>"\\SAVE_POPULATION" {fprintf(fpOutputFile,"%d",bSAVE_POPULATION);}
+<TEMPLATE_ANALYSIS>"\\START_FROM_FILE" {fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);}
 
 <TEMPLATE_ANALYSIS>"\\START_CUDA_GENOME_H_TPL"  {
   char sFileName[1000];
@@ -1551,7 +1566,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   fprintf(fpOutputFile,"template <class fitT> %s %sGenome<fitT>::",yytext,sPROJECT_NAME);}         
 <COPY>"GenomeClass::"  {fprintf(fpOutputFile,"template <class fitT> %sGenome<fitT>::",sPROJECT_NAME);}
 <COPY>"GenomeClass"  {
-  if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"Individual");
+  if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"IndividualImpl");
   else fprintf(fpOutputFile,"%sGenome",sPROJECT_NAME);} // local name
 <COPY>"pPopulation[" {
   if(bFinalizationFunction){
@@ -1625,7 +1640,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 // keywords
 <GENOME_ANALYSIS>"bool"                  {
-  yylval.pSymbol = pSymbolTable->find("boolean");
+  yylval.pSymbol = pSymbolTable->find("bool");
   return BOOL;}
 <GENOME_ANALYSIS>"boolean"            {
     yylval.pSymbol = new CSymbol(yytext);
@@ -2076,11 +2091,14 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Crossover"[ \t\n]+"probability"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tXov Prob...\n");return XOVER_PROB;}
 <GET_PARAMETERS>"Offspring"[ \t\n]+"size"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tOff Size...\n");return OFFSPRING;}
 
-<GET_PARAMETERS>"Print"[ \t\n]+"stats"[ \t\n]*":"[\t\n]* {if (bVERBOSE) printf("\tPrint Stats...\n");return PRINT_STATS;}
-<GET_PARAMETERS>"Plot"[ \t\n]+"stats"[ \t\n]*":"[\t\n]* {if (bVERBOSE) printf("\tPlot Stats with gnuplot...\n");return PLOT_STATS;}
+<GET_PARAMETERS>"Print"[ \t\n]+"stats"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats...\n");return PRINT_STATS;}
+<GET_PARAMETERS>"Plot"[ \t\n]+"stats"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPlot Stats with gnuplot...\n");return PLOT_STATS;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"csv"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to csv File...\n");return GENERATE_CSV_FILE;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"gnuplot"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate Gnuplot Script...\n");return GENERATE_GNUPLOT_SCRIPT;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"R"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate R Script...\n");return GENERATE_R_SCRIPT;}
+
+<GET_PARAMETERS>"Save"[ \t\n]+"population"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tSave population...\n"); return SAVE_POPULATION;}
+<GET_PARAMETERS>"Start"[ \t\n]+"from"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tStart from file...\n"); return START_FROM_FILE;}
 
 <GET_PARAMETERS>"Reduce"[ \t\n]+"parents"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {
   if (bVERBOSE) printf ("\tReduce Parents Operator...\n");
@@ -2102,6 +2120,10 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Evaluator"[ \t\n]+"goal"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;}
 <GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"optimisation"[ \t\n]+"iterations"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Optimisation It...\n");return NB_OPT_IT;}
 <GET_PARAMETERS>"Baldwinism"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tBaldwinism...\n");return BALDWINISM;}
+
+<GET_PARAMETERS>"Remote"[ \t\n]+"island"[ \t\n]+"model"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf ("\tRemote Island Model...\n"); return REMOTE_ISLAND_MODEL;}
+<GET_PARAMETERS>"IP"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tIP File...\n"); return IP_FILE;}
+
  
 // number
 <GET_PARAMETERS>[0-9]+"."[0-9]*{exponent}?  |
@@ -2254,11 +2276,11 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (TARGET==CUDA){
     if(TARGET_FLAVOR == CUDA_FLAVOR_SO )
       strcat(sTemp,"CUDA.tpl");
-    else if(TARGET_FLAVOR == CUDA_FLAVOR_CMAES )
+    else if(TARGET_FLAVOR == CMAES )
       strcat(sTemp,"CMAES_CUDA.tpl");
     else if( TARGET_FLAVOR == CUDA_FLAVOR_GP )
       strcat(sTemp,"CUDA_GP.tpl");
-    else if(TARGET_FLAVOR == CUDA_FLAVOR_MEMETIC )
+    else if(TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"CUDA_MEM.tpl");
     else 
       strcat(sTemp,"CUDA_MO.tpl");
@@ -2272,9 +2294,9 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (TARGET==STD){
     if(TARGET_FLAVOR == STD_FLAVOR_SO)
       strcat(sTemp,"STD.tpl");
-    else if (TARGET_FLAVOR == STD_FLAVOR_CMAES)
+    else if (TARGET_FLAVOR == CMAES)
       strcat(sTemp,"CMAES.tpl");
-    else if (TARGET_FLAVOR == STD_FLAVOR_MEMETIC )
+    else if (TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"STD_MEM.tpl");
     else
       strcat(sTemp,"STD_MO.tpl");
