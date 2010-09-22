@@ -445,9 +445,9 @@ public:
 UNAME := $(shell uname)
 
 #ifeq ($(UNAME),Darwin)
-EASEALIB_PATH=$(EZ_PATH)libeasea/
+EASEALIB_PATH=$(EZ_PATH)/libeasea/
 #else
-#EASEALIB_PATH=\EZ_PATHlibeasea/
+#EASEALIB_PATH=$(EZ_PATH)/libeasea/
 #endif
 
 ifeq ($(UNAME),Darwin)
@@ -471,7 +471,7 @@ endif
 TARGET =	EASEA
 
 $(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a
+	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LIBS) -g $(EASEALIB_PATH)/libeasea.a
 
 	
 #%.o:%.cpp

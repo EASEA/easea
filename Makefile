@@ -12,14 +12,6 @@ else
 $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libeasea/libeasea.a
 endif
 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
-ifeq ($(UNAME), Darwin)
-	@sed '/EZ_PATH/d' $(HOME)/.profile>$(HOME)/.profile_save
-	@mv $(HOME)/.profile_save $(HOME)/.profile
-	@echo "export EZ_PATH=\"$(PWD)/\"">>$(HOME)/.profile
-else
-	echo "this one"
-	@if [ -z "$(EZ_PATH)" -a "$(EZ_PATH)" != $(PWD)/ ] ; then echo "\nexport EZ_PATH=$(PWD)/">>$(HOME)/.bashrc ; fi
-endif
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
 	# 
@@ -59,6 +51,28 @@ endif
 # 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@ -lalex
 
 
+install:
+	mkdir -p /usr/local/easea/ /usr/local/easea/bin /usr/local/easea/tpl /usr/local/easea/libeasea/include 
+	cp easea /usr/local/easea/bin/
+	cp tpl/* /usr/local/easea/tpl/
+	cp libeasea/include/* /usr/local/easea/libeasea/include/
+	cp libeasea/libeasea.a /usr/local/easea/libeasea/
+vars:
+ifeq ($(UNAME), Darwin)
+	@sed '/EZ_PATH/d' $(HOME)/.profile>$(HOME)/.profile_save
+	@mv $(HOME)/.profile_save $(HOME)/.profile
+	@echo "\nexport EZ_PATH=/usr/local/easea/">>$(HOME)/.profile
+	@echo "export PATH=\$$PATH:/usr/local/easea/bin" >>$(HOME)/.profile
+else
+	@echo "\nexport EZ_PATH=/usr/local/easea/">>$(HOME)/.bashrc
+	@echo "export PATH=\$$PATH:/usr/local/easea/bin" >>$(HOME)/.bashrc
+	@echo "PATH and EZ_PATH variables have been set"
+endif
+
+
+dev_vars:
+	@echo "\nexport EZ_PATH=$(PWD)/">>$(HOME)/.bashrc ; fi
+
 
 EaseaParse.o: EaseaParse.cpp EaseaLex.cpp
 	$(CPPC) $(CPPFLAGS) $< -o $@ -c
@@ -90,8 +104,8 @@ ifeq ($(UNAME),Darwin)
 	cd boost && make clean
 endif
 
-install:$(EXEC)
-	sudo cp $< /usr/bin/dev-easea
+#install:$(EXEC)
+#	sudo cp $< /usr/bin/dev-easea
 
 ifeq ($(UNAME),Linux)
 realclean: clean

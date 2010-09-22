@@ -346,7 +346,7 @@ GenomeClass {
     
   }
 
-  fitness_value = (((float)error) / t1->no_instances)*100;// + ((float)tree_size)/K;
+  fitness_value = (((float)error) / t1->no_instances)*100;// + (((float)tree_size)/K);
   
   for( unsigned i=0 ; i<K ; i++ ){
     ba_delete(k_tmp_tables[i]);
