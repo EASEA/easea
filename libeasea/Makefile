@@ -15,21 +15,21 @@ ifeq ($(EZ_CUDA),1)
 OBJS += CCuda.o
 endif
 
-ifeq ($(UNAME),Darwin)
+#ifeq ($(UNAME),Darwin)
 LIBS = 
-else ifeq ($(UNAME),Linux)
-LIBS = -lboost_program_options 
-endif #OS
+#else ifeq ($(UNAME),Linux)
+#LIBS = -lboost_program_options 
+#endif #OS
 
 TARGET =	libeasea.a
-CPPFLAGS=-I/usr/local/cuda/include/ 
+CPPFLAGS=-I/usr/local/cuda/include/ -I../boost/
 
 $(TARGET): $(OBJS)
-ifeq ($(UNAME),Darwin)
-	ar rcs $@ $^ ../boost/program_options.a 
-else ifeq ($(UNAME),Linux)
-	ar rcs $@ $^
-endif #OS
+#ifeq ($(UNAME),Darwin)
+	ar rcs $@ $^ #../boost/program_options.a 
+#else ifeq ($(UNAME),Linux)
+#	ar rcs $@ $^
+#endif #OS
 #$(TARGET): $(OBJS)
 #	ar rcs $@ $^
 

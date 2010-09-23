@@ -450,11 +450,11 @@ EASEALIB_PATH=$(EZ_PATH)/libeasea/
 #EASEALIB_PATH=$(EZ_PATH)/libeasea/
 #endif
 
-ifeq ($(UNAME),Darwin)
+#ifeq ($(UNAME),Darwin)
 CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
-else
-CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
-endif
+#else
+#CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
+#endif
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
@@ -462,16 +462,12 @@ endif
 
 OBJS = EASEA.o EASEAIndividual.o 
 
-ifeq ($(UNAME),Darwin)
-LIBS = $(EZ_PATH)boost/program_options.a
-else
-LIBS = -lboost_program_options -lpthread
-endif
+LIBS = -lpthread
 
 TARGET =	EASEA
 
 $(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LIBS) -g $(EASEALIB_PATH)/libeasea.a
+	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LIBS) -g $(EASEALIB_PATH)/libeasea.a $(EZ_PATH)boost/program_options.a
 
 	
 #%.o:%.cpp

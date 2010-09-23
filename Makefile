@@ -6,11 +6,11 @@ LDFLAGS =
 
 
 
-ifeq ($(UNAME),Darwin)
+#ifeq ($(UNAME),Darwin)
 $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o boost/program_options.a libeasea/libeasea.a
-else
-$(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libeasea/libeasea.a
-endif
+#else
+#$(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libeasea/libeasea.a
+#endif
 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
@@ -87,10 +87,10 @@ alexyacc/libalex.so:alexyacc/*.cpp
 alexyacc/libalex.a:alexyacc/*.cpp
 	cd alexyacc && make libalex.a
 
-ifeq ($(UNAME),Darwin)
+#ifeq ($(UNAME),Darwin)
 boost/program_options.a:boost/*.cpp
 	cd boost && make program_options.a
-endif #OS
+#endif #OS
 
 #compile libeasea
 libeasea/libeasea.a:libeasea/*.cpp
@@ -100,9 +100,9 @@ clean:
 	rm -f *.o $(EXEC) $(EXEC)_bin
 	cd alexyacc && make clean
 	cd libeasea && make clean
-ifeq ($(UNAME),Darwin)
+#ifeq ($(UNAME),Darwin)
 	cd boost && make clean
-endif
+#endif
 
 #install:$(EXEC)
 #	sudo cp $< /usr/bin/dev-easea
