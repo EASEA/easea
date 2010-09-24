@@ -71,6 +71,7 @@ GenomeClass {
 
   t1 = ba_postgres_load_ilot(1);
   t2 = ba_postgres_load_batiment(1);
+  ba_sort_instances(t1,0,0);
   ba_set_links(t1,t2);
   //ba_print_links(t1);
   //printf("+ %d - %d\n",t1->class_repartition[1],t1->class_repartition[0]);
@@ -129,6 +130,8 @@ GenomeClass {
   cTreeNode* root = generate_tree(best->x,t1,t2,GENOME_SIZE,GENE_SIZE);
   struct base* tmp_table = table_from_genome(best->x,t1,t2,GENOME_SIZE,GENE_SIZE);
   show_tree(tmp_table,root);
+
+  ba_to_arff(tmp_table,"best_table.arff");
 
   printf("depth of resulting tree %d\n",root->tree_depth());
 

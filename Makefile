@@ -52,11 +52,13 @@ $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o boos
 
 
 install:
-	mkdir -p /usr/local/easea/ /usr/local/easea/bin /usr/local/easea/tpl /usr/local/easea/libeasea/include 
+	mkdir -p /usr/local/easea/ /usr/local/easea/bin /usr/local/easea/tpl /usr/local/easea/libeasea/include /usr/local/easea/boost
 	cp easea /usr/local/easea/bin/
 	cp tpl/* /usr/local/easea/tpl/
 	cp libeasea/include/* /usr/local/easea/libeasea/include/
 	cp libeasea/libeasea.a /usr/local/easea/libeasea/
+	cp boost/program_options.a /usr/local/easea/boost
+	cp -r boost/boost/ /usr/local/easea/boost/boost/
 vars:
 ifeq ($(UNAME), Darwin)
 	@sed '/EZ_PATH/d' $(HOME)/.profile>$(HOME)/.profile_save
