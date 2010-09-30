@@ -41,7 +41,7 @@ __________________________________________________________*/
  
 float pMutPerGene=0.1;
 float pMutDesCard = 0.05;
-float pMutDesThre = 0.5;
+float pMutDesThre = 0.05;
 
 struct base* t1 = NULL;
 struct base* t2 = NULL;
@@ -161,6 +161,8 @@ GenomeClass {
 
 \GenomeClass::crossover :
 {
+  
+#if 0
   for (int i=0; i<GENOME_SIZE; i+=GENE_SIZE){
     if( tossCoin(0.5) )
       for( unsigned j=0 ; j<GENE_SIZE ; j++ )
@@ -168,7 +170,16 @@ GenomeClass {
     else
       for( unsigned j=0 ; j<GENE_SIZE ; j++ )
 	child.x[i+j] = parent2.x[i+j];
+    
   }
+#else
+  for (int i=0; i<GENOME_SIZE; i+=1){
+    if( tossCoin(0.5) )
+	child.x[i] = parent1.x[i];
+    else
+	child.x[i] = parent2.x[i];
+  }
+#endif
 }
 \end
 
@@ -317,7 +328,7 @@ GenomeClass {
     
   }
 
-  fitness_value = (((float)error) / t1->no_instances)*100 + ((float)tree_size)/K;
+  fitness_value = (((float)error) / t1->no_instances)*100;// + ((float)tree_size)/K;
 
   for( unsigned i=0 ; i<K ; i++ ){
     ba_delete(k_tmp_tables[i]);
