@@ -177,6 +177,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   }
 
   showPopulationStats(begin);
+  bBest = population->Best;
   currentGeneration += 1;
 
   //Initialize elitPopulation
@@ -402,8 +403,8 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 	//Sending an individual every n generations	
 	if(this->currentGeneration%(10+this->myClientNumber)==0){
 		//cout << "I'm going to send an Individual now" << endl;
-		this->population->selectionOperator->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
-		size_t index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
+		//this->population->selectionOperator->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
+		//size_t index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
 		//cout << "Going to send individual " << index << " with fitness " << this->population->parents[index]->fitness << endl;
 	
 		//selecting a client randomly
@@ -412,7 +413,7 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 		cout << "His IP is " << this->Clients[client]->getIP() << endl;
 		//cout << "Sending individual " << index << " to client " << client << " nomw" << endl;
 		//cout << this->population->parents[index]->serialize() << endl;
-		this->Clients[client]->CComUDP_client_send((char*)this->population->parents[index]->serialize().c_str());
+		this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
 		
 	}
 }
