@@ -444,17 +444,9 @@ public:
 
 UNAME := $(shell uname)
 
-#ifeq ($(UNAME),Darwin)
 EASEALIB_PATH=$(EZ_PATH)/libeasea/
-#else
-#EASEALIB_PATH=$(EZ_PATH)/libeasea/
-#endif
 
-#ifeq ($(UNAME),Darwin)
 CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
-#else
-#CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
-#endif
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
@@ -462,7 +454,7 @@ CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH
 
 OBJS = EASEA.o EASEAIndividual.o 
 
-LIBS = -lpthread
+LIBS = -lpthread 
 
 TARGET =	EASEA
 
