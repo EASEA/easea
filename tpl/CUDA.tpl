@@ -292,6 +292,7 @@ float IndividualImpl::evaluate(){
 string IndividualImpl::serialize(){
     ostringstream AESAE_Line(ios_base::app);
     \GENOME_SERIAL
+    AESAE_Line << this->fitness;
     return AESAE_Line.str();
 }
 
@@ -299,8 +300,9 @@ void IndividualImpl::deserialize(string Line){
     istringstream AESAE_Line(Line);
     string line;
     \GENOME_DESERIAL
+    AESAE_Line >> this->fitness;
+    this->valid=true;
 }
-
 
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 
