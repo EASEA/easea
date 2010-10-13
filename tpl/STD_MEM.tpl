@@ -314,9 +314,6 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	if(parentReductionSize<parentPopulationSize) parentReduction = true;
 	else parentReduction = false;
 
-	cout << "Parent red " << parentReduction << " " << parentReductionSize << "/"<< parentPopulationSize << endl;
-	cout << "Parent red " << offspringReduction << " " << offspringReductionSize << "/" << offspringPopulationSize << endl;
-
 	generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
 	controlCStopingCriterion = new CControlCStopingCriterion();
 	timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));

@@ -631,36 +631,41 @@ Parameter
 	strcat(sIP_FILE,$4->sName);
 	}
      
-  | PRINT_STATS NUMBER2{
-      if((int)$2>=1)
-	 bPRINT_STATS=1;
-      else
-	 bPRINT_STATS=0;
-    }
-  | PLOT_STATS NUMBER2{
-      if((int)$2>=1)
-	 bPLOT_STATS=1;
-      else
-	 bPLOT_STATS=0;
-    }
-  | GENERATE_CSV_FILE NUMBER2{
-      if((int)$2>=1)
-	 bGENERATE_CSV_FILE=1;
-      else
-	 bGENERATE_CSV_FILE=0;
-    }
-  | GENERATE_GNUPLOT_SCRIPT NUMBER2{
-      if((int)$2>=1)
-	 bGENERATE_GNUPLOT_SCRIPT=1;
-      else
-	 bGENERATE_GNUPLOT_SCRIPT=0;
-    }
-  | GENERATE_R_SCRIPT NUMBER2{
-      if((int)$2>=1)
-	 bGENERATE_R_SCRIPT=1;
-      else
-	 bGENERATE_R_SCRIPT=0;
-    }
+  | PRINT_STATS IDENTIFIER2{
+      if (!mystricmp($2->sName,"False")) bPRINT_STATS=0;
+      else if (!mystricmp($2->sName,"True")) bPRINT_STATS=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Print stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bPRINT_STATS=0;
+       }}
+  | PLOT_STATS IDENTIFIER2{
+      if (!mystricmp($2->sName,"False")) bPLOT_STATS=0;
+      else if (!mystricmp($2->sName,"True")) bPLOT_STATS=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Generate stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bPLOT_STATS=0;
+       }}
+  | GENERATE_CSV_FILE IDENTIFIER2{
+      if (!mystricmp($2->sName,"False")) bGENERATE_CSV_FILE=0;
+      else if (!mystricmp($2->sName,"True")) bGENERATE_CSV_FILE=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Generate csv file must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bGENERATE_CSV_FILE=0;
+       }}
+  | GENERATE_GNUPLOT_SCRIPT IDENTIFIER2{
+      if (!mystricmp($2->sName,"False")) bGENERATE_GNUPLOT_SCRIPT=0;
+      else if (!mystricmp($2->sName,"True")) bGENERATE_GNUPLOT_SCRIPT=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Generate gnuplot script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bGENERATE_GNUPLOT_SCRIPT=0;
+       }}
+  | GENERATE_R_SCRIPT IDENTIFIER2{
+      if (!mystricmp($2->sName,"False")) bGENERATE_R_SCRIPT=0;
+      else if (!mystricmp($2->sName,"True")) bGENERATE_R_SCRIPT=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Generate R script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bGENERATE_R_SCRIPT=0;
+       }}
   | SAVE_POPULATION IDENTIFIER2{
       if (!mystricmp($2->sName,"False")) bSAVE_POPULATION=0;
       else if (!mystricmp($2->sName,"True")) bSAVE_POPULATION=1;

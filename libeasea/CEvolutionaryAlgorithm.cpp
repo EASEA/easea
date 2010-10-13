@@ -435,8 +435,6 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 			this->server->read_data_lock();
 			string line = this->server->parm->data[this->treatedIndividuals].data;
 			this->population->parents[index]->deserialize(line);
-			this->population->parents[index]->valid = false;
-			this->population->parents[index]->evaluate();
 			this->server->read_data_unlock();
 			//cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
 			this->treatedIndividuals++;
