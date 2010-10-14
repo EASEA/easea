@@ -149,14 +149,16 @@ float IndividualImpl::evaluate(){
 string IndividualImpl::serialize(){
     ostringstream AESAE_Line(ios_base::app);
     \GENOME_SERIAL
+    AESAE_Line << this->fitness;
     return AESAE_Line.str();
 }
-
 
 void IndividualImpl::deserialize(string Line){
     istringstream AESAE_Line(Line);
     string line;
     \GENOME_DESERIAL
+    AESAE_Line >> this->fitness;
+    this->valid=true;
 }
 
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
@@ -311,9 +313,6 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	if(parentReductionSize<parentPopulationSize) parentReduction = true;
 	else parentReduction = false;
-
-	cout << "Parent red " << parentReduction << " " << parentReductionSize << "/"<< parentPopulationSize << endl;
-	cout << "Parent red " << offspringReduction << " " << offspringReductionSize << "/" << offspringPopulationSize << endl;
 
 	generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
 	controlCStopingCriterion = new CControlCStopingCriterion();
@@ -484,30 +483,21 @@ public:
 
 UNAME := $(shell uname)
 
-#ifeq ($(UNAME),Darwin)
 EASEALIB_PATH=$(EZ_PATH)libeasea/
-#else
-#EASEALIB_PATH=\EZ_PATHlibeasea/
-#endif
 
-ifeq ($(UNAME),Darwin)
 CXXFLAGS =      -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
-else
-CXXFLAGS =      -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
-endif
+
+#USER MAKEFILE OPTIONS :
+\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 OBJS = EASEA.o EASEAIndividual.o 
 
-ifeq ($(UNAME),Darwin)
-LIBS = $(EZ_PATH)boost/program_options.a
-else
-LIBS = -lboost_program_options -lpthread
-endif
+LIBS = -lpthread
 
 TARGET =	EASEA
 
 $(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a
+	$(CXX) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a
 
 	
 #%.o:%.cpp

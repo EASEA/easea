@@ -292,6 +292,7 @@ float IndividualImpl::evaluate(){
 string IndividualImpl::serialize(){
     ostringstream AESAE_Line(ios_base::app);
     \GENOME_SERIAL
+    AESAE_Line << this->fitness;
     return AESAE_Line.str();
 }
 
@@ -299,8 +300,9 @@ void IndividualImpl::deserialize(string Line){
     istringstream AESAE_Line(Line);
     string line;
     \GENOME_DESERIAL
+    AESAE_Line >> this->fitness;
+    this->valid=true;
 }
-
 
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 
@@ -463,9 +465,6 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
         if(parentReductionSize<parentPopulationSize) parentReduction = true;
         else parentReduction = false;
-
-        cout << "Parent red " << parentReduction << " " << parentReductionSize << "/"<< parentPopulationSize << endl;
-        cout << "Parent red " << offspringReduction << " " << offspringReductionSize << "/" << offspringPopulationSize << endl;
 
         generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
         controlCStopingCriterion = new CControlCStopingCriterion();
@@ -657,14 +656,14 @@ public:
 \START_CUDA_MAKEFILE_TPL
 NVCC= nvcc
 CPPC= g++
-LIBAESAE=\EZ_PATHlibeasea/
-CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include
-LDFLAGS=-lboost_program_options $(LIBAESAE)libeasea.a -lpthread
+LIBAESAE=$(EZ_PATH)libeasea/
+CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include -I$(EZ_PATH)boost
+LDFLAGS=$(EZ_PATH)boost/program_options.a $(LIBAESAE)libeasea.a -lpthread
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
-CPPFLAGS+= -I$(LIBAESAE)include -I/usr/local/cuda/include/
+CPPFLAGS+= -I$(LIBAESAE)include -I$(EZ_PATH)boost
 NVCCFLAGS+=
 
 

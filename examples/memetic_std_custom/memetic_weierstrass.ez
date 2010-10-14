@@ -218,10 +218,10 @@ CPPFLAGS+=
   Number of optimisation iterations : 1 //Number of optimisation iteration
   Baldwinism : false //True or False (Lamarckism : keep optimised Genome
 
-  Print stats:1				//Default: 1
-  Generate csv stats file:0			
-  Generate gnuplot script:0
-  Generate R script:0
-  Plot stats:0				//Default: 0
+  Print stats:true				//Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats:false				//Default: 0
 \end
 	

@@ -63,7 +63,7 @@ vars:
 ifeq ($(UNAME), Darwin)
 	@sed '/EZ_PATH/d' $(HOME)/.profile>$(HOME)/.profile_save
 	@mv $(HOME)/.profile_save $(HOME)/.profile
-	@echo "\nexport EZ_PATH=/usr/local/easea/">>$(HOME)/.profile
+	@echo "export EZ_PATH=/usr/local/easea/">>$(HOME)/.profile
 	@echo "export PATH=\$$PATH:/usr/local/easea/bin" >>$(HOME)/.profile
 else
 	@echo "\nexport EZ_PATH=/usr/local/easea/">>$(HOME)/.bashrc
@@ -73,7 +73,11 @@ endif
 
 
 dev_vars:
-	@echo "\nexport EZ_PATH=$(PWD)/">>$(HOME)/.bashrc ; fi
+ifeq ($(UNAME), Darwin)
+	@echo "export EZ_PATH=$(PWD)/">>$(HOME)/.profile 
+else
+	@echo "\nexport EZ_PATH=$(PWD)/">>$(HOME)/.bashrc 
+endif
 
 
 EaseaParse.o: EaseaParse.cpp EaseaLex.cpp
