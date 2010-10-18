@@ -1,0 +1,181 @@
+ 
+
+/*_________________________________________________________
+
+  This is a standard GP implementation on EASEA, 
+  aimed for regression.
+
+  use : easea -cuda_gp regression.ez
+        make
+
+  in order to generate and compile this code.
+__________________________________________________________*/
+
+\User declarations :
+#define PI (3.141592653589793)
+\end
+
+\User functions:
+#define POLY(x) x*x*x-3*x*x+x
+/**
+   This function generates data NO_FITNESS_CASES fitness cases,
+   from the polynome POLY(X) with X randomly picked between (-1,1)
+
+   @inputs address of the inputs array. (array will be allocated here)
+   @outputs adddress of the outputs array. (array will be allocated here)
+
+   @ret number of loaded fitness cases (should be equal to NO_FITNESS_CASES).   
+ */
+int generateData(float*** inputs, float** outputs){
+  int i=0;
+
+  (*inputs) = new float*[NO_FITNESS_CASES];
+  (*outputs) = new float[NO_FITNESS_CASES];
+  
+  for( i=0 ; i<NO_FITNESS_CASES ; i++ ){
+    (*inputs)[i]=new float[VAR_LEN];
+    float x = random(-10.,+10.);
+    (*inputs)[i][0] = x;
+    (*outputs)[i] = POLY(x);
+  }
+
+  return NO_FITNESS_CASES;
+}
+
+
+void free_data(){
+  for( int i=0 ; i<fitnessCasesSetLength ;i++ )
+    delete[] inputs[i] ;
+  delete[] outputs;
+  delete[] inputs;
+} 
+\end
+
+
+
+\Before everything else function:
+{
+  generateData(&inputs,&outputs);
+}
+\end
+
+\After everything else function:
+{
+  toDotFile( ((IndividualImpl*)EA->population->Best)->root, "best", 0);
+  free_data();
+}
+\end
+
+\At the beginning of each generation function:
+{
+  //cout << "At the beginning of each generation function called" << endl;
+}		    
+\end
+
+\At the end of each generation function:
+{		 
+  //cout << "At the end of each generation function called" << endl;
+}
+\end
+
+\At each generation before reduce function:
+ //cout << "At each generation before replacement function called" << endl;
+\end
+
+
+\User classes :
+
+GenomeClass {
+  GPNode* root;
+}
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser :
+{
+  Genome.root = RAMPED_H_H(INIT_TREE_DEPTH_MIN,INIT_TREE_DEPTH_MAX,EA->population->actualParentPopulationSize,EA->population->parentPopulationSize,GROW_FULL_RATIO, VAR_LEN, OPCODE_SIZE,opArity, OP_ERC);
+}
+\end
+
+\GenomeClass::crossover :
+{
+  simpleCrossOver(parent1,parent2,child);
+  child.valid = false;
+}
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+{
+
+  simple_mutator(&Genome);
+
+  return 1;
+}
+\end
+
+\begin operator description :
+OP_X, "x", 0, {RESULT=INPUT[0];};
+OP_ADD, "+", 2, {RESULT=OP1+OP2;};
+OP_SUB, "-", 2, {RESULT=OP1-OP2;};
+OP_MUL, "*", 2, {RESULT=OP1*OP2;};
+OP_DIV, "/", 2, {
+  if( !OP2 ) RESULT = 1;
+  else RESULT = OP1/OP2;
+};
+OP_ERC, "ERC", 0, {RESULT=ERC;};
+\end
+
+\GenomeClass::evaluator header:
+\end
+
+\GenomeClass::evaluator for each fc :
+float expected_value = OUTPUT;
+ERROR = powf(expected_value-EVOLVED_VALUE,2);
+\end
+
+\GenomeClass::evaluator accumulator :
+return sqrtf(ERROR/NO_FITNESS_CASES);
+\end
+
+\User Makefile options: 
+
+CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/
+LDFLAGS+=
+\end
+
+\Default run parameters :         // Please let the parameters appear in this order
+  Number of generations : 100       // NB_GEN
+  Time limit: 0 		  // In seconds, 0 to deactivate
+  Population size : 4096	          //POP_SIZE
+  Offspring size : 4096              // 40% 
+  Mutation probability : 0.2        // MUT_PROB
+  Crossover probability : 0.9       // XOVER_PROB
+  Evaluator goal : minimise       // Maximise
+  Selection operator: Tournament 2
+  Surviving parents: 100%//percentage or absolute  
+  Surviving offspring: 100%
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+  Final reduce operator: Tournament 2
+
+  Elitism: Strong			//Weak or Strong
+  Elite: 1
+
+  //  Print stats:1				//Default: 1
+  //  Generate csv stats file:0			
+  //  Generate gnuplot script:0
+  //  Generate R script:0
+  //  Plot stats:0				//Default: 0
+
+  max init tree depth : 9
+  min init tree depth : 4
+
+  max tree depth : 12
+
+  nb of GPUs : 1
+  size of prog buffer : 20000000
+
+  nb of fitness cases : 128
+\end
