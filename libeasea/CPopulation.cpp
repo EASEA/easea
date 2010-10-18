@@ -251,6 +251,15 @@ void CPopulation::serializePopulation(){
   EASEA_File.close();
 }
 
+int CPopulation::getWorstIndividualIndex(CIndividual** population){
+	int index=0;
+	for(int i=1; i<(signed)this->parentPopulationSize; i++){
+		if((params->minimizing && (population[i]->fitness > population[index]->fitness)) || (!params->minimizing && (population[i]->fitness < population[index]->fitness)))
+			index=i;
+	}	
+	return index;
+}
+
 
 /**
    Reduit les populations en faisant l'operation de remplacement.

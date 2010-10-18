@@ -190,7 +190,7 @@ CPPFLAGS+=
   Generate R script:false
   Plot stats:false				//Default: 0
 
-  Remote island model: false
+  Remote island model: true
   IP file: ip.txt 			//File containing all the remote island's IP
 
   Save population: true

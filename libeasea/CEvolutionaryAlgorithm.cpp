@@ -129,6 +129,8 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		this->numberOfClients = 0;
 		this->myClientNumber=0;	
 		this->initializeClients();
+		if(!params->remoteIslandModel)
+			delete this->server;
 	}
 }
 
@@ -320,7 +322,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #ifdef WIN32
             printf("%lu\t%2.6f\t%lu\t%.15e\t\t%.15e\t\t%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #else
-	    printf("%d\t%ld.%06ld\t%d\t%.15e\t\t%.15e\t\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+	    printf("%d\t%ld.%06ld\t%d\t%.15e\t\t%.15e\t\t%.15e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #endif
 	  //printf("%lu\t%ld.%06ld\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
   }
@@ -336,7 +338,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #ifdef WIN32
           fprintf(f,"%lu\t%2.6f\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #else
-	  fprintf(f,"%d\t%ld.%06ld\t%d\t%.15e\t%.15e\t%.15e\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+	  fprintf(f,"%d\t%ld.%06ld\t%d\t%.15e\t%.15e\t%.15e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #endif
 	  fclose(f);
         }
@@ -352,7 +354,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #ifdef WIN32
 	  fprintf(f,"%lu,%2.6f,%lu,%.15e,%.15e,%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #else
-	  fprintf(f,"%d,%ld.%d,%d,%f,%f,%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+	  fprintf(f,"%d,%ld.%ld,%d,%f,%f,%f\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #endif
 	  fclose(f);
         }
@@ -377,7 +379,7 @@ void CEvolutionaryAlgorithm::initializeClients(){
 	int clientNumber=0;
 	char (*clients)[16] = (char(*)[16])calloc(1,sizeof(char)*16);
 	
-	cout << "Reading IP address file" << endl;
+	cout << "Reading IP address file: " << this->params->ipFile << endl;
 	ifstream IP_File(this->params->ipFile);
 	string line;
 	while(getline(IP_File, line)){
@@ -392,9 +394,15 @@ void CEvolutionaryAlgorithm::initializeClients(){
 		}
 	}
 
-	this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
-	for(int i=0; i<(signed)this->numberOfClients; i++){
-		this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);
+	if(this->numberOfClients>1){
+		this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
+		for(int i=0; i<(signed)this->numberOfClients; i++){
+			this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);
+		}
+	}
+	else{
+		cout << "***WARNING***\nNo islands to communicate with. Aborting Island Model.\n***WARNING***" << endl;
+		params->remoteIslandModel=0;
 	}
 	free(clients);
 }
@@ -411,7 +419,7 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 		int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
 		cout << "Going to send and individual to client " << client << endl;
 		cout << "His IP is " << this->Clients[client]->getIP() << endl;
-		//cout << "Sending individual " << index << " to client " << client << " nomw" << endl;
+		//cout << "Sending individual " << index << " to client " << client << " now" << endl;
 		//cout << this->population->parents[index]->serialize() << endl;
 		this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
 		
@@ -427,9 +435,12 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 		//Treating all the individuals before continuing
 		while(this->treatedIndividuals < (unsigned)this->server->nb_data){
 			//selecting the individual to erase
-			CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
-			antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
-			size_t index = antiTournament->selectNext(this->population->actualParentPopulationSize);
+			//CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
+			//antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
+			//size_t index = antiTournament->selectNext(this->population->actualParentPopulationSize);
+			
+			//We're selecting the worst element to replace
+			size_t index = this->population->getWorstIndividualIndex(this->population->parents);
 
 			//cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
 			//cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
@@ -446,7 +457,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 void CEvolutionaryAlgorithm::outputGraph(){
       	fprintf(this->gnuplot->fWrit,"set term png\n");
       	fprintf(this->gnuplot->fWrit,"set output \"%s\"\n",params->plotOutputFilename);
-	fprintf(this->gnuplot->fWrit,"set xrange[0:%d]\n",population->currentEvaluationNb);
+	fprintf(this->gnuplot->fWrit,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
 	fprintf(this->gnuplot->fWrit,"set xlabel \"Number of Evaluations\"\n");
         fprintf(this->gnuplot->fWrit,"set ylabel \"Fitness\"\n");
         fprintf(this->gnuplot->fWrit,"replot \n");
@@ -460,7 +471,7 @@ void CEvolutionaryAlgorithm::generateGnuplotScript(){
 	f = fopen(fichier.c_str(),"a");
 	fprintf(f,"set term png\n");
 	fprintf(f,"set output \"%s\"\n",params->plotOutputFilename);
-	fprintf(f,"set xrange[0:%d]\n",population->currentEvaluationNb);
+	fprintf(f,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
 	fprintf(f,"set xlabel \"Number of Evaluations\"\n");
         fprintf(f,"set ylabel \"Fitness\"\n");
 	fprintf(f,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines, \'%s.dat\' using 3:5 t  \'Average\' w lines, \'%s.dat\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename,params->outputFilename,params->outputFilename);
@@ -475,7 +486,7 @@ void CEvolutionaryAlgorithm::generateRScript(){
 	fprintf(f,"#Plotting for R\n"),
 	fprintf(f,"png(\"%s\")\n",params->plotOutputFilename);
 	fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename);
-	fprintf(f,"plot(0, type = \"n\", main = \"Plot Title\", xlab = \"Number of Evaluations\", ylab = \"Fitness\", xlim = c(0,%d) )\n",population->currentEvaluationNb);
+	fprintf(f,"plot(0, type = \"n\", main = \"Plot Title\", xlab = \"Number of Evaluations\", ylab = \"Fitness\", xlim = c(0,%d) )\n",(int)population->currentEvaluationNb);
 	fprintf(f,"grid() # add grid\n");
 	fprintf(f,"lines(data[,3], data[,4], lty = 1) #draw first dataset\n");
 	fprintf(f,"lines(data[,3], data[,5], lty = 2) #draw second dataset\n");

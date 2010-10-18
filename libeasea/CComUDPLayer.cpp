@@ -6,6 +6,7 @@ pthread_mutex_t server_mutex = PTHREAD_MUTEX_INITIALIZER;
 /* UDP SERVER*/
 CComUDPServer::~CComUDPServer() {
 	pthread_cancel(thread);
+	close(this->ServerSocket);
 };
 
 void * CComUDPServer::UDP_server_thread(void *parm) {
@@ -104,6 +105,7 @@ void CComUDPClient::CComUDP_client_send(char *individual) {
 		sendto(this->Socket,individual,MAXINDSIZE,0,(struct sockaddr *)&this->ServAddr,sizeof(this->ServAddr));
 	}
 	else {fprintf(stderr,"Not sending individual with strlen(): %i\n",(int)strlen(individual));}
+	close(this->Socket);
 };
 
 std::string CComUDPClient::getIP(){
