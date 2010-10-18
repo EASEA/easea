@@ -14,11 +14,11 @@
 /* ****************************************
    GenerationalCriterion class
 ****************************************/
-CGenerationalCriterion::CGenerationalCriterion(size_t generationalLimit){
+CGenerationalCriterion::CGenerationalCriterion(unsigned generationalLimit){
   this->generationalLimit = generationalLimit;
 }
 
-void CGenerationalCriterion::setCounterEa(size_t* ea_counter){
+void CGenerationalCriterion::setCounterEa(unsigned* ea_counter){
 	this->currentGenerationPtr = ea_counter;
 }
 
@@ -31,14 +31,14 @@ bool CGenerationalCriterion::reached(){
   else return false;
 }
 
-size_t* CGenerationalCriterion::getGenerationalLimit(){
+unsigned* CGenerationalCriterion::getGenerationalLimit(){
 	return &(this->generationalLimit);
 }
 
 /* ****************************************
    TimeCriterion class
 ****************************************/
-CTimeCriterion::CTimeCriterion(size_t timeLimit){
+CTimeCriterion::CTimeCriterion(unsigned timeLimit){
   this->timeLimit = timeLimit;
   this->elapsedTime = 0;
 }
@@ -58,7 +58,7 @@ bool CTimeCriterion::reached(){
   else return false;
 }
 
-void CTimeCriterion::setElapsedTime(size_t elapsedTime){
+void CTimeCriterion::setElapsedTime(unsigned elapsedTime){
 	this->elapsedTime = elapsedTime;
 }
 

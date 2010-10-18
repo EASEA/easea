@@ -19,8 +19,8 @@ extern CIndividual** pPopulation;
 extern CIndividual* bBest;
 extern float* pEZ_MUT_PROB;
 extern float* pEZ_XOVER_PROB;
-extern size_t *EZ_NB_GEN;
-extern size_t *EZ_current_generation;
+extern unsigned *EZ_NB_GEN;
+extern unsigned *EZ_current_generation;
 
 extern CRandomGenerator* globalRandomGenerator;
 

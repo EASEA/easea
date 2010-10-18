@@ -36,13 +36,13 @@ public:
 ****************************************/
 class CGenerationalCriterion : public CStoppingCriterion {
  private:
-  size_t* currentGenerationPtr;
-  size_t generationalLimit;
+  unsigned* currentGenerationPtr;
+  unsigned generationalLimit;
  public:
   virtual bool reached();
-  CGenerationalCriterion(size_t generationalLimit);
-  void setCounterEa(size_t* ea_counter);
-  size_t *getGenerationalLimit();
+  CGenerationalCriterion(unsigned generationalLimit);
+  void setCounterEa(unsigned* ea_counter);
+  unsigned *getGenerationalLimit();
 };
 
 /* ****************************************
@@ -50,12 +50,12 @@ class CGenerationalCriterion : public CStoppingCriterion {
 ****************************************/
 class CTimeCriterion : public CStoppingCriterion {
  private:
-  size_t timeLimit;
-  size_t elapsedTime;
+  unsigned timeLimit;
+  unsigned elapsedTime;
  public:
   virtual bool reached();
-  CTimeCriterion(size_t timeLimit);
-  void setElapsedTime(size_t elapsedTime);
+  CTimeCriterion(unsigned timeLimit);
+  void setElapsedTime(unsigned elapsedTime);
 };
 
 /* ****************************************
