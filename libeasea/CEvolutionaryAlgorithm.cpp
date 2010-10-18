@@ -394,7 +394,7 @@ void CEvolutionaryAlgorithm::initializeClients(){
 		}
 	}
 
-	if(this->numberOfClients>1){
+	if(this->numberOfClients>0){
 		this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
 		for(int i=0; i<(signed)this->numberOfClients; i++){
 			this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);

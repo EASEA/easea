@@ -36,7 +36,7 @@ public:
   CEvolutionaryAlgorithm( Parameters* params );
   virtual void initializeParentPopulation() = 0;
 
-  unsigned* getCurrentGenerationPtr(){ return &currentGeneration;}
+  unsigned int *getCurrentGenerationPtr(){ return &currentGeneration;}
   void addStoppingCriterion(CStoppingCriterion* sc);
   void runEvolutionaryLoop();
   bool allCriteria();

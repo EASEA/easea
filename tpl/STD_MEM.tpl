@@ -26,8 +26,8 @@ CIndividual** pPopulation = NULL;
 CIndividual*  bBest = NULL;
 float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
-size_t *EZ_NB_GEN;
-size_t *EZ_current_generation;
+unsigned *EZ_NB_GEN;
+unsigned *EZ_current_generation;
 CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
@@ -215,7 +215,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-size_t IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 
@@ -228,7 +228,7 @@ void IndividualImpl::optimiser(int currentIteration){
   \INSERT_OPTIMISER	
 }
 
-void PopulationImpl::optimisePopulation(CIndividual** population, size_t populationSize){
+void PopulationImpl::optimisePopulation(CIndividual** population, unsigned populationSize){
 	for(int iter=0; iter<params->optimiseIterations; iter++){
 		for(int i=0; i<(signed)populationSize; i++){
 			IndividualImpl* tmp = new IndividualImpl(*(IndividualImpl*)population[i]);
@@ -344,7 +344,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	EZ_NB_GEN = (size_t*)setVariable("nbGen",\NB_GEN);
+	EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
@@ -388,7 +388,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 
 }
 
-PopulationImpl::PopulationImpl(size_t parentPopulationSize, size_t offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params){
+PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params){
         ;
 }
 
@@ -429,14 +429,14 @@ public:
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl();
 	float evaluate();
-	static size_t getCrossoverArrity(){ return 2; }
+	static unsigned getCrossoverArrity(){ return 2; }
 	float getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void optimiser(int currentIteration);
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	size_t mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene);
         string serialize();
         void deserialize(string AESAE_Line);
 
@@ -473,9 +473,9 @@ public:
 
 class PopulationImpl: public CPopulation {
 public:
-        PopulationImpl(size_t parentPopulationSize, size_t offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params);
+        PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params);
         virtual ~PopulationImpl();
-	void optimisePopulation(CIndividual** population, size_t populationSize);
+	void optimisePopulation(CIndividual** population, unsigned populationSize);
 };
 
 #endif /* PROBLEM_DEP_H */

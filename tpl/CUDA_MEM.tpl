@@ -26,8 +26,8 @@ CIndividual** pPopulation = NULL;
 CIndividual* bBest = NULL;
 float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
-size_t *EZ_NB_GEN;
-size_t *EZ_current_generation;
+unsigned *EZ_NB_GEN;
+unsigned *EZ_current_generation;
 
 int main(int argc, char** argv){
 
@@ -109,9 +109,9 @@ dim3 dimBlock, dimGrid;
 
 \INSERT_USER_FUNCTIONS
 
-void cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid, void** allocatedDeviceBuffer,void** allocatedDeviceTmpBuffer, float** deviceFitness){
+void cudaPreliminaryProcess(unsigned populationSize, dim3* dimBlock, dim3* dimGrid, void** allocatedDeviceBuffer,void** allocatedDeviceTmpBuffer, float** deviceFitness){
 
-        size_t nbThreadPB, nbThreadLB, nbBlock;
+        unsigned nbThreadPB, nbThreadLB, nbBlock;
         cudaError_t lastError;
 
         lastError = cudaMalloc(allocatedDeviceBuffer,populationSize*(sizeof(IndividualImpl)));
@@ -270,7 +270,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-size_t IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 
@@ -279,7 +279,7 @@ size_t IndividualImpl::mutate( float pMutationPerGene ){
   \INSERT_MUTATOR
 }
 
-__device__ __host__ inline IndividualImpl* INDIVIDUAL_ACCESS(void* buffer,size_t id){
+__device__ __host__ inline IndividualImpl* INDIVIDUAL_ACCESS(void* buffer,unsigned id){
   return (IndividualImpl*)buffer+id;
 }
 
@@ -289,15 +289,15 @@ __device__  void cudaCopyIndividual(IndividualImpl* src, IndividualImpl* dest){
   dest->fitnessImpl = src->fitnessImpl;
 }
 
-__device__ float cudaEvaluate(void* devBuffer, size_t id, struct gpuOptions initOpts){
+__device__ float cudaEvaluate(void* devBuffer, unsigned id, struct gpuOptions initOpts){
   \INSERT_CUDA_EVALUATOR
 }
   
-__device__ void cudaOptimiseIndividual(void* devBuffer, size_t id, struct gpuOptions initOpts, int currentIteration){
+__device__ void cudaOptimiseIndividual(void* devBuffer, unsigned id, struct gpuOptions initOpts, int currentIteration){
   \INSERT_CUDA_OPTIMISOR
 }
 
-__device__ void cudaOptimise(void* devBuffer, void* tmpBuffer, size_t id, struct gpuOptions initOpts,  int OptimiseIterations){
+__device__ void cudaOptimise(void* devBuffer, void* tmpBuffer, unsigned id, struct gpuOptions initOpts,  int OptimiseIterations){
 	for(int currentIteration=0; currentIteration<OptimiseIterations; currentIteration++){
 		cudaOptimiseIndividual(tmpBuffer, id, initOpts, currentIteration);
 		INDIVIDUAL_ACCESS(tmpBuffer,id)->fitnessImpl = cudaEvaluate(tmpBuffer, id, initOpts); 
@@ -309,9 +309,9 @@ __device__ void cudaOptimise(void* devBuffer, void* tmpBuffer, size_t id, struct
 	}
 }
 
-__global__ void cudaEvaluatePopulation(void* d_population, size_t popSize, float* d_fitnesses, struct gpuOptions initOpts){
+__global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses, struct gpuOptions initOpts){
 
-        size_t id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
+        unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
 
   	// escaping for the last block
         if(blockIdx.x == (gridDim.x-1)) if( id >= popSize ) return;
@@ -322,9 +322,9 @@ __global__ void cudaEvaluatePopulation(void* d_population, size_t popSize, float
   
 }
 
-__global__ void cudaOptimisePopulation(void* d_population, void* d_populationTmp, size_t popSize, struct gpuOptions initOpts, int OptimiseIterations){
+__global__ void cudaOptimisePopulation(void* d_population, void* d_populationTmp, unsigned popSize, struct gpuOptions initOpts, int OptimiseIterations){
 
-        size_t id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
+        unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
 
   	// escaping for the last block
         if(blockIdx.x == (gridDim.x-1)) if( id >= popSize ) return;
@@ -342,7 +342,7 @@ void PopulationImpl::evaluateParentPopulation(){
         float* deviceFitness;*/
         cudaError_t lastError;
 //        dim3 dimBlock, dimGrid;
-        size_t actualPopulationSize = this->actualParentPopulationSize;
+        unsigned actualPopulationSize = this->actualParentPopulationSize;
 
 	// ICI il faut allouer la tailler max (entre parentPopualtionSize et offspringpopulationsize)
 	cudaPreliminaryProcess(actualPopulationSize,&dimBlock,&dimGrid,&allocatedDeviceBuffer,&allocatedDeviceTmpBuffer, &deviceFitness);
@@ -367,7 +367,7 @@ void PopulationImpl::evaluateParentPopulation(){
        this->CPopulation::evaluateParentPopulation();
 #endif
 
-       for( size_t i=0 ; i<actualPopulationSize ; i++ ){
+       for( unsigned i=0 ; i<actualPopulationSize ; i++ ){
 #ifdef COMPARE_HOST_DEVICE
                float error = (this->parents[i]->getFitness()-fitnesses[i])/this->parents[i]->getFitness();
                printf("Difference for individual %lu is : %f %f|%f\n",i,error,this->parents[i]->getFitness(), fitnesses[i]);
@@ -386,7 +386,7 @@ void PopulationImpl::optimiseParentPopulation(){
 /*  void* allocatedDeviceBuffer;
   void* allocatedDeviceTmpBuffer;
   float* deviceFitness;*/
-  size_t actualPopulationSize = this->actualParentPopulationSize;
+  unsigned actualPopulationSize = this->actualParentPopulationSize;
 //  dim3 dimBlock, dimGrid;
 
 // ICI il faut allouer la tailler max (entre parentPopualtionSize et offspringpopulationsize)
@@ -394,7 +394,7 @@ void PopulationImpl::optimiseParentPopulation(){
   
 
 //Copy population into buffer
-  for( size_t i=0 ; i<this->actualParentPopulationSize ; i++){
+  for( unsigned i=0 ; i<this->actualParentPopulationSize ; i++){
 	((IndividualImpl*)this->parents[i])->copyToCudaBuffer(((PopulationImpl*)this)->cuda->cudaParentBuffer,i);
   }
 
@@ -416,7 +416,7 @@ void PopulationImpl::optimiseParentPopulation(){
   cudaFree(deviceFitness);
 
   //Copies the new individuals back into the population
-  for( size_t i=0; i<actualPopulationSize ; i++){
+  for( unsigned i=0; i<actualPopulationSize ; i++){
     if(!params->baldwinism)
       ((IndividualImpl*)this->parents[i])->copyFromCudaBuffer(this->cuda->cudaParentBuffer,i);
     this->parents[i]->fitness = ((IndividualImpl*)this->parents[i])->fitnessImpl;
@@ -426,10 +426,10 @@ void PopulationImpl::optimiseParentPopulation(){
 
 void PopulationImpl::evaluateOffspringPopulation(){
   cudaError_t lastError;
-  size_t actualPopulationSize = this->actualOffspringPopulationSize;
+  unsigned actualPopulationSize = this->actualOffspringPopulationSize;
   float* fitnesses = new float[actualPopulationSize];
 
-  for( size_t i=0 ; i<this->actualOffspringPopulationSize ; i++ )
+  for( unsigned i=0 ; i<this->actualOffspringPopulationSize ; i++ )
       ((IndividualImpl*)this->offsprings[i])->copyToCudaBuffer(this->cuda->cudaOffspringBuffer,i);
   
   lastError = cudaMemcpy(d_offspringPopulationcuda,this->cuda->cudaOffspringBuffer,sizeof(IndividualImpl)*actualPopulationSize, cudaMemcpyHostToDevice);
@@ -447,7 +447,7 @@ void PopulationImpl::evaluateOffspringPopulation(){
   this->CPopulation::evaluateOffspringPopulation();
 #endif
 
-  for( size_t i=0 ; i<actualPopulationSize ; i++ ){
+  for( unsigned i=0 ; i<actualPopulationSize ; i++ ){
 #ifdef COMPARE_HOST_DEVICE
     float error = (this->offsprings[i]->getFitness()-fitnesses[i])/this->offsprings[i]->getFitness();
     printf("Difference for individual %lu is : %f %f|%f\n",i,error, this->offsprings[i]->getFitness(),fitnesses[i]);
@@ -465,10 +465,10 @@ void PopulationImpl::evaluateOffspringPopulation(){
 
 void PopulationImpl::optimiseOffspringPopulation(){
   cudaError_t lastError;
-  size_t actualPopulationSize = this->actualOffspringPopulationSize;
+  unsigned actualPopulationSize = this->actualOffspringPopulationSize;
 
   //Copy population to buffer
-  for( size_t i=0; i<actualPopulationSize; i++)
+  for( unsigned i=0; i<actualPopulationSize; i++)
     ((IndividualImpl*)this->offsprings[i])->copyToCudaBuffer(this->cuda->cudaOffspringBuffer,i);
 
   //Copy population to GPU
@@ -484,7 +484,7 @@ void PopulationImpl::optimiseOffspringPopulation(){
     lastError = cudaMemcpy(this->cuda->cudaOffspringBuffer,d_offspringPopulationcuda,actualPopulationSize*sizeof(IndividualImpl*), cudaMemcpyDeviceToHost);
 
   //Replace the newly optimised population
-  for( size_t i=0; i<actualPopulationSize ; i++){
+  for( unsigned i=0; i<actualPopulationSize ; i++){
     if(!params->baldwinism)
       ((IndividualImpl*)this->offsprings[i])->copyFromCudaBuffer(this->cuda->cudaOffspringBuffer,i);
     this->offsprings[i]->fitness = ((IndividualImpl*)this->offsprings[i])->fitnessImpl;
@@ -576,7 +576,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	EZ_NB_GEN = (size_t*)setVariable("nbGen",\NB_GEN);
+	EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
@@ -591,13 +591,13 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	 return ea;
 }
 
-inline void IndividualImpl::copyToCudaBuffer(void* buffer, size_t id){
+inline void IndividualImpl::copyToCudaBuffer(void* buffer, unsigned id){
   
  memcpy(((IndividualImpl*)buffer)+id,this,sizeof(IndividualImpl)); 
   
 }
 
-inline void IndividualImpl::copyFromCudaBuffer(void* buffer, size_t id){
+inline void IndividualImpl::copyFromCudaBuffer(void* buffer, unsigned id){
 
         memcpy(this, ((IndividualImpl*)buffer)+id,sizeof(IndividualImpl));
 
@@ -642,7 +642,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 
 }
 
-PopulationImpl::PopulationImpl(size_t parentPopulationSize, size_t offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params){
+PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params){
 	;
 }
 
@@ -691,17 +691,17 @@ public:
 	virtual ~IndividualImpl();
 	float evaluate();
 	void optimise(int currentIteration);
-	static size_t getCrossoverArrity(){ return 2; }
+	static unsigned getCrossoverArrity(){ return 2; }
 	float getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	size_t mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene);
         string serialize();
         void deserialize(string AESAE_Line);
-	void copyToCudaBuffer(void* buffer, size_t id);
-	void copyFromCudaBuffer(void* buffer, size_t id);
+	void copyToCudaBuffer(void* buffer, unsigned id);
+	void copyFromCudaBuffer(void* buffer, unsigned id);
 
 	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
 	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
@@ -737,7 +737,7 @@ class PopulationImpl: public CPopulation {
 public:
 	CCuda *cuda;
 public:
-	PopulationImpl(size_t parentPopulationSize, size_t offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params);
+	PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params);
         virtual ~PopulationImpl();
         void evaluateParentPopulation();
 	void evaluateOffspringPopulation();

@@ -27,8 +27,8 @@ CIndividual** pPopulation = NULL;
 CIndividual *bBest = NULL;
 float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
-size_t *EZ_NB_GEN;
-size_t *EZ_current_generation;
+unsigned *EZ_NB_GEN;
+unsigned *EZ_current_generation;
 CEvolutionaryAlgorithm* EA;
 
 CCmaes *cma;
@@ -254,7 +254,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-size_t IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 
@@ -325,7 +325,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	EZ_NB_GEN = (size_t*)setVariable("nbGen",\NB_GEN);
+	EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
@@ -407,13 +407,13 @@ public:
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl();
 	float evaluate();
-	static size_t getCrossoverArrity(){ return 2; }
+	static unsigned getCrossoverArrity(){ return 2; }
 	float getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	size_t mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene);
         string serialize();
         void deserialize(string AESAE_Line);
 
