@@ -8,7 +8,7 @@ Parser for the EASEA language (EAsy Specification for Evolutionary Algorithms)
 
 Pierre COLLET (Pierre.Collet@polytechnique.fr)
 Ecole Polytechnique
-Centre de Mathématiques Appliquées
+Centre de Mathï¿½matiques Appliquï¿½es
 91128 Palaiseau cedex
 ****************************************************************************/
 
@@ -78,7 +78,7 @@ FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile;//, *fpExplodedGenomeFile;
 YYPARSENAME::YYPARSENAME()
 {
 	yytables();
-#line 179 "EaseaParse.y"
+#line 181 "EaseaParse.y"
 
       CSymbol *pNewBaseType;
 
@@ -157,7 +157,7 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 219 "EaseaParse.y"
+#line 221 "EaseaParse.y"
 
         if (bVERBOSE){ printf("                    _______________________________________\n");
         printf ("\nGeneration of the C++ source file for %s.\n\n",sPROJECT_NAME);}
@@ -173,7 +173,7 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 224 "EaseaParse.y"
+#line 226 "EaseaParse.y"
 
         if (bVERBOSE) printf("                    _______________________________________\n");
         if (bVERBOSE) printf ("\nGeneration of the C++ source file for %s.\n\n",sPROJECT_NAME);
@@ -189,7 +189,7 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 232 "EaseaParse.y"
+#line 234 "EaseaParse.y"
 
     if (bVERBOSE) printf("Declaration of user classes :\n\n");
 #line 196 "EaseaParse.cpp"
@@ -203,7 +203,7 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 235 "EaseaParse.y"
+#line 237 "EaseaParse.y"
 
       if (bVERBOSE) printf("No user class declaration found other than GenomeClass.\n");
 #line 210 "EaseaParse.cpp"
@@ -217,7 +217,7 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 245 "EaseaParse.y"
+#line 247 "EaseaParse.y"
 
       pCURRENT_CLASS=SymbolTable.insert(yyattribute(1 - 1).pSymbol);  
       pCURRENT_CLASS->pSymbolList=new CLList<CSymbol *>();
@@ -236,7 +236,7 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 6);
 #endif
 			{
-#line 252 "EaseaParse.y"
+#line 254 "EaseaParse.y"
 
       if (bVERBOSE) printf("Class %s declared for %d bytes.\n\n",yyattribute(1 - 5).pSymbol->sName,yyattribute(1 - 5).pSymbol->nSize);
       //DEBUG_PRT("Yacc variable declaration %s %d",$1->sName,$1->nSize);
@@ -252,7 +252,7 @@ void YYPARSENAME::yyaction(int action)
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 265 "EaseaParse.y"
+#line 267 "EaseaParse.y"
 pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattribute(1 - 2).ObjectQualifier;
 #line 258 "EaseaParse.cpp"
 			}
@@ -265,7 +265,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 265 "EaseaParse.y"
+#line 267 "EaseaParse.y"
 
 #line 271 "EaseaParse.cpp"
 			}
@@ -278,7 +278,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 266 "EaseaParse.y"
+#line 268 "EaseaParse.y"
 pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattribute(1 - 2).ObjectQualifier;
 #line 284 "EaseaParse.cpp"
 			}
@@ -291,7 +291,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 266 "EaseaParse.y"
+#line 268 "EaseaParse.y"
 
 #line 297 "EaseaParse.cpp"
 			}
@@ -304,7 +304,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 271 "EaseaParse.y"
+#line 273 "EaseaParse.y"
 
     pCURRENT_CLASS->sString = new char[strlen(yyattribute(2 - 2).szString) + 1];
     strcpy(pCURRENT_CLASS->sString, yyattribute(2 - 2).szString);      
@@ -321,7 +321,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 279 "EaseaParse.y"
+#line 281 "EaseaParse.y"
 (*(YYSTYPE YYFAR*)yyvalptr).ObjectQualifier=1;
 #line 327 "EaseaParse.cpp"
 			}
@@ -329,7 +329,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 		break;
 	case 12:
 		{
-#line 280 "EaseaParse.y"
+#line 282 "EaseaParse.y"
 (*(YYSTYPE YYFAR*)yyvalptr).ObjectQualifier=0;
 #line 335 "EaseaParse.cpp"
 		}
@@ -341,7 +341,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 285 "EaseaParse.y"
+#line 287 "EaseaParse.y"
 
 #line 347 "EaseaParse.cpp"
 			}
@@ -354,7 +354,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 289 "EaseaParse.y"
+#line 291 "EaseaParse.y"
 
 #line 360 "EaseaParse.cpp"
 			}
@@ -367,7 +367,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 290 "EaseaParse.y"
+#line 292 "EaseaParse.y"
 
 #line 373 "EaseaParse.cpp"
 			}
@@ -380,7 +380,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 304 "EaseaParse.y"
+#line 306 "EaseaParse.y"
   
       CSymbol *pSym=SymbolTable.find(yyattribute(1 - 1).pSymbol->sName);
       if (pSym==NULL) {
@@ -401,7 +401,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 325 "EaseaParse.y"
+#line 327 "EaseaParse.y"
 
 //      CSymbol *pSym;
 //      pSym=$1;
@@ -425,7 +425,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 337 "EaseaParse.y"
+#line 339 "EaseaParse.y"
 
       yyattribute(2 - 2).pSymbol->nSize=sizeof (char *);
       yyattribute(2 - 2).pSymbol->pClass=pCURRENT_CLASS;
@@ -447,7 +447,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 347 "EaseaParse.y"
+#line 349 "EaseaParse.y"
 
       yyattribute(2 - 2).pSymbol->nSize=sizeof (char *);
       yyattribute(2 - 2).pSymbol->pClass=pCURRENT_CLASS;
@@ -469,7 +469,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 357 "EaseaParse.y"
+#line 359 "EaseaParse.y"
 
       yyattribute(3 - 3).pSymbol->nSize=sizeof (char *);
       yyattribute(3 - 3).pSymbol->pClass=pCURRENT_CLASS;
@@ -493,7 +493,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 370 "EaseaParse.y"
+#line 372 "EaseaParse.y"
 
       if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=yyattribute(1 - 4).pSymbol->sName; nPROBLEM_DIM=(int)yyattribute(3 - 4).dValue;}
 
@@ -519,7 +519,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 6);
 #endif
 			{
-#line 384 "EaseaParse.y"
+#line 386 "EaseaParse.y"
 
 
     // this is for support of pointer array. This should be done in a more generic way in a later version
@@ -551,7 +551,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 412 "EaseaParse.y"
+#line 414 "EaseaParse.y"
 
 #line 557 "EaseaParse.cpp"
 			}
@@ -564,7 +564,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 425 "EaseaParse.y"
+#line 427 "EaseaParse.y"
 
     ////DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName);
       if (bVERBOSE) printf ("\nGenome declaration analysis :\n\n");
@@ -586,7 +586,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 6);
 #endif
 			{
-#line 435 "EaseaParse.y"
+#line 437 "EaseaParse.y"
 
 #line 592 "EaseaParse.cpp"
 			}
@@ -599,7 +599,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 452 "EaseaParse.y"
+#line 454 "EaseaParse.y"
 
 #line 605 "EaseaParse.cpp"
 			}
@@ -612,7 +612,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 456 "EaseaParse.y"
+#line 458 "EaseaParse.y"
 (*(YYSTYPE YYFAR*)yyvalptr).pSymbol=yyattribute(1 - 1).pSymbol;
 #line 618 "EaseaParse.cpp"
 			}
@@ -625,7 +625,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 465 "EaseaParse.y"
+#line 467 "EaseaParse.y"
          
       if (bVERBOSE) printf("Inserting genome initialiser (taken from .ez file).\n");
     
@@ -640,7 +640,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 468 "EaseaParse.y"
+#line 470 "EaseaParse.y"
 
 #line 646 "EaseaParse.cpp"
 			}
@@ -653,7 +653,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 469 "EaseaParse.y"
+#line 471 "EaseaParse.y"
 
       if (bVERBOSE) printf("Inserting user genome crossover (taken from .ez file).\n");
     
@@ -668,7 +668,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 472 "EaseaParse.y"
+#line 474 "EaseaParse.y"
 
 #line 674 "EaseaParse.cpp"
 			}
@@ -681,7 +681,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 473 "EaseaParse.y"
+#line 475 "EaseaParse.y"
 
       if (bVERBOSE) printf("Inserting user genome mutator (taken from .ez file).\n");
     
@@ -696,7 +696,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 476 "EaseaParse.y"
+#line 478 "EaseaParse.y"
 
 #line 702 "EaseaParse.cpp"
 			}
@@ -709,7 +709,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 477 "EaseaParse.y"
+#line 479 "EaseaParse.y"
  
       if (bVERBOSE) printf("Inserting user genome evaluator (taken from .ez file).\n");
     
@@ -724,7 +724,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 480 "EaseaParse.y"
+#line 482 "EaseaParse.y"
 
 #line 730 "EaseaParse.cpp"
 			}
@@ -737,7 +737,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 481 "EaseaParse.y"
+#line 483 "EaseaParse.y"
  
       if (bVERBOSE) printf("Inserting user genome optimiser (taken from .ez file).\n");
     
@@ -752,7 +752,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 484 "EaseaParse.y"
+#line 486 "EaseaParse.y"
 
 #line 758 "EaseaParse.cpp"
 			}
@@ -765,7 +765,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 485 "EaseaParse.y"
+#line 487 "EaseaParse.y"
 
      //DEBUG_PRT("User makefile options have been reduced");
      
@@ -780,7 +780,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 488 "EaseaParse.y"
+#line 490 "EaseaParse.y"
 
 #line 786 "EaseaParse.cpp"
 			}
@@ -793,7 +793,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 498 "EaseaParse.y"
+#line 500 "EaseaParse.y"
 nNB_GEN=(int)yyattribute(2 - 2).dValue;
 #line 799 "EaseaParse.cpp"
 			}
@@ -806,7 +806,7 @@ nNB_GEN=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 500 "EaseaParse.y"
+#line 502 "EaseaParse.y"
 nNB_OPT_IT=(int)yyattribute(2 - 2).dValue;
 #line 812 "EaseaParse.cpp"
 			}
@@ -819,7 +819,7 @@ nNB_OPT_IT=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 502 "EaseaParse.y"
+#line 504 "EaseaParse.y"
 nTIME_LIMIT=(int)yyattribute(2 - 2).dValue;
 #line 825 "EaseaParse.cpp"
 			}
@@ -832,7 +832,7 @@ nTIME_LIMIT=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 504 "EaseaParse.y"
+#line 506 "EaseaParse.y"
 fMUT_PROB=(float)yyattribute(2 - 2).dValue;
 #line 838 "EaseaParse.cpp"
 			}
@@ -845,7 +845,7 @@ fMUT_PROB=(float)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 506 "EaseaParse.y"
+#line 508 "EaseaParse.y"
 fXOVER_PROB=(float)yyattribute(2 - 2).dValue;
 #line 851 "EaseaParse.cpp"
 			}
@@ -858,7 +858,7 @@ fXOVER_PROB=(float)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 508 "EaseaParse.y"
+#line 510 "EaseaParse.y"
 nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 #line 864 "EaseaParse.cpp"
 			}
@@ -871,7 +871,7 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 509 "EaseaParse.y"
+#line 511 "EaseaParse.y"
 
       strcpy(sSELECTOR, yyattribute(2 - 2).pSymbol->sName);
       strcpy(sSELECTOR_OPERATOR, yyattribute(2 - 2).pSymbol->sName);
@@ -893,7 +893,7 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 519 "EaseaParse.y"
+#line 521 "EaseaParse.y"
 
       sprintf(sSELECTOR, yyattribute(2 - 3).pSymbol->sName);   
       sprintf(sSELECTOR_OPERATOR, yyattribute(2 - 3).pSymbol->sName);   
@@ -915,7 +915,7 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 529 "EaseaParse.y"
+#line 531 "EaseaParse.y"
 
         sprintf(sRED_PAR, yyattribute(2 - 2).pSymbol->sName);
 	sprintf(sRED_PAR_OPERATOR, yyattribute(2 - 2).pSymbol->sName);
@@ -937,7 +937,7 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 539 "EaseaParse.y"
+#line 541 "EaseaParse.y"
 
         sprintf(sRED_PAR, yyattribute(2 - 3).pSymbol->sName);
 	sprintf(sRED_PAR_OPERATOR, yyattribute(2 - 3).pSymbol->sName);
@@ -959,7 +959,7 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 549 "EaseaParse.y"
+#line 551 "EaseaParse.y"
 
 	sprintf(sRED_OFF, yyattribute(2 - 2).pSymbol->sName);
 	sprintf(sRED_OFF_OPERATOR, yyattribute(2 - 2).pSymbol->sName);
@@ -981,7 +981,7 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 559 "EaseaParse.y"
+#line 561 "EaseaParse.y"
 
         sprintf(sRED_OFF, yyattribute(2 - 3).pSymbol->sName);
 	sprintf(sRED_OFF_OPERATOR, yyattribute(2 - 3).pSymbol->sName);
@@ -1001,7 +1001,7 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 567 "EaseaParse.y"
+#line 569 "EaseaParse.y"
 
         sprintf(sRED_FINAL, yyattribute(2 - 2).pSymbol->sName);
         sprintf(sRED_FINAL_OPERATOR, yyattribute(2 - 2).pSymbol->sName);
@@ -1022,7 +1022,7 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 576 "EaseaParse.y"
+#line 578 "EaseaParse.y"
 
         sprintf(sRED_FINAL, yyattribute(2 - 3).pSymbol->sName);
         sprintf(sRED_FINAL_OPERATOR, yyattribute(2 - 3).pSymbol->sName);
@@ -1043,7 +1043,7 @@ nPOP_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 585 "EaseaParse.y"
+#line 587 "EaseaParse.y"
 nOFF_SIZE=(int)yyattribute(2 - 2).dValue;
 #line 1049 "EaseaParse.cpp"
 			}
@@ -1056,7 +1056,7 @@ nOFF_SIZE=(int)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 586 "EaseaParse.y"
+#line 588 "EaseaParse.y"
 nOFF_SIZE=(int)(yyattribute(2 - 3).dValue*nPOP_SIZE/100);
 #line 1062 "EaseaParse.cpp"
 			}
@@ -1069,7 +1069,7 @@ nOFF_SIZE=(int)(yyattribute(2 - 3).dValue*nPOP_SIZE/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 587 "EaseaParse.y"
+#line 589 "EaseaParse.y"
 fSURV_PAR_SIZE=(float)yyattribute(2 - 2).dValue;
 #line 1075 "EaseaParse.cpp"
 			}
@@ -1082,7 +1082,7 @@ fSURV_PAR_SIZE=(float)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 588 "EaseaParse.y"
+#line 590 "EaseaParse.y"
 fSURV_PAR_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 #line 1088 "EaseaParse.cpp"
 			}
@@ -1095,7 +1095,7 @@ fSURV_PAR_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 589 "EaseaParse.y"
+#line 591 "EaseaParse.y"
 fSURV_OFF_SIZE=(float)yyattribute(2 - 2).dValue;
 #line 1101 "EaseaParse.cpp"
 			}
@@ -1108,7 +1108,7 @@ fSURV_OFF_SIZE=(float)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 590 "EaseaParse.y"
+#line 592 "EaseaParse.y"
 fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 #line 1114 "EaseaParse.cpp"
 			}
@@ -1121,7 +1121,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 591 "EaseaParse.y"
+#line 593 "EaseaParse.y"
 
       if ((!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Maximise")) || (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Maximize"))) nMINIMISE=0;
       else if ((!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Minimise")) || (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Minimize"))) nMINIMISE=1;
@@ -1142,7 +1142,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 600 "EaseaParse.y"
+#line 602 "EaseaParse.y"
 
         nELITE=(int)yyattribute(2 - 2).dValue;
         
@@ -1157,7 +1157,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 603 "EaseaParse.y"
+#line 605 "EaseaParse.y"
 
         nELITE=(int)yyattribute(2 - 3).dValue*nPOP_SIZE/100;
         
@@ -1172,7 +1172,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 606 "EaseaParse.y"
+#line 608 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Weak")) bELITISM=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"Strong")) bELITISM=1;
@@ -1191,7 +1191,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 613 "EaseaParse.y"
+#line 615 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bBALDWINISM=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bBALDWINISM=1;
@@ -1210,7 +1210,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 621 "EaseaParse.y"
+#line 623 "EaseaParse.y"
 
 	if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bREMOTE_ISLAND_MODEL=0;
 	else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bREMOTE_ISLAND_MODEL=1;
@@ -1229,7 +1229,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 5);
 #endif
 			{
-#line 628 "EaseaParse.y"
+#line 630 "EaseaParse.y"
 
         sprintf(sIP_FILE, yyattribute(2 - 4).pSymbol->sName);
 	strcat(sIP_FILE,".");
@@ -1246,7 +1246,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 634 "EaseaParse.y"
+#line 636 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bPRINT_STATS=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bPRINT_STATS=1;
@@ -1265,7 +1265,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 641 "EaseaParse.y"
+#line 643 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bPLOT_STATS=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bPLOT_STATS=1;
@@ -1284,7 +1284,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 648 "EaseaParse.y"
+#line 650 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bGENERATE_CSV_FILE=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bGENERATE_CSV_FILE=1;
@@ -1303,7 +1303,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 655 "EaseaParse.y"
+#line 657 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bGENERATE_GNUPLOT_SCRIPT=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bGENERATE_GNUPLOT_SCRIPT=1;
@@ -1322,7 +1322,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 662 "EaseaParse.y"
+#line 664 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bGENERATE_R_SCRIPT=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bGENERATE_R_SCRIPT=1;
@@ -1341,7 +1341,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 669 "EaseaParse.y"
+#line 671 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bSAVE_POPULATION=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bSAVE_POPULATION=1;
@@ -1360,7 +1360,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 676 "EaseaParse.y"
+#line 678 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bSTART_FROM_FILE=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bSTART_FROM_FILE=1;
@@ -1379,7 +1379,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 683 "EaseaParse.y"
+#line 685 "EaseaParse.y"
 iMAX_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
 #line 1385 "EaseaParse.cpp"
 			}
@@ -1392,7 +1392,7 @@ iMAX_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 684 "EaseaParse.y"
+#line 686 "EaseaParse.y"
 iMIN_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
 #line 1398 "EaseaParse.cpp"
 			}
@@ -1405,7 +1405,7 @@ iMIN_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 685 "EaseaParse.y"
+#line 687 "EaseaParse.y"
 iMAX_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
 #line 1411 "EaseaParse.cpp"
 			}
@@ -1418,7 +1418,7 @@ iMAX_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 686 "EaseaParse.y"
+#line 688 "EaseaParse.y"
 iNB_GPU = (unsigned)yyattribute(2 - 2).dValue;
 #line 1424 "EaseaParse.cpp"
 			}
@@ -1431,7 +1431,7 @@ iNB_GPU = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 687 "EaseaParse.y"
+#line 689 "EaseaParse.y"
 iPRG_BUF_SIZE = (unsigned)yyattribute(2 - 2).dValue;
 #line 1437 "EaseaParse.cpp"
 			}
@@ -1444,7 +1444,7 @@ iPRG_BUF_SIZE = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 690 "EaseaParse.y"
+#line 692 "EaseaParse.y"
 iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 #line 1450 "EaseaParse.cpp"
 			}
@@ -1457,7 +1457,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 694 "EaseaParse.y"
+#line 696 "EaseaParse.y"
  
       if (SymbolTable.find(yyattribute(1 - 3).pSymbol->sName)==NULL){
          fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,yyattribute(1 - 3).pSymbol->sName);
@@ -1476,7 +1476,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 701 "EaseaParse.y"
+#line 703 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue + yyattribute(3 - 3).dValue; 
 #line 1482 "EaseaParse.cpp"
 			}
@@ -1489,7 +1489,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 702 "EaseaParse.y"
+#line 704 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue - yyattribute(3 - 3).dValue; 
 #line 1495 "EaseaParse.cpp"
 			}
@@ -1502,7 +1502,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 703 "EaseaParse.y"
+#line 705 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue * yyattribute(3 - 3).dValue; 
 #line 1508 "EaseaParse.cpp"
 			}
@@ -1515,7 +1515,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 704 "EaseaParse.y"
+#line 706 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = divide(yyattribute(1 - 3).dValue, yyattribute(3 - 3).dValue); 
 #line 1521 "EaseaParse.cpp"
 			}
@@ -1528,7 +1528,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 705 "EaseaParse.y"
+#line 707 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(2 - 3).dValue; 
 #line 1534 "EaseaParse.cpp"
 			}
@@ -1541,7 +1541,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 706 "EaseaParse.y"
+#line 708 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = -yyattribute(2 - 2).dValue; 
 #line 1547 "EaseaParse.cpp"
 			}
@@ -1554,7 +1554,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 707 "EaseaParse.y"
+#line 709 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 1).dValue; 
 #line 1560 "EaseaParse.cpp"
 			}
@@ -1567,7 +1567,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 708 "EaseaParse.y"
+#line 710 "EaseaParse.y"
 
       if (SymbolTable.find(yyattribute(1 - 1).pSymbol->sName)==NULL){
          fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,yyattribute(1 - 1).pSymbol->sName);
@@ -1584,7 +1584,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 		break;
 	}
 }
-#line 717 "EaseaParse.y"
+#line 719 "EaseaParse.y"
 
                        
 /////////////////////////////////////////////////////////////////////////////
@@ -1707,7 +1707,14 @@ double CEASEAParser::divide(double a, double b)
   }
 }
 
-#line 1711 "EaseaParse.cpp"
+
+void CEASEAParser::yysyntaxerror(){
+
+  printf("Syntax Error at line : %d\n",EASEALexer.yylineno);
+}
+
+
+#line 1718 "EaseaParse.cpp"
 void YYPARSENAME::yytables()
 {
 	yyattribute_size = sizeof(YYSTYPE);

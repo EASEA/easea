@@ -184,7 +184,7 @@ CPPFLAGS+=
 
   Elitism: Strong			//Weak or Strong
   Elite: 1
-  Print stats: true				//Default: 1
+  Print stats: True				//Default: 1
   Generate csv stats file:false			
   Generate gnuplot script:false
   Generate R script:false
