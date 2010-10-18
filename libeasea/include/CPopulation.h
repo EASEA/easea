@@ -39,18 +39,18 @@ public:
   CIndividual** parents;
   CIndividual** offsprings;
 
-  size_t parentPopulationSize;
-  size_t offspringPopulationSize;
+  unsigned parentPopulationSize;
+  unsigned offspringPopulationSize;
 
-  size_t actualParentPopulationSize;
-  size_t actualOffspringPopulationSize;
+  unsigned actualParentPopulationSize;
+  unsigned actualOffspringPopulationSize;
 
   static CSelectionOperator* selectionOperator;
   static CSelectionOperator* replacementOperator;
   static CSelectionOperator* parentReductionOperator;
   static CSelectionOperator* offspringReductionOperator;
 
-  size_t currentEvaluationNb;
+  unsigned currentEvaluationNb;
   CRandomGenerator* rg;
   std::vector<CIndividual*> pop_vect;
 
@@ -58,27 +58,27 @@ public:
 
  public:
   CPopulation();
-  CPopulation(size_t parentPopulationSize, size_t offspringPopulationSize,
+  CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
 	     float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params);
   virtual ~CPopulation();
 
   //virtual void initializeParentPopulation() = 0;
-  void addIndividualParentPopulation(CIndividual* indiv, size_t id);
+  void addIndividualParentPopulation(CIndividual* indiv, unsigned id);
   void addIndividualParentPopulation(CIndividual* indiv);
-  void evaluatePopulation(CIndividual** population, size_t populationSize);
-  virtual void optimisePopulation(CIndividual** population, size_t populationSize);
+  void evaluatePopulation(CIndividual** population, unsigned populationSize);
+  virtual void optimisePopulation(CIndividual** population, unsigned populationSize);
   virtual void evaluateParentPopulation();
   virtual void optimiseParentPopulation();
 
-  void strongElitism(size_t elitismSize, CIndividual** population, size_t populationSize, CIndividual** outPopulation, size_t outPopulationSize);
-  void weakElitism(size_t elitismSize, CIndividual** parentsPopulation, CIndividual** offspringPopulation, size_t* parentPopSize, size_t* offPopSize, CIndividual** outPopulation, size_t outPopulationSize);
+  void strongElitism(unsigned elitismSize, CIndividual** population, unsigned populationSize, CIndividual** outPopulation, unsigned outPopulationSize);
+  void weakElitism(unsigned elitismSize, CIndividual** parentsPopulation, CIndividual** offspringPopulation, unsigned* parentPopSize, unsigned* offPopSize, CIndividual** outPopulation, unsigned outPopulationSize);
 
   virtual void evaluateOffspringPopulation();
   virtual void optimiseOffspringPopulation();
-  CIndividual** reducePopulations(CIndividual** population, size_t populationSize,
-			       CIndividual** reducedPopulation, size_t obSize);
-  CIndividual** reduceParentPopulation(size_t obSize);
-  CIndividual** reduceOffspringPopulation(size_t obSize);
+  CIndividual** reducePopulations(CIndividual** population, unsigned populationSize,
+			       CIndividual** reducedPopulation, unsigned obSize);
+  CIndividual** reduceParentPopulation(unsigned obSize);
+  CIndividual** reduceOffspringPopulation(unsigned obSize);
   void reduceTotalPopulation(CIndividual** elitPop);
   void evolve();
 
@@ -94,9 +94,9 @@ public:
 			     float selectionPressure, float replacementPressure,
 			     float parentReductionPressure, float offspringReductionPressure);
 
-  static void sortPopulation(CIndividual** population, size_t populationSize);
+  static void sortPopulation(CIndividual** population, unsigned populationSize);
 
-  static void sortRPopulation(CIndividual** population, size_t populationSize);
+  static void sortRPopulation(CIndividual** population, unsigned populationSize);
 
   void serializePopulation();
 
@@ -107,13 +107,13 @@ public:
   friend std::ostream& operator << (std::ostream& O, const CPopulation& B);
 
 
-  void setParentPopulation(CIndividual** population, size_t actualParentPopulationSize){
+  void setParentPopulation(CIndividual** population, unsigned actualParentPopulationSize){
     this->parents = population;
     this->actualParentPopulationSize = actualParentPopulationSize;
   }
 
-  static void reducePopulation(CIndividual** population, size_t populationSize,
-				       CIndividual** reducedPopulation, size_t obSize,
+  static void reducePopulation(CIndividual** population, unsigned populationSize,
+				       CIndividual** reducedPopulation, unsigned obSize,
 				       CSelectionOperator* replacementOperator);
   void syncOutVector();
   void syncInVector();

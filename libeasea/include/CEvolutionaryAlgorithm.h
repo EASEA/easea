@@ -36,22 +36,22 @@ public:
   CEvolutionaryAlgorithm( Parameters* params );
   virtual void initializeParentPopulation() = 0;
 
-  size_t* getCurrentGenerationPtr(){ return &currentGeneration;}
+  unsigned* getCurrentGenerationPtr(){ return &currentGeneration;}
   void addStoppingCriterion(CStoppingCriterion* sc);
   void runEvolutionaryLoop();
   bool allCriteria();
   CPopulation* getPopulation(){ return population;}
-  size_t getCurrentGeneration() { return currentGeneration;}
+  unsigned getCurrentGeneration() { return currentGeneration;}
 public:
-  size_t currentGeneration;
+  unsigned currentGeneration;
   CPopulation* population;
-  size_t reduceParents;
-  size_t reduceOffsprings;
+  unsigned reduceParents;
+  unsigned reduceOffsprings;
 
   //methods and variables for remote island model
-  size_t treatedIndividuals;
-  size_t numberOfClients;
-  size_t myClientNumber;
+  unsigned treatedIndividuals;
+  unsigned numberOfClients;
+  unsigned myClientNumber;
   CComUDPServer *server;
   CComUDPClient **Clients;
   void initializeClients();

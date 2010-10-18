@@ -62,4 +62,4 @@ extern float fSELECT_PRM, fRED_PAR_PRM, fRED_FINAL_PRM, fRED_OFF_PRM;
 extern unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_SIZE,iMAX_TREE_DEPTH,iNO_FITNESS_CASES;
 
 // Prototypes
-extern int mystricmp(char *, char *);
+extern int mystricmp(const char *, const char *);

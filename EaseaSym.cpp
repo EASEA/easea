@@ -149,7 +149,7 @@ void CSymbol::print(FILE *fp){
       if (pSym->Object->ObjectType==oPointer)
 	fprintf(fp,"    %s=NULL;\n",pSym->Object->sName);
       if (pSym->Object->ObjectType==oArrayPointer){
-	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",(int)(pSym->Object->nSize/sizeof(char*)));
 	fprintf(fp,"         %s[EASEA_Ndx]=NULL;\n",pSym->Object->sName);
       }
     }
@@ -168,7 +168,7 @@ void CSymbol::print(FILE *fp){
 	fprintf(fp,"    %s=(EASEA_Var.%s ? new %s(*(EASEA_Var.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
       }
       if( pSym->Object->ObjectType==oArrayPointer ){
-	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",(int)(pSym->Object->nSize/sizeof(char*)));
 	fprintf(fp,"        if( EASEA_Var.%s[EASEA_Ndx] ) %s[EASEA_Ndx] = new %s(*(EASEA_Var.%s[EASEA_Ndx]));\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
 	fprintf(fp,"        else  %s[EASEA_Ndx] = NULL;\n",pSym->Object->sName);
       }
@@ -181,7 +181,7 @@ void CSymbol::print(FILE *fp){
       if (pSym->Object->ObjectType==oPointer)
 	fprintf(fp,"    if (%s) delete %s;\n    %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
       if( pSym->Object->ObjectType==oArrayPointer ){
-	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",(int)(pSym->Object->nSize/sizeof(char*)));
 	fprintf(fp,"        if( %s[EASEA_Ndx] ) delete %s[EASEA_Ndx];\n",pSym->Object->sName,pSym->Object->sName);
       }
     }
@@ -249,7 +249,7 @@ void CSymbol::print(FILE *fp){
 	fprintf(fp,"       %s[EASEA_Ndx] = EASEA_Var.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
       }
       if (pSym->Object->ObjectType==oArrayPointer){
-	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",(int)(pSym->Object->nSize/sizeof(char*)));
 	fprintf(fp,"      if(EASEA_Var.%s[EASEA_Ndx]) %s[EASEA_Ndx] = new %s(*(EASEA_Var.%s[EASEA_Ndx]));\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
       }
       if (pSym->Object->ObjectType==oPointer){
@@ -270,7 +270,7 @@ void CSymbol::print(FILE *fp){
 	  fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return false;}\n",pSym->Object->sName,pSym->Object->sName);
 	}
 	if ( pSym->Object->ObjectType==oArrayPointer){
-	  fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	  fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",(int)(pSym->Object->nSize/sizeof(char*)));
 	  fprintf(fp,"       if (%s[EASEA_Ndx]!=EASEA_Var.%s[EASEA_Ndx]) return false;}\n",pSym->Object->sName,pSym->Object->sName);
 	}
 	if (pSym->Object->ObjectType==oPointer){
@@ -295,7 +295,7 @@ void CSymbol::print(FILE *fp){
       }
       if( pSym->Object->ObjectType==oArrayPointer){
 	fprintf(fp,"    {os << \"Array %s : \";\n",pSym->Object->sName);
-	fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
+	fprintf(fp,"     for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",(int)(pSym->Object->nSize/sizeof(char*)));
 	fprintf(fp,"       if( EASEA_Var.%s[EASEA_Ndx] ) os << \"[\" << EASEA_Ndx << \"]:\" << *(EASEA_Var.%s[EASEA_Ndx]) << \"\\t\";}\n    os << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
       }
       if (pSym->Object->ObjectType==oPointer)
@@ -334,7 +334,7 @@ void CSymbol::print(FILE *fp){
     if ((pSym->Object->ObjectType==oArray))
       fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
     if ((pSym->Object->ObjectType==oArrayPointer))
-      fprintf(fp,"  %s* %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/sizeof(char*));
+      fprintf(fp,"  %s* %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,(int)(pSym->Object->nSize/sizeof(char*)));
 
   }
 

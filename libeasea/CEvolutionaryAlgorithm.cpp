@@ -44,8 +44,8 @@ extern bool INSTEAD_EVAL_STEP;
 /**
  * @DEPRECATED the next contructor has to be used instead of this one.
  */
-/*CEvolutionaryAlgorithm::CEvolutionaryAlgorithm( size_t parentPopulationSize,
-					      size_t offspringPopulationSize,
+/*CEvolutionaryAlgorithm::CEvolutionaryAlgorithm( unsigned parentPopulationSize,
+					      unsigned offspringPopulationSize,
 					      float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
 					      CSelectionOperator* selectionOperator, CSelectionOperator* replacementOperator,
 					      CSelectionOperator* parentReductionOperator, CSelectionOperator* offspringReductionOperator,
@@ -285,7 +285,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
   //Calcul de la moyenne et de l'ecart type
   population->Best=population->parents[0];
-  for(size_t i=0; i<population->parentPopulationSize; i++){
+  for(unsigned i=0; i<population->parentPopulationSize; i++){
     currentAverageFitness+=population->parents[i]->getFitness();
 
     // here we are looking for the smaller individual's fitness if we are minimizing
@@ -297,7 +297,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
   currentAverageFitness/=population->parentPopulationSize;
 
-  for(size_t i=0; i<population->parentPopulationSize; i++){
+  for(unsigned i=0; i<population->parentPopulationSize; i++){
     currentSTDEV+=(population->parents[i]->getFitness()-currentAverageFitness)*(population->parents[i]->getFitness()-currentAverageFitness);
   }
   currentSTDEV/=population->parentPopulationSize;
@@ -332,7 +332,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
  	f = fopen(fichier.c_str(),"a"); //ajouter .csv
 	if(f!=NULL){
 	  if(currentGeneration==0)
-		fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
+	    fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\n\n");
 #ifdef WIN32
           fprintf(f,"%lu\t%2.6f\t%lu\t%.15e\t%.15e\t%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #else
@@ -352,7 +352,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #ifdef WIN32
 	  fprintf(f,"%lu,%2.6f,%lu,%.15e,%.15e,%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #else
-	  fprintf(f,"%d,%ld.%d,%d,%f,%f,%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
+	  fprintf(f,"%d,%ld.%ld,%d,%f,%f,%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
 #endif
 	  fclose(f);
         }
@@ -404,7 +404,7 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 	if(this->currentGeneration%(10+this->myClientNumber)==0){
 		//cout << "I'm going to send an Individual now" << endl;
 		//this->population->selectionOperator->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
-		//size_t index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
+		//unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
 		//cout << "Going to send individual " << index << " with fitness " << this->population->parents[index]->fitness << endl;
 	
 		//selecting a client randomly
@@ -429,7 +429,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 			//selecting the individual to erase
 			CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
 			antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
-			size_t index = antiTournament->selectNext(this->population->actualParentPopulationSize);
+			unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
 
 			//cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
 			//cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
@@ -487,7 +487,7 @@ void CEvolutionaryAlgorithm::generateRScript(){
 
 bool CEvolutionaryAlgorithm::allCriteria(){
 
-	for( size_t i=0 ; i<stoppingCriteria.size(); i++ ){
+	for( unsigned i=0 ; i<stoppingCriteria.size(); i++ ){
 		if( stoppingCriteria.at(i)->reached() ){
 			std::cout << "Stopping criterion reached" << std::endl;
 			return true;
