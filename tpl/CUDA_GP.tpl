@@ -1,7 +1,7 @@
 \TEMPLATE_START
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
-#pragma comment(lib, "libEasea.lib")
+#pragma comment(lib, "libEasea.lib")
 #endif
 /**
  This is program entry for TreeGP template for EASEA
@@ -84,7 +84,10 @@ int main(int argc, char** argv){
 #include "CIndividual.h"
 #include "CCuda.h"
 #include "CGPNode.h"
+#include <iostream>
+#include <sstream>
 
+unsigned aborded_crossover;
 float* input_k;
 float* output_k;
 int* indexes_k;
@@ -95,7 +98,7 @@ int* hits_k;
 using namespace std;
 
 #include "EASEAIndividual.hpp"
-bool INSTEAD_EVAL_STEP = false;
+bool INSTEAD_EVAL_STEP = true;
 
 int fitnessCasesSetLength;
 
@@ -112,6 +115,8 @@ extern CEvolutionaryAlgorithm* EA;
 #define CUDA_GP_TPL
 #define GROW_FULL_RATIO 0.5
 
+struct gpu_argument* t_args;
+unsigned evaluation_threads_status;
 
 #define NUMTHREAD2 128
 #define MAX_STACK 50
@@ -125,10 +130,10 @@ extern CEvolutionaryAlgorithm* EA;
 /* Insert declarations about opcodes*/
 \INSERT_GP_OPCODE_DECL
 
-float recEvaleDrone(GPNode* root, float* input) {
+float recEval(GPNode* root, float* input) {
   float OP1=0, OP2= 0, RESULT = 0;
-  if( opArity[root->opCode]>=1) OP1 = recEvaleDrone(root->children[0],input);
-  if( opArity[root->opCode]>=2) OP2 = recEvaleDrone(root->children[1],input);
+  if( opArity[root->opCode]>=1) OP1 = recEval(root->children[0],input);
+  if( opArity[root->opCode]>=2) OP2 = recEval(root->children[1],input);
   switch( root->opCode ){
 \INSERT_GP_CPU_SWITCH
   default:
@@ -160,11 +165,29 @@ __device__ float eval_tree_gpu(unsigned fc_id, const float * k_progs, const floa
 }
 
 
+
+
+int flattening_tree_rpn( GPNode* root, float* buf, int* index){
+  int i;
+
+  for( i=0 ; i<opArity[(int)root->opCode] ; i++ ){
+    flattening_tree_rpn(root->children[i],buf,index);
+  }
+  if( (*index)+2>MAX_PROGS_SIZE )return 0;
+  buf[(*index)++] = root->opCode;
+  if( root->opCode == OP_ERC ) buf[(*index)++] = root->erc_value;
+  return 1;
+}
+
+
+
 /**
    Send input and output data on the GPU memory.
    Allocate
  */
 void initialDataToGPU(float* input_f, int length_input, float* output_f, int length_output){
+  
+
   // allocate and copy input/output arrays
   CUDA_SAFE_CALL(cudaMalloc((void**)(&input_k),sizeof(float)*length_input));
   CUDA_SAFE_CALL(cudaMalloc((void**)(&output_k),sizeof(float)*length_output));
@@ -177,9 +200,11 @@ void initialDataToGPU(float* input_f, int length_input, float* output_f, int len
   CUDA_SAFE_CALL( cudaMalloc((void**)&progs_k,sizeof(*progs_k)*MAX_PROGS_SIZE));
 
   // allocate hits and results arrays
-  CUDA_SAFE_CALL(cudaMalloc((void**)&results_k,sizeof(*indexes_k)*maxPopSize));
-  CUDA_SAFE_CALL(cudaMalloc((void**)&hits_k,sizeof(*indexes_k)*maxPopSize));
+  CUDA_SAFE_CALL(cudaMalloc((void**)&results_k,sizeof(*results_k)*maxPopSize));
+  CUDA_SAFE_CALL(cudaMalloc((void**)&hits_k,sizeof(*hits_k)*maxPopSize));
 }
+
+
 
 /**
    Free gpu memory from the input and ouput arrays.
@@ -191,12 +216,6 @@ void free_gpu(){
   cudaFree(indexes_k);
   cout << "GPU freed" << endl;
 }
-
-
-
-
-
-
 
 
 __global__ static void 
@@ -222,7 +241,6 @@ EvaluatePostFixIndividuals_128(const float * k_progs,
   float sum = 0.0;
   int hits = 0 ; // hits number
 
-  float currentOutput;
   float ERROR;
 
   index = bid; // one program per block => block ID = program number
@@ -249,10 +267,10 @@ EvaluatePostFixIndividuals_128(const float * k_progs,
     // are we on a busy thread?
     if (i*NUMTHREAD2+tid >= trainingSetSize) // no!
       continue;
-    currentOutput = outputs[i*NUMTHREAD2+tid];
-
+         
     float EVOLVED_VALUE = eval_tree_gpu(i, k_progs+k_indexes[index], k_inputs+(i*NUMTHREAD2+tid));
-\INSERT_GENOME_EVAL_BDY
+ 
+\INSERT_GENOME_EVAL_BDY_GPU
 
     
     if (!(ERROR < BIG_NUMBER))
@@ -279,25 +297,11 @@ EvaluatePostFixIndividuals_128(const float * k_progs,
     }    
     ERROR = tmpresult[0];
     \INSERT_GENOME_EVAL_FTR_GPU
-    k_results[index] = sqrtf(tmpresult[0]/512);
+      
     k_hits[index] = tmphits[0];
   }  
   // here results and hits have been stored in their respective array: we can leave
 }
-
-int flattening_tree_rpn( GPNode* root, float* buf, int* index){
-  int i;
-
-  for( i=0 ; i<opArity[(int)root->opCode] ; i++ ){
-    flattening_tree_rpn(root->children[i],buf,index);
-  }
-  if( (*index)+2>MAX_PROGS_SIZE )return 0;
-  buf[(*index)++] = root->opCode;
-  if( root->opCode == OP_ERC ) buf[(*index)++] = root->erc_value;
-  return 1;
-}
-
-
 
 GPNode* pickNthNode(GPNode* root, int N, int* childId){
 
@@ -335,13 +339,14 @@ GPNode* pickNthNode(GPNode* root, int N, int* childId){
 }
 
 
+
+
 void simple_mutator(IndividualImpl* Genome){
 
   // Cassical  mutation
   // select a node
   int mutationPointChildId = 0;
   int mutationPointDepth = 0;
-  //toDotFile( Genome.root[tree], "out/mutation/p", tree);
   GPNode* mutationPointParent = selectNode(Genome->root, &mutationPointChildId, &mutationPointDepth);
   
   
@@ -350,11 +355,61 @@ void simple_mutator(IndividualImpl* Genome){
     mutationPointDepth = 0;
   }
   delete mutationPointParent->children[mutationPointChildId] ;
-  mutationPointParent->children[mutationPointChildId] = NULL;
   mutationPointParent->children[mutationPointChildId] =
     construction_method( VAR_LEN+1, OPCODE_SIZE , 1, TREE_DEPTH_MAX-mutationPointDepth ,0,opArity,OP_ERC);
-
 }
+
+
+/**
+   This function handles printing of tree.
+   Every node is identify by its address, in memory,
+   and labeled by the actual opCode.
+
+   On our architecture (64bits, ubuntu 8.04 and gcc-4.3.2)
+   the long int variable is sufficient to store the address
+   without any warning.
+ */
+void toDotFile_r(GPNode* root, FILE* outputFile){
+  if( root->opCode==OP_ERC )
+    fprintf(outputFile," %ld [label=\"%s : %f\"];\n", (long int)root, opCodeName[(int)root->opCode],
+	    root->erc_value);
+ else
+   fprintf(outputFile," %ld [label=\"%s\"];\n", (long int)root, opCodeName[(int)root->opCode]);
+  
+  for( int i=0 ; i<opArity[root->opCode] ; i++ ){
+    if( root->children[i] ){
+      fprintf(outputFile,"%ld -> %ld;\n", (long int)root, (long int)root->children[i]);
+      toDotFile_r( root->children[i] , outputFile);
+    }
+  }
+}
+/**
+   This function prints a tree in dot (graphviz format).
+   This is the entry point for the print operation. (see toDotFile_r,
+   for the actual function)
+
+   @arg root : set of trees, same type than in a individual.
+   @arg baseFileName : base of filename for the output file.
+   @arg treeId : the id of the tree to print, in the given set.
+ */
+void toDotFile(GPNode* root, const char* baseFileName, int treeId){
+  std::ostringstream oss;
+  oss << baseFileName << "-" << treeId << ".gv";
+
+  FILE* outputFile = fopen(oss.str().c_str(),"w");
+  if( !outputFile ){
+    perror("Opening file for outputing dot representation ");
+    printf("%s\n",oss.str().c_str());
+    exit(-1);
+  }
+
+  fprintf(outputFile,"digraph trees {\n");
+  if(root)
+    toDotFile_r( root, outputFile);
+  fprintf(outputFile,"}\n");
+  fclose(outputFile);
+}
+
 
 void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
   int depthP1 = depthOfTree(p1.root);
@@ -373,15 +428,23 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
   GPNode* stockParentNode = NULL;
   GPNode* graftParentNode = NULL;
 
+  unsigned tries = 0;
   do{
   choose_node:
-    /* Np1 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP1); */
-    /* Np2 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP2); */
+    
+    tries++;
+    if( tries>=10 ){
+      aborded_crossover++;
+      Np1=0;
+      Np2=0;
+      break;
+    }
 
     if( nbNodeP1<2 ) Np1=0;
     else Np1 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP1);
     if( nbNodeP2<2 ) Np2=0;
     else Np2 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP2);
+
 
     
     if( Np1!=0 ) stockParentNode = pickNthNode(c.root, MIN(Np1,nbNodeP1) ,&stockPointChildId);
@@ -398,6 +461,7 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
     else childrenDepth = depthP2;
     
   }while( childrenDepth>TREE_DEPTH_MAX );
+
   
   if( Np1 && Np2 ){
     delete stockParentNode->children[stockPointChildId];
@@ -428,12 +492,12 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
 
 
 float IndividualImpl::evaluate(){
-  float ERROR;
-  float sum = 0;
+  float ERROR; 
+ float sum = 0;
   \INSERT_GENOME_EVAL_HDR
 
-   for( int i=0 ; i<fitnessCasesSetLength-1 ; i++ ){
-     float EVOLVED_VALUE = recEvaleDrone(this->root,inputs[i]);
+   for( int i=0 ; i<NO_FITNESS_CASES ; i++ ){
+     float EVOLVED_VALUE = recEval(this->root,inputs[i]);
      \INSERT_GENOME_EVAL_BDY
      sum += ERROR;
    }
@@ -441,6 +505,9 @@ float IndividualImpl::evaluate(){
   ERROR = sum;
   \INSERT_GENOME_EVAL_FTR    
 }
+
+
+
 
 
 
@@ -456,7 +523,24 @@ float IndividualImpl::evaluate(){
 
 \INSERT_BOUND_CHECKING
 
+string IndividualImpl::serialize(){
+    ostringstream AESAE_Line(ios_base::app);
+    \GENOME_SERIAL
+    AESAE_Line << this->fitness;
+    return AESAE_Line.str();
+}
+
+void IndividualImpl::deserialize(string Line){
+    istringstream AESAE_Line(Line);
+    string line;
+    \GENOME_DESERIAL
+    AESAE_Line >> this->fitness;
+    this->valid=true;
+}
+
+
 void evale_pop_chunk(CIndividual** population, int popSize){
+
   int index = 0;
   for( int i=0 ; i<popSize ; i++ ){
     indexes[i] = index;
@@ -471,42 +555,47 @@ void evale_pop_chunk(CIndividual** population, int popSize){
   cudaStreamCreate(&st);
 
   // Here we will do the real GPU evaluation
-  EvaluatePostFixIndividuals_128<<<popSize,128,st>>>( progs_k, index, popSize, input_k, output_k, fitnessCasesSetLength, results_k, hits_k, indexes_k);
+  EvaluatePostFixIndividuals_128<<<popSize,128,0,st>>>( progs_k, index, popSize, input_k, output_k, NO_FITNESS_CASES, results_k, hits_k, indexes_k);
   CUDA_SAFE_CALL(cudaStreamSynchronize(st));
 
 
   //CUDA_SAFE_CALL(cudaMemcpy( hits, hits_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost));
   CUDA_SAFE_CALL(cudaMemcpy( results, results_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost));
 
-
+  unsigned no_err = 0;
   for( int i=0 ; i<popSize ; i++ ){
-    population[i]->fitness = results[i];
-    //population[i]->valid = false;
-    //float res = population[i]->evaluate();
-    //float err = sqrtf(res-results[i]);
-    //if( err>res*0.1 )
-    //printf("error in evaluation of %d : %f\n",i,err);
+    /*     population[i]->valid = false; */
+    /*     float res = population[i]->evaluate(); */
+    /*     float err = fabs(res-results[i]); */
+    /*     if( err>res*0.1 ){ */
+    /*     no_err++; */
+    /*     //printf("error in evaluation of %d : %f | %f %f\n",i,err,res,results[i]); */
+    /*     } */
+    
     population[i]->valid = true;
+    population[i]->fitness = results[i];
   }
   
-
+  /*   printf("no_err : %d\n",no_err); */
 
   \INSTEAD_EVAL_FUNCTION
+
 }
 
 void EASEAInit(int argc, char** argv){
 
   int maxPopSize = MAX(EA->population->parentPopulationSize,EA->population->offspringPopulationSize);
 
+
+  \INSERT_INIT_FCT_CALL
+
   // load data from csv file.
   cout<<"Before everything else function called "<<endl;
-  //fitnessCasesSetLength = load_data(&inputs,&outputs,"data_koza_sextic.csv");
-  fitnessCasesSetLength = generateData(&inputs,&outputs);
-  cout << "number of point in fitness cases set : " << fitnessCasesSetLength << endl;
+  cout << "number of point in fitness cases set : " << NO_FITNESS_CASES << endl;
 
   float* inputs_f = NULL;
 
-  flattenDatas2D(inputs,fitnessCasesSetLength,VAR_LEN,&inputs_f);
+  flattenDatas2D(inputs,NO_FITNESS_CASES,VAR_LEN,&inputs_f);
 
   indexes = new int[maxPopSize];
   hits    = new int[maxPopSize];
@@ -515,11 +604,8 @@ void EASEAInit(int argc, char** argv){
   
   INSTEAD_EVAL_STEP=true;
 
-  initialDataToGPU(inputs_f, fitnessCasesSetLength*VAR_LEN, outputs, fitnessCasesSetLength);
-
-
-
-  \INSERT_INIT_FCT_CALL
+  initialDataToGPU(inputs_f, NO_FITNESS_CASES*VAR_LEN, outputs, NO_FITNESS_CASES);
+  
 }
 
 void EASEAFinal(CPopulation* pop){
@@ -535,7 +621,7 @@ void EASEAFinal(CPopulation* pop){
   delete[] results; delete[] progs;
   
   //free_gpu();
-  free_data();
+  //free_data();
 }
 
 void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
@@ -583,14 +669,12 @@ IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 CIndividual* IndividualImpl::crossover(CIndividual** ps){
 	// ********************
 	// Generic part
+
+
 	IndividualImpl** tmp = (IndividualImpl**)ps;
 	IndividualImpl parent1(*this);
 	IndividualImpl parent2(*tmp[0]);
 	IndividualImpl child(*this);
-
-	//DEBUG_PRT("Xover");
-	/*   cout << "p1 : " << parent1 << endl; */
-	/*   cout << "p2 : " << parent2 << endl; */
 
 	// ********************
 	// Problem specific part
@@ -598,7 +682,8 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 
 
 	child.valid = false;
-	/*   cout << "child : " << child << endl; */
+
+
 	return new IndividualImpl(child);
 }
 
@@ -792,6 +877,9 @@ public:
 	CIndividual* clone();
 
 	size_t mutate(float pMutationPerGene);
+	string serialize();
+	void deserialize(string AESAE_Line);
+
 
 	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
 	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
@@ -831,19 +919,19 @@ public:
 NVCC=nvcc
 EASEALIB_PATH=\EZ_PATHlibeasea/#/home/kruger/Bureau/Easea/libeasea/
 
-CXXFLAGS =  -g  -I$(EASEALIB_PATH)include
+CXXFLAGS =  -g  -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
 
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 
 OBJS = EASEA.o EASEAIndividual.o 
 
-LIBS = -lboost_program_options 
+LIBS = 
 
 TARGET =	EASEA
 
 $(TARGET):	$(OBJS)
-	$(NVCC) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a
+	$(NVCC) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a
 
 	
 %.o:%.cu

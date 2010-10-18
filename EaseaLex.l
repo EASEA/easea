@@ -5,7 +5,7 @@ Lexical analyser for the EASEA language (EAsy Specification for Evolutionary Alg
 
 Pierre COLLET (Pierre.Collet@polytechnique.fr)
 Ecole Polytechnique
-Centre de Mathématiques Appliquées
+Centre de Mathï¿½matiques Appliquï¿½es
 91128 Palaiseau cedex
   ****************************************************************************/
 #ifdef WIN32
@@ -327,6 +327,8 @@ exponent  ([Ee][+-]?[0-9]+)
   opDesc[iNoOp]->opcode = new string(yytext);
  }
 
+<GP_RULE_ANALYSIS>"//".*"\n" {}
+
 <GP_RULE_ANALYSIS>"\""([a-zA-Z0-9]|\*|\+|\-|\/|\%)*"\"" {
   if( iGP_OPCODE_FIELD != 1 ){
     fprintf(stderr,"Error, op code real name must be given at the second place\n");
@@ -369,7 +371,7 @@ exponent  ([Ee][+-]?[0-9]+)
   if( bVERBOSE ) printf("begining of the code part\n");
   accolade_counter=1;
 
-  printf("arity : %d\n",opDesc[iNoOp]->arity);
+//  printf("arity : %d\n",opDesc[iNoOp]->arity);
   if( opDesc[iNoOp]->arity>=2 )
     opDesc[iNoOp]->gpuCodeStream << "OP2 = stack[--sp];\n      ";
   if( opDesc[iNoOp]->arity>=1 )
@@ -404,7 +406,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <GP_COPY_OPCODE_CODE>"INPUT["[0-9]*"]" {
   char* endptr;
   unsigned no_input = strtol(yytext+strlen("INPUT["),&endptr,10);
-  printf("input no : %d\n",no_input);
+//  printf("input no : %d\n",no_input);
   opDesc[iNoOp]->cpuCodeStream << "input["<< no_input <<"]" ;
   opDesc[iNoOp]->gpuCodeStream << "input["<< no_input << "]";  
  }
@@ -413,7 +415,7 @@ exponent  ([Ee][+-]?[0-9]+)
   opDesc[iNoOp]->isERC = true;
   opDesc[iNoOp]->cpuCodeStream << "root->erc_value" ;
   opDesc[iNoOp]->gpuCodeStream << "k_progs[start_prog++];" ;
-  printf("ERC matched\n");
+//  printf("ERC matched\n");
 }
 
 <GP_COPY_OPCODE_CODE>\n {
@@ -446,8 +448,25 @@ exponent  ([Ee][+-]?[0-9]+)
   iCOPY_GP_EVAL_STATUS = EVAL_BDY;
   if( bVERBOSE ) printf("Insert GP eval body\n");
   fprintf(fpOutputFile,"      ");
+  bCOPY_GP_EVAL_GPU = false;
   BEGIN COPY_GP_EVAL;
  }
+
+
+
+<TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_BDY_GPU" {
+  yyreset();
+  rewind(fpGenomeFile);
+  yyin = fpGenomeFile;
+  bIsCopyingGPEval = false;
+  iCOPY_GP_EVAL_STATUS = EVAL_BDY;
+  if( bVERBOSE ) printf("Insert GP eval body\n");
+  fprintf(fpOutputFile,"      ");
+  bCOPY_GP_EVAL_GPU = true;
+  BEGIN COPY_GP_EVAL;
+ }
+
+
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_FTR" {
   yyreset();
@@ -523,7 +542,11 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <COPY_GP_EVAL>"OUTPUT" {
-  if( bIsCopyingGPEval) fprintf(fpOutputFile, "outputs[i]" );
+  if( bIsCopyingGPEval) 
+    if( bCOPY_GP_EVAL_GPU )
+      fprintf(fpOutputFile, "outputs[i*NUMTHREAD2+tid]" );
+    else fprintf(fpOutputFile, "outputs[i]" );
+  
  }
 
 <COPY_GP_EVAL>"return " {
@@ -1308,7 +1331,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   bFunction=1; bInitFunction=1;
   if( bLINE_NUM_EZ_FILE )
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-  
+      
   BEGIN COPY;
  }
 <COPY_INITIALISATION_FUNCTION><<EOF>> {bInitFunction=0; // No before everything else function was found in the .ez file
@@ -1649,7 +1672,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GENOME_ANALYSIS>"GPNode"            {
   yylval.pSymbol = new CSymbol("GPNode");
   //yylval.pSymbol->ObjectType = oPointer;
-  printf("match gpnode\n");
+//  printf("match gpnode\n");
   return GPNODE;
  }
 
@@ -2120,7 +2143,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Evaluator"[ \t\n]+"goal"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;}
 <GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"optimisation"[ \t\n]+"iterations"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Optimisation It...\n");return NB_OPT_IT;}
 <GET_PARAMETERS>"Baldwinism"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tBaldwinism...\n");return BALDWINISM;}
-
+ 
 <GET_PARAMETERS>"Remote"[ \t\n]+"island"[ \t\n]+"model"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf ("\tRemote Island Model...\n"); return REMOTE_ISLAND_MODEL;}
 <GET_PARAMETERS>"IP"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tIP File...\n"); return IP_FILE;}
 

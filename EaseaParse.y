@@ -5,7 +5,7 @@ Parser for the EASEA language (EAsy Specification for Evolutionary Algorithms)
 
 Pierre COLLET (Pierre.Collet@polytechnique.fr)
 Ecole Polytechnique
-Centre de Mathématiques Appliquées
+Centre de Mathï¿½matiques Appliquï¿½es
 91128 Palaiseau cedex
 ****************************************************************************/
 
@@ -160,7 +160,7 @@ class CSymbol;
 }
 
 // parser name and class definition
-%name CEASEAParser
+%name CEASEAParser 
 {
 protected:
   CEASEALexer EASEALexer;       // the lexical analyser
@@ -173,6 +173,8 @@ public:
   double assign(CSymbol* pIdentifier, double dValue);
   double divide(double dDividend, double dDivisor);
   CSymbol* insert() const;
+
+  virtual void yysyntaxerror();
 }
 
 // constructor
@@ -317,8 +319,8 @@ Objects
   | Objects ',' Object
   ;
 
-// Attention : il reste à gérer correctement les tableaux de pointeurs
-// les indirections multiples et les tableaux à plusieurs dimensions.
+// Attention : il reste ï¿½ gï¿½rer correctement les tableaux de pointeurs
+// les indirections multiples et les tableaux ï¿½ plusieurs dimensions.
 // Je sais, il faudrait aussi utiliser un peu de polymorphisme pour les symboles
   
 Object
@@ -835,3 +837,10 @@ double CEASEAParser::divide(double a, double b)
     return a / b;
   }
 }
+
+
+void CEASEAParser::yysyntaxerror(){
+
+  printf("Syntax Error at line : %d\n",EASEALexer.yylineno);
+}
+

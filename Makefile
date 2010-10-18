@@ -11,7 +11,7 @@ $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o boos
 #else
 #$(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libeasea/libeasea.a
 #endif
-	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
+	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@ 
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
 	# 
@@ -81,7 +81,7 @@ endif
 
 
 EaseaParse.o: EaseaParse.cpp EaseaLex.cpp
-	$(CPPC) $(CPPFLAGS) $< -o $@ -c
+	$(CPPC) $(CPPFLAGS) $< -o $@ -c 2>/dev/null
 
 %.o:%.cpp
 	$(CPPC) $(CPPFLAGS) -c -o $@ $<

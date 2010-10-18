@@ -123,7 +123,9 @@ public:
   double divide(double dDividend, double dDivisor);
   CSymbol* insert() const;
 
-#line 127 "EaseaParse.h"
+  virtual void yysyntaxerror();
+
+#line 129 "EaseaParse.h"
 };
 
 #ifndef YYPARSENAME
