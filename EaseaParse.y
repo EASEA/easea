@@ -372,7 +372,7 @@ Object
   | Symbol  '[' Expr ']' {
       if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
 
-      printf("DEBUG : size of $3 %d nSize %d\n",(int)$3,pCURRENT_TYPE->nSize);
+      //printf("DEBUG : size of $3 %d nSize %d\n",(int)$3,pCURRENT_TYPE->nSize);
 
       $1->nSize=pCURRENT_TYPE->nSize*(int)$3;
       $1->pClass=pCURRENT_CLASS;
@@ -841,6 +841,6 @@ double CEASEAParser::divide(double a, double b)
 
 void CEASEAParser::yysyntaxerror(){
 
-  printf("Syntax Error at line : %d\n",EASEALexer.yylineno);
+  printf("Syntax Error at line : %d\nFor more details during the EASEA compiling, use the \"-v\" option\n",EASEALexer.yylineno);
 }
 

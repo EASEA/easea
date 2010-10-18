@@ -1961,8 +1961,8 @@ fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);
 #line 1257 "EaseaLex.l"
 
   if (nWARNINGS) printf ("\nWARNING !!!\nTarget file(s) generation went through WITH %d WARNING(S) !\n",nWARNINGS);
-  else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded with no warning.\n");
-  printf ("Have a nice compile time.\n");
+  else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded without warnings.\n");
+  printf ("You can now type \"make\" to compile your project.\n");
   if (TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"\n# That's all folks ! \n");
   else fprintf(fpOutputFile,"\n// That's all folks ! \n");
   fflush(fpOutputFile);
@@ -4390,10 +4390,19 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   pSymbolTable = pSymTable;
   if (!yycreate(pParser)) return 0;    
 
-  if (bVERBOSE) printf("\n                                                                   ");
-  if (bVERBOSE) printf("\n                                   E A S E A                   (v1.0)");
-  if (bVERBOSE) printf("\n                              ___________________     ");
-  if (bVERBOSE) printf("\n                                                                    ");
+  if (bVERBOSE) {
+	printf("\n                                                                   ");
+  	printf("\n                                   E A S E A                   (v1.1)");
+  	printf("\n                              ___________________     ");
+ 	printf("\n                                                                    ");
+	printf("\n		Stochastic Optimisation and Nature Inspired Computing");
+	printf("\nLaboratoire des Sciences de l'Image, de l'Informatique et de la Teledetection");
+	printf("\n			Universite de Strasbourg - France");
+	printf("\n		Ogier Maitre - Frederic Kruger - Pierre Collet");
+ 	printf("\n                                                                    ");
+  	printf("\n                              ___________________     ");
+ 	printf("\n                                                                    ");
+  }
   
   if (sRAW_PROJECT_NAME[0]==0){
     printf("\nInsert a .ez file name or a local project name: ");
@@ -4506,7 +4515,7 @@ double CEASEALexer::myStrtod() const{
   return d;
 }                               
 
-#line 4510 "EaseaLex.cpp"
+#line 4519 "EaseaLex.cpp"
 
 void YYLEXNAME::yytables()
 {

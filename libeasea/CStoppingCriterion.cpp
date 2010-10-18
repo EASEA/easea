@@ -78,6 +78,8 @@ CControlCStopingCriterion::CControlCStopingCriterion(){
 }
 
 bool CControlCStopingCriterion::reached(){
+  if(ARRET_DEMANDE)
+	std::cout << "Algorithm stopped on user demand" << std::endl; 
   return ARRET_DEMANDE;
 }
 

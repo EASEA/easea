@@ -497,7 +497,7 @@ pCURRENT_TYPE=yyattribute(2 - 2).pSymbol; pCURRENT_TYPE->ObjectQualifier=yyattri
 
       if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=yyattribute(1 - 4).pSymbol->sName; nPROBLEM_DIM=(int)yyattribute(3 - 4).dValue;}
 
-      printf("DEBUG : size of $3 %d nSize %d\n",(int)yyattribute(3 - 4).dValue,pCURRENT_TYPE->nSize);
+      //printf("DEBUG : size of $3 %d nSize %d\n",(int)$3,pCURRENT_TYPE->nSize);
 
       yyattribute(1 - 4).pSymbol->nSize=pCURRENT_TYPE->nSize*(int)yyattribute(3 - 4).dValue;
       yyattribute(1 - 4).pSymbol->pClass=pCURRENT_CLASS;
@@ -1710,7 +1710,7 @@ double CEASEAParser::divide(double a, double b)
 
 void CEASEAParser::yysyntaxerror(){
 
-  printf("Syntax Error at line : %d\n",EASEALexer.yylineno);
+  printf("Syntax Error at line : %d\nFor more details during the EASEA compiling, use the \"-v\" option\n",EASEALexer.yylineno);
 }
 
 
