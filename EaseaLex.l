@@ -1139,6 +1139,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {fprintf(fpOutputFile,"%d",bREMOTE_ISLAND_MODEL);}
 <TEMPLATE_ANALYSIS>"\\IP_FILE" {if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
+<TEMPLATE_ANALYSIS>"\\MIGRATION_PROBABILITY" {fprintf(fpOutputFile,"%f",fMIGRATION_PROBABILITY);}
 
 <TEMPLATE_ANALYSIS>"\\PRINT_STATS" {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
 <TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
@@ -2146,6 +2147,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  
 <GET_PARAMETERS>"Remote"[ \t\n]+"island"[ \t\n]+"model"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf ("\tRemote Island Model...\n"); return REMOTE_ISLAND_MODEL;}
 <GET_PARAMETERS>"IP"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tIP File...\n"); return IP_FILE;}
+<GET_PARAMETERS>"Migration"[ \t\n]+"probability"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tMigration Probability...\n"); return MIGRATION_PROBABILITY;}
 
  
 // number

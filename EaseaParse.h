@@ -3,7 +3,7 @@
 
 #include <cyacc.h>
 
-#line 68 "EaseaParse.y"
+#line 69 "EaseaParse.y"
 
 // forward references
 class CSymbol;
@@ -11,7 +11,7 @@ class CSymbol;
 #line 12 "EaseaParse.h"
 #ifndef YYSTYPE
 union tagYYSTYPE {
-#line 74 "EaseaParse.y"
+#line 75 "EaseaParse.y"
 
   CSymbol* pSymbol;
   double dValue;
@@ -67,28 +67,29 @@ union tagYYSTYPE {
 #define ELITE 296
 #define REMOTE_ISLAND_MODEL 297
 #define IP_FILE 298
-#define PRINT_STATS 299
-#define PLOT_STATS 300
-#define GENERATE_CSV_FILE 301
-#define GENERATE_GNUPLOT_SCRIPT 302
-#define GENERATE_R_SCRIPT 303
-#define SAVE_POPULATION 304
-#define START_FROM_FILE 305
-#define TIME_LIMIT 306
-#define MAX_INIT_TREE_D 307
-#define MIN_INIT_TREE_D 308
-#define MAX_XOVER_DEPTH 309
-#define MAX_MUTAT_DEPTH 310
-#define MAX_TREE_D 311
-#define NB_GPU 312
-#define PRG_BUF_SIZE 313
-#define NO_FITNESS_CASES 314
-#line 157 "EaseaParse.y"
+#define MIGRATION_PROBABILITY 299
+#define PRINT_STATS 300
+#define PLOT_STATS 301
+#define GENERATE_CSV_FILE 302
+#define GENERATE_GNUPLOT_SCRIPT 303
+#define GENERATE_R_SCRIPT 304
+#define SAVE_POPULATION 305
+#define START_FROM_FILE 306
+#define TIME_LIMIT 307
+#define MAX_INIT_TREE_D 308
+#define MIN_INIT_TREE_D 309
+#define MAX_XOVER_DEPTH 310
+#define MAX_MUTAT_DEPTH 311
+#define MAX_TREE_D 312
+#define NB_GPU 313
+#define PRG_BUF_SIZE 314
+#define NO_FITNESS_CASES 315
+#line 159 "EaseaParse.y"
 
 #include "EaseaSym.h"
 #include "EaseaLex.h"
 
-#line 92 "EaseaParse.h"
+#line 93 "EaseaParse.h"
 /////////////////////////////////////////////////////////////////////////////
 // CEASEAParser
 
@@ -109,7 +110,7 @@ protected:
 #endif
 
 public:
-#line 164 "EaseaParse.y"
+#line 166 "EaseaParse.y"
 
 protected:
   CEASEALexer EASEALexer;       // the lexical analyser
@@ -125,7 +126,7 @@ public:
 
   virtual void yysyntaxerror();
 
-#line 129 "EaseaParse.h"
+#line 130 "EaseaParse.h"
 };
 
 #ifndef YYPARSENAME

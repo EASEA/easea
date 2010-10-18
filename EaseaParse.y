@@ -49,6 +49,7 @@ bool bGENERATE_CSV_FILE=0, bGENERATE_R_SCRIPT=0, bGENERATE_GNUPLOT_SCRIPT=0;
 bool bSAVE_POPULATION=0, bSTART_FROM_FILE=0;
 bool bBALDWINISM=0; //memetic
 bool bREMOTE_ISLAND_MODEL=0; //remote island model
+float fMIGRATION_PROBABILITY=0.0;
 char sIP_FILE[128]; //remote island model
 int nPOP_SIZE, nOFF_SIZE;
 float fSURV_PAR_SIZE=-1.0, fSURV_OFF_SIZE=-1.0;
@@ -137,6 +138,7 @@ class CSymbol;
 %token ELITE
 %token REMOTE_ISLAND_MODEL //island model
 %token IP_FILE  //island model
+%token MIGRATION_PROBABILITY //island model
 %token PRINT_STATS
 %token PLOT_STATS
 %token GENERATE_CSV_FILE
@@ -631,6 +633,9 @@ Parameter
         sprintf(sIP_FILE, $2->sName);
 	strcat(sIP_FILE,".");
 	strcat(sIP_FILE,$4->sName);
+	}
+  | MIGRATION_PROBABILITY NUMBER2{
+	fMIGRATION_PROBABILITY=(float)$2;
 	}
      
   | PRINT_STATS IDENTIFIER2{

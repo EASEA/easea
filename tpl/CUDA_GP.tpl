@@ -797,9 +797,15 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->plotStats = setVariable("plotStats",\PLOT_STATS);
 	this->printInitialPopulation = setVariable("printInitialPopulation",0);
 	this->printFinalPopulation = setVariable("printFinalPopulation",0);
+        this->savePopulation = setVariable("savePopulation",\SAVE_POPULATION);
+        this->startFromFile = setVariable("startFromFile",\START_FROM_FILE);
 
 	this->outputFilename = (char*)"EASEA";
 	this->plotOutputFilename = (char*)"EASEA.png";
+
+        this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
+        this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
+        this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -822,9 +828,22 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 }
 
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
-	for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-		this->population->addIndividualParentPopulation(new IndividualImpl());
-	}
+        if(this->params->startFromFile){
+          ifstream AESAE_File("EASEA.pop");
+          string AESAE_Line;
+          for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
+                  getline(AESAE_File, AESAE_Line);
+                  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
+                  ((IndividualImpl*)this->population->parents[i])->deserialize(AESAE_Line);
+          }
+
+        }
+        else{
+          for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
+                  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
+          }
+        }
+        this->population->actualParentPopulationSize = this->params->parentPopulationSize;
 }
 
 
@@ -1115,4 +1134,14 @@ easeaclean:
 --generateCSV=\GENERATE_CSV_FILE
 --generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
+
+#### Population save    ####
+--savePopulation=\SAVE_POPULATION #save population to EASEA.pop file
+--startFromFile=\START_FROM_FILE #start optimisation from EASEA.pop file
+
+#### Remote Island Model ####
+--remoteIslandModel=\REMOTE_ISLAND_MODEL #To initialize communications with remote AESAE's
+--ipFile=\IP_FILE
+--migrationProbability=\MIGRATION_PROBABILITY #Probability to send an individual every generation
+
 \TEMPLATE_END

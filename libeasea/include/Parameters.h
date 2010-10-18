@@ -72,6 +72,7 @@ public:
 	//Parameters for the Island Model
 	bool remoteIslandModel;
 	char* ipFile;
+	float migrationProbability;
 
 	char* outputFilename;
 	char* plotOutputFilename;

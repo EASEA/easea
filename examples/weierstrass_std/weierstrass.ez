@@ -192,6 +192,7 @@ CPPFLAGS+=
 
   Remote island model: true
   IP file: ip.txt 			//File containing all the remote island's IP
+  Migration probability: 0.1
 
   Save population: true
   Start from file:false

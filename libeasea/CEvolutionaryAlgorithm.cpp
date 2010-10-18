@@ -192,7 +192,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     EASEABeginningGenerationFunction(this);
 
     // Sending individuals if remote island model
-    if(params->remoteIslandModel && this->numberOfClients>0)
+    if(params->remoteIslandModel)
 	    this->sendIndividual();
 
     population->produceOffspringPopulation();
@@ -409,7 +409,7 @@ void CEvolutionaryAlgorithm::initializeClients(){
 
 void CEvolutionaryAlgorithm::sendIndividual(){
 	//Sending an individual every n generations	
-	if(this->currentGeneration%(10+this->myClientNumber)==0){
+	if(globalRandomGenerator->random(0.0,1.0)<=params->migrationProbability){
 		//cout << "I'm going to send an Individual now" << endl;
 		//this->population->selectionOperator->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
 		//size_t index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);

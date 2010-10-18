@@ -142,6 +142,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 	("baldwinism",po::value<int>(),"Only keep fitness (default : 0)")
 	("remoteIslandModel",po::value<int>(),"Boolean to activate the individual exachange with remote islands (default : 0)")
 	("ipFile",po::value<string>(),"File containing all the IPs of the remote islands)")
+	("migrationProbability", po::value<float>(),"Probability to send an individual each generation")
 	("outputfile",po::value<string>(),"Set an output file for the final population (default : none)")
 	("inputfile",po::value<string>(),"Set an input file for the initial population (default : none)")
 	("printStats",po::value<int>(),"Print the Stats (default : 1)")

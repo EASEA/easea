@@ -337,6 +337,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
         this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
         this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
+        this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -691,6 +692,7 @@ easeaclean:
 --startFromFile=\START_FROM_FILE #start optimisation from EASEA.pop file
 
 #### Remote Island Model ####
---remoteIslandModel=\REMOTE_ISLAND_MODEL #To initialize communications with remote AESAE's
+a-remoteIslandModel=\REMOTE_ISLAND_MODEL #To initialize communications with remote AESAE's
 --ipFile=\IP_FILE
+--migrationProbability=\MIGRATION_PROBABILITY #Probability to send an individual every generation
 \TEMPLATE_END
