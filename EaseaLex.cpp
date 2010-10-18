@@ -4357,7 +4357,7 @@ inline char  mytolower(char c) {
   return ((c>=65)&&(c<=90)) ? c+=32:c;
 }
 
-inline int mystricmp(char *string1, char *string2){
+inline int mystricmp(const char *string1, const char *string2){
   int i;
   for (i=0; string1[i]&&string2[i];i++){
     if (mytolower(string1[i])<mytolower(string2[i])) return -(i+1);
