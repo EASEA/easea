@@ -1248,12 +1248,13 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			{
 #line 634 "EaseaParse.y"
 
-      if((int)yyattribute(2 - 2).dValue>=1)
-	 bPRINT_STATS=1;
-      else
-	 bPRINT_STATS=0;
-    
-#line 1257 "EaseaParse.cpp"
+      if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bPRINT_STATS=0;
+      else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bPRINT_STATS=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Print stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bPRINT_STATS=0;
+       }
+#line 1258 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1264,14 +1265,15 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 640 "EaseaParse.y"
+#line 641 "EaseaParse.y"
 
-      if((int)yyattribute(2 - 2).dValue>=1)
-	 bPLOT_STATS=1;
-      else
-	 bPLOT_STATS=0;
-    
-#line 1275 "EaseaParse.cpp"
+      if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bPLOT_STATS=0;
+      else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bPLOT_STATS=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Generate stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bPLOT_STATS=0;
+       }
+#line 1277 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1282,14 +1284,15 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 646 "EaseaParse.y"
+#line 648 "EaseaParse.y"
 
-      if((int)yyattribute(2 - 2).dValue>=1)
-	 bGENERATE_CSV_FILE=1;
-      else
-	 bGENERATE_CSV_FILE=0;
-    
-#line 1293 "EaseaParse.cpp"
+      if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bGENERATE_CSV_FILE=0;
+      else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bGENERATE_CSV_FILE=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Generate csv file must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bGENERATE_CSV_FILE=0;
+       }
+#line 1296 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1300,14 +1303,15 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 652 "EaseaParse.y"
+#line 655 "EaseaParse.y"
 
-      if((int)yyattribute(2 - 2).dValue>=1)
-	 bGENERATE_GNUPLOT_SCRIPT=1;
-      else
-	 bGENERATE_GNUPLOT_SCRIPT=0;
-    
-#line 1311 "EaseaParse.cpp"
+      if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bGENERATE_GNUPLOT_SCRIPT=0;
+      else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bGENERATE_GNUPLOT_SCRIPT=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Generate gnuplot script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bGENERATE_GNUPLOT_SCRIPT=0;
+       }
+#line 1315 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1318,14 +1322,15 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 658 "EaseaParse.y"
+#line 662 "EaseaParse.y"
 
-      if((int)yyattribute(2 - 2).dValue>=1)
-	 bGENERATE_R_SCRIPT=1;
-      else
-	 bGENERATE_R_SCRIPT=0;
-    
-#line 1329 "EaseaParse.cpp"
+      if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bGENERATE_R_SCRIPT=0;
+      else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bGENERATE_R_SCRIPT=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Generate R script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bGENERATE_R_SCRIPT=0;
+       }
+#line 1334 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1336,7 +1341,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 664 "EaseaParse.y"
+#line 669 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bSAVE_POPULATION=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bSAVE_POPULATION=1;
@@ -1344,7 +1349,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
          fprintf(stderr,"\n%s - Warning line %d: SavePopulation must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
          bSAVE_POPULATION=0;
        }
-#line 1348 "EaseaParse.cpp"
+#line 1353 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1355,7 +1360,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 671 "EaseaParse.y"
+#line 676 "EaseaParse.y"
 
       if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"False")) bSTART_FROM_FILE=0;
       else if (!mystricmp(yyattribute(2 - 2).pSymbol->sName,"True")) bSTART_FROM_FILE=1;
@@ -1363,7 +1368,7 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
          fprintf(stderr,"\n%s - Warning line %d: StartFromFile must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
          bSTART_FROM_FILE=0;
        }
-#line 1367 "EaseaParse.cpp"
+#line 1372 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1374,9 +1379,9 @@ fSURV_OFF_SIZE=(float)(yyattribute(2 - 3).dValue/100);
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 678 "EaseaParse.y"
+#line 683 "EaseaParse.y"
 iMAX_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
-#line 1380 "EaseaParse.cpp"
+#line 1385 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1387,9 +1392,9 @@ iMAX_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 679 "EaseaParse.y"
+#line 684 "EaseaParse.y"
 iMIN_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
-#line 1393 "EaseaParse.cpp"
+#line 1398 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1400,9 +1405,9 @@ iMIN_INIT_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 680 "EaseaParse.y"
+#line 685 "EaseaParse.y"
 iMAX_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
-#line 1406 "EaseaParse.cpp"
+#line 1411 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1413,9 +1418,9 @@ iMAX_TREE_D = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 681 "EaseaParse.y"
+#line 686 "EaseaParse.y"
 iNB_GPU = (unsigned)yyattribute(2 - 2).dValue;
-#line 1419 "EaseaParse.cpp"
+#line 1424 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1426,9 +1431,9 @@ iNB_GPU = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 682 "EaseaParse.y"
+#line 687 "EaseaParse.y"
 iPRG_BUF_SIZE = (unsigned)yyattribute(2 - 2).dValue;
-#line 1432 "EaseaParse.cpp"
+#line 1437 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1439,9 +1444,9 @@ iPRG_BUF_SIZE = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 685 "EaseaParse.y"
+#line 690 "EaseaParse.y"
 iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
-#line 1445 "EaseaParse.cpp"
+#line 1450 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1452,7 +1457,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 689 "EaseaParse.y"
+#line 694 "EaseaParse.y"
  
       if (SymbolTable.find(yyattribute(1 - 3).pSymbol->sName)==NULL){
          fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,yyattribute(1 - 3).pSymbol->sName);
@@ -1460,7 +1465,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
       }
       (*(YYSTYPE YYFAR*)yyvalptr).dValue = assign(SymbolTable.find(yyattribute(1 - 3).pSymbol->sName), yyattribute(3 - 3).dValue);
     
-#line 1464 "EaseaParse.cpp"
+#line 1469 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1471,9 +1476,9 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 696 "EaseaParse.y"
+#line 701 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue + yyattribute(3 - 3).dValue; 
-#line 1477 "EaseaParse.cpp"
+#line 1482 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1484,9 +1489,9 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 697 "EaseaParse.y"
+#line 702 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue - yyattribute(3 - 3).dValue; 
-#line 1490 "EaseaParse.cpp"
+#line 1495 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1497,9 +1502,9 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 698 "EaseaParse.y"
+#line 703 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 3).dValue * yyattribute(3 - 3).dValue; 
-#line 1503 "EaseaParse.cpp"
+#line 1508 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1510,9 +1515,9 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 699 "EaseaParse.y"
+#line 704 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = divide(yyattribute(1 - 3).dValue, yyattribute(3 - 3).dValue); 
-#line 1516 "EaseaParse.cpp"
+#line 1521 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1523,9 +1528,9 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 4);
 #endif
 			{
-#line 700 "EaseaParse.y"
+#line 705 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(2 - 3).dValue; 
-#line 1529 "EaseaParse.cpp"
+#line 1534 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1536,9 +1541,9 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 3);
 #endif
 			{
-#line 701 "EaseaParse.y"
+#line 706 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = -yyattribute(2 - 2).dValue; 
-#line 1542 "EaseaParse.cpp"
+#line 1547 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1549,9 +1554,9 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 702 "EaseaParse.y"
+#line 707 "EaseaParse.y"
  (*(YYSTYPE YYFAR*)yyvalptr).dValue = yyattribute(1 - 1).dValue; 
-#line 1555 "EaseaParse.cpp"
+#line 1560 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1562,7 +1567,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 			yyinitdebug((void YYFAR**)yya, 2);
 #endif
 			{
-#line 703 "EaseaParse.y"
+#line 708 "EaseaParse.y"
 
       if (SymbolTable.find(yyattribute(1 - 1).pSymbol->sName)==NULL){
          fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,yyattribute(1 - 1).pSymbol->sName);
@@ -1570,7 +1575,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
       }
       (*(YYSTYPE YYFAR*)yyvalptr).dValue = (SymbolTable.find(yyattribute(1 - 1).pSymbol->sName))->dValue;
     
-#line 1574 "EaseaParse.cpp"
+#line 1579 "EaseaParse.cpp"
 			}
 		}
 		break;
@@ -1579,7 +1584,7 @@ iNO_FITNESS_CASES = (unsigned)yyattribute(2 - 2).dValue;
 		break;
 	}
 }
-#line 712 "EaseaParse.y"
+#line 717 "EaseaParse.y"
 
                        
 /////////////////////////////////////////////////////////////////////////////
@@ -1702,7 +1707,7 @@ double CEASEAParser::divide(double a, double b)
   }
 }
 
-#line 1706 "EaseaParse.cpp"
+#line 1711 "EaseaParse.cpp"
 void YYPARSENAME::yytables()
 {
 	yyattribute_size = sizeof(YYSTYPE);
@@ -1885,11 +1890,11 @@ void YYPARSENAME::yytables()
 		"Parameter: BALDWINISM IDENTIFIER2",
 		"Parameter: REMOTE_ISLAND_MODEL IDENTIFIER2",
 		"Parameter: IP_FILE IDENTIFIER2 \'.\' IDENTIFIER2",
-		"Parameter: PRINT_STATS NUMBER2",
-		"Parameter: PLOT_STATS NUMBER2",
-		"Parameter: GENERATE_CSV_FILE NUMBER2",
-		"Parameter: GENERATE_GNUPLOT_SCRIPT NUMBER2",
-		"Parameter: GENERATE_R_SCRIPT NUMBER2",
+		"Parameter: PRINT_STATS IDENTIFIER2",
+		"Parameter: PLOT_STATS IDENTIFIER2",
+		"Parameter: GENERATE_CSV_FILE IDENTIFIER2",
+		"Parameter: GENERATE_GNUPLOT_SCRIPT IDENTIFIER2",
+		"Parameter: GENERATE_R_SCRIPT IDENTIFIER2",
 		"Parameter: SAVE_POPULATION IDENTIFIER2",
 		"Parameter: START_FROM_FILE IDENTIFIER2",
 		"Parameter: MAX_INIT_TREE_D NUMBER2",
@@ -2296,11 +2301,11 @@ void YYPARSENAME::yytables()
 		{ -143, 1, YYAT_DEFAULT, 32 },
 		{ -135, 1, YYAT_DEFAULT, 82 },
 		{ -136, 1, YYAT_DEFAULT, 82 },
-		{ -146, 1, YYAT_DEFAULT, 32 },
-		{ -147, 1, YYAT_DEFAULT, 32 },
-		{ -148, 1, YYAT_DEFAULT, 32 },
-		{ -149, 1, YYAT_DEFAULT, 32 },
-		{ -150, 1, YYAT_DEFAULT, 32 },
+		{ -137, 1, YYAT_DEFAULT, 82 },
+		{ -138, 1, YYAT_DEFAULT, 82 },
+		{ -139, 1, YYAT_DEFAULT, 82 },
+		{ -140, 1, YYAT_DEFAULT, 82 },
+		{ -141, 1, YYAT_DEFAULT, 82 },
 		{ -142, 1, YYAT_DEFAULT, 82 },
 		{ -143, 1, YYAT_DEFAULT, 82 },
 		{ -153, 1, YYAT_DEFAULT, 32 },
