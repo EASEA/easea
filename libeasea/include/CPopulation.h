@@ -99,6 +99,7 @@ public:
   static void sortRPopulation(CIndividual** population, unsigned populationSize);
 
   void serializePopulation();
+  int getWorstIndividualIndex(CIndividual** population);
 
   void sortParentPopulation(){ CPopulation::sortPopulation(parents,actualParentPopulationSize);}
 
