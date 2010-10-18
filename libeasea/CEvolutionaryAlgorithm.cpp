@@ -437,7 +437,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 			//selecting the individual to erase
 			//CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
 			//antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
-			unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
+			//unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
 			
 			//We're selecting the worst element to replace
 			size_t index = this->population->getWorstIndividualIndex(this->population->parents);
