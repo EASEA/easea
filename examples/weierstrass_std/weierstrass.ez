@@ -184,10 +184,10 @@ CPPFLAGS+=
 
   Elitism: Strong			//Weak or Strong
   Elite: 1
-  Print stats: True				//Default: 1
+  Print stats: true				//Default: 1
   Generate csv stats file:false			
   Generate gnuplot script:false
-  Generate R script:false
+  Generate R script:true
   Plot stats:false				//Default: 0
 
   Remote island model: true
