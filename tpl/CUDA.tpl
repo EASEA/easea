@@ -664,7 +664,7 @@ LDFLAGS=$(EZ_PATH)boost/program_options.a $(LIBAESAE)libeasea.a -lpthread
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 CPPFLAGS+= -I$(LIBAESAE)include -I$(EZ_PATH)boost
-NVCCFLAGS+=
+NVCCFLAGS+= --compiler-options -fpermissive
 
 
 EASEA_SRC= EASEAIndividual.cpp
