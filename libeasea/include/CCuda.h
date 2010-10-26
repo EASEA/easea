@@ -10,7 +10,7 @@
 
 #include <iostream>
 #include <semaphore.h>
-#include <cuda_runtime_api.h>
+//#include <cuda_runtime_api.h>
 
 
 
@@ -52,10 +52,10 @@ struct gpuArg{
 class CCuda {
 public:
 	void* cudaBuffer;
-	size_t sizeOfIndividualImpl;
+	unsigned sizeOfIndividualImpl;
 	struct gpuOptions initOpts;
 public:
-	CCuda(size_t parentSize, size_t offSize, size_t individualImplSize);
+	CCuda(unsigned parentSize, unsigned offSize, unsigned individualImplSize);
 	~CCuda();
 };
 

@@ -4,7 +4,7 @@
 #include <stdio.h>
  
 
-CCuda::CCuda(size_t parentSize, size_t offSize, size_t individualImplSize){
+CCuda::CCuda(unsigned parentSize, unsigned offSize, unsigned individualImplSize){
 	this->sizeOfIndividualImpl = individualImplSize;
 	this->cudaBuffer = (void*)malloc(this->sizeOfIndividualImpl*( (parentSize>offSize) ? parentSize : offSize));
 }

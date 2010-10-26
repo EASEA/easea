@@ -5,7 +5,7 @@ CXXFLAGS = -g -Wall -fmessage-length=0 -I../boost/
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
 	CGnuplot.o CCmaes.o CCmaesCuda.o Parameters.o CGPNode.o\
-	CComUDPLayer.o
+	CComUDPLayer.o CCuda.o
 
 ifeq ($(EZ_CUDA),1)
 OBJS += CCuda.o
