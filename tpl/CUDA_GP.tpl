@@ -935,7 +935,7 @@ public:
 
 \START_CUDA_MAKEFILE_TPL
 
-NVCC=nvcc
+NVCC=nvcc --compiler-options -fpermissive
 EASEALIB_PATH=\EZ_PATHlibeasea/#/home/kruger/Bureau/Easea/libeasea/
 
 CXXFLAGS =  -g  -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
