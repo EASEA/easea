@@ -940,7 +940,6 @@ EASEALIB_PATH=\EZ_PATHlibeasea/#/home/kruger/Bureau/Easea/libeasea/
 
 CXXFLAGS =  -g  -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
 
-\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 
 OBJS = EASEA.o EASEAIndividual.o 
@@ -948,6 +947,8 @@ OBJS = EASEA.o EASEAIndividual.o
 LIBS = 
 
 TARGET =	EASEA
+
+\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 $(TARGET):	$(OBJS)
 	$(NVCC) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a
