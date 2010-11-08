@@ -383,6 +383,44 @@ void toDotFile_r(GPNode* root, FILE* outputFile){
     }
   }
 }
+
+void toString_r(GPNode* root) {
+
+	std::cout << '(';
+	if (opArity[root->opCode] == 2) {
+		toString_r(root->children[0]);
+		std::cout << ' ';
+		std::cout << opCodeName[(int)root->opCode];
+		std::cout << ' ';
+		toString_r(root->children[1]);
+	} else {
+		if (root->opCode == OP_ERC) {
+			std::cout << root->erc_value;
+		} else {
+			std::cout << opCodeName[(int)root->opCode];
+		}
+		for (int i = 0; i < opArity[root->opCode]; ++i) {
+			if (root->children[i]) {
+				toString_r(root->children[i]);
+				if (i < opArity[root->opCode] - 1) {
+					std::cout << ' ';
+				}
+			}
+		}
+	}
+	std::cout << ')';
+
+	return;
+}
+
+void toString(GPNode* root) {
+	
+	toString_r(root);
+	std::cout << std::endl;
+
+	return;
+}
+
 /**
    This function prints a tree in dot (graphviz format).
    This is the entry point for the print operation. (see toDotFile_r,
