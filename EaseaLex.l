@@ -72,7 +72,7 @@ Centre de Math�matiques Appliqu�es
  }                                                     
                                          
 %start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
-%start COPY_USER_DECLARATIONS COPY_INITIALISATION_FUNCTION ANALYSE_USER_CLASSES
+%start COPY_USER_DECLARATIONS COPY_USER_CUDA COPY_INITIALISATION_FUNCTION ANALYSE_USER_CLASSES
 %start COPY_EO_INITIALISER COPY_GP_OPCODE
 %start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_OPTIMISER COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
@@ -169,6 +169,15 @@ exponent  ([Ee][+-]?[0-9]+)
   lineCounter=1;
   BEGIN COPY_USER_DECLARATIONS;
  }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_USER_CUDA"  {
+  if (bVERBOSE) printf ("Inserting user cuda.\n");
+  yyreset();
+  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
+  lineCounter=1;
+  BEGIN COPY_USER_CUDA;
+ }
+
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting initialisation function.\n");
   yyreset();
@@ -1305,6 +1314,25 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_USER_DECLARATIONS>. {}
 <COPY_USER_DECLARATIONS>\n {
+  lineCounter++;
+ } 
+               
+<COPY_USER_CUDA>"\\User"[ \t\n]+"CUDA"[ \t\n]*":" {
+  fprintf (fpOutputFile,"// User CUDA\n"); 
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  BEGIN COPY;
+ }                                                               
+<COPY_USER_CUDA><<EOF>> {
+  if (bVERBOSE) printf("*** No user CUDA were found. ***\n");
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  BEGIN TEMPLATE_ANALYSIS;
+  bNotFinishedYet=1;
+ }
+
+<COPY_USER_CUDA>. {}
+<COPY_USER_CUDA>\n {
   lineCounter++;
  }                
 

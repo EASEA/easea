@@ -178,6 +178,11 @@ void* gpuThreadMain(void* arg){
   cudaSetDevice(localArg->threadId);
   int nbr_cudaPreliminaryProcess = 2;
 
+  // Because of the context of each GPU thread, we have to put all user's CUDA 
+  // initialisation here if we want to use them in the GPU, otherwise they are
+  // not found in the GPU context
+  \INSERT_USER_CUDA
+
   // Wait for population to evaluate
    while(1){
 	    sem_wait(&localArg->sem_in);
