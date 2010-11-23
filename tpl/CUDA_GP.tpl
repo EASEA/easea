@@ -126,9 +126,12 @@ unsigned evaluation_threads_status;
 #define PROBABLY_ZERO  1.11E-15f
 #define BIG_NUMBER 1.0E15f
 
-
 /* Insert declarations about opcodes*/
 \INSERT_GP_OPCODE_DECL
+
+\INSERT_USER_DECLARATIONS
+
+\INSERT_USER_FUNCTIONS
 
 float recEval(GPNode* root, float* input) {
   float OP1=0, OP2= 0, RESULT = 0;
@@ -549,12 +552,9 @@ float IndividualImpl::evaluate(){
 
 
 
-\INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
 
 \INSERT_USER_CLASSES
-
-\INSERT_USER_FUNCTIONS
 
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION

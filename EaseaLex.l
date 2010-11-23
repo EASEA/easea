@@ -558,6 +558,54 @@ exponent  ([Ee][+-]?[0-9]+)
   
  }
 
+<COPY_GP_EVAL>"OUTPUT["[0-9]+"]" {
+  char* endptr;
+  unsigned no_output = strtol(yytext+strlen("OUTPUT["),&endptr,10);
+  if( bIsCopyingGPEval) 
+    if( bCOPY_GP_EVAL_GPU )
+      fprintf(fpOutputFile, "outputs[i*NUMTHREAD2+tid+%d]", no_output);
+    else fprintf(fpOutputFile, "outputs[i+%d]", no_output );
+  
+ }
+
+<COPY_GP_EVAL>"OUTPUT["[a-zA-Z][a-zA-Z0-9]*"]" {
+	char *var;
+	var = strndup(yytext+strlen("OUTPUT["), strlen(yytext) - strlen("OUTPUT[") - 1);
+  if( bIsCopyingGPEval) 
+    if( bCOPY_GP_EVAL_GPU )
+      fprintf(fpOutputFile, "outputs[i*NUMTHREAD2+tid+%s]", var);
+    else fprintf(fpOutputFile, "outputs[i+%s]", var);
+  
+ }
+
+<COPY_GP_EVAL>"INPUT" {
+  if( bIsCopyingGPEval) 
+    if( bCOPY_GP_EVAL_GPU )
+      fprintf(fpOutputFile, "k_inputs[i*NUMTHREAD2+tid]" );
+    else fprintf(fpOutputFile, "inputs[i][0]" );
+  
+ }
+
+<COPY_GP_EVAL>"INPUT["[0-9]+"]" {
+  char* endptr;
+  unsigned no_input = strtol(yytext+strlen("INPUT["),&endptr,10);
+  if( bIsCopyingGPEval) 
+    if( bCOPY_GP_EVAL_GPU )
+      fprintf(fpOutputFile, "k_inputs[i*NUMTHREAD2+tid+%d]", no_input);
+    else fprintf(fpOutputFile, "inputs[i][%d]", no_input );
+  
+ }
+
+<COPY_GP_EVAL>"INPUT["[a-zA-Z][a-zA-Z0-9]*"]" {
+	char *var;
+	var = strndup(yytext+strlen("INPUT["), strlen(yytext) - strlen("INPUT[") - 1);
+  if( bIsCopyingGPEval) 
+    if( bCOPY_GP_EVAL_GPU )
+      fprintf(fpOutputFile, "k_inputs[i*NUMTHREAD2+tid+%s]", var);
+    else fprintf(fpOutputFile, "inputs[i][%s]", var);
+  
+ }
+
 <COPY_GP_EVAL>"return " {
   if( bIsCopyingGPEval )
     if( iCOPY_GP_EVAL_STATUS==EVAL_FTR )
