@@ -665,11 +665,6 @@ LIBAESAE=$(EZ_PATH)libeasea/
 CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include -I$(EZ_PATH)boost
 LDFLAGS=$(EZ_PATH)boost/program_options.a $(LIBAESAE)libeasea.a -lpthread
 
-#USER MAKEFILE OPTIONS :
-\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
-
-CPPFLAGS+= -I$(LIBAESAE)include -I$(EZ_PATH)boost
-NVCCFLAGS+= --compiler-options -fpermissive
 
 
 EASEA_SRC= EASEAIndividual.cpp
@@ -682,6 +677,13 @@ SRC= $(EASEA_SRC) $(EASEA_MAIN_HDR)
 CUDA_SRC = EASEAIndividual.cu
 HDR= $(EASEA_HDR) $(EASEA_UC_HDR)
 OBJ= $(EASEA_SRC:.cpp=.o) $(EASEA_MAIN_HDR:.cpp=.o)
+
+#USER MAKEFILE OPTIONS :
+\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
+
+CPPFLAGS+= -I$(LIBAESAE)include -I$(EZ_PATH)boost
+NVCCFLAGS+= --compiler-options -fpermissive
+
 
 BIN= EASEA
   

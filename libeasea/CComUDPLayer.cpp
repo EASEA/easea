@@ -127,7 +127,7 @@ bool isLocalMachine(const char*  address){
 	inet_pton(AF_INET, address, &ipv4addr);
 	he = gethostbyaddr(&ipv4addr, sizeof ipv4addr, AF_INET);
 	//printf("Host name:%s\n",he->h_name);
-
+	
 	if(strlen(hostname)<strlen(he->h_name))
 		size = strlen(hostname);
 	else	

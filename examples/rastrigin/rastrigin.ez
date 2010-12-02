@@ -17,7 +17,7 @@ __________________________________________________________*/
 #define PI 3.141592654
 
  
-float pMutPerGene=0.1;
+float pMutPerGene=0.3;
 
 
 \end
@@ -146,10 +146,10 @@ CPPFLAGS+=
 \end
 
 \Default run parameters :        // Please let the parameters appear in this order
-  Number of generations : 100     	// NB_GEN
-  Time limit: 0 			// In seconds, 0 to deactivate
-  Population size : 2000			//POP_SIZE
-  Offspring size : 1600 // 40% 
+  Number of generations : 9999999     	// NB_GEN
+  Time limit: 60 			// In seconds, 0 to deactivate
+  Population size : 3840			//POP_SIZE
+  Offspring size : 3840 // 40% 
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
   Evaluator goal : minimise      // Maximise
@@ -163,15 +163,15 @@ CPPFLAGS+=
   Elitism: Strong			//Weak or Strong
   Elite: 1
   Print stats:true				//Default: 1
-  Generate csv stats file:false			
+  Generate csv stats file:true			
   Generate gnuplot script:false
   Generate R script:false
   Plot stats:false				//Default: 0
 
-  Remote island model: true
+  Remote island model: false
   IP file: ip.txt 			//File containing all the remote island's IP
 
-  Save population: true
+  Save population: false
   Start from file:false
 \end
 	

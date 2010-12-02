@@ -150,7 +150,7 @@ float pMutDesThre = 0.5;
 struct base* t1 = NULL;
 struct base* t2 = NULL;
 
-float* uniq_instances[2];
+//float* uniq_instances[2];
 float* mutation_step;
 unsigned uniq_cnt[2];
 
@@ -168,6 +168,8 @@ GenomeClass {
 
 \Before everything else function:
 {
+
+
   srand(globalRandomGenerator->get_seed());
   INSTEAD_EVAL_STEP = true;
 
@@ -182,10 +184,10 @@ GenomeClass {
   for( unsigned i=0 ; i<t1->hdr->attributes[t1->hdr->whichis_class]->no_values; i++ )
     printf("%s : %d\n",t1->hdr->attributes[t1->hdr->whichis_class]->values[i],t1->class_repartition[i]);
   
-  uniq_instances[0] = ba_compute_uniq_values(t2, 1, uniq_cnt+0);
-  uniq_instances[1] = ba_compute_uniq_values(t2, 2, uniq_cnt+1);
+  //uniq_instances[0] = ba_compute_uniq_values(t2, 1, uniq_cnt+0);
+  //uniq_instances[1] = ba_compute_uniq_values(t2, 2, uniq_cnt+1);
   
-  printf("%d %d\n",uniq_cnt[0],uniq_cnt[1]);
+  //printf("%d %d\n",uniq_cnt[0],uniq_cnt[1]);
 
   // allocating K packets 
   generate_k_fold(K,packets_size,t1,k_tables,t2);
@@ -239,6 +241,32 @@ GenomeClass {
 
   delete mins;
   delete maxs;
+
+  printf("%d\n",setVariable("u3",0));
+  if( setVariable("u3",0) ){
+    FILE* f = fopen("out/out.t","r");
+    char* indiv_text = (char*)malloc(sizeof(*indiv_text)*512);
+    fgets(indiv_text,512,f);
+    printf("%s\n",indiv_text);
+    fclose(f);
+
+    IndividualImpl i;
+    string* st = new string(indiv_text);
+    i.deserialize(*st);
+
+    delete st;
+    free(indiv_text);
+    
+    float fit = i.evaluate();
+    cTreeNode* root = generate_tree(i.x,t1,t2,GENOME_SIZE,GENE_SIZE);
+    struct base* tmp_table = table_from_genome(i.x,t1,t2,GENOME_SIZE,GENE_SIZE);
+    root->compute_coverage(tmp_table);
+    show_tree(tmp_table,root);
+    
+    printf("fitness of loaded individual is %f\n",fit);
+
+    exit(-1);
+  }
 }
 \end
 
@@ -261,6 +289,7 @@ GenomeClass {
 
   cTreeNode* root = generate_tree(best->x,t1,t2,GENOME_SIZE,GENE_SIZE);
   struct base* tmp_table = table_from_genome(best->x,t1,t2,GENOME_SIZE,GENE_SIZE);
+  root->compute_coverage(tmp_table);
   show_tree(tmp_table,root);
 
   ba_to_arff(tmp_table,"best_table.arff");
@@ -279,6 +308,8 @@ GenomeClass {
 #endif
 
 
+  FILE* f = fopen("out/out.t","w");
+  fprintf(f,"%s",best->serialize().c_str());
 
   struct base* k_tables_f[10];
   unsigned packets_size_f[10];
@@ -292,6 +323,7 @@ GenomeClass {
   ba_delete( tmp_table );
 }
 \end
+
 
 \GenomeClass::initialiser : 
 {
@@ -474,7 +506,6 @@ GenomeClass {
     // then delete tmp tables
     ba_partial_copy_delete(tmp_learning_table);
     ba_partial_copy_delete(tmp_test_table);
-    
   }
 
   fitness_value = (((float)error) / t1->no_instances)*100;// + (((float)tree_size)/K);
@@ -509,10 +540,10 @@ LDFLAGS+= -lpq  -lm  -fopenmp ../c4.5_common/libc45.a $(LIBANTLR_DIR)/.libs/liba
   
   Elitism: Strong			//Weak or Strong
   Elite: 1
-  Print stats:1				//Default: 1
-  Generate csv stats file:0			
-  Generate gnuplot script:0
-  Generate R script:0
-  Plot stats:0				//Default: 0
+  Print stats:true				//Default: 1
+  Generate csv stats file:true			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats:false				//Default: 0
 \end
 	
