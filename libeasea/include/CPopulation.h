@@ -33,6 +33,7 @@ public:
   float pMutationPerGene;
 
   CIndividual* Best;
+  CIndividual* Worst;
   float currentAverageFitness;
   float currentSTDEV;
 
