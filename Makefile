@@ -81,9 +81,9 @@ endif
 
 
 EaseaParse.o: EaseaParse.cpp EaseaLex.cpp
-	$(CPPC) $(CPPFLAGS) $< -o $@ -c 2>/dev/null
+	$(CPPC) $(CPPFLAGS) $< -o $@ -c #2>/dev/null
 EaseaLex.o:  EaseaLex.cpp
-	$(CPPC) $(CPPFLAGS) $< -o $@ -c 2>/dev/null
+	$(CPPC) $(CPPFLAGS) $< -o $@ -c #2>/dev/null
 
 
 %.o:%.cpp

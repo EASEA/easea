@@ -3,7 +3,7 @@
 
 #include <clex.h>
 
-#line 67 "EaseaLex.l"
+#line 153 "EaseaLex.l"
 
   // forward references
   class CEASEAParser;
@@ -60,7 +60,7 @@ protected:
 	virtual int yyaction(int action);
 
 public:
-#line 82 "EaseaLex.l"
+#line 168 "EaseaLex.l"
 
  protected:
   CSymbolTable *pSymbolTable;   // the symbol table

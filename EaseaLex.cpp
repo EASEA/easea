@@ -22,6 +22,92 @@ Centre de Math�matiques Appliqu�es
 #else
 #include <unistd.h>
 #endif
+#ifdef __APPLE__
+/* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
+char *strndup (const char *s, size_t n){
+    size_t len = strlen (s);
+    char *ret;
+
+    if (len <= n)
+	return strdup (s);
+
+    ret = (char *)malloc(n + 1);
+    strncpy(ret, s, n);
+    ret[n] = '\0';
+    return ret;
+}
+ssize_t getline (char **lineptr, size_t *n, FILE *fp){
+    ssize_t result;
+    size_t cur_len = 0;
+
+    if (lineptr == NULL || n == NULL || fp == NULL){
+	errno = EINVAL;
+	return -1;
+    }
+
+    if (*lineptr == NULL || *n == 0){
+	*n = 120;
+	*lineptr = (char *) malloc (*n);
+	if (*lineptr == NULL){
+	    result = -1;
+	    goto end;
+	}
+    }
+
+    for (;;){
+	int i;
+
+	i = getc (fp);
+	if (i == EOF){
+	    result = -1;
+	    break;
+	}
+
+	/* Make enough space for len+1 (for final NUL) bytes.  */
+	if (cur_len + 1 >= *n){
+	    size_t needed_max =	SSIZE_MAX < SIZE_MAX ? (size_t) SSIZE_MAX + 1 : SIZE_MAX;
+	    size_t needed = 2 * *n + 1;   /* Be generous. */
+	    char *new_lineptr;
+
+	    if (needed_max < needed)
+		needed = needed_max;
+	    if (cur_len + 1 >= needed){
+		result = -1;
+		goto end;
+	    }
+
+	    new_lineptr = (char *) realloc (*lineptr, needed);
+	    if (new_lineptr == NULL){
+		result = -1;
+		goto end;
+	    }
+
+	    *lineptr = new_lineptr;
+	    *n = needed;
+	}
+
+	(*lineptr)[cur_len] = i;
+	cur_len++;
+
+	if (i == '\n')
+	    break;
+    }
+    (*lineptr)[cur_len] = '\0';
+    result = cur_len ? (ssize_t) cur_len : result;
+
+end:
+    return result;
+}
+#endif
+
+/* getline implementation is copied from glibc. */
+
+#ifndef SIZE_MAX
+# define SIZE_MAX ((size_t) -1)
+#endif
+#ifndef SSIZE_MAX
+# define SSIZE_MAX ((ssize_t) (SIZE_MAX / 2))
+#endif
 #include "debug.h"
 #include <iostream>
 #include <sstream>
@@ -65,24 +151,24 @@ Centre de Math�matiques Appliqu�es
   return ret;
 }
   
-#line 69 "EaseaLex.cpp"
+#line 155 "EaseaLex.cpp"
 // repeated because of possible precompiled header
 #include <clex.h>
 
 #include "EaseaLex.h"
 
-#line 73 "EaseaLex.l"
+#line 159 "EaseaLex.l"
                                          
-#line 81 "EaseaLex.l"
+#line 167 "EaseaLex.l"
  // lexical analyser name and class definition
-#line 79 "EaseaLex.cpp"
+#line 165 "EaseaLex.cpp"
 /////////////////////////////////////////////////////////////////////////////
 // constructor
 
 YYLEXNAME::YYLEXNAME()
 {
 	yytables();
-#line 110 "EaseaLex.l"
+#line 196 "EaseaLex.l"
                                 
   bFunction=bWithinEvaluator=bWithinOptimiser=bDisplayFunction=bInitFunction=bNotFinishedYet=0;
   bSymbolInserted=bDoubleQuotes=bWithinDisplayFunction=bWithinInitialiser=bWithinMutator=bWithinXover=0;
@@ -95,7 +181,7 @@ YYLEXNAME::YYLEXNAME()
   iNoOp = 0;
   bCOPY_GP_EVAL_GPU,bIsCopyingGPEval = false;
 
-#line 99 "EaseaLex.cpp"
+#line 185 "EaseaLex.cpp"
 }
 
 #ifndef YYTEXT_SIZE
@@ -141,99 +227,99 @@ void YYLEXNAME::yyunput(int ch)
 
 int YYLEXNAME::yyaction(int action)
 {
-#line 130 "EaseaLex.l"
+#line 216 "EaseaLex.l"
 
   // extract yylval for use later on in actions
   YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
   
-#line 150 "EaseaLex.cpp"
+#line 236 "EaseaLex.cpp"
 	yyreturnflg = 1;
 	switch (action) {
 	case 1:
 		{
-#line 136 "EaseaLex.l"
+#line 222 "EaseaLex.l"
 
-#line 157 "EaseaLex.cpp"
+#line 243 "EaseaLex.cpp"
 		}
 		break;
 	case 2:
 		{
-#line 139 "EaseaLex.l"
+#line 225 "EaseaLex.l"
 
   BEGIN TEMPLATE_ANALYSIS; yyless(yyleng-1);
  
-#line 166 "EaseaLex.cpp"
+#line 252 "EaseaLex.cpp"
 		}
 		break;
 	case 3:
 		{
-#line 147 "EaseaLex.l"
+#line 233 "EaseaLex.l"
              
   char sFileName[1000];
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,".cpp"); 
   fpOutputFile=fopen(sFileName,"w");
  
-#line 178 "EaseaLex.cpp"
+#line 264 "EaseaLex.cpp"
 		}
 		break;
 	case 4:
 		{
-#line 153 "EaseaLex.l"
+#line 239 "EaseaLex.l"
 fprintf(fpOutputFile,"EASEA");
-#line 185 "EaseaLex.cpp"
+#line 271 "EaseaLex.cpp"
 		}
 		break;
 	case 5:
 		{
-#line 154 "EaseaLex.l"
+#line 240 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",sPROJECT_NAME);
-#line 192 "EaseaLex.cpp"
+#line 278 "EaseaLex.cpp"
 		}
 		break;
 	case 6:
 		{
-#line 155 "EaseaLex.l"
+#line 241 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",sEZ_PATH);
-#line 199 "EaseaLex.cpp"
+#line 285 "EaseaLex.cpp"
 		}
 		break;
 	case 7:
 		{
-#line 156 "EaseaLex.l"
+#line 242 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",sTPL_DIR);
-#line 206 "EaseaLex.cpp"
+#line 292 "EaseaLex.cpp"
 		}
 		break;
 	case 8:
 		{
-#line 157 "EaseaLex.l"
+#line 243 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",sEO_DIR);
-#line 213 "EaseaLex.cpp"
+#line 299 "EaseaLex.cpp"
 		}
 		break;
 	case 9:
 		{
-#line 158 "EaseaLex.l"
+#line 244 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",sLOWER_CASE_PROJECT_NAME);
-#line 220 "EaseaLex.cpp"
+#line 306 "EaseaLex.cpp"
 		}
 		break;
 	case 10:
 		{
-#line 159 "EaseaLex.l"
+#line 245 "EaseaLex.l"
 switch (OPERATING_SYSTEM) {
   case UNIX : fprintf(fpOutputFile,"UNIX_OS"); break;
   case WINDOWS : fprintf(fpOutputFile,"WINDOWS_OS"); break;
   case UNKNOWN_OS : fprintf(fpOutputFile,"UNKNOWN_OS"); break;
   }
  
-#line 232 "EaseaLex.cpp"
+#line 318 "EaseaLex.cpp"
 		}
 		break;
 	case 11:
 		{
-#line 165 "EaseaLex.l"
+#line 251 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Inserting user declarations.\n");
   yyreset();
@@ -241,12 +327,12 @@ switch (OPERATING_SYSTEM) {
   lineCounter=1;
   BEGIN COPY_USER_DECLARATIONS;
  
-#line 245 "EaseaLex.cpp"
+#line 331 "EaseaLex.cpp"
 		}
 		break;
 	case 12:
 		{
-#line 173 "EaseaLex.l"
+#line 259 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Inserting user cuda.\n");
   yyreset();
@@ -254,12 +340,12 @@ switch (OPERATING_SYSTEM) {
   lineCounter=1;
   BEGIN COPY_USER_CUDA;
  
-#line 258 "EaseaLex.cpp"
+#line 344 "EaseaLex.cpp"
 		}
 		break;
 	case 13:
 		{
-#line 181 "EaseaLex.l"
+#line 267 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Inserting initialisation function.\n");
   yyreset();
@@ -267,12 +353,12 @@ switch (OPERATING_SYSTEM) {
   lineCounter = 1;
   BEGIN COPY_INITIALISATION_FUNCTION;
  
-#line 271 "EaseaLex.cpp"
+#line 357 "EaseaLex.cpp"
 		}
 		break;
 	case 14:
 		{
-#line 189 "EaseaLex.l"
+#line 275 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Inserting generation before reduce function.\n");
   yyreset();
@@ -280,12 +366,12 @@ switch (OPERATING_SYSTEM) {
   bGenerationFunctionBeforeReplacement = true;
   BEGIN COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT;
  
-#line 284 "EaseaLex.cpp"
+#line 370 "EaseaLex.cpp"
 		}
 		break;
 	case 15:
 		{
-#line 198 "EaseaLex.l"
+#line 284 "EaseaLex.l"
 
   //DEBUG_PRT_PRT("insert beg");
   if (bVERBOSE) printf ("Inserting at the begining of each generation function.\n");
@@ -299,12 +385,12 @@ switch (OPERATING_SYSTEM) {
   lineCounter = 1;
   BEGIN COPY_BEG_GENERATION_FUNCTION;
  
-#line 303 "EaseaLex.cpp"
+#line 389 "EaseaLex.cpp"
 		}
 		break;
 	case 16:
 		{
-#line 217 "EaseaLex.l"
+#line 303 "EaseaLex.l"
 
   if( bVERBOSE )printf("inserting gp parameters\n");
   //  fprintf(fpOutputFile,"#define MAX_XOVER_DEPTH",%d
@@ -317,12 +403,12 @@ switch (OPERATING_SYSTEM) {
 
   fprintf(fpOutputFile,"#define NO_FITNESS_CASES %d\n",iNO_FITNESS_CASES);
 
-#line 321 "EaseaLex.cpp"
+#line 407 "EaseaLex.cpp"
 		}
 		break;
 	case 17:
 		{
-#line 235 "EaseaLex.l"
+#line 321 "EaseaLex.l"
 
   
   fprintf(fpOutputFile,"enum OPCODE              {"); 
@@ -354,12 +440,12 @@ switch (OPERATING_SYSTEM) {
   if( bVERBOSE ) printf("var length is %d\n",var_len);
   fprintf(fpOutputFile,"#define VAR_LEN %d\n",var_len); 
  
-#line 358 "EaseaLex.cpp"
+#line 444 "EaseaLex.cpp"
 		}
 		break;
 	case 18:
 		{
-#line 267 "EaseaLex.l"
+#line 353 "EaseaLex.l"
 
   for( unsigned i=0 ; i<iNoOp ; i++ ){
     fprintf(fpOutputFile,"    case %s :\n",opDesc[i]->opcode->c_str());
@@ -368,12 +454,12 @@ switch (OPERATING_SYSTEM) {
 
   }
  
-#line 372 "EaseaLex.cpp"
+#line 458 "EaseaLex.cpp"
 		}
 		break;
 	case 19:
 		{
-#line 276 "EaseaLex.l"
+#line 362 "EaseaLex.l"
 
   for( unsigned i=0 ; i<iNoOp ; i++ ){
     fprintf(fpOutputFile,"  case %s :\n",opDesc[i]->opcode->c_str());
@@ -381,12 +467,12 @@ switch (OPERATING_SYSTEM) {
     fprintf(fpOutputFile,"    break;\n");
   }
  
-#line 385 "EaseaLex.cpp"
+#line 471 "EaseaLex.cpp"
 		}
 		break;
 	case 20:
 		{
-#line 285 "EaseaLex.l"
+#line 371 "EaseaLex.l"
 
   yyreset();
   rewind(fpGenomeFile);
@@ -394,23 +480,23 @@ switch (OPERATING_SYSTEM) {
   if (bVERBOSE) printf ("Analysing GP OP code from ez file\n");
   BEGIN COPY_GP_OPCODE;
  
-#line 398 "EaseaLex.cpp"
+#line 484 "EaseaLex.cpp"
 		}
 		break;
 	case 21:
 		{
-#line 294 "EaseaLex.l"
+#line 380 "EaseaLex.l"
 
   if (bVERBOSE) printf ("found begin section\n");
   bGPOPCODE_ANALYSIS = true;
   BEGIN GP_RULE_ANALYSIS;
  
-#line 409 "EaseaLex.cpp"
+#line 495 "EaseaLex.cpp"
 		}
 		break;
 	case 22:
 		{
-#line 300 "EaseaLex.l"
+#line 386 "EaseaLex.l"
  
   if (bVERBOSE) printf ("found end section\n");
   if( bGPOPCODE_ANALYSIS ){
@@ -425,38 +511,38 @@ switch (OPERATING_SYSTEM) {
     BEGIN TEMPLATE_ANALYSIS; 
   }  
  
-#line 429 "EaseaLex.cpp"
+#line 515 "EaseaLex.cpp"
 		}
 		break;
 	case 23:
 		{
-#line 315 "EaseaLex.l"
+#line 401 "EaseaLex.l"
 
   if (bVERBOSE) printf("*** No GP OP codes were found. ***\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
  
-#line 441 "EaseaLex.cpp"
+#line 527 "EaseaLex.cpp"
 		}
 		break;
 	case 24:
 		{
-#line 321 "EaseaLex.l"
+#line 407 "EaseaLex.l"
 
-#line 448 "EaseaLex.cpp"
+#line 534 "EaseaLex.cpp"
 		}
 		break;
 	case 25:
 		{
-#line 322 "EaseaLex.l"
+#line 408 "EaseaLex.l"
 if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
-#line 455 "EaseaLex.cpp"
+#line 541 "EaseaLex.cpp"
 		}
 		break;
 	case 26:
 		{
-#line 329 "EaseaLex.l"
+#line 415 "EaseaLex.l"
 
   // this rule match the OP_NAME
   if( iGP_OPCODE_FIELD != 0 ){
@@ -466,19 +552,19 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   opDesc[iNoOp] = new OPCodeDesc();
   opDesc[iNoOp]->opcode = new string(yytext);
  
-#line 470 "EaseaLex.cpp"
+#line 556 "EaseaLex.cpp"
 		}
 		break;
 	case 27:
 		{
-#line 339 "EaseaLex.l"
+#line 425 "EaseaLex.l"
 
-#line 477 "EaseaLex.cpp"
+#line 563 "EaseaLex.cpp"
 		}
 		break;
 	case 28:
 		{
-#line 341 "EaseaLex.l"
+#line 427 "EaseaLex.l"
 
   if( iGP_OPCODE_FIELD != 1 ){
     fprintf(stderr,"Error, op code real name must be given at the second place\n");
@@ -486,12 +572,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   }
   opDesc[iNoOp]->realName = new string(yytext);
  
-#line 490 "EaseaLex.cpp"
+#line 576 "EaseaLex.cpp"
 		}
 		break;
 	case 29:
 		{
-#line 350 "EaseaLex.l"
+#line 436 "EaseaLex.l"
 
   if( iGP_OPCODE_FIELD != 2 ){
     fprintf(stderr,"Error, arity must be given at the third place\n");
@@ -505,38 +591,38 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     opDesc[iNoOp]->arity = 0;
   }
  
-#line 509 "EaseaLex.cpp"
+#line 595 "EaseaLex.cpp"
 		}
 		break;
 	case 30:
 		{
-#line 364 "EaseaLex.l"
+#line 450 "EaseaLex.l"
 
-#line 516 "EaseaLex.cpp"
+#line 602 "EaseaLex.cpp"
 		}
 		break;
 	case 31:
 		{
-#line 365 "EaseaLex.l"
+#line 451 "EaseaLex.l"
 
   iGP_OPCODE_FIELD = 0;
   iNoOp++;
  
-#line 526 "EaseaLex.cpp"
+#line 612 "EaseaLex.cpp"
 		}
 		break;
 	case 32:
 		{
-#line 370 "EaseaLex.l"
+#line 456 "EaseaLex.l"
 
   if( bGPOPCODE_ANALYSIS ) iGP_OPCODE_FIELD++;
  
-#line 535 "EaseaLex.cpp"
+#line 621 "EaseaLex.cpp"
 		}
 		break;
 	case 33:
 		{
-#line 375 "EaseaLex.l"
+#line 461 "EaseaLex.l"
 
   if( iGP_OPCODE_FIELD != 3 ){
     fprintf(stderr,"Error, code must be given at the forth place\n");
@@ -553,23 +639,23 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
 
   BEGIN GP_COPY_OPCODE_CODE;
  
-#line 557 "EaseaLex.cpp"
+#line 643 "EaseaLex.cpp"
 		}
 		break;
 	case 34:
 		{
-#line 396 "EaseaLex.l"
+#line 482 "EaseaLex.l"
 
   accolade_counter++;
   opDesc[iNoOp]->cpuCodeStream << "{";
   opDesc[iNoOp]->gpuCodeStream << "{";
  
-#line 568 "EaseaLex.cpp"
+#line 654 "EaseaLex.cpp"
 		}
 		break;
 	case 35:
 		{
-#line 402 "EaseaLex.l"
+#line 488 "EaseaLex.l"
 
   accolade_counter--;
   if( accolade_counter==0 ){
@@ -582,12 +668,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     opDesc[iNoOp]->gpuCodeStream << "}";
   }
  
-#line 586 "EaseaLex.cpp"
+#line 672 "EaseaLex.cpp"
 		}
 		break;
 	case 36:
 		{
-#line 415 "EaseaLex.l"
+#line 501 "EaseaLex.l"
 
   char* endptr;
   unsigned no_input = strtol(yytext+strlen("INPUT["),&endptr,10);
@@ -595,44 +681,44 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   opDesc[iNoOp]->cpuCodeStream << "input["<< no_input <<"]" ;
   opDesc[iNoOp]->gpuCodeStream << "input["<< no_input << "]";  
  
-#line 599 "EaseaLex.cpp"
+#line 685 "EaseaLex.cpp"
 		}
 		break;
 	case 37:
 		{
-#line 423 "EaseaLex.l"
+#line 509 "EaseaLex.l"
 
   opDesc[iNoOp]->isERC = true;
   opDesc[iNoOp]->cpuCodeStream << "root->erc_value" ;
   opDesc[iNoOp]->gpuCodeStream << "k_progs[start_prog++];" ;
 //  printf("ERC matched\n");
 
-#line 611 "EaseaLex.cpp"
+#line 697 "EaseaLex.cpp"
 		}
 		break;
 	case 38:
 		{
-#line 430 "EaseaLex.l"
+#line 516 "EaseaLex.l"
 
   opDesc[iNoOp]->cpuCodeStream << "\n  ";
   opDesc[iNoOp]->gpuCodeStream << "\n    ";
  
-#line 621 "EaseaLex.cpp"
+#line 707 "EaseaLex.cpp"
 		}
 		break;
 	case 39:
 		{
-#line 436 "EaseaLex.l"
+#line 522 "EaseaLex.l"
 
   opDesc[iNoOp]->cpuCodeStream << yytext;
   opDesc[iNoOp]->gpuCodeStream << yytext;
  
-#line 631 "EaseaLex.cpp"
+#line 717 "EaseaLex.cpp"
 		}
 		break;
 	case 40:
 		{
-#line 441 "EaseaLex.l"
+#line 527 "EaseaLex.l"
  
   yyreset();
   rewind(fpGenomeFile);
@@ -643,12 +729,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   fprintf(fpOutputFile,"  ");
   BEGIN COPY_GP_EVAL;
  
-#line 647 "EaseaLex.cpp"
+#line 733 "EaseaLex.cpp"
 		}
 		break;
 	case 41:
 		{
-#line 452 "EaseaLex.l"
+#line 538 "EaseaLex.l"
 
   yyreset();
   rewind(fpGenomeFile);
@@ -660,12 +746,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   bCOPY_GP_EVAL_GPU = false;
   BEGIN COPY_GP_EVAL;
  
-#line 664 "EaseaLex.cpp"
+#line 750 "EaseaLex.cpp"
 		}
 		break;
 	case 42:
 		{
-#line 466 "EaseaLex.l"
+#line 552 "EaseaLex.l"
 
   yyreset();
   rewind(fpGenomeFile);
@@ -677,12 +763,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   bCOPY_GP_EVAL_GPU = true;
   BEGIN COPY_GP_EVAL;
  
-#line 681 "EaseaLex.cpp"
+#line 767 "EaseaLex.cpp"
 		}
 		break;
 	case 43:
 		{
-#line 480 "EaseaLex.l"
+#line 566 "EaseaLex.l"
 
   yyreset();
   rewind(fpGenomeFile);
@@ -693,12 +779,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   fprintf(fpOutputFile,"  ");
   BEGIN COPY_GP_EVAL;
  
-#line 697 "EaseaLex.cpp"
+#line 783 "EaseaLex.cpp"
 		}
 		break;
 	case 44:
 		{
-#line 491 "EaseaLex.l"
+#line 577 "EaseaLex.l"
 
   yyreset();
   rewind(fpGenomeFile);
@@ -710,12 +796,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   bCOPY_GP_EVAL_GPU = true;
   BEGIN COPY_GP_EVAL;
  
-#line 714 "EaseaLex.cpp"
+#line 800 "EaseaLex.cpp"
 		}
 		break;
 	case 45:
 		{
-#line 504 "EaseaLex.l"
+#line 590 "EaseaLex.l"
 
   switch(iCOPY_GP_EVAL_STATUS){
   case EVAL_HDR:
@@ -729,45 +815,45 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     exit(-1);
   }
  
-#line 733 "EaseaLex.cpp"
+#line 819 "EaseaLex.cpp"
 		}
 		break;
 	case 46:
 		{
-#line 519 "EaseaLex.l"
+#line 605 "EaseaLex.l"
 
   if( iCOPY_GP_EVAL_STATUS==EVAL_HDR){
     bIsCopyingGPEval = true;
   }
  
-#line 744 "EaseaLex.cpp"
+#line 830 "EaseaLex.cpp"
 		}
 		break;
 	case 47:
 		{
-#line 525 "EaseaLex.l"
+#line 611 "EaseaLex.l"
 
   if( iCOPY_GP_EVAL_STATUS==EVAL_BDY){
     bIsCopyingGPEval = true;
   }
  
-#line 755 "EaseaLex.cpp"
+#line 841 "EaseaLex.cpp"
 		}
 		break;
 	case 48:
 		{
-#line 533 "EaseaLex.l"
+#line 619 "EaseaLex.l"
 
   if( iCOPY_GP_EVAL_STATUS==EVAL_FTR){
     bIsCopyingGPEval = true;
   }
  
-#line 766 "EaseaLex.cpp"
+#line 852 "EaseaLex.cpp"
 		}
 		break;
 	case 49:
 		{
-#line 539 "EaseaLex.l"
+#line 625 "EaseaLex.l"
 
   if( bIsCopyingGPEval ){
     bIsCopyingGPEval = false;
@@ -777,21 +863,21 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     BEGIN TEMPLATE_ANALYSIS;
   }
  
-#line 781 "EaseaLex.cpp"
+#line 867 "EaseaLex.cpp"
 		}
 		break;
 	case 50:
 		{
-#line 549 "EaseaLex.l"
+#line 635 "EaseaLex.l"
 
   if( bIsCopyingGPEval ) fprintf(fpOutputFile,"%s",yytext);
  
-#line 790 "EaseaLex.cpp"
+#line 876 "EaseaLex.cpp"
 		}
 		break;
 	case 51:
 		{
-#line 553 "EaseaLex.l"
+#line 639 "EaseaLex.l"
 
   if( bIsCopyingGPEval) 
     if( bCOPY_GP_EVAL_GPU )
@@ -799,12 +885,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     else fprintf(fpOutputFile, "outputs[i]" );
   
  
-#line 803 "EaseaLex.cpp"
+#line 889 "EaseaLex.cpp"
 		}
 		break;
 	case 52:
 		{
-#line 561 "EaseaLex.l"
+#line 647 "EaseaLex.l"
 
   char* endptr;
   unsigned no_output = strtol(yytext+strlen("OUTPUT["),&endptr,10);
@@ -814,12 +900,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     else fprintf(fpOutputFile, "outputs[i+%d]", no_output );
   
  
-#line 818 "EaseaLex.cpp"
+#line 904 "EaseaLex.cpp"
 		}
 		break;
 	case 53:
 		{
-#line 571 "EaseaLex.l"
+#line 657 "EaseaLex.l"
 
 	char *var;
 	var = strndup(yytext+strlen("OUTPUT["), strlen(yytext) - strlen("OUTPUT[") - 1);
@@ -829,12 +915,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     else fprintf(fpOutputFile, "outputs[i+%s]", var);
   
  
-#line 833 "EaseaLex.cpp"
+#line 919 "EaseaLex.cpp"
 		}
 		break;
 	case 54:
 		{
-#line 581 "EaseaLex.l"
+#line 667 "EaseaLex.l"
 
   if( bIsCopyingGPEval) 
     if( bCOPY_GP_EVAL_GPU )
@@ -842,12 +928,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     else fprintf(fpOutputFile, "inputs[i][0]" );
   
  
-#line 846 "EaseaLex.cpp"
+#line 932 "EaseaLex.cpp"
 		}
 		break;
 	case 55:
 		{
-#line 589 "EaseaLex.l"
+#line 675 "EaseaLex.l"
 
   char* endptr;
   unsigned no_input = strtol(yytext+strlen("INPUT["),&endptr,10);
@@ -857,12 +943,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     else fprintf(fpOutputFile, "inputs[i+%d][0]", no_input );
   
  
-#line 861 "EaseaLex.cpp"
+#line 947 "EaseaLex.cpp"
 		}
 		break;
 	case 56:
 		{
-#line 599 "EaseaLex.l"
+#line 685 "EaseaLex.l"
 
 	char *var;
 	var = strndup(yytext+strlen("INPUT["), strlen(yytext) - strlen("INPUT[") - 1);
@@ -872,12 +958,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     else fprintf(fpOutputFile, "inputs[i+%s][0]", var);
   
  
-#line 876 "EaseaLex.cpp"
+#line 962 "EaseaLex.cpp"
 		}
 		break;
 	case 57:
 		{
-#line 609 "EaseaLex.l"
+#line 695 "EaseaLex.l"
 
   if( bIsCopyingGPEval )
     if( iCOPY_GP_EVAL_STATUS==EVAL_FTR )
@@ -886,12 +972,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
       }
       else fprintf(fpOutputFile,"%s",yytext);
  
-#line 890 "EaseaLex.cpp"
+#line 976 "EaseaLex.cpp"
 		}
 		break;
 	case 58:
 		{
-#line 621 "EaseaLex.l"
+#line 707 "EaseaLex.l"
 
   if( bIsCopyingGPEval )
     switch(iCOPY_GP_EVAL_STATUS){
@@ -904,22 +990,22 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
       break;
     }
  
-#line 908 "EaseaLex.cpp"
+#line 994 "EaseaLex.cpp"
 		}
 		break;
 	case 59:
 		{
-#line 635 "EaseaLex.l"
+#line 721 "EaseaLex.l"
 
   if( bIsCopyingGPEval )
     fprintf(fpOutputFile,"return fitness = "); 
  
-#line 918 "EaseaLex.cpp"
+#line 1004 "EaseaLex.cpp"
 		}
 		break;
 	case 60:
 		{
-#line 642 "EaseaLex.l"
+#line 728 "EaseaLex.l"
 
   //DEBUG_PRT_PRT("insert beg");
   yyreset();
@@ -928,12 +1014,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   lineCounter = 1;
   BEGIN COPY_INSTEAD_EVAL;
  
-#line 932 "EaseaLex.cpp"
+#line 1018 "EaseaLex.cpp"
 		}
 		break;
 	case 61:
 		{
-#line 651 "EaseaLex.l"
+#line 737 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Inserting at the end of each generation function.\n");
   yyreset();
@@ -942,36 +1028,36 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   bBeginGeneration = false;
   BEGIN COPY_END_GENERATION_FUNCTION;
  
-#line 946 "EaseaLex.cpp"
+#line 1032 "EaseaLex.cpp"
 		}
 		break;
 	case 62:
 		{
-#line 660 "EaseaLex.l"
+#line 746 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Inserting Bound Checking function.\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_BOUND_CHECKING_FUNCTION;
  
-#line 958 "EaseaLex.cpp"
+#line 1044 "EaseaLex.cpp"
 		}
 		break;
 	case 63:
 		{
-#line 667 "EaseaLex.l"
+#line 753 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Analysing user classes.\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN ANALYSE_USER_CLASSES;
  
-#line 970 "EaseaLex.cpp"
+#line 1056 "EaseaLex.cpp"
 		}
 		break;
 	case 64:
 		{
-#line 674 "EaseaLex.l"
+#line 760 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Inserting User classes.\n");
   fprintf (fpOutputFile,"// User classes\n");
@@ -995,12 +1081,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     //DEBUG_PRT_PRT("\n");
   }
  
-#line 999 "EaseaLex.cpp"
+#line 1085 "EaseaLex.cpp"
 		}
 		break;
 	case 65:
 		{
-#line 697 "EaseaLex.l"
+#line 783 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome constructor.\n");
@@ -1012,12 +1098,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     }
   }
  
-#line 1016 "EaseaLex.cpp"
+#line 1102 "EaseaLex.cpp"
 		}
 		break;
 	case 66:
 		{
-#line 709 "EaseaLex.l"
+#line 795 "EaseaLex.l"
 
   size_t size_of_genome=0;
   if (bVERBOSE) printf ("Inserting default genome size.\n");
@@ -1038,12 +1124,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   }
   fprintf(fpOutputFile,"%d",size_of_genome);
  
-#line 1042 "EaseaLex.cpp"
+#line 1128 "EaseaLex.cpp"
 		}
 		break;
 	case 67:
 		{
-#line 730 "EaseaLex.l"
+#line 816 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome constructor.\n");
@@ -1059,17 +1145,17 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   }
   
  
-#line 1063 "EaseaLex.cpp"
+#line 1149 "EaseaLex.cpp"
 		}
 		break;
-#line 748 "EaseaLex.l"
+#line 834 "EaseaLex.l"
   
-#line 762 "EaseaLex.l"
+#line 848 "EaseaLex.l"
       
-#line 1070 "EaseaLex.cpp"
+#line 1156 "EaseaLex.cpp"
 	case 68:
 		{
-#line 770 "EaseaLex.l"
+#line 856 "EaseaLex.l"
         
   if (pGENOME->sString) {
     if (bVERBOSE) printf ("Inserting Methods into Genome Class.\n");
@@ -1079,12 +1165,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   if (bVERBOSE) printf ("Inserting genome.\n");
   pGENOME->print(fpOutputFile);
  
-#line 1083 "EaseaLex.cpp"
+#line 1169 "EaseaLex.cpp"
 		}
 		break;
 	case 69:
 		{
-#line 779 "EaseaLex.l"
+#line 865 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default assignment constructor.\n");
@@ -1102,12 +1188,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     }
   }
  
-#line 1106 "EaseaLex.cpp"
+#line 1192 "EaseaLex.cpp"
 		}
 		break;
 	case 70:
 		{
-#line 796 "EaseaLex.l"
+#line 882 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default clone method.\n");
@@ -1125,12 +1211,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
       }
   }
  
-#line 1129 "EaseaLex.cpp"
+#line 1215 "EaseaLex.cpp"
 		}
 		break;
 	case 71:
 		{
-#line 814 "EaseaLex.l"
+#line 900 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default copy constructor.\n");
@@ -1157,12 +1243,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
       
   }
  
-#line 1161 "EaseaLex.cpp"
+#line 1247 "EaseaLex.cpp"
 		}
 		break;
 	case 72:
 		{
-#line 841 "EaseaLex.l"
+#line 927 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome serializer.\n");
@@ -1171,12 +1257,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   pGENOME->serializeIndividual(fpOutputFile, "this");
   //fprintf(fpOutputFile,"\tEASEA_Line << endl;\n");
  
-#line 1175 "EaseaLex.cpp"
+#line 1261 "EaseaLex.cpp"
 		}
 		break;
 	case 73:
 		{
-#line 850 "EaseaLex.l"
+#line 936 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome deserializer.\n");
@@ -1184,12 +1270,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   pGENOME->pSymbolList->reset();
   pGENOME->deserializeIndividual(fpOutputFile, "this");
  
-#line 1188 "EaseaLex.cpp"
+#line 1274 "EaseaLex.cpp"
 		}
 		break;
 	case 74:
 		{
-#line 858 "EaseaLex.l"
+#line 944 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default copy constructor.\n");
@@ -1205,12 +1291,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
       }
   }
  
-#line 1209 "EaseaLex.cpp"
+#line 1295 "EaseaLex.cpp"
 		}
 		break;
 	case 75:
 		{
-#line 874 "EaseaLex.l"
+#line 960 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default destructor.\n");
@@ -1227,12 +1313,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     }
   }
  
-#line 1231 "EaseaLex.cpp"
+#line 1317 "EaseaLex.cpp"
 		}
 		break;
 	case 76:
 		{
-#line 891 "EaseaLex.l"
+#line 977 "EaseaLex.l"
        
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default diversity test.\n");
@@ -1255,12 +1341,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     
   }
  
-#line 1259 "EaseaLex.cpp"
+#line 1345 "EaseaLex.cpp"
 		}
 		break;
 	case 77:
 		{
-#line 913 "EaseaLex.l"
+#line 999 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default genome comparator.\n");
@@ -1277,12 +1363,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     }
   }
  
-#line 1281 "EaseaLex.cpp"
+#line 1367 "EaseaLex.cpp"
 		}
 		break;
 	case 78:
 		{
-#line 929 "EaseaLex.l"
+#line 1015 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default read command.\n");
@@ -1292,36 +1378,36 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
   }
  
-#line 1296 "EaseaLex.cpp"
+#line 1382 "EaseaLex.cpp"
 		}
 		break;
 	case 79:
 		{
-#line 938 "EaseaLex.l"
+#line 1024 "EaseaLex.l"
         
   if (bVERBOSE) printf ("Inserting genome display function.\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_DISPLAY;   
  
-#line 1308 "EaseaLex.cpp"
+#line 1394 "EaseaLex.cpp"
 		}
 		break;
 	case 80:
 		{
-#line 946 "EaseaLex.l"
+#line 1032 "EaseaLex.l"
 
   if( bVERBOSE ) printf("Inserting user LDFLAGS.\n");
   yyreset();
   yyin = fpGenomeFile;
   BEGIN COPY_MAKEFILE_OPTION;
  
-#line 1320 "EaseaLex.cpp"
+#line 1406 "EaseaLex.cpp"
 		}
 		break;
 	case 81:
 		{
-#line 953 "EaseaLex.l"
+#line 1039 "EaseaLex.l"
 
   CListItem<CSymbol*> *pSym;
   if (!bDisplayFunction){
@@ -1347,12 +1433,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     }
   }                      
  
-#line 1351 "EaseaLex.cpp"
+#line 1437 "EaseaLex.cpp"
 		}
 		break;
 	case 82:
 		{
-#line 978 "EaseaLex.l"
+#line 1064 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Inserting user functions.\n");
   yyreset();
@@ -1360,12 +1446,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   lineCounter=2;                                 // switch to .ez file and analyser
   BEGIN COPY_USER_FUNCTIONS;
  
-#line 1364 "EaseaLex.cpp"
+#line 1450 "EaseaLex.cpp"
 		}
 		break;
 	case 83:
 		{
-#line 985 "EaseaLex.l"
+#line 1071 "EaseaLex.l"
         
   yyreset();
   bWithinEO_Function=1;
@@ -1374,24 +1460,24 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN COPY_EO_INITIALISER;                               // not implemented as a function !
  
-#line 1378 "EaseaLex.cpp"
+#line 1464 "EaseaLex.cpp"
 		}
 		break;
 	case 84:
 		{
-#line 994 "EaseaLex.l"
+#line 1080 "EaseaLex.l"
         
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   lineCounter = 1;
   BEGIN COPY_INITIALISER;   
  
-#line 1390 "EaseaLex.cpp"
+#line 1476 "EaseaLex.cpp"
 		}
 		break;
 	case 85:
 		{
-#line 1001 "EaseaLex.l"
+#line 1087 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Inserting Finalization function.\n");
   yyreset();
@@ -1399,48 +1485,48 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   lineCounter=1;
   BEGIN COPY_FINALIZATION_FUNCTION;
  
-#line 1403 "EaseaLex.cpp"
+#line 1489 "EaseaLex.cpp"
 		}
 		break;
 	case 86:
 		{
-#line 1009 "EaseaLex.l"
+#line 1095 "EaseaLex.l"
         
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   lineCounter=1;
   BEGIN COPY_CROSSOVER;   
  
-#line 1415 "EaseaLex.cpp"
+#line 1501 "EaseaLex.cpp"
 		}
 		break;
 	case 87:
 		{
-#line 1015 "EaseaLex.l"
+#line 1101 "EaseaLex.l"
         
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   lineCounter=1;
   BEGIN COPY_MUTATOR;   
  
-#line 1427 "EaseaLex.cpp"
+#line 1513 "EaseaLex.cpp"
 		}
 		break;
 	case 88:
 		{
-#line 1021 "EaseaLex.l"
+#line 1107 "EaseaLex.l"
         
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   lineCounter=1;
   BEGIN COPY_EVALUATOR;   
  
-#line 1439 "EaseaLex.cpp"
+#line 1525 "EaseaLex.cpp"
 		}
 		break;
 	case 89:
 		{
-#line 1027 "EaseaLex.l"
+#line 1113 "EaseaLex.l"
       
   if( bVERBOSE ) fprintf(stdout,"Inserting optimization function\n");
   yyreset();
@@ -1448,12 +1534,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   lineCounter=1;
   BEGIN COPY_OPTIMISER;   
  
-#line 1452 "EaseaLex.cpp"
+#line 1538 "EaseaLex.cpp"
 		}
 		break;
 	case 90:
 		{
-#line 1034 "EaseaLex.l"
+#line 1120 "EaseaLex.l"
         
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
@@ -1461,12 +1547,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   lineCounter=1;
   BEGIN COPY_EVALUATOR;
  
-#line 1465 "EaseaLex.cpp"
+#line 1551 "EaseaLex.cpp"
 		}
 		break;
 	case 91:
 		{
-#line 1041 "EaseaLex.l"
+#line 1127 "EaseaLex.l"
  
   if( bVERBOSE ) fprintf(stdout,"Inserting cuda optimization function\n");
   yyreset();
@@ -1475,23 +1561,23 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   lineCounter=1;
   BEGIN COPY_OPTIMISER;
  
-#line 1479 "EaseaLex.cpp"
+#line 1565 "EaseaLex.cpp"
 		}
 		break;
 	case 92:
 		{
-#line 1050 "EaseaLex.l"
+#line 1136 "EaseaLex.l"
         
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   BEGIN PARAMETERS_ANALYSIS;   
  
-#line 1490 "EaseaLex.cpp"
+#line 1576 "EaseaLex.cpp"
 		}
 		break;
 	case 93:
 		{
-#line 1055 "EaseaLex.l"
+#line 1141 "EaseaLex.l"
 
   if (bGenerationReplacementFunction) {
     if( bVERBOSE ) fprintf(stdout,"Inserting generation function call\n");
@@ -1500,12 +1586,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     }
   }
  
-#line 1504 "EaseaLex.cpp"
+#line 1590 "EaseaLex.cpp"
 		}
 		break;
 	case 94:
 		{
-#line 1064 "EaseaLex.l"
+#line 1150 "EaseaLex.l"
 
   if( bEndGenerationFunction ) {
     if( bVERBOSE ) fprintf(stdout,"Inserting end generation function call\n");
@@ -1514,12 +1600,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     }
   }
  
-#line 1518 "EaseaLex.cpp"
+#line 1604 "EaseaLex.cpp"
 		}
 		break;
 	case 95:
 		{
-#line 1073 "EaseaLex.l"
+#line 1159 "EaseaLex.l"
 
   if( bBeginGenerationFunction ) {
     if( bVERBOSE ) fprintf(stdout,"Inserting beginning generation function call\n");
@@ -1528,12 +1614,12 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     }
   }
  
-#line 1532 "EaseaLex.cpp"
+#line 1618 "EaseaLex.cpp"
 		}
 		break;
 	case 96:
 		{
-#line 1083 "EaseaLex.l"
+#line 1169 "EaseaLex.l"
 
   if (bBoundCheckingFunction) {
     if( TARGET==CUDA || TARGET==STD ){
@@ -1541,58 +1627,58 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
     }
   }
  
-#line 1545 "EaseaLex.cpp"
+#line 1631 "EaseaLex.cpp"
 		}
 		break;
 	case 97:
 		{
-#line 1091 "EaseaLex.l"
+#line 1177 "EaseaLex.l"
 
     fprintf(fpOutputFile,"%d",bIsParentReduce);
  
-#line 1554 "EaseaLex.cpp"
+#line 1640 "EaseaLex.cpp"
 		}
 		break;
 	case 98:
 		{
-#line 1095 "EaseaLex.l"
+#line 1181 "EaseaLex.l"
 
   fprintf(fpOutputFile,"%d",bIsOffspringReduce);
  
-#line 1563 "EaseaLex.cpp"
+#line 1649 "EaseaLex.cpp"
 		}
 		break;
 	case 99:
 		{
-#line 1099 "EaseaLex.l"
+#line 1185 "EaseaLex.l"
 
   if (bInitFunction) fprintf(fpOutputFile,"\n  EASEAInitFunction(argc, argv);\n");
  
-#line 1572 "EaseaLex.cpp"
+#line 1658 "EaseaLex.cpp"
 		}
 		break;
 	case 100:
 		{
-#line 1103 "EaseaLex.l"
+#line 1189 "EaseaLex.l"
 
   if (bFinalizationFunction) fprintf(fpOutputFile,"\n  EASEAFinalization(pop);\n");
  
-#line 1581 "EaseaLex.cpp"
+#line 1667 "EaseaLex.cpp"
 		}
 		break;
 	case 101:
 		{
-#line 1107 "EaseaLex.l"
+#line 1193 "EaseaLex.l"
 
   //DEBUG_PRT_PRT("Inserting user classe definitions");
   pGENOME->printUserClasses(fpOutputFile);
  
-#line 1591 "EaseaLex.cpp"
+#line 1677 "EaseaLex.cpp"
 		}
 		break;
 	case 102:
 		{
-#line 1112 "EaseaLex.l"
+#line 1198 "EaseaLex.l"
 
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Selector is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
@@ -1606,92 +1692,92 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
   }
   else fprintf(fpOutputFile,"%s",sSELECTOR);
 
-#line 1610 "EaseaLex.cpp"
+#line 1696 "EaseaLex.cpp"
 		}
 		break;
 	case 103:
 		{
-#line 1125 "EaseaLex.l"
+#line 1211 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",sSELECTOR_OPERATOR);
-#line 1617 "EaseaLex.cpp"
+#line 1703 "EaseaLex.cpp"
 		}
 		break;
 	case 104:
 		{
-#line 1126 "EaseaLex.l"
+#line 1212 "EaseaLex.l"
 fprintf(fpOutputFile,"%f",fSELECT_PRM);
-#line 1624 "EaseaLex.cpp"
+#line 1710 "EaseaLex.cpp"
 		}
 		break;
 	case 105:
 		{
-#line 1127 "EaseaLex.l"
+#line 1213 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",sRED_PAR_OPERATOR);
-#line 1631 "EaseaLex.cpp"
+#line 1717 "EaseaLex.cpp"
 		}
 		break;
 	case 106:
 		{
-#line 1128 "EaseaLex.l"
+#line 1214 "EaseaLex.l"
 fprintf(fpOutputFile,"%f",fRED_PAR_PRM);
-#line 1638 "EaseaLex.cpp"
+#line 1724 "EaseaLex.cpp"
 		}
 		break;
 	case 107:
 		{
-#line 1129 "EaseaLex.l"
+#line 1215 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",sRED_OFF_OPERATOR);
-#line 1645 "EaseaLex.cpp"
+#line 1731 "EaseaLex.cpp"
 		}
 		break;
 	case 108:
 		{
-#line 1130 "EaseaLex.l"
+#line 1216 "EaseaLex.l"
 fprintf(fpOutputFile,"%f",fRED_OFF_PRM);
-#line 1652 "EaseaLex.cpp"
+#line 1738 "EaseaLex.cpp"
 		}
 		break;
 	case 109:
 		{
-#line 1131 "EaseaLex.l"
+#line 1217 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",sRED_FINAL_OPERATOR);
-#line 1659 "EaseaLex.cpp"
+#line 1745 "EaseaLex.cpp"
 		}
 		break;
 	case 110:
 		{
-#line 1132 "EaseaLex.l"
+#line 1218 "EaseaLex.l"
 fprintf(fpOutputFile,"%f",fRED_FINAL_PRM);
-#line 1666 "EaseaLex.cpp"
+#line 1752 "EaseaLex.cpp"
 		}
 		break;
 	case 111:
 		{
-#line 1133 "EaseaLex.l"
+#line 1219 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",nPOP_SIZE);
-#line 1673 "EaseaLex.cpp"
+#line 1759 "EaseaLex.cpp"
 		}
 		break;
 	case 112:
 		{
-#line 1134 "EaseaLex.l"
+#line 1220 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",nOFF_SIZE);
-#line 1680 "EaseaLex.cpp"
+#line 1766 "EaseaLex.cpp"
 		}
 		break;
 	case 113:
 		{
-#line 1135 "EaseaLex.l"
+#line 1221 "EaseaLex.l"
 
   fprintf(fpOutputFile,"%d",nELITE);
   ////DEBUG_PRT_PRT("elitism is %d, elite size is %d",bELITISM, nELITE);
  
-#line 1690 "EaseaLex.cpp"
+#line 1776 "EaseaLex.cpp"
 		}
 		break;
 	case 114:
 		{
-#line 1140 "EaseaLex.l"
+#line 1226 "EaseaLex.l"
 
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Parent reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
@@ -1705,12 +1791,12 @@ fprintf(fpOutputFile,"%d",nOFF_SIZE);
   }
   else fprintf(fpOutputFile,"%s",sRED_PAR);
  
-#line 1709 "EaseaLex.cpp"
+#line 1795 "EaseaLex.cpp"
 		}
 		break;
 	case 115:
 		{
-#line 1153 "EaseaLex.l"
+#line 1239 "EaseaLex.l"
 
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Offspring reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
@@ -1724,12 +1810,12 @@ fprintf(fpOutputFile,"%d",nOFF_SIZE);
   }
   else fprintf(fpOutputFile,"%s",sRED_OFF);
  
-#line 1728 "EaseaLex.cpp"
+#line 1814 "EaseaLex.cpp"
 		}
 		break;
 	case 116:
 		{
-#line 1166 "EaseaLex.l"
+#line 1252 "EaseaLex.l"
 
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Replacement selector is \"%s\" | Goal is %s",sRED_FINAL,(nMINIMISE?"Minimize":"Maximize"));
@@ -1743,176 +1829,176 @@ fprintf(fpOutputFile,"%d",nOFF_SIZE);
   }
   else fprintf(fpOutputFile,"%s",sRED_FINAL);
  
-#line 1747 "EaseaLex.cpp"
+#line 1833 "EaseaLex.cpp"
 		}
 		break;
 	case 117:
 		{
-#line 1179 "EaseaLex.l"
+#line 1265 "EaseaLex.l"
 
 if(OPERATING_SYSTEM=WINDOWS)
 	fprintf(fpOutputFile,"%s\\",getenv("NVSDKCUDA_ROOT"));
 
-#line 1757 "EaseaLex.cpp"
+#line 1843 "EaseaLex.cpp"
 		}
 		break;
 	case 118:
 		{
-#line 1183 "EaseaLex.l"
+#line 1269 "EaseaLex.l"
 if(fSURV_PAR_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_PAR_SIZE); else fprintf(fpOutputFile,"%f",(float)nPOP_SIZE);
-#line 1764 "EaseaLex.cpp"
+#line 1850 "EaseaLex.cpp"
 		}
 		break;
 	case 119:
 		{
-#line 1184 "EaseaLex.l"
+#line 1270 "EaseaLex.l"
 if(fSURV_OFF_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_OFF_SIZE); else fprintf(fpOutputFile,"%f",(float)nOFF_SIZE);
-#line 1771 "EaseaLex.cpp"
+#line 1857 "EaseaLex.cpp"
 		}
 		break;
 	case 120:
 		{
-#line 1185 "EaseaLex.l"
+#line 1271 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",nGENOME_NAME);
-#line 1778 "EaseaLex.cpp"
+#line 1864 "EaseaLex.cpp"
 		}
 		break;
 	case 121:
 		{
-#line 1186 "EaseaLex.l"
+#line 1272 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",nPROBLEM_DIM);
-#line 1785 "EaseaLex.cpp"
+#line 1871 "EaseaLex.cpp"
 		}
 		break;
 	case 122:
 		{
-#line 1187 "EaseaLex.l"
+#line 1273 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",nNB_GEN);
-#line 1792 "EaseaLex.cpp"
+#line 1878 "EaseaLex.cpp"
 		}
 		break;
 	case 123:
 		{
-#line 1188 "EaseaLex.l"
+#line 1274 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",nTIME_LIMIT);
-#line 1799 "EaseaLex.cpp"
+#line 1885 "EaseaLex.cpp"
 		}
 		break;
 	case 124:
 		{
-#line 1189 "EaseaLex.l"
+#line 1275 "EaseaLex.l"
 fprintf(fpOutputFile,"%f",fMUT_PROB);
-#line 1806 "EaseaLex.cpp"
+#line 1892 "EaseaLex.cpp"
 		}
 		break;
 	case 125:
 		{
-#line 1190 "EaseaLex.l"
+#line 1276 "EaseaLex.l"
 fprintf(fpOutputFile,"%f",fXOVER_PROB);
-#line 1813 "EaseaLex.cpp"
+#line 1899 "EaseaLex.cpp"
 		}
 		break;
 	case 126:
 		{
-#line 1191 "EaseaLex.l"
+#line 1277 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); 
-#line 1820 "EaseaLex.cpp"
+#line 1906 "EaseaLex.cpp"
 		}
 		break;
 	case 127:
 		{
-#line 1192 "EaseaLex.l"
+#line 1278 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bELITISM);
-#line 1827 "EaseaLex.cpp"
+#line 1913 "EaseaLex.cpp"
 		}
 		break;
 	case 128:
 		{
-#line 1194 "EaseaLex.l"
+#line 1280 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",nNB_OPT_IT);
-#line 1834 "EaseaLex.cpp"
+#line 1920 "EaseaLex.cpp"
 		}
 		break;
 	case 129:
 		{
-#line 1195 "EaseaLex.l"
+#line 1281 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bBALDWINISM);
-#line 1841 "EaseaLex.cpp"
+#line 1927 "EaseaLex.cpp"
 		}
 		break;
 	case 130:
 		{
-#line 1197 "EaseaLex.l"
+#line 1283 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bREMOTE_ISLAND_MODEL);
-#line 1848 "EaseaLex.cpp"
+#line 1934 "EaseaLex.cpp"
 		}
 		break;
 	case 131:
 		{
-#line 1198 "EaseaLex.l"
+#line 1284 "EaseaLex.l"
 if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");
-#line 1855 "EaseaLex.cpp"
+#line 1941 "EaseaLex.cpp"
 		}
 		break;
 	case 132:
 		{
-#line 1199 "EaseaLex.l"
+#line 1285 "EaseaLex.l"
 fprintf(fpOutputFile,"%f",fMIGRATION_PROBABILITY);
-#line 1862 "EaseaLex.cpp"
+#line 1948 "EaseaLex.cpp"
 		}
 		break;
 	case 133:
 		{
-#line 1201 "EaseaLex.l"
+#line 1287 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bPRINT_STATS);
-#line 1869 "EaseaLex.cpp"
+#line 1955 "EaseaLex.cpp"
 		}
 		break;
 	case 134:
 		{
-#line 1202 "EaseaLex.l"
+#line 1288 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bPLOT_STATS);
-#line 1876 "EaseaLex.cpp"
+#line 1962 "EaseaLex.cpp"
 		}
 		break;
 	case 135:
 		{
-#line 1203 "EaseaLex.l"
+#line 1289 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bGENERATE_CSV_FILE);
-#line 1883 "EaseaLex.cpp"
+#line 1969 "EaseaLex.cpp"
 		}
 		break;
 	case 136:
 		{
-#line 1204 "EaseaLex.l"
+#line 1290 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bGENERATE_GNUPLOT_SCRIPT);
-#line 1890 "EaseaLex.cpp"
+#line 1976 "EaseaLex.cpp"
 		}
 		break;
 	case 137:
 		{
-#line 1205 "EaseaLex.l"
+#line 1291 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bGENERATE_R_SCRIPT);
-#line 1897 "EaseaLex.cpp"
+#line 1983 "EaseaLex.cpp"
 		}
 		break;
 	case 138:
 		{
-#line 1207 "EaseaLex.l"
+#line 1293 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bSAVE_POPULATION);
-#line 1904 "EaseaLex.cpp"
+#line 1990 "EaseaLex.cpp"
 		}
 		break;
 	case 139:
 		{
-#line 1208 "EaseaLex.l"
+#line 1294 "EaseaLex.l"
 fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);
-#line 1911 "EaseaLex.cpp"
+#line 1997 "EaseaLex.cpp"
 		}
 		break;
 	case 140:
 		{
-#line 1210 "EaseaLex.l"
+#line 1296 "EaseaLex.l"
 
   char sFileName[1000];
   fclose(fpOutputFile);
@@ -1921,12 +2007,12 @@ fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);
   fpOutputFile=fopen(sFileName,"w");    
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  
-#line 1925 "EaseaLex.cpp"
+#line 2011 "EaseaLex.cpp"
 		}
 		break;
 	case 141:
 		{
-#line 1218 "EaseaLex.l"
+#line 1304 "EaseaLex.l"
 
   char sFileName[1000];
   fclose(fpOutputFile);
@@ -1941,12 +2027,12 @@ fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);
   fpOutputFile=fopen(sFileName,"w");    
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  
-#line 1945 "EaseaLex.cpp"
+#line 2031 "EaseaLex.cpp"
 		}
 		break;
 	case 142:
 		{
-#line 1232 "EaseaLex.l"
+#line 1318 "EaseaLex.l"
 
   char sFileName[1000];
   fclose(fpOutputFile);
@@ -1955,12 +2041,12 @@ fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
   fpOutputFile=fopen(sFileName,"w");
  
-#line 1959 "EaseaLex.cpp"
+#line 2045 "EaseaLex.cpp"
 		}
 		break;
 	case 143:
 		{
-#line 1240 "EaseaLex.l"
+#line 1326 "EaseaLex.l"
 
   char sFileName[1000];
   fclose(fpOutputFile);
@@ -1969,12 +2055,12 @@ fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
   fpOutputFile=fopen(sFileName,"w");
  
-#line 1973 "EaseaLex.cpp"
+#line 2059 "EaseaLex.cpp"
 		}
 		break;
 	case 144:
 		{
-#line 1249 "EaseaLex.l"
+#line 1335 "EaseaLex.l"
 
   char sFileName[1000];
  fclose(fpOutputFile);
@@ -1983,12 +2069,12 @@ fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
   fpOutputFile=fopen(sFileName,"w");
  
-#line 1987 "EaseaLex.cpp"
+#line 2073 "EaseaLex.cpp"
 		}
 		break;
 	case 145:
 		{
-#line 1258 "EaseaLex.l"
+#line 1344 "EaseaLex.l"
 
   char sFileName[1000];
   char sPathName[1000];
@@ -2046,12 +2132,12 @@ fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);
     exit(-1);
   }
 
-#line 2050 "EaseaLex.cpp"
+#line 2136 "EaseaLex.cpp"
 		}
 		break;
 	case 146:
 		{
-#line 1315 "EaseaLex.l"
+#line 1401 "EaseaLex.l"
 
   if (nWARNINGS) printf ("\nWARNING !!!\nTarget file(s) generation went through WITH %d WARNING(S) !\n",nWARNINGS);
   else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded without warnings.\n");
@@ -2063,31 +2149,31 @@ fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);
   fclose(fpTemplateFile);
   fclose(fpGenomeFile);
  
-#line 2067 "EaseaLex.cpp"
+#line 2153 "EaseaLex.cpp"
 		}
 		break;
 	case 147:
 		{
-#line 1327 "EaseaLex.l"
+#line 1413 "EaseaLex.l"
 putc(yytext[0],fpOutputFile);
-#line 2074 "EaseaLex.cpp"
+#line 2160 "EaseaLex.cpp"
 		}
 		break;
 	case 148:
 		{
-#line 1333 "EaseaLex.l"
+#line 1419 "EaseaLex.l"
 
   fprintf (fpOutputFile,"// Genome Initialiser\n"); 
   if( bLINE_NUM_EZ_FILE )
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   BEGIN COPY;
  
-#line 2086 "EaseaLex.cpp"
+#line 2172 "EaseaLex.cpp"
 		}
 		break;
 	case 149:
 		{
-#line 1339 "EaseaLex.l"
+#line 1425 "EaseaLex.l"
 
   if (bVERBOSE) printf("*** No genome initialiser was found. ***\n");
   rewind(fpGenomeFile);
@@ -2095,126 +2181,40 @@ putc(yytext[0],fpOutputFile);
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  
-#line 2099 "EaseaLex.cpp"
+#line 2185 "EaseaLex.cpp"
 		}
 		break;
 	case 150:
 		{
-#line 1346 "EaseaLex.l"
+#line 1432 "EaseaLex.l"
 
-#line 2106 "EaseaLex.cpp"
+#line 2192 "EaseaLex.cpp"
 		}
 		break;
 	case 151:
 		{
-#line 1347 "EaseaLex.l"
+#line 1433 "EaseaLex.l"
 lineCounter++;
-#line 2113 "EaseaLex.cpp"
+#line 2199 "EaseaLex.cpp"
 		}
 		break;
 	case 152:
 		{
-#line 1349 "EaseaLex.l"
+#line 1435 "EaseaLex.l"
 
   fprintf (fpOutputFile,"// User declarations\n"); 
   if( bLINE_NUM_EZ_FILE )
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   BEGIN COPY;
  
-#line 2125 "EaseaLex.cpp"
+#line 2211 "EaseaLex.cpp"
 		}
 		break;
 	case 153:
 		{
-#line 1355 "EaseaLex.l"
+#line 1441 "EaseaLex.l"
 
   if (bVERBOSE) printf("*** No user declarations were found. ***\n");
-  rewind(fpGenomeFile);
-  yyin = fpTemplateFile;
-  BEGIN TEMPLATE_ANALYSIS;
-  bNotFinishedYet=1;
- 
-#line 2138 "EaseaLex.cpp"
-		}
-		break;
-	case 154:
-		{
-#line 1363 "EaseaLex.l"
-
-#line 2145 "EaseaLex.cpp"
-		}
-		break;
-	case 155:
-		{
-#line 1364 "EaseaLex.l"
-
-  lineCounter++;
- 
-#line 2154 "EaseaLex.cpp"
-		}
-		break;
-#line 1367 "EaseaLex.l"
-               
-#line 2159 "EaseaLex.cpp"
-	case 156:
-		{
-#line 1368 "EaseaLex.l"
-
-  fprintf (fpOutputFile,"// User CUDA\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-  BEGIN COPY;
- 
-#line 2169 "EaseaLex.cpp"
-		}
-		break;
-	case 157:
-		{
-#line 1374 "EaseaLex.l"
-
-  if (bVERBOSE) printf("*** No user CUDA were found. ***\n");
-  rewind(fpGenomeFile);
-  yyin = fpTemplateFile;
-  BEGIN TEMPLATE_ANALYSIS;
-  bNotFinishedYet=1;
- 
-#line 2182 "EaseaLex.cpp"
-		}
-		break;
-	case 158:
-		{
-#line 1382 "EaseaLex.l"
-
-#line 2189 "EaseaLex.cpp"
-		}
-		break;
-	case 159:
-		{
-#line 1383 "EaseaLex.l"
-
-  lineCounter++;
- 
-#line 2198 "EaseaLex.cpp"
-		}
-		break;
-	case 160:
-		{
-#line 1387 "EaseaLex.l"
-
-  fprintf (fpOutputFile,"// User functions\n\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-  BEGIN COPY;
- 
-#line 2210 "EaseaLex.cpp"
-		}
-		break;
-	case 161:
-		{
-#line 1393 "EaseaLex.l"
-
-  if (bVERBOSE) printf("*** No user functions were found. ***\n");
-  fprintf(fpOutputFile,"\n// No user functions.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
@@ -2223,25 +2223,111 @@ lineCounter++;
 #line 2224 "EaseaLex.cpp"
 		}
 		break;
-	case 162:
+	case 154:
 		{
-#line 1401 "EaseaLex.l"
+#line 1449 "EaseaLex.l"
 
 #line 2231 "EaseaLex.cpp"
 		}
 		break;
-	case 163:
+	case 155:
 		{
-#line 1402 "EaseaLex.l"
+#line 1450 "EaseaLex.l"
 
   lineCounter++;
  
 #line 2240 "EaseaLex.cpp"
 		}
 		break;
+#line 1453 "EaseaLex.l"
+               
+#line 2245 "EaseaLex.cpp"
+	case 156:
+		{
+#line 1454 "EaseaLex.l"
+
+  fprintf (fpOutputFile,"// User CUDA\n"); 
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  BEGIN COPY;
+ 
+#line 2255 "EaseaLex.cpp"
+		}
+		break;
+	case 157:
+		{
+#line 1460 "EaseaLex.l"
+
+  if (bVERBOSE) printf("*** No user CUDA were found. ***\n");
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  BEGIN TEMPLATE_ANALYSIS;
+  bNotFinishedYet=1;
+ 
+#line 2268 "EaseaLex.cpp"
+		}
+		break;
+	case 158:
+		{
+#line 1468 "EaseaLex.l"
+
+#line 2275 "EaseaLex.cpp"
+		}
+		break;
+	case 159:
+		{
+#line 1469 "EaseaLex.l"
+
+  lineCounter++;
+ 
+#line 2284 "EaseaLex.cpp"
+		}
+		break;
+	case 160:
+		{
+#line 1473 "EaseaLex.l"
+
+  fprintf (fpOutputFile,"// User functions\n\n"); 
+  if( bLINE_NUM_EZ_FILE )
+    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  BEGIN COPY;
+ 
+#line 2296 "EaseaLex.cpp"
+		}
+		break;
+	case 161:
+		{
+#line 1479 "EaseaLex.l"
+
+  if (bVERBOSE) printf("*** No user functions were found. ***\n");
+  fprintf(fpOutputFile,"\n// No user functions.\n");
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  BEGIN TEMPLATE_ANALYSIS;
+  bNotFinishedYet=1;
+ 
+#line 2310 "EaseaLex.cpp"
+		}
+		break;
+	case 162:
+		{
+#line 1487 "EaseaLex.l"
+
+#line 2317 "EaseaLex.cpp"
+		}
+		break;
+	case 163:
+		{
+#line 1488 "EaseaLex.l"
+
+  lineCounter++;
+ 
+#line 2326 "EaseaLex.cpp"
+		}
+		break;
 	case 164:
 		{
-#line 1406 "EaseaLex.l"
+#line 1492 "EaseaLex.l"
 
     fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){\n");
   bFunction=1; bInitFunction=1;
@@ -2250,12 +2336,12 @@ lineCounter++;
       
   BEGIN COPY;
  
-#line 2254 "EaseaLex.cpp"
+#line 2340 "EaseaLex.cpp"
 		}
 		break;
 	case 165:
 		{
-#line 1414 "EaseaLex.l"
+#line 1500 "EaseaLex.l"
 bInitFunction=0; // No before everything else function was found in the .ez file
   if (bVERBOSE) printf("*** No before everything else function was found. ***\n");
   fprintf(fpOutputFile,"\n// No before everything else function.\n");
@@ -2265,26 +2351,26 @@ bInitFunction=0; // No before everything else function was found in the .ez file
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  
-#line 2269 "EaseaLex.cpp"
+#line 2355 "EaseaLex.cpp"
 		}
 		break;
 	case 166:
 		{
-#line 1423 "EaseaLex.l"
+#line 1509 "EaseaLex.l"
 
-#line 2276 "EaseaLex.cpp"
+#line 2362 "EaseaLex.cpp"
 		}
 		break;
 	case 167:
 		{
-#line 1424 "EaseaLex.l"
+#line 1510 "EaseaLex.l"
 lineCounter++;
-#line 2283 "EaseaLex.cpp"
+#line 2369 "EaseaLex.cpp"
 		}
 		break;
 	case 168:
 		{
-#line 1429 "EaseaLex.l"
+#line 1515 "EaseaLex.l"
 
   fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n");
   if( bLINE_NUM_EZ_FILE )
@@ -2293,12 +2379,12 @@ lineCounter++;
   bFunction=1; bFinalizationFunction=1;
   BEGIN COPY;
  
-#line 2297 "EaseaLex.cpp"
+#line 2383 "EaseaLex.cpp"
 		}
 		break;
 	case 169:
 		{
-#line 1438 "EaseaLex.l"
+#line 1524 "EaseaLex.l"
 bFinalizationFunction=0; // No after everything else function was found in the .ez file
   if (bVERBOSE) printf("*** No after everything else function was found. ***\n");
   fprintf(fpOutputFile,"\n// No after eveything else function.\n");
@@ -2307,26 +2393,26 @@ bFinalizationFunction=0; // No after everything else function was found in the .
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  
-#line 2311 "EaseaLex.cpp"
+#line 2397 "EaseaLex.cpp"
 		}
 		break;
 	case 170:
 		{
-#line 1446 "EaseaLex.l"
+#line 1532 "EaseaLex.l"
 
-#line 2318 "EaseaLex.cpp"
+#line 2404 "EaseaLex.cpp"
 		}
 		break;
 	case 171:
 		{
-#line 1447 "EaseaLex.l"
+#line 1533 "EaseaLex.l"
 lineCounter++;
-#line 2325 "EaseaLex.cpp"
+#line 2411 "EaseaLex.cpp"
 		}
 		break;
 	case 172:
 		{
-#line 1450 "EaseaLex.l"
+#line 1536 "EaseaLex.l"
 
   //DEBUG_PRT_PRT("at each end");
   if( (TARGET==CUDA || TARGET==STD)  ){
@@ -2337,12 +2423,12 @@ lineCounter++;
     BEGIN COPY_USER_GENERATION;
   }
  
-#line 2341 "EaseaLex.cpp"
+#line 2427 "EaseaLex.cpp"
 		}
 		break;
 	case 173:
 		{
-#line 1461 "EaseaLex.l"
+#line 1547 "EaseaLex.l"
 
   bEndGenerationFunction=0; // No Generation function was found in the .ez file
   if( bVERBOSE) printf("*** No end generation function was found. ***\n");
@@ -2353,19 +2439,19 @@ lineCounter++;
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  
-#line 2357 "EaseaLex.cpp"
+#line 2443 "EaseaLex.cpp"
 		}
 		break;
 	case 174:
 		{
-#line 1471 "EaseaLex.l"
+#line 1557 "EaseaLex.l"
 
-#line 2364 "EaseaLex.cpp"
+#line 2450 "EaseaLex.cpp"
 		}
 		break;
 	case 175:
 		{
-#line 1474 "EaseaLex.l"
+#line 1560 "EaseaLex.l"
 
   //DEBUG_PRT_PRT("at each beg");
   if( (TARGET==CUDA || TARGET==STD)){
@@ -2378,12 +2464,12 @@ lineCounter++;
     BEGIN COPY_USER_GENERATION;
   }
  
-#line 2382 "EaseaLex.cpp"
+#line 2468 "EaseaLex.cpp"
 		}
 		break;
 	case 176:
 		{
-#line 1487 "EaseaLex.l"
+#line 1573 "EaseaLex.l"
 
   //DEBUG_PRT_PRT("at each beg");
   if( (TARGET==CUDA || TARGET==STD)){
@@ -2395,26 +2481,26 @@ lineCounter++;
     BEGIN COPY_USER_GENERATION;
   }
  
-#line 2399 "EaseaLex.cpp"
+#line 2485 "EaseaLex.cpp"
 		}
 		break;
 	case 177:
 		{
-#line 1499 "EaseaLex.l"
+#line 1585 "EaseaLex.l"
 
-#line 2406 "EaseaLex.cpp"
+#line 2492 "EaseaLex.cpp"
 		}
 		break;
 	case 178:
 		{
-#line 1500 "EaseaLex.l"
+#line 1586 "EaseaLex.l"
 lineCounter++;
-#line 2413 "EaseaLex.cpp"
+#line 2499 "EaseaLex.cpp"
 		}
 		break;
 	case 179:
 		{
-#line 1502 "EaseaLex.l"
+#line 1588 "EaseaLex.l"
 
   bBeginGenerationFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No Instead evaluation step function was found. ***\n");
@@ -2425,12 +2511,12 @@ lineCounter++;
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  
-#line 2429 "EaseaLex.cpp"
+#line 2515 "EaseaLex.cpp"
 		}
 		break;
 	case 180:
 		{
-#line 1514 "EaseaLex.l"
+#line 1600 "EaseaLex.l"
 
   bBeginGenerationFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No beginning generation function was found. ***\n");
@@ -2441,26 +2527,26 @@ lineCounter++;
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  
-#line 2445 "EaseaLex.cpp"
+#line 2531 "EaseaLex.cpp"
 		}
 		break;
 	case 181:
 		{
-#line 1524 "EaseaLex.l"
+#line 1610 "EaseaLex.l"
 lineCounter++;
-#line 2452 "EaseaLex.cpp"
+#line 2538 "EaseaLex.cpp"
 		}
 		break;
 	case 182:
 		{
-#line 1525 "EaseaLex.l"
+#line 1611 "EaseaLex.l"
 
-#line 2459 "EaseaLex.cpp"
+#line 2545 "EaseaLex.cpp"
 		}
 		break;
 	case 183:
 		{
-#line 1529 "EaseaLex.l"
+#line 1615 "EaseaLex.l"
 
   //DEBUG_PRT_PRT("at each");
   if((TARGET==CUDA || TARGET==STD)){// && !bBeginGeneration && !bEndGeneration ){
@@ -2470,12 +2556,12 @@ lineCounter++;
       BEGIN COPY_USER_GENERATION;
   }
  
-#line 2474 "EaseaLex.cpp"
+#line 2560 "EaseaLex.cpp"
 		}
 		break;
 	case 184:
 		{
-#line 1539 "EaseaLex.l"
+#line 1625 "EaseaLex.l"
 
   bGenerationFunctionBeforeReplacement=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No generation function was found. ***\n");
@@ -2485,19 +2571,19 @@ lineCounter++;
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  
-#line 2489 "EaseaLex.cpp"
+#line 2575 "EaseaLex.cpp"
 		}
 		break;
 	case 185:
 		{
-#line 1548 "EaseaLex.l"
+#line 1634 "EaseaLex.l"
 
-#line 2496 "EaseaLex.cpp"
+#line 2582 "EaseaLex.cpp"
 		}
 		break;
 	case 186:
 		{
-#line 1551 "EaseaLex.l"
+#line 1637 "EaseaLex.l"
 
   if(TARGET==CUDA || TARGET==STD){
     fprintf (fpOutputFile,"void EASEABoundChecking(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
@@ -2505,12 +2591,12 @@ lineCounter++;
   bFunction=1; bBoundCheckingFunction=1;
   BEGIN COPY_USER_GENERATION;
  
-#line 2509 "EaseaLex.cpp"
+#line 2595 "EaseaLex.cpp"
 		}
 		break;
 	case 187:
 		{
-#line 1558 "EaseaLex.l"
+#line 1644 "EaseaLex.l"
 bBoundCheckingFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No bound checking function was found. ***\n");
   fprintf(fpOutputFile,"\n// No Bound checking function.\n");
@@ -2519,78 +2605,78 @@ bBoundCheckingFunction=0; // No Generation function was found in the .ez file
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  
-#line 2523 "EaseaLex.cpp"
+#line 2609 "EaseaLex.cpp"
 		}
 		break;
 	case 188:
 		{
-#line 1566 "EaseaLex.l"
+#line 1652 "EaseaLex.l"
 
-#line 2530 "EaseaLex.cpp"
+#line 2616 "EaseaLex.cpp"
 		}
 		break;
 	case 189:
 		{
-#line 1570 "EaseaLex.l"
+#line 1656 "EaseaLex.l"
 
   BEGIN GENOME_ANALYSIS; return CLASSES;
-#line 2538 "EaseaLex.cpp"
+#line 2624 "EaseaLex.cpp"
 		}
 		break;
 	case 190:
 		{
-#line 1572 "EaseaLex.l"
+#line 1658 "EaseaLex.l"
 
-#line 2545 "EaseaLex.cpp"
+#line 2631 "EaseaLex.cpp"
 		}
 		break;
 	case 191:
 		{
-#line 1578 "EaseaLex.l"
+#line 1664 "EaseaLex.l"
 (bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");
-#line 2552 "EaseaLex.cpp"
+#line 2638 "EaseaLex.cpp"
 		}
 		break;
 	case 192:
 		{
-#line 1579 "EaseaLex.l"
+#line 1665 "EaseaLex.l"
 fprintf(fpOutputFile,"\\\"");
-#line 2559 "EaseaLex.cpp"
+#line 2645 "EaseaLex.cpp"
 		}
 		break;
 	case 193:
 	case 194:
 		{
-#line 1582 "EaseaLex.l"
+#line 1668 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }
-#line 2570 "EaseaLex.cpp"
+#line 2656 "EaseaLex.cpp"
 		}
 		break;
 	case 195:
 	case 196:
 		{
-#line 1587 "EaseaLex.l"
+#line 1673 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");
-#line 2579 "EaseaLex.cpp"
+#line 2665 "EaseaLex.cpp"
 		}
 		break;
 	case 197:
 	case 198:
 		{
-#line 1590 "EaseaLex.l"
+#line 1676 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");
-#line 2588 "EaseaLex.cpp"
+#line 2674 "EaseaLex.cpp"
 		}
 		break;
 	case 199:
 	case 200:
 		{
-#line 1593 "EaseaLex.l"
+#line 1679 "EaseaLex.l"
 
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"MUT_PROB");
@@ -2601,13 +2687,13 @@ if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
     else fprintf(fpOutputFile,"EZ_MUT_PROB");
   
  
-#line 2605 "EaseaLex.cpp"
+#line 2691 "EaseaLex.cpp"
 		}
 		break;
 	case 201:
 	case 202:
 		{
-#line 1604 "EaseaLex.l"
+#line 1690 "EaseaLex.l"
 
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
@@ -2615,275 +2701,275 @@ if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
     fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
   else fprintf(fpOutputFile,"EZ_XOVER_PROB");
  
-#line 2619 "EaseaLex.cpp"
+#line 2705 "EaseaLex.cpp"
 		}
 		break;
 	case 203:
 	case 204:
 		{
-#line 1612 "EaseaLex.l"
+#line 1698 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else fprintf(fpOutputFile,"EZ_REPL_PERC");
-#line 2628 "EaseaLex.cpp"
+#line 2714 "EaseaLex.cpp"
 		}
 		break;
 	case 205:
 	case 206:
 		{
-#line 1615 "EaseaLex.l"
+#line 1701 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE");
   else fprintf(fpOutputFile,"EZ_MINIMISE");
-#line 2637 "EaseaLex.cpp"
+#line 2723 "EaseaLex.cpp"
 		}
 		break;
 	case 207:
 	case 208:
 		{
-#line 1618 "EaseaLex.l"
+#line 1704 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE");
   else fprintf(fpOutputFile,"EZ_MINIMIZE");
-#line 2646 "EaseaLex.cpp"
+#line 2732 "EaseaLex.cpp"
 		}
 		break;
 	case 209:
 	case 210:
 		{
-#line 1621 "EaseaLex.l"
+#line 1707 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE");
   else fprintf(fpOutputFile,"EZ_MAXIMISE");
-#line 2655 "EaseaLex.cpp"
+#line 2741 "EaseaLex.cpp"
 		}
 		break;
 	case 211:
 	case 212:
 		{
-#line 1624 "EaseaLex.l"
+#line 1710 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE");
   else fprintf(fpOutputFile,"EZ_MAXIMIZE");
-#line 2664 "EaseaLex.cpp"
+#line 2750 "EaseaLex.cpp"
 		}
 		break;
 	case 213:
 	case 214:
 		{
-#line 1628 "EaseaLex.l"
+#line 1714 "EaseaLex.l"
 
   if( TARGET==CUDA ){
     fprintf(fpOutputFile,"%s",yytext);
   }
  
-#line 2676 "EaseaLex.cpp"
+#line 2762 "EaseaLex.cpp"
 		}
 		break;
 	case 215:
 		{
-#line 1634 "EaseaLex.l"
+#line 1720 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);
-#line 2683 "EaseaLex.cpp"
+#line 2769 "EaseaLex.cpp"
 		}
 		break;
 	case 216:
 		{
-#line 1635 "EaseaLex.l"
+#line 1721 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 2690 "EaseaLex.cpp"
+#line 2776 "EaseaLex.cpp"
 		}
 		break;
 	case 217:
 		{
-#line 1636 "EaseaLex.l"
+#line 1722 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 2697 "EaseaLex.cpp"
+#line 2783 "EaseaLex.cpp"
 		}
 		break;
 	case 218:
 		{
-#line 1637 "EaseaLex.l"
+#line 1723 "EaseaLex.l"
 
   fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
   exit (1);
 
-#line 2707 "EaseaLex.cpp"
+#line 2793 "EaseaLex.cpp"
 		}
 		break;
 	case 219:
 		{
-#line 1642 "EaseaLex.l"
+#line 1728 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The crossover proability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 2714 "EaseaLex.cpp"
+#line 2800 "EaseaLex.cpp"
 		}
 		break;
 	case 220:
 		{
-#line 1643 "EaseaLex.l"
+#line 1729 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 2721 "EaseaLex.cpp"
+#line 2807 "EaseaLex.cpp"
 		}
 		break;
 	case 221:
 		{
-#line 1644 "EaseaLex.l"
+#line 1730 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 2728 "EaseaLex.cpp"
+#line 2814 "EaseaLex.cpp"
 		}
 		break;
 	case 222:
 		{
-#line 1645 "EaseaLex.l"
+#line 1731 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 2735 "EaseaLex.cpp"
+#line 2821 "EaseaLex.cpp"
 		}
 		break;
 	case 223:
 		{
-#line 1646 "EaseaLex.l"
+#line 1732 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 2742 "EaseaLex.cpp"
+#line 2828 "EaseaLex.cpp"
 		}
 		break;
 	case 224:
 		{
-#line 1647 "EaseaLex.l"
+#line 1733 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 2749 "EaseaLex.cpp"
+#line 2835 "EaseaLex.cpp"
 		}
 		break;
 	case 225:
 		{
-#line 1648 "EaseaLex.l"
+#line 1734 "EaseaLex.l"
 fprintf(fpOutputFile,"false");
-#line 2756 "EaseaLex.cpp"
+#line 2842 "EaseaLex.cpp"
 		}
 		break;
 	case 226:
 		{
-#line 1649 "EaseaLex.l"
+#line 1735 "EaseaLex.l"
 fprintf(fpOutputFile,"true");
-#line 2763 "EaseaLex.cpp"
+#line 2849 "EaseaLex.cpp"
 		}
 		break;
 	case 227:
 		{
-#line 1650 "EaseaLex.l"
+#line 1736 "EaseaLex.l"
 
   fprintf(fpOutputFile,yytext);
-#line 2771 "EaseaLex.cpp"
+#line 2857 "EaseaLex.cpp"
 		}
 		break;
 	case 228:
 		{
-#line 1652 "EaseaLex.l"
+#line 1738 "EaseaLex.l"
  // local random name 
   fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");
-#line 2779 "EaseaLex.cpp"
+#line 2865 "EaseaLex.cpp"
 		}
 		break;
 	case 229:
 		{
-#line 1654 "EaseaLex.l"
+#line 1740 "EaseaLex.l"
 
   fprintf(fpOutputFile,"globalRandomGenerator->random");
-#line 2787 "EaseaLex.cpp"
+#line 2873 "EaseaLex.cpp"
 		}
 		break;
 	case 230:
 		{
-#line 1656 "EaseaLex.l"
+#line 1742 "EaseaLex.l"
 
   if (bWithinEO_Function && TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"_genotype");
   else if(bWithinEO_Function && bWithinCUDA_Initializer )fprintf(fpOutputFile,"(*this)");
   else fprintf(fpOutputFile,"Genome");
-#line 2797 "EaseaLex.cpp"
+#line 2883 "EaseaLex.cpp"
 		}
 		break;
 	case 231:
 		{
-#line 1660 "EaseaLex.l"
+#line 1746 "EaseaLex.l"
 fprintf(fpOutputFile,"genome._evaluated");
-#line 2804 "EaseaLex.cpp"
+#line 2890 "EaseaLex.cpp"
 		}
 		break;
 	case 232:
 		{
-#line 1661 "EaseaLex.l"
+#line 1747 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",yytext); BEGIN MACRO_IDENTIFIER;
-#line 2811 "EaseaLex.cpp"
+#line 2897 "EaseaLex.cpp"
 		}
 		break;
 	case 233:
 		{
-#line 1662 "EaseaLex.l"
+#line 1748 "EaseaLex.l"
 
   int i;
   for (i=0;(yytext[i]!=' ')&&(yytext[i]!=' ');i++);
   yytext[i]=0;
   fprintf(fpOutputFile,"template <class fitT> %s %sGenome<fitT>::",yytext,sPROJECT_NAME);
-#line 2822 "EaseaLex.cpp"
+#line 2908 "EaseaLex.cpp"
 		}
 		break;
 	case 234:
 		{
-#line 1667 "EaseaLex.l"
+#line 1753 "EaseaLex.l"
 fprintf(fpOutputFile,"template <class fitT> %sGenome<fitT>::",sPROJECT_NAME);
-#line 2829 "EaseaLex.cpp"
+#line 2915 "EaseaLex.cpp"
 		}
 		break;
 	case 235:
 		{
-#line 1668 "EaseaLex.l"
+#line 1754 "EaseaLex.l"
 
   if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"IndividualImpl");
   else fprintf(fpOutputFile,"%sGenome",sPROJECT_NAME);
-#line 2838 "EaseaLex.cpp"
+#line 2924 "EaseaLex.cpp"
 		}
 		break;
 	case 236:
 		{
-#line 1671 "EaseaLex.l"
+#line 1757 "EaseaLex.l"
 
   if(bFinalizationFunction){
 	bWaitingToClosePopulation=true;
     fprintf(fpOutputFile,"((IndividualImpl*)pPopulation[");
   }
  
-#line 2850 "EaseaLex.cpp"
+#line 2936 "EaseaLex.cpp"
 		}
 		break;
 	case 237:
 		{
-#line 1677 "EaseaLex.l"
+#line 1763 "EaseaLex.l"
 
   	if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
   	else {fprintf(fpOutputFile,"])"); ;bWaitingToClosePopulation=false;}
-#line 2859 "EaseaLex.cpp"
+#line 2945 "EaseaLex.cpp"
 		}
 		break;
 	case 238:
 		{
-#line 1680 "EaseaLex.l"
+#line 1766 "EaseaLex.l"
 
   if(bFinalizationFunction){
     fprintf(fpOutputFile,"pPopulation");
   }
   else fprintf(fpOutputFile,"/*pPopulation only in \"After everything else function\" this will cause an error*/ pPopulation");
  
-#line 2871 "EaseaLex.cpp"
+#line 2957 "EaseaLex.cpp"
 		}
 		break;
 	case 239:
 		{
-#line 1686 "EaseaLex.l"
+#line 1772 "EaseaLex.l"
 
   if(bFinalizationFunction)
 	fprintf(fpOutputFile,"((IndividualImpl*)bBest)");
   else fprintf(fpOutputFile,"/*bBest only in \"After everything else function\" this will cause an error*/ bBest");
   
-#line 2882 "EaseaLex.cpp"
+#line 2968 "EaseaLex.cpp"
 		}
 		break;
 	case 240:
 		{
-#line 1691 "EaseaLex.l"
+#line 1777 "EaseaLex.l"
 
   if (bFunction==1 && bWithinCUDA_Initializer==0) {
     fprintf (fpOutputFile,"}\n"); 
@@ -2894,267 +2980,267 @@ fprintf(fpOutputFile,"template <class fitT> %sGenome<fitT>::",sPROJECT_NAME);
   rewind(fpGenomeFile); 
   yyin = fpTemplateFile; 
   BEGIN TEMPLATE_ANALYSIS;
-#line 2898 "EaseaLex.cpp"
+#line 2984 "EaseaLex.cpp"
 		}
 		break;
 	case 241:
 		{
-#line 1701 "EaseaLex.l"
+#line 1787 "EaseaLex.l"
 putc(yytext[0],fpOutputFile);
-#line 2905 "EaseaLex.cpp"
+#line 2991 "EaseaLex.cpp"
 		}
 		break;
 	case 242:
 		{
-#line 1704 "EaseaLex.l"
+#line 1790 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",yytext);
   pASymbol = new CSymbol(yytext); pASymbol->ObjectType=oMacro;
   BEGIN MACRO_DEFINITION; 
-#line 2914 "EaseaLex.cpp"
+#line 3000 "EaseaLex.cpp"
 		}
 		break;
 	case 243:
 		{
-#line 1707 "EaseaLex.l"
+#line 1793 "EaseaLex.l"
 BEGIN COPY;
-#line 2921 "EaseaLex.cpp"
+#line 3007 "EaseaLex.cpp"
 		}
 		break;
 	case 244:
 		{
-#line 1709 "EaseaLex.l"
+#line 1795 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",yytext);
-#line 2928 "EaseaLex.cpp"
+#line 3014 "EaseaLex.cpp"
 		}
 		break;
 	case 245:
 	case 246:
 	case 247:
 		{
-#line 1712 "EaseaLex.l"
+#line 1798 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = myStrtod();
   pSymbolTable->insert(pASymbol);
   bSymbolInserted=1;
   BEGIN COPY;
-#line 2941 "EaseaLex.cpp"
+#line 3027 "EaseaLex.cpp"
 		}
 		break;
 	case 248:
 		{
-#line 1717 "EaseaLex.l"
+#line 1803 "EaseaLex.l"
 fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = atoi(yytext);
   pSymbolTable->insert(pASymbol);
   bSymbolInserted=1;
   BEGIN COPY;
-#line 2952 "EaseaLex.cpp"
+#line 3038 "EaseaLex.cpp"
 		}
 		break;
 	case 249:
 		{
-#line 1722 "EaseaLex.l"
+#line 1808 "EaseaLex.l"
 if (!bSymbolInserted) delete pASymbol;
   else bSymbolInserted=0;
   BEGIN COPY;
-#line 2961 "EaseaLex.cpp"
+#line 3047 "EaseaLex.cpp"
 		}
 		break;
 	case 250:
 		{
-#line 1731 "EaseaLex.l"
+#line 1817 "EaseaLex.l"
 ;
-#line 2968 "EaseaLex.cpp"
+#line 3054 "EaseaLex.cpp"
 		}
 		break;
 	case 251:
 		{
-#line 1732 "EaseaLex.l"
+#line 1818 "EaseaLex.l"
 ;
-#line 2975 "EaseaLex.cpp"
+#line 3061 "EaseaLex.cpp"
 		}
 		break;
 	case 252:
 		{
-#line 1733 "EaseaLex.l"
+#line 1819 "EaseaLex.l"
 ;
-#line 2982 "EaseaLex.cpp"
+#line 3068 "EaseaLex.cpp"
 		}
 		break;
 	case 253:
 		{
-#line 1734 "EaseaLex.l"
+#line 1820 "EaseaLex.l"
 ;
-#line 2989 "EaseaLex.cpp"
+#line 3075 "EaseaLex.cpp"
 		}
 		break;
 	case 254:
 		{
-#line 1737 "EaseaLex.l"
+#line 1823 "EaseaLex.l"
  /* do nothing */ 
-#line 2996 "EaseaLex.cpp"
+#line 3082 "EaseaLex.cpp"
 		}
 		break;
 	case 255:
 		{
-#line 1738 "EaseaLex.l"
+#line 1824 "EaseaLex.l"
  /*return '\n';*/ 
-#line 3003 "EaseaLex.cpp"
+#line 3089 "EaseaLex.cpp"
 		}
 		break;
 	case 256:
 		{
-#line 1739 "EaseaLex.l"
+#line 1825 "EaseaLex.l"
  /*return '\n';*/ 
-#line 3010 "EaseaLex.cpp"
+#line 3096 "EaseaLex.cpp"
 		}
 		break;
 	case 257:
 		{
-#line 1742 "EaseaLex.l"
+#line 1828 "EaseaLex.l"
 
   yylval.pSymbol = pSymbolTable->find("bool");
   return BOOL;
-#line 3019 "EaseaLex.cpp"
+#line 3105 "EaseaLex.cpp"
 		}
 		break;
 	case 258:
 		{
-#line 1745 "EaseaLex.l"
+#line 1831 "EaseaLex.l"
 
     yylval.pSymbol = new CSymbol(yytext);
     return IDENTIFIER;
     
-#line 3029 "EaseaLex.cpp"
+#line 3115 "EaseaLex.cpp"
 		}
 		break;
 	case 259:
 		{
-#line 1749 "EaseaLex.l"
+#line 1835 "EaseaLex.l"
 
   yylval.pSymbol = new CSymbol("GPNode");
   //yylval.pSymbol->ObjectType = oPointer;
 //  printf("match gpnode\n");
   return GPNODE;
  
-#line 3041 "EaseaLex.cpp"
+#line 3127 "EaseaLex.cpp"
 		}
 		break;
 	case 260:
 		{
-#line 1756 "EaseaLex.l"
+#line 1842 "EaseaLex.l"
 return STATIC;
-#line 3048 "EaseaLex.cpp"
+#line 3134 "EaseaLex.cpp"
 		}
 		break;
 	case 261:
 		{
-#line 1757 "EaseaLex.l"
+#line 1843 "EaseaLex.l"
 yylval.pSymbol = pSymbolTable->find("int"); return INT;
-#line 3055 "EaseaLex.cpp"
+#line 3141 "EaseaLex.cpp"
 		}
 		break;
 	case 262:
 		{
-#line 1758 "EaseaLex.l"
+#line 1844 "EaseaLex.l"
 yylval.pSymbol = pSymbolTable->find("double"); return DOUBLE;
-#line 3062 "EaseaLex.cpp"
+#line 3148 "EaseaLex.cpp"
 		}
 		break;
 	case 263:
 		{
-#line 1759 "EaseaLex.l"
+#line 1845 "EaseaLex.l"
 yylval.pSymbol = pSymbolTable->find("float"); return FLOAT;
-#line 3069 "EaseaLex.cpp"
+#line 3155 "EaseaLex.cpp"
 		}
 		break;
 	case 264:
 		{
-#line 1760 "EaseaLex.l"
+#line 1846 "EaseaLex.l"
 yylval.pSymbol = pSymbolTable->find("char"); return CHAR;
-#line 3076 "EaseaLex.cpp"
+#line 3162 "EaseaLex.cpp"
 		}
 		break;
 	case 265:
 		{
-#line 1761 "EaseaLex.l"
+#line 1847 "EaseaLex.l"
 yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;
-#line 3083 "EaseaLex.cpp"
+#line 3169 "EaseaLex.cpp"
 		}
 		break;
 	case 266:
 		{
-#line 1763 "EaseaLex.l"
+#line 1849 "EaseaLex.l"
 rewind(fpGenomeFile);yyin = fpTemplateFile;BEGIN TEMPLATE_ANALYSIS;
-#line 3090 "EaseaLex.cpp"
+#line 3176 "EaseaLex.cpp"
 		}
 		break;
-#line 1764 "EaseaLex.l"
+#line 1850 "EaseaLex.l"
   
-#line 3095 "EaseaLex.cpp"
+#line 3181 "EaseaLex.cpp"
 	case 267:
 		{
-#line 1765 "EaseaLex.l"
+#line 1851 "EaseaLex.l"
 return GENOME; 
-#line 3100 "EaseaLex.cpp"
+#line 3186 "EaseaLex.cpp"
 		}
 		break;
 	case 268:
 		{
-#line 1767 "EaseaLex.l"
+#line 1853 "EaseaLex.l"
 BEGIN GET_METHODS;
   yylval.szString=yytext;  
   bMethodsInGenome=1;
   return METHODS;
-#line 3110 "EaseaLex.cpp"
+#line 3196 "EaseaLex.cpp"
 		}
 		break;
 	case 269:
 	case 270:
 	case 271:
 		{
-#line 1774 "EaseaLex.l"
+#line 1860 "EaseaLex.l"
  yylval.dValue = myStrtod(); return NUMBER; 
-#line 3119 "EaseaLex.cpp"
+#line 3205 "EaseaLex.cpp"
 		}
 		break;
 	case 272:
 		{
-#line 1775 "EaseaLex.l"
+#line 1861 "EaseaLex.l"
 yylval.dValue=atoi(yytext); return NUMBER;
-#line 3126 "EaseaLex.cpp"
+#line 3212 "EaseaLex.cpp"
 		}
 		break;
 	case 273:
 		{
-#line 1778 "EaseaLex.l"
+#line 1864 "EaseaLex.l"
  yylval.pSymbol = new CSymbol(yytext);
   return IDENTIFIER; 
-#line 3134 "EaseaLex.cpp"
+#line 3220 "EaseaLex.cpp"
 		}
 		break;
 	case 274:
 		{
-#line 1780 "EaseaLex.l"
+#line 1866 "EaseaLex.l"
 BEGIN GENOME_ANALYSIS; return END_METHODS;
-#line 3141 "EaseaLex.cpp"
+#line 3227 "EaseaLex.cpp"
 		}
 		break;
 	case 275:
 		{
-#line 1786 "EaseaLex.l"
+#line 1872 "EaseaLex.l"
  
 /*   //DEBUG_PRT_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
 /*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
   bDisplayFunction=bWithinDisplayFunction=1;
   BEGIN COPY_USER_FUNCTION;
  
-#line 3153 "EaseaLex.cpp"
+#line 3239 "EaseaLex.cpp"
 		}
 		break;
 	case 276:
 		{
-#line 1792 "EaseaLex.l"
+#line 1878 "EaseaLex.l"
 bDisplayFunction=0; // No display function was found in the .ez file
   if (bVERBOSE) printf("*** No display function was found. ***\n");
   rewind(fpGenomeFile);
@@ -3162,30 +3248,30 @@ bDisplayFunction=0; // No display function was found in the .ez file
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  
-#line 3166 "EaseaLex.cpp"
+#line 3252 "EaseaLex.cpp"
 		}
 		break;
 	case 277:
 		{
-#line 1799 "EaseaLex.l"
+#line 1885 "EaseaLex.l"
 
-#line 3173 "EaseaLex.cpp"
+#line 3259 "EaseaLex.cpp"
 		}
 		break;
 	case 278:
 		{
-#line 1801 "EaseaLex.l"
+#line 1887 "EaseaLex.l"
 
   //DEBUG_PRT_PRT("LDFLAGS is beg: %s",yytext); 
   bWithinMAKEFILEOPTION=1;
   return MAKEFILE_OPTION;
  
-#line 3184 "EaseaLex.cpp"
+#line 3270 "EaseaLex.cpp"
 		}
 		break;
 	case 279:
 		{
-#line 1812 "EaseaLex.l"
+#line 1898 "EaseaLex.l"
 
   if( bWithinMAKEFILEOPTION ){
     //DEBUG_PRT_PRT("end of makefile options");
@@ -3195,32 +3281,32 @@ bDisplayFunction=0; // No display function was found in the .ez file
     return END_OF_FUNCTION;
   }
  
-#line 3199 "EaseaLex.cpp"
+#line 3285 "EaseaLex.cpp"
 		}
 		break;
 	case 280:
 		{
-#line 1822 "EaseaLex.l"
+#line 1908 "EaseaLex.l"
 
   if( bWithinMAKEFILEOPTION ){
     putc(yytext[0],fpOutputFile);
     }
  
-#line 3210 "EaseaLex.cpp"
+#line 3296 "EaseaLex.cpp"
 		}
 		break;
 	case 281:
 		{
-#line 1828 "EaseaLex.l"
+#line 1914 "EaseaLex.l"
 
   if( bWithinMAKEFILEOPTION );
  
-#line 3219 "EaseaLex.cpp"
+#line 3305 "EaseaLex.cpp"
 		}
 		break;
 	case 282:
 		{
-#line 1832 "EaseaLex.l"
+#line 1918 "EaseaLex.l"
  
   //DEBUG_PRT_PRT("No makefile options defined.");
 
@@ -3230,31 +3316,31 @@ bDisplayFunction=0; // No display function was found in the .ez file
 
   return MAKEFILE_OPTION;
  
-#line 3234 "EaseaLex.cpp"
+#line 3320 "EaseaLex.cpp"
 		}
 		break;
 	case 283:
 		{
-#line 1845 "EaseaLex.l"
+#line 1931 "EaseaLex.l"
 
   bWithinInitialiser=1;
   BEGIN COPY_USER_FUNCTION;
   BEGIN TEMPLATE_ANALYSIS;
   return USER_CTOR;
  
-#line 3246 "EaseaLex.cpp"
+#line 3332 "EaseaLex.cpp"
 		}
 		break;
 	case 284:
 		{
-#line 1851 "EaseaLex.l"
+#line 1937 "EaseaLex.l"
 
-#line 3253 "EaseaLex.cpp"
+#line 3339 "EaseaLex.cpp"
 		}
 		break;
 	case 285:
 		{
-#line 1852 "EaseaLex.l"
+#line 1938 "EaseaLex.l"
 
   bWithinXover=1;
   if( bLINE_NUM_EZ_FILE )
@@ -3262,26 +3348,26 @@ bDisplayFunction=0; // No display function was found in the .ez file
   BEGIN COPY_USER_FUNCTION;
   return USER_XOVER;
  
-#line 3266 "EaseaLex.cpp"
+#line 3352 "EaseaLex.cpp"
 		}
 		break;
 	case 286:
 		{
-#line 1859 "EaseaLex.l"
+#line 1945 "EaseaLex.l"
 
-#line 3273 "EaseaLex.cpp"
+#line 3359 "EaseaLex.cpp"
 		}
 		break;
 	case 287:
 		{
-#line 1860 "EaseaLex.l"
+#line 1946 "EaseaLex.l"
 lineCounter++;
-#line 3280 "EaseaLex.cpp"
+#line 3366 "EaseaLex.cpp"
 		}
 		break;
 	case 288:
 		{
-#line 1861 "EaseaLex.l"
+#line 1947 "EaseaLex.l"
 
   bWithinMutator=1;
   if( bLINE_NUM_EZ_FILE )
@@ -3289,26 +3375,26 @@ lineCounter++;
   BEGIN COPY_USER_FUNCTION;
   return USER_MUTATOR;
  
-#line 3293 "EaseaLex.cpp"
+#line 3379 "EaseaLex.cpp"
 		}
 		break;
 	case 289:
 		{
-#line 1868 "EaseaLex.l"
+#line 1954 "EaseaLex.l"
 
-#line 3300 "EaseaLex.cpp"
+#line 3386 "EaseaLex.cpp"
 		}
 		break;
 	case 290:
 		{
-#line 1869 "EaseaLex.l"
+#line 1955 "EaseaLex.l"
 lineCounter++;
-#line 3307 "EaseaLex.cpp"
+#line 3393 "EaseaLex.cpp"
 		}
 		break;
 	case 291:
 		{
-#line 1871 "EaseaLex.l"
+#line 1957 "EaseaLex.l"
 
   BEGIN COPY_USER_FUNCTION;            
   bWithinEvaluator=1;
@@ -3316,26 +3402,26 @@ lineCounter++;
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   return USER_EVALUATOR;
  
-#line 3320 "EaseaLex.cpp"
+#line 3406 "EaseaLex.cpp"
 		}
 		break;
 	case 292:
 		{
-#line 1878 "EaseaLex.l"
+#line 1964 "EaseaLex.l"
 
-#line 3327 "EaseaLex.cpp"
+#line 3413 "EaseaLex.cpp"
 		}
 		break;
 	case 293:
 		{
-#line 1879 "EaseaLex.l"
+#line 1965 "EaseaLex.l"
 lineCounter++;
-#line 3334 "EaseaLex.cpp"
+#line 3420 "EaseaLex.cpp"
 		}
 		break;
 	case 294:
 		{
-#line 1881 "EaseaLex.l"
+#line 1967 "EaseaLex.l"
 
   BEGIN COPY_USER_FUNCTION;
   bWithinOptimiser=1;
@@ -3343,84 +3429,84 @@ lineCounter++;
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   return USER_OPTIMISER;
  
-#line 3347 "EaseaLex.cpp"
+#line 3433 "EaseaLex.cpp"
 		}
 		break;
 	case 295:
 		{
-#line 1888 "EaseaLex.l"
+#line 1974 "EaseaLex.l"
 
-#line 3354 "EaseaLex.cpp"
+#line 3440 "EaseaLex.cpp"
 		}
 		break;
 	case 296:
 		{
-#line 1889 "EaseaLex.l"
+#line 1975 "EaseaLex.l"
 lineCounter++;
-#line 3361 "EaseaLex.cpp"
+#line 3447 "EaseaLex.cpp"
 		}
 		break;
 	case 297:
 		{
-#line 1895 "EaseaLex.l"
+#line 1981 "EaseaLex.l"
 fprintf(fpOutputFile,yytext);
-#line 3368 "EaseaLex.cpp"
+#line 3454 "EaseaLex.cpp"
 		}
 		break;
 	case 298:
 		{
-#line 1896 "EaseaLex.l"
+#line 1982 "EaseaLex.l"
 fprintf(fpOutputFile,yytext);
-#line 3375 "EaseaLex.cpp"
+#line 3461 "EaseaLex.cpp"
 		}
 		break;
 	case 299:
 		{
-#line 1897 "EaseaLex.l"
+#line 1983 "EaseaLex.l"
 fprintf(fpOutputFile,yytext);
-#line 3382 "EaseaLex.cpp"
+#line 3468 "EaseaLex.cpp"
 		}
 		break;
 	case 300:
 		{
-#line 1898 "EaseaLex.l"
+#line 1984 "EaseaLex.l"
 fprintf(fpOutputFile,yytext);
-#line 3389 "EaseaLex.cpp"
+#line 3475 "EaseaLex.cpp"
 		}
 		break;
 	case 301:
 		{
-#line 1899 "EaseaLex.l"
+#line 1985 "EaseaLex.l"
 fprintf(fpOutputFile,"genome");
-#line 3396 "EaseaLex.cpp"
+#line 3482 "EaseaLex.cpp"
 		}
 		break;
 	case 302:
 		{
-#line 1900 "EaseaLex.l"
+#line 1986 "EaseaLex.l"
 (bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");
-#line 3403 "EaseaLex.cpp"
+#line 3489 "EaseaLex.cpp"
 		}
 		break;
 	case 303:
 		{
-#line 1901 "EaseaLex.l"
+#line 1987 "EaseaLex.l"
 fprintf(fpOutputFile,"\\\"");
-#line 3410 "EaseaLex.cpp"
+#line 3496 "EaseaLex.cpp"
 		}
 		break;
 	case 304:
 		{
-#line 1903 "EaseaLex.l"
+#line 1989 "EaseaLex.l"
 bWaitingToClosePopulation=true;
     fprintf(fpOutputFile,"((IndividualImpl*)pPopulation[");
  
-#line 3419 "EaseaLex.cpp"
+#line 3505 "EaseaLex.cpp"
 		}
 		break;
 	case 305:
 		{
-#line 1906 "EaseaLex.l"
+#line 1992 "EaseaLex.l"
 
   if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
   else {
@@ -3428,276 +3514,276 @@ bWaitingToClosePopulation=true;
     bWaitingToClosePopulation=false;
   }
  
-#line 3432 "EaseaLex.cpp"
+#line 3518 "EaseaLex.cpp"
 		}
 		break;
 	case 306:
 	case 307:
 		{
-#line 1915 "EaseaLex.l"
+#line 2001 "EaseaLex.l"
 
   if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else {
       fprintf(fpOutputFile,"(*EZ_current_generation)");}
-#line 3443 "EaseaLex.cpp"
+#line 3529 "EaseaLex.cpp"
 		}
 		break;
 	case 308:
 	case 309:
 		{
-#line 1920 "EaseaLex.l"
+#line 2006 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }
-#line 3452 "EaseaLex.cpp"
+#line 3538 "EaseaLex.cpp"
 		}
 		break;
 	case 310:
 	case 311:
 		{
-#line 1923 "EaseaLex.l"
+#line 2009 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
     
-#line 3461 "EaseaLex.cpp"
+#line 3547 "EaseaLex.cpp"
 		}
 		break;
 	case 312:
 	case 313:
 		{
-#line 1926 "EaseaLex.l"
+#line 2012 "EaseaLex.l"
 
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else {fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
     }
  
-#line 3473 "EaseaLex.cpp"
+#line 3559 "EaseaLex.cpp"
 		}
 		break;
 	case 314:
 	case 315:
 		{
-#line 1932 "EaseaLex.l"
+#line 2018 "EaseaLex.l"
 
   if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
   else {
       fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");     
     }
  
-#line 3486 "EaseaLex.cpp"
+#line 3572 "EaseaLex.cpp"
 		}
 		break;
 	case 316:
 	case 317:
 		{
-#line 1939 "EaseaLex.l"
+#line 2025 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
     
-#line 3495 "EaseaLex.cpp"
+#line 3581 "EaseaLex.cpp"
 		}
 		break;
 	case 318:
 	case 319:
 		{
-#line 1942 "EaseaLex.l"
+#line 2028 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE");
     
-#line 3504 "EaseaLex.cpp"
+#line 3590 "EaseaLex.cpp"
 		}
 		break;
 	case 320:
 	case 321:
 		{
-#line 1945 "EaseaLex.l"
+#line 2031 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE");
     
-#line 3513 "EaseaLex.cpp"
+#line 3599 "EaseaLex.cpp"
 		}
 		break;
 	case 322:
 	case 323:
 		{
-#line 1948 "EaseaLex.l"
+#line 2034 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE");
     
-#line 3522 "EaseaLex.cpp"
+#line 3608 "EaseaLex.cpp"
 		}
 		break;
 	case 324:
 	case 325:
 		{
-#line 1951 "EaseaLex.l"
+#line 2037 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE");
     
-#line 3531 "EaseaLex.cpp"
+#line 3617 "EaseaLex.cpp"
 		}
 		break;
 	case 326:
 		{
-#line 1954 "EaseaLex.l"
+#line 2040 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n    hint -> You must have meant \"NB_GEN=...\" rather than \"currentGeneration=...\"\n",sEZ_FILE_NAME,yylineno);
   exit(1);
  
-#line 3540 "EaseaLex.cpp"
+#line 3626 "EaseaLex.cpp"
 		}
 		break;
 	case 327:
 		{
-#line 1957 "EaseaLex.l"
+#line 2043 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else {
       fprintf(fpOutputFile,"(*EZ_NB_GEN)=");
     }
-#line 3550 "EaseaLex.cpp"
+#line 3636 "EaseaLex.cpp"
 		}
 		break;
 	case 328:
 		{
-#line 1961 "EaseaLex.l"
+#line 2047 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     
-#line 3558 "EaseaLex.cpp"
+#line 3644 "EaseaLex.cpp"
 		}
 		break;
 	case 329:
 		{
-#line 1963 "EaseaLex.l"
+#line 2049 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else {
       fprintf(fpOutputFile,"(*pEZ_MUT_PROB)=");
     }
  
-#line 3569 "EaseaLex.cpp"
+#line 3655 "EaseaLex.cpp"
 		}
 		break;
 	case 330:
 		{
-#line 1968 "EaseaLex.l"
+#line 2054 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else {
       fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)=");
     }
  
-#line 3580 "EaseaLex.cpp"
+#line 3666 "EaseaLex.cpp"
 		}
 		break;
 	case 331:
 		{
-#line 1973 "EaseaLex.l"
+#line 2059 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     
-#line 3588 "EaseaLex.cpp"
+#line 3674 "EaseaLex.cpp"
 		}
 		break;
 	case 332:
 		{
-#line 1975 "EaseaLex.l"
+#line 2061 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     
-#line 3596 "EaseaLex.cpp"
+#line 3682 "EaseaLex.cpp"
 		}
 		break;
 	case 333:
 		{
-#line 1977 "EaseaLex.l"
+#line 2063 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     
-#line 3604 "EaseaLex.cpp"
+#line 3690 "EaseaLex.cpp"
 		}
 		break;
 	case 334:
 		{
-#line 1979 "EaseaLex.l"
+#line 2065 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     
-#line 3612 "EaseaLex.cpp"
+#line 3698 "EaseaLex.cpp"
 		}
 		break;
 	case 335:
 		{
-#line 1981 "EaseaLex.l"
+#line 2067 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     
-#line 3620 "EaseaLex.cpp"
+#line 3706 "EaseaLex.cpp"
 		}
 		break;
 	case 336:
 		{
-#line 1983 "EaseaLex.l"
+#line 2069 "EaseaLex.l"
 fprintf(fpOutputFile,"false");
-#line 3627 "EaseaLex.cpp"
+#line 3713 "EaseaLex.cpp"
 		}
 		break;
 	case 337:
 		{
-#line 1984 "EaseaLex.l"
+#line 2070 "EaseaLex.l"
 fprintf(fpOutputFile,"true");
-#line 3634 "EaseaLex.cpp"
+#line 3720 "EaseaLex.cpp"
 		}
 		break;
 	case 338:
 		{
-#line 1985 "EaseaLex.l"
+#line 2071 "EaseaLex.l"
 
   fprintf(fpOutputFile,yytext);
-#line 3642 "EaseaLex.cpp"
+#line 3728 "EaseaLex.cpp"
 		}
 		break;
 	case 339:
 		{
-#line 1987 "EaseaLex.l"
+#line 2073 "EaseaLex.l"
  // local random name
   fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");
-#line 3650 "EaseaLex.cpp"
+#line 3736 "EaseaLex.cpp"
 		}
 		break;
 	case 340:
 		{
-#line 1989 "EaseaLex.l"
+#line 2075 "EaseaLex.l"
 
   fprintf(fpOutputFile,"globalRandomGenerator->random");
-#line 3658 "EaseaLex.cpp"
+#line 3744 "EaseaLex.cpp"
 		}
 		break;
 	case 341:
 		{
-#line 1991 "EaseaLex.l"
+#line 2077 "EaseaLex.l"
 fprintf(fpOutputFile,"genome._evaluated");
-#line 3665 "EaseaLex.cpp"
+#line 3751 "EaseaLex.cpp"
 		}
 		break;
 	case 342:
 		{
-#line 1992 "EaseaLex.l"
+#line 2078 "EaseaLex.l"
 
   if(bBeginGenerationFunction || bEndGenerationFunction || bGenerationFunctionBeforeReplacement){
     fprintf(fpOutputFile,"pPopulation)");
   }
   else fprintf(fpOutputFile,"pPopulation");
  
-#line 3677 "EaseaLex.cpp"
+#line 3763 "EaseaLex.cpp"
 		}
 		break;
 	case 343:
 		{
-#line 1998 "EaseaLex.l"
+#line 2084 "EaseaLex.l"
 
   fprintf(fpOutputFile,"((IndividualImpl*)bBest)");
  
-#line 3686 "EaseaLex.cpp"
+#line 3772 "EaseaLex.cpp"
 		}
 		break;
 	case 344:
 		{
-#line 2001 "EaseaLex.l"
+#line 2087 "EaseaLex.l"
 rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
   fprintf(fpOutputFile,"}");
-#line 3696 "EaseaLex.cpp"
+#line 3782 "EaseaLex.cpp"
 		}
 		break;
 	case 345:
 		{
-#line 2005 "EaseaLex.l"
+#line 2091 "EaseaLex.l"
 if (bWaitingForSemiColon){
     bWaitingForSemiColon=0;
     if (bFinishMINIMISE) {fprintf(fpOutputFile,");\n  if (MINIMISE) g.minimize() else g.maximize();\n"); bFinishMINIMISE=0;}
@@ -3709,73 +3795,73 @@ if (bWaitingForSemiColon){
     else fprintf(fpOutputFile,"));");
   }
   else fprintf(fpOutputFile,";");
-#line 3713 "EaseaLex.cpp"
+#line 3799 "EaseaLex.cpp"
 		}
 		break;
 	case 346:
 	case 347:
 		{
-#line 2017 "EaseaLex.l"
+#line 2103 "EaseaLex.l"
 
   fprintf(fpOutputFile,"(*evoluationaryAlgorithm).");
  
-#line 3723 "EaseaLex.cpp"
+#line 3809 "EaseaLex.cpp"
 		}
 		break;
 	case 348:
 		{
-#line 2020 "EaseaLex.l"
+#line 2106 "EaseaLex.l"
 putc(yytext[0],fpOutputFile);
-#line 3730 "EaseaLex.cpp"
+#line 3816 "EaseaLex.cpp"
 		}
 		break;
 	case 349:
 		{
-#line 2027 "EaseaLex.l"
+#line 2113 "EaseaLex.l"
 fprintf(fpOutputFile,yytext);
-#line 3737 "EaseaLex.cpp"
+#line 3823 "EaseaLex.cpp"
 		}
 		break;
 	case 350:
 		{
-#line 2028 "EaseaLex.l"
+#line 2114 "EaseaLex.l"
 fprintf(fpOutputFile,yytext);
-#line 3744 "EaseaLex.cpp"
+#line 3830 "EaseaLex.cpp"
 		}
 		break;
 	case 351:
 		{
-#line 2029 "EaseaLex.l"
+#line 2115 "EaseaLex.l"
 fprintf(fpOutputFile,yytext);printf("%s\n",yytext);
-#line 3751 "EaseaLex.cpp"
+#line 3837 "EaseaLex.cpp"
 		}
 		break;
 	case 352:
 		{
-#line 2030 "EaseaLex.l"
+#line 2116 "EaseaLex.l"
 fprintf(fpOutputFile,yytext);
-#line 3758 "EaseaLex.cpp"
+#line 3844 "EaseaLex.cpp"
 		}
 		break;
 	case 353:
 		{
-#line 2031 "EaseaLex.l"
+#line 2117 "EaseaLex.l"
 fprintf(fpOutputFile,yytext);
-#line 3765 "EaseaLex.cpp"
+#line 3851 "EaseaLex.cpp"
 		}
 		break;
 	case 354:
 		{
-#line 2033 "EaseaLex.l"
+#line 2119 "EaseaLex.l"
 
   fprintf(fpOutputFile,"Genome.");
  
-#line 3774 "EaseaLex.cpp"
+#line 3860 "EaseaLex.cpp"
 		}
 		break;
 	case 355:
 		{
-#line 2037 "EaseaLex.l"
+#line 2123 "EaseaLex.l"
 
   if( bWithinCUDA_Evaluator && TARGET==CUDA && TARGET_FLAVOR==CUDA_FLAVOR_MO ){
     fprintf(fpOutputFile,"(f[0])");
@@ -3783,12 +3869,12 @@ fprintf(fpOutputFile,yytext);
   else
     fprintf(fpOutputFile,"%s",yytext);
  
-#line 3787 "EaseaLex.cpp"
+#line 3873 "EaseaLex.cpp"
 		}
 		break;
 	case 356:
 		{
-#line 2045 "EaseaLex.l"
+#line 2131 "EaseaLex.l"
 
   if( bWithinCUDA_Evaluator &&  TARGET==CUDA && TARGET_FLAVOR==CUDA_FLAVOR_MO ){
     fprintf(fpOutputFile,"(f[1])");
@@ -3796,12 +3882,12 @@ fprintf(fpOutputFile,yytext);
   else
     fprintf(fpOutputFile,"%s",yytext);
  
-#line 3800 "EaseaLex.cpp"
+#line 3886 "EaseaLex.cpp"
 		}
 		break;
 	case 357:
 		{
-#line 2054 "EaseaLex.l"
+#line 2140 "EaseaLex.l"
 
   if( ((bWithinEvaluator || bWithinOptimiser) && !bWithinCUDA_Evaluator) && ( TARGET==STD || TARGET==CUDA )){
     fprintf(fpOutputFile,"");
@@ -3809,12 +3895,12 @@ fprintf(fpOutputFile,yytext);
   else
     fprintf(fpOutputFile,"%s",yytext);
  
-#line 3813 "EaseaLex.cpp"
+#line 3899 "EaseaLex.cpp"
 		}
 		break;
 	case 358:
 		{
-#line 2063 "EaseaLex.l"
+#line 2149 "EaseaLex.l"
 
 
   if(bWithinOptimiser || bWithinEvaluator || bWithinMutator || bWithinDisplayFunction){ 
@@ -3824,212 +3910,212 @@ fprintf(fpOutputFile,yytext);
   }
 
   else fprintf(fpOutputFile,"Genome");
-#line 3828 "EaseaLex.cpp"
+#line 3914 "EaseaLex.cpp"
 		}
 		break;
 	case 359:
 		{
-#line 2073 "EaseaLex.l"
+#line 2159 "EaseaLex.l"
 (bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");
-#line 3835 "EaseaLex.cpp"
+#line 3921 "EaseaLex.cpp"
 		}
 		break;
 	case 360:
 		{
-#line 2074 "EaseaLex.l"
+#line 2160 "EaseaLex.l"
 fprintf(fpOutputFile,"\\\"");
-#line 3842 "EaseaLex.cpp"
+#line 3928 "EaseaLex.cpp"
 		}
 		break;
 	case 361:
 	case 362:
 		{
-#line 2077 "EaseaLex.l"
+#line 2163 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }
-#line 3853 "EaseaLex.cpp"
+#line 3939 "EaseaLex.cpp"
 		}
 		break;
 	case 363:
 	case 364:
 		{
-#line 2082 "EaseaLex.l"
+#line 2168 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");
-#line 3862 "EaseaLex.cpp"
+#line 3948 "EaseaLex.cpp"
 		}
 		break;
 	case 365:
 	case 366:
 		{
-#line 2085 "EaseaLex.l"
+#line 2171 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");
-#line 3871 "EaseaLex.cpp"
+#line 3957 "EaseaLex.cpp"
 		}
 		break;
 	case 367:
 	case 368:
 		{
-#line 2088 "EaseaLex.l"
+#line 2174 "EaseaLex.l"
 
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else if( TARGET==CUDA || TARGET==STD)
     fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
   else fprintf(fpOutputFile,"EZ_MUT_PROB");
  
-#line 3884 "EaseaLex.cpp"
+#line 3970 "EaseaLex.cpp"
 		}
 		break;
 	case 369:
 	case 370:
 		{
-#line 2095 "EaseaLex.l"
+#line 2181 "EaseaLex.l"
 
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
   else if( TARGET==CUDA || TARGET==STD )
     fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
   else fprintf(fpOutputFile,"EZ_XOVER_PROB");
-#line 3897 "EaseaLex.cpp"
+#line 3983 "EaseaLex.cpp"
 		}
 		break;
 	case 371:
 	case 372:
 		{
-#line 2102 "EaseaLex.l"
+#line 2188 "EaseaLex.l"
 if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else fprintf(fpOutputFile,"EZ_REPL_PERC");
-#line 3906 "EaseaLex.cpp"
+#line 3992 "EaseaLex.cpp"
 		}
 		break;
 	case 373:
 		{
-#line 2105 "EaseaLex.l"
+#line 2191 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);
-#line 3913 "EaseaLex.cpp"
+#line 3999 "EaseaLex.cpp"
 		}
 		break;
 	case 374:
 		{
-#line 2106 "EaseaLex.l"
+#line 2192 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 3920 "EaseaLex.cpp"
+#line 4006 "EaseaLex.cpp"
 		}
 		break;
 	case 375:
 		{
-#line 2107 "EaseaLex.l"
+#line 2193 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 3927 "EaseaLex.cpp"
+#line 4013 "EaseaLex.cpp"
 		}
 		break;
 	case 376:
 		{
-#line 2108 "EaseaLex.l"
+#line 2194 "EaseaLex.l"
 
   fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
   exit (1);
 
-#line 3937 "EaseaLex.cpp"
+#line 4023 "EaseaLex.cpp"
 		}
 		break;
 	case 377:
 		{
-#line 2113 "EaseaLex.l"
+#line 2199 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The crossover proability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 3944 "EaseaLex.cpp"
+#line 4030 "EaseaLex.cpp"
 		}
 		break;
 	case 378:
 		{
-#line 2114 "EaseaLex.l"
+#line 2200 "EaseaLex.l"
 fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);
-#line 3951 "EaseaLex.cpp"
+#line 4037 "EaseaLex.cpp"
 		}
 		break;
 	case 379:
 		{
-#line 2115 "EaseaLex.l"
+#line 2201 "EaseaLex.l"
 fprintf(fpOutputFile,"false");
-#line 3958 "EaseaLex.cpp"
+#line 4044 "EaseaLex.cpp"
 		}
 		break;
 	case 380:
 		{
-#line 2116 "EaseaLex.l"
+#line 2202 "EaseaLex.l"
 fprintf(fpOutputFile,"true");
-#line 3965 "EaseaLex.cpp"
+#line 4051 "EaseaLex.cpp"
 		}
 		break;
 	case 381:
 		{
-#line 2117 "EaseaLex.l"
+#line 2203 "EaseaLex.l"
 
   fprintf(fpOutputFile,yytext);
-#line 3973 "EaseaLex.cpp"
+#line 4059 "EaseaLex.cpp"
 		}
 		break;
 	case 382:
 		{
-#line 2119 "EaseaLex.l"
+#line 2205 "EaseaLex.l"
  // local random name
   fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");
-#line 3981 "EaseaLex.cpp"
+#line 4067 "EaseaLex.cpp"
 		}
 		break;
 	case 383:
 		{
-#line 2121 "EaseaLex.l"
+#line 2207 "EaseaLex.l"
 
   fprintf(fpOutputFile,"globalRandomGenerator->random");
-#line 3989 "EaseaLex.cpp"
+#line 4075 "EaseaLex.cpp"
 		}
 		break;
 	case 384:
 		{
-#line 2123 "EaseaLex.l"
+#line 2209 "EaseaLex.l"
 fprintf(fpOutputFile,"child1");
  
-#line 3997 "EaseaLex.cpp"
+#line 4083 "EaseaLex.cpp"
 		}
 		break;
 	case 385:
 		{
-#line 2125 "EaseaLex.l"
+#line 2211 "EaseaLex.l"
 fprintf(fpOutputFile,"child2");
  
-#line 4005 "EaseaLex.cpp"
+#line 4091 "EaseaLex.cpp"
 		}
 		break;
 	case 386:
 		{
-#line 2127 "EaseaLex.l"
+#line 2213 "EaseaLex.l"
 fprintf(fpOutputFile,"parent1");
  
-#line 4013 "EaseaLex.cpp"
+#line 4099 "EaseaLex.cpp"
 		}
 		break;
 	case 387:
 		{
-#line 2129 "EaseaLex.l"
+#line 2215 "EaseaLex.l"
 fprintf(fpOutputFile,"parent2");
  
-#line 4021 "EaseaLex.cpp"
+#line 4107 "EaseaLex.cpp"
 		}
 		break;
 	case 388:
 		{
-#line 2131 "EaseaLex.l"
+#line 2217 "EaseaLex.l"
 fprintf(fpOutputFile,"genome._evaluated");
-#line 4028 "EaseaLex.cpp"
+#line 4114 "EaseaLex.cpp"
 		}
 		break;
 	case 389:
 		{
-#line 2132 "EaseaLex.l"
+#line 2218 "EaseaLex.l"
 if (bWithinEvaluator) {
     if( TARGET==CUDA || TARGET==STD) {
       if( bWithinCUDA_Evaluator ){
@@ -4047,23 +4133,23 @@ if (bWithinEvaluator) {
     bCatchNextSemiColon=true;
   }
   else fprintf(fpOutputFile,"return"); 
-#line 4051 "EaseaLex.cpp"
+#line 4137 "EaseaLex.cpp"
 		}
 		break;
 	case 390:
 		{
-#line 2149 "EaseaLex.l"
+#line 2235 "EaseaLex.l"
 if (!bCatchNextSemiColon) fprintf(fpOutputFile,";");
   else if (bWithinMutator){fprintf(fpOutputFile,">0?true:false;");/* bWithinMutator=false;*/}
   else fprintf(fpOutputFile,"));");
   bCatchNextSemiColon=false;
  
-#line 4062 "EaseaLex.cpp"
+#line 4148 "EaseaLex.cpp"
 		}
 		break;
 	case 391:
 		{
-#line 2154 "EaseaLex.l"
+#line 2240 "EaseaLex.l"
 rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   BEGIN TEMPLATE_ANALYSIS;
@@ -4072,397 +4158,397 @@ rewind(fpGenomeFile);
     bWithinDisplayFunction=0; // display function
   }
   else return END_OF_FUNCTION;
-#line 4076 "EaseaLex.cpp"
+#line 4162 "EaseaLex.cpp"
 		}
 		break;
 	case 392:
 		{
-#line 2162 "EaseaLex.l"
+#line 2248 "EaseaLex.l"
 putc(yytext[0],fpOutputFile);
-#line 4083 "EaseaLex.cpp"
+#line 4169 "EaseaLex.cpp"
 		}
 		break;
 	case 393:
 		{
-#line 2168 "EaseaLex.l"
+#line 2254 "EaseaLex.l"
 
   if (bVERBOSE) printf ("Analysing parameters...\n");
   BEGIN GET_PARAMETERS;
  
-#line 4093 "EaseaLex.cpp"
+#line 4179 "EaseaLex.cpp"
 		}
 		break;
 	case 394:
 		{
-#line 2172 "EaseaLex.l"
+#line 2258 "EaseaLex.l"
 
-#line 4100 "EaseaLex.cpp"
+#line 4186 "EaseaLex.cpp"
 		}
 		break;
 	case 395:
 		{
-#line 2175 "EaseaLex.l"
+#line 2261 "EaseaLex.l"
 ;
-#line 4107 "EaseaLex.cpp"
+#line 4193 "EaseaLex.cpp"
 		}
 		break;
 	case 396:
 		{
-#line 2176 "EaseaLex.l"
+#line 2262 "EaseaLex.l"
 ;
-#line 4114 "EaseaLex.cpp"
+#line 4200 "EaseaLex.cpp"
 		}
 		break;
 	case 397:
 		{
-#line 2177 "EaseaLex.l"
+#line 2263 "EaseaLex.l"
 ;
-#line 4121 "EaseaLex.cpp"
+#line 4207 "EaseaLex.cpp"
 		}
 		break;
 	case 398:
 		{
-#line 2178 "EaseaLex.l"
+#line 2264 "EaseaLex.l"
 ;
-#line 4128 "EaseaLex.cpp"
+#line 4214 "EaseaLex.cpp"
 		}
 		break;
 	case 399:
 		{
-#line 2180 "EaseaLex.l"
+#line 2266 "EaseaLex.l"
  /* do nothing */ 
-#line 4135 "EaseaLex.cpp"
+#line 4221 "EaseaLex.cpp"
 		}
 		break;
 	case 400:
 		{
-#line 2181 "EaseaLex.l"
+#line 2267 "EaseaLex.l"
  /*return '\n';*/ 
-#line 4142 "EaseaLex.cpp"
+#line 4228 "EaseaLex.cpp"
 		}
 		break;
 	case 401:
 		{
-#line 2182 "EaseaLex.l"
+#line 2268 "EaseaLex.l"
  /*return '\n';*/ 
-#line 4149 "EaseaLex.cpp"
+#line 4235 "EaseaLex.cpp"
 		}
 		break;
 	case 402:
 		{
-#line 2184 "EaseaLex.l"
+#line 2270 "EaseaLex.l"
 if (bVERBOSE) printf ("\tNb of Gen...\n");return NB_GEN;
-#line 4156 "EaseaLex.cpp"
+#line 4242 "EaseaLex.cpp"
 		}
 		break;
 	case 403:
 		{
-#line 2185 "EaseaLex.l"
+#line 2271 "EaseaLex.l"
 if (bVERBOSE) printf ("\tTime Limit...\n");return TIME_LIMIT;
-#line 4163 "EaseaLex.cpp"
+#line 4249 "EaseaLex.cpp"
 		}
 		break;
 	case 404:
 		{
-#line 2186 "EaseaLex.l"
+#line 2272 "EaseaLex.l"
 if (bVERBOSE) printf ("\tPop Size...\n");return POP_SIZE;
-#line 4170 "EaseaLex.cpp"
+#line 4256 "EaseaLex.cpp"
 		}
 		break;
 	case 405:
 		{
-#line 2187 "EaseaLex.l"
+#line 2273 "EaseaLex.l"
 if (bVERBOSE) printf ("\tElite Size...\n");return ELITE;
-#line 4177 "EaseaLex.cpp"
+#line 4263 "EaseaLex.cpp"
 		}
 		break;
 	case 406:
 		{
-#line 2188 "EaseaLex.l"
+#line 2274 "EaseaLex.l"
 if (bVERBOSE) printf ("\tSelection Operator...\n");return SELECTOR;
-#line 4184 "EaseaLex.cpp"
+#line 4270 "EaseaLex.cpp"
 		}
 		break;
 	case 407:
 		{
-#line 2189 "EaseaLex.l"
+#line 2275 "EaseaLex.l"
 if (bVERBOSE) printf ("\tSel Genitors...\n");
-#line 4191 "EaseaLex.cpp"
+#line 4277 "EaseaLex.cpp"
 		}
 		break;
 	case 408:
 		{
-#line 2190 "EaseaLex.l"
+#line 2276 "EaseaLex.l"
 if (bVERBOSE) printf ("\tMut Prob...\n");return MUT_PROB;
-#line 4198 "EaseaLex.cpp"
+#line 4284 "EaseaLex.cpp"
 		}
 		break;
 	case 409:
 		{
-#line 2191 "EaseaLex.l"
+#line 2277 "EaseaLex.l"
 if (bVERBOSE) printf ("\tXov Prob...\n");return XOVER_PROB;
-#line 4205 "EaseaLex.cpp"
+#line 4291 "EaseaLex.cpp"
 		}
 		break;
 	case 410:
 		{
-#line 2192 "EaseaLex.l"
+#line 2278 "EaseaLex.l"
 if (bVERBOSE) printf ("\tOff Size...\n");return OFFSPRING;
-#line 4212 "EaseaLex.cpp"
+#line 4298 "EaseaLex.cpp"
 		}
 		break;
 	case 411:
 		{
-#line 2194 "EaseaLex.l"
+#line 2280 "EaseaLex.l"
 if (bVERBOSE) printf("\tPrint Stats...\n");return PRINT_STATS;
-#line 4219 "EaseaLex.cpp"
+#line 4305 "EaseaLex.cpp"
 		}
 		break;
 	case 412:
 		{
-#line 2195 "EaseaLex.l"
+#line 2281 "EaseaLex.l"
 if (bVERBOSE) printf("\tPlot Stats with gnuplot...\n");return PLOT_STATS;
-#line 4226 "EaseaLex.cpp"
+#line 4312 "EaseaLex.cpp"
 		}
 		break;
 	case 413:
 		{
-#line 2196 "EaseaLex.l"
+#line 2282 "EaseaLex.l"
 if (bVERBOSE) printf("\tPrint Stats to csv File...\n");return GENERATE_CSV_FILE;
-#line 4233 "EaseaLex.cpp"
+#line 4319 "EaseaLex.cpp"
 		}
 		break;
 	case 414:
 		{
-#line 2197 "EaseaLex.l"
+#line 2283 "EaseaLex.l"
 if (bVERBOSE) printf("\tGenerate Gnuplot Script...\n");return GENERATE_GNUPLOT_SCRIPT;
-#line 4240 "EaseaLex.cpp"
+#line 4326 "EaseaLex.cpp"
 		}
 		break;
 	case 415:
 		{
-#line 2198 "EaseaLex.l"
+#line 2284 "EaseaLex.l"
 if (bVERBOSE) printf("\tGenerate R Script...\n");return GENERATE_R_SCRIPT;
-#line 4247 "EaseaLex.cpp"
+#line 4333 "EaseaLex.cpp"
 		}
 		break;
 	case 416:
 		{
-#line 2200 "EaseaLex.l"
+#line 2286 "EaseaLex.l"
 if(bVERBOSE) printf("\tSave population...\n"); return SAVE_POPULATION;
-#line 4254 "EaseaLex.cpp"
+#line 4340 "EaseaLex.cpp"
 		}
 		break;
 	case 417:
 		{
-#line 2201 "EaseaLex.l"
+#line 2287 "EaseaLex.l"
 if(bVERBOSE) printf("\tStart from file...\n"); return START_FROM_FILE;
-#line 4261 "EaseaLex.cpp"
+#line 4347 "EaseaLex.cpp"
 		}
 		break;
 	case 418:
 		{
-#line 2203 "EaseaLex.l"
+#line 2289 "EaseaLex.l"
 
   if (bVERBOSE) printf ("\tReduce Parents Operator...\n");
   bIsParentReduce = true;
   return RED_PAR;
  
-#line 4272 "EaseaLex.cpp"
+#line 4358 "EaseaLex.cpp"
 		}
 		break;
 	case 419:
 		{
-#line 2208 "EaseaLex.l"
+#line 2294 "EaseaLex.l"
 if (bVERBOSE) printf ("\tSurv Par...\n");return SURVPAR;
-#line 4279 "EaseaLex.cpp"
+#line 4365 "EaseaLex.cpp"
 		}
 		break;
 	case 420:
 		{
-#line 2210 "EaseaLex.l"
+#line 2296 "EaseaLex.l"
 
   if (bVERBOSE) printf ("\tReduce Offspring Operator...\n");
   bIsOffspringReduce = true;
   return RED_OFF;
  
-#line 4290 "EaseaLex.cpp"
+#line 4376 "EaseaLex.cpp"
 		}
 		break;
 	case 421:
 		{
-#line 2215 "EaseaLex.l"
+#line 2301 "EaseaLex.l"
 if (bVERBOSE) printf ("\tSurv Off...\n");return SURVOFF;
-#line 4297 "EaseaLex.cpp"
+#line 4383 "EaseaLex.cpp"
 		}
 		break;
 	case 422:
 		{
-#line 2218 "EaseaLex.l"
+#line 2304 "EaseaLex.l"
 if (bVERBOSE) printf ("\tFinal Reduce Operator...\n");return RED_FINAL;
-#line 4304 "EaseaLex.cpp"
+#line 4390 "EaseaLex.cpp"
 		}
 		break;
 	case 423:
 		{
-#line 2219 "EaseaLex.l"
+#line 2305 "EaseaLex.l"
 if (bVERBOSE) printf ("\tElitism...\n");return ELITISM;
-#line 4311 "EaseaLex.cpp"
+#line 4397 "EaseaLex.cpp"
 		}
 		break;
 	case 424:
 		{
-#line 2220 "EaseaLex.l"
+#line 2306 "EaseaLex.l"
 if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;
-#line 4318 "EaseaLex.cpp"
+#line 4404 "EaseaLex.cpp"
 		}
 		break;
 	case 425:
 		{
-#line 2221 "EaseaLex.l"
+#line 2307 "EaseaLex.l"
 if (bVERBOSE) printf ("\tNb of Optimisation It...\n");return NB_OPT_IT;
-#line 4325 "EaseaLex.cpp"
+#line 4411 "EaseaLex.cpp"
 		}
 		break;
 	case 426:
 		{
-#line 2222 "EaseaLex.l"
+#line 2308 "EaseaLex.l"
 if (bVERBOSE) printf ("\tBaldwinism...\n");return BALDWINISM;
-#line 4332 "EaseaLex.cpp"
+#line 4418 "EaseaLex.cpp"
 		}
 		break;
-#line 2223 "EaseaLex.l"
+#line 2309 "EaseaLex.l"
  
-#line 4337 "EaseaLex.cpp"
+#line 4423 "EaseaLex.cpp"
 	case 427:
 		{
-#line 2224 "EaseaLex.l"
+#line 2310 "EaseaLex.l"
 if(bVERBOSE) printf ("\tRemote Island Model...\n"); return REMOTE_ISLAND_MODEL;
-#line 4342 "EaseaLex.cpp"
+#line 4428 "EaseaLex.cpp"
 		}
 		break;
 	case 428:
 		{
-#line 2225 "EaseaLex.l"
+#line 2311 "EaseaLex.l"
 if(bVERBOSE) printf("\tIP File...\n"); return IP_FILE;
-#line 4349 "EaseaLex.cpp"
+#line 4435 "EaseaLex.cpp"
 		}
 		break;
 	case 429:
 		{
-#line 2226 "EaseaLex.l"
+#line 2312 "EaseaLex.l"
 if(bVERBOSE) printf("\tMigration Probability...\n"); return MIGRATION_PROBABILITY;
-#line 4356 "EaseaLex.cpp"
+#line 4442 "EaseaLex.cpp"
 		}
 		break;
-#line 2228 "EaseaLex.l"
+#line 2314 "EaseaLex.l"
  
-#line 4361 "EaseaLex.cpp"
+#line 4447 "EaseaLex.cpp"
 	case 430:
 	case 431:
 	case 432:
 		{
-#line 2232 "EaseaLex.l"
+#line 2318 "EaseaLex.l"
  yylval.dValue = myStrtod(); return NUMBER2; 
-#line 4368 "EaseaLex.cpp"
+#line 4454 "EaseaLex.cpp"
 		}
 		break;
 	case 433:
 		{
-#line 2233 "EaseaLex.l"
+#line 2319 "EaseaLex.l"
 yylval.dValue=atof(yytext); return NUMBER2;
-#line 4375 "EaseaLex.cpp"
+#line 4461 "EaseaLex.cpp"
 		}
 		break;
 	case 434:
 		{
-#line 2236 "EaseaLex.l"
+#line 2322 "EaseaLex.l"
  yylval.pSymbol = new CSymbol(yytext);
   return IDENTIFIER2; 
-#line 4383 "EaseaLex.cpp"
+#line 4469 "EaseaLex.cpp"
 		}
 		break;
 	case 435:
 		{
-#line 2239 "EaseaLex.l"
+#line 2325 "EaseaLex.l"
 rewind(fpGenomeFile); yyin = fpTemplateFile; BEGIN TEMPLATE_ANALYSIS;
-#line 4390 "EaseaLex.cpp"
+#line 4476 "EaseaLex.cpp"
 		}
 		break;
 	case 436:
 		{
-#line 2241 "EaseaLex.l"
+#line 2327 "EaseaLex.l"
 
   lineCounter++;
 
-#line 4399 "EaseaLex.cpp"
+#line 4485 "EaseaLex.cpp"
 		}
 		break;
 	case 437:
 		{
-#line 2244 "EaseaLex.l"
+#line 2330 "EaseaLex.l"
 
   if( bVERBOSE ) printf("\tMax init tree depth...\n");
   return MAX_INIT_TREE_D;
  
-#line 4409 "EaseaLex.cpp"
+#line 4495 "EaseaLex.cpp"
 		}
 		break;
 	case 438:
 		{
-#line 2249 "EaseaLex.l"
+#line 2335 "EaseaLex.l"
 
   if( bVERBOSE ) printf("\tMin init tree depth...\n");
   return MIN_INIT_TREE_D;
  
-#line 4419 "EaseaLex.cpp"
+#line 4505 "EaseaLex.cpp"
 		}
 		break;
 	case 439:
 		{
-#line 2254 "EaseaLex.l"
+#line 2340 "EaseaLex.l"
 
   if( bVERBOSE ) printf("\tMax tree depth...\n");
   return MAX_TREE_D;
  
-#line 4429 "EaseaLex.cpp"
+#line 4515 "EaseaLex.cpp"
 		}
 		break;
 	case 440:
 		{
-#line 2259 "EaseaLex.l"
+#line 2345 "EaseaLex.l"
 
   if( bVERBOSE ) printf("\tNo of GPUs...\n");
   return NB_GPU;
  
-#line 4439 "EaseaLex.cpp"
+#line 4525 "EaseaLex.cpp"
 		}
 		break;
 	case 441:
 		{
-#line 2264 "EaseaLex.l"
+#line 2350 "EaseaLex.l"
 
   if( bVERBOSE ) printf("\tProgramm length buffer...\n");
   return PRG_BUF_SIZE;
  
-#line 4449 "EaseaLex.cpp"
+#line 4535 "EaseaLex.cpp"
 		}
 		break;
 	case 442:
 		{
-#line 2269 "EaseaLex.l"
+#line 2355 "EaseaLex.l"
 
   if( bVERBOSE ) printf("\tNo of fitness cases...\n");
   return NO_FITNESS_CASES;
  
-#line 4459 "EaseaLex.cpp"
+#line 4545 "EaseaLex.cpp"
 		}
 		break;
 	case 443:
 		{
-#line 2278 "EaseaLex.l"
+#line 2364 "EaseaLex.l"
 return  (char)yytext[0];
-#line 4466 "EaseaLex.cpp"
+#line 4552 "EaseaLex.cpp"
 		}
 		break;
 	default:
@@ -4478,7 +4564,7 @@ return  (char)yytext[0];
 #pragma warn .rch		// <warning: unreachable code> to the old state
 #endif
 #endif
-#line 2280 "EaseaLex.l"
+#line 2366 "EaseaLex.l"
 
 
 		       /////////////////////////////////////////////////////////////////////////////
@@ -4659,7 +4745,7 @@ double CEASEALexer::myStrtod() const{
   return d;
 }                               
 
-#line 4663 "EaseaLex.cpp"
+#line 4749 "EaseaLex.cpp"
 
 void YYLEXNAME::yytables()
 {
