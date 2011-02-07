@@ -116,14 +116,14 @@ clean:
 #install:$(EXEC)
 #	sudo cp $< /usr/bin/dev-easea
 
-ifeq ($(UNAME),Linux)
-realclean: clean
-	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
+#ifeq ($(UNAME),Linux)
+#realclean: clean
+#	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
 
 
-EaseaParse.cpp: EaseaParse.y
-	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d
+#EaseaParse.cpp: EaseaParse.y
+#	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d
 
-EaseaLex.cpp: EaseaLex.l
-	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i
-endif
+#EaseaLex.cpp: EaseaLex.l
+#	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i
+#endif
