@@ -69,6 +69,10 @@ float gauss()
 
 \After everything else function:
   //cout << "After everything else function called" << endl;
+  cout << "Best individual " << bBest->fitness << endl;
+  ofstream SaveFile("save.csv", ios::app);
+  SaveFile << bBest->fitness << ";" << endl;
+  SaveFile.close();
 \end
 
 \At the beginning of each generation function:
@@ -141,8 +145,8 @@ CPPFLAGS+=
 \end
 
 \Default run parameters :        // Please let the parameters appear in this order
-  Number of generations : 100     	// NB_GEN
-  Time limit: 60 			// In seconds, 0 to deactivate
+  Number of generations : 1000     	// NB_GEN
+  Time limit: 0 			// In seconds, 0 to deactivate
   Population size : 3840			//POP_SIZE
   Offspring size : 3840 // 40% 
   Mutation probability : 1       // MUT_PROB
@@ -165,6 +169,7 @@ CPPFLAGS+=
 
   Remote island model: false
   IP file: ip.txt 			//File containing all the remote island's IP
+  Migration probability : 1.0
 
   Save population: false
   Start from file:false

@@ -22,7 +22,7 @@
 #include <string>
 
 #define _MULTI_THREADED
-#define MAXINDSIZE 5000 /*maximum size of an individual in number of characters*/
+#define MAXINDSIZE 50000 /*maximum size of an individual in number of characters*/
 
 typedef struct {
         char data[MAXINDSIZE];
