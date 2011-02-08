@@ -1636,7 +1636,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_BOUND_CHECKING_FUNCTION>"\\Bound"[ \t\n]+"checking"[ \t\n]*":" {
   if(TARGET==CUDA || TARGET==STD){
-    fprintf (fpOutputFile,"void EASEABoundChecking(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
+    //fprintf (fpOutputFile,"void EASEABoundChecking(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
+    fprintf (fpOutputFile,"{\n");
   }
   bFunction=1; bBoundCheckingFunction=1;
   BEGIN COPY_USER_GENERATION;

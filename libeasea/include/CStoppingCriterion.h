@@ -51,11 +51,12 @@ class CGenerationalCriterion : public CStoppingCriterion {
 class CTimeCriterion : public CStoppingCriterion {
  private:
   unsigned timeLimit;
-  unsigned elapsedTime;
+  double elapsedTime;
  public:
   virtual bool reached();
   CTimeCriterion(unsigned timeLimit);
-  void setElapsedTime(unsigned elapsedTime);
+  void setElapsedTime(double elapsedTime);
+  double getElapsedTime();
 };
 
 /* ****************************************

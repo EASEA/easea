@@ -559,7 +559,9 @@ float IndividualImpl::evaluate(){
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
-\INSERT_BOUND_CHECKING
+void IndividualImpl::boundChecking(){
+	\INSERT_BOUND_CHECKING
+}
 
 string IndividualImpl::serialize(){
     ostringstream AESAE_Line(ios_base::app);
@@ -934,6 +936,9 @@ public:
 	CIndividual* clone();
 
 	unsigned mutate(float pMutationPerGene);
+
+	void boundChecking();
+	
 	string serialize();
 	void deserialize(string AESAE_Line);
 

@@ -336,6 +336,8 @@ void CPopulation::produceOffspringPopulation(){
       child->mutate(pMutationPerGene);
     }
 
+    child->boundChecking();
+
     offsprings[actualOffspringPopulationSize++] = child;
   }
   delete[](ps);

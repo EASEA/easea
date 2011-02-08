@@ -40,7 +40,7 @@ unsigned* CGenerationalCriterion::getGenerationalLimit(){
 ****************************************/
 CTimeCriterion::CTimeCriterion(unsigned timeLimit){
   this->timeLimit = timeLimit;
-  this->elapsedTime = 0;
+  this->elapsedTime = 0.0;
 }
 
 bool CTimeCriterion::reached(){
@@ -58,8 +58,12 @@ bool CTimeCriterion::reached(){
   else return false;
 }
 
-void CTimeCriterion::setElapsedTime(unsigned elapsedTime){
+void CTimeCriterion::setElapsedTime(double elapsedTime){
 	this->elapsedTime = elapsedTime;
+}
+
+double CTimeCriterion::getElapsedTime(){
+	return this->elapsedTime;
 }
 
 /* ****************************************

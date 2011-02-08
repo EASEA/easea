@@ -132,8 +132,6 @@ void cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
-\INSERT_BOUND_CHECKING
-
 void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
@@ -213,6 +211,10 @@ float IndividualImpl::evaluate(){
     valid = true;
     \INSERT_EVALUATOR
   }
+}
+
+void IndividualImpl::boundChecking(){
+	\INSERT_BOUND_CHECKING
 }
 
 
@@ -546,6 +548,9 @@ public:
 	CIndividual* clone();
 
 	size_t mutate(float pMutationPerGene);
+
+	void boundChecking();
+
 	void copyToCudaBuffer(void* buffer, size_t id);
 
 	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;

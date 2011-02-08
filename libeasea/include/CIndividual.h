@@ -29,6 +29,8 @@ public:
         virtual std::string serialize() = 0;
         virtual void deserialize(std::string EASEA_Line) = 0;
 
+	virtual void boundChecking() = 0;
+
 	static unsigned getCrossoverArrity(){ return 2; }
 	float getFitness(){ return this->fitness; }
 

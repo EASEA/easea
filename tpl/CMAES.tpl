@@ -103,8 +103,6 @@ extern CEvolutionaryAlgorithm* EA;
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
-\INSERT_BOUND_CHECKING
-
 void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
@@ -182,6 +180,10 @@ float IndividualImpl::evaluate(){
     valid = true;
     \INSERT_EVALUATOR
   }
+}
+
+void IndividualImpl::boundChecking(){
+	\INSERT_BOUND_CHECKING
 }
 
 string IndividualImpl::serialize(){
@@ -414,6 +416,9 @@ public:
 	CIndividual* clone();
 
 	unsigned mutate(float pMutationPerGene);
+
+	void boundChecking();
+
         string serialize();
         void deserialize(string AESAE_Line);
 

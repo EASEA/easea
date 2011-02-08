@@ -376,8 +376,16 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
  }
  
 #endif
+  double elapsedTime = res.tv_sec + 0.0;
+  double micSec = res.tv_usec + 0.0;
 
-  params->timeCriterion->setElapsedTime(res.tv_sec);
+  while(micSec>1){
+	micSec /= 10.;
+  }
+  elapsedTime += micSec + 0.0;
+
+
+  params->timeCriterion->setElapsedTime(elapsedTime);
 }
 
 //REMOTE ISLAND MODEL FUNCTIONS
@@ -416,19 +424,20 @@ void CEvolutionaryAlgorithm::initializeClients(){
 void CEvolutionaryAlgorithm::sendIndividual(){
 	//Sending an individual every n generations	
 	if(globalRandomGenerator->random(0.0,1.0)<=params->migrationProbability){
+	//if((this->currentGeneration+this->myClientNumber)%3==0 && this->currentGeneration!=0){
 		//cout << "I'm going to send an Individual now" << endl;
-		//this->population->selectionOperator->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
+		this->population->selectionOperator->initialize(this->population->parents, params->selectionPressure, this->population->actualParentPopulationSize);
 		//unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
 		//cout << "Going to send individual " << index << " with fitness " << this->population->parents[index]->fitness << endl;
 	
 		//selecting a client randomly
 		int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
+		//for(int client=0; client<this->numberOfClients; client++){
 		cout << "Going to send and individual to client " << client << endl;
 		cout << "His IP is " << this->Clients[client]->getIP() << endl;
 		//cout << "Sending individual " << index << " to client " << client << " now" << endl;
 		//cout << this->population->parents[index]->serialize() << endl;
 		this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
-		
 	}
 }
 
@@ -437,16 +446,16 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 	if(this->treatedIndividuals<(unsigned)this->server->nb_data){
 		//cout << "number of received individuals :" << this->server->nb_data << endl;
 		//cout << "number of treated individuals :" << this->treatedIndividuals << endl;
+		CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
 
 		//Treating all the individuals before continuing
 		while(this->treatedIndividuals < (unsigned)this->server->nb_data){
 			//selecting the individual to erase
-			//CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
-			//antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
-			//unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
+			antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
+			unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
 			
 			//We're selecting the worst element to replace
-			size_t index = this->population->getWorstIndividualIndex(this->population->parents);
+			//size_t index = this->population->getWorstIndividualIndex(this->population->parents);
 
 			//cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
 			//cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
