@@ -766,6 +766,10 @@ int main(int argc, char *argv[]){
     else if (!mystricmp(sTemp,"memetic"))  {
       TARGET_FLAVOR = MEMETIC;
     }
+    else if( !mystricmp(sTemp,"gp")){
+      TARGET = STD;
+      TARGET_FLAVOR = STD_FLAVOR_GP;
+    }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
     else if (!mystricmp(sTemp,"tl")){

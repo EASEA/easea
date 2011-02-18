@@ -155,6 +155,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 	("printFinalPopulation",po::value<int>(),"Prints the final population (default : 0)")
 	("savePopulation",po::value<int>(),"Saves population at the end (default : 0)")
 	("startFromFile",po::value<int>(),"Loads the population from a .pop file (default : 0")
+	("fcSize",po::value<int>(),"Number of learning point for genetic programming (default : 0")
 	("u1",po::value<string>(),"User defined parameter 1")
 	("u2",po::value<string>(),"User defined parameter 2")
 	("u3",po::value<int>(),"User defined parameter 3")

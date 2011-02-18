@@ -100,7 +100,7 @@ int* hits_k;
 using namespace std;
 
 #include "EASEAIndividual.hpp"
-bool INSTEAD_EVAL_STEP = true;
+bool INSTEAD_EVAL_STEP = false;
 
 int fitnessCasesSetLength;
 
@@ -117,7 +117,6 @@ extern CEvolutionaryAlgorithm* EA;
 #define CUDA_GP_TPL
 #define GROW_FULL_RATIO 0.5
 
-struct gpu_argument* t_args;
 unsigned evaluation_threads_status;
 
 #define NUMTHREAD2 128
@@ -147,154 +146,6 @@ float recEval(GPNode* root, float* input) {
   }
   return RESULT;
 }
-
-__device__ float eval_tree_gpu(unsigned fc_id, const float * k_progs, const float * input){
-  float RESULT;
-  float OP1, OP2;
-  float stack[MAX_STACK];
-  int sp=0;
-  int start_prog = 0;
-  int codop =  k_progs[start_prog++];
-
-
-  while (codop != OP_RETURN){
-    switch(codop){
-
-\INSERT_GP_GPU_SWITCH
-    }
-    codop =  k_progs[start_prog++];
-  }
-
-  
-  return stack[0];
-}
-
-/**
-   Send input and output data on the GPU memory.
-   Allocate
- */
-void initialDataToGPU(float* input_f, int length_input, float* output_f, int length_output){
-  
-
-  // allocate and copy input/output arrays
-  CUDA_SAFE_CALL(cudaMalloc((void**)(&input_k),sizeof(float)*length_input));
-  CUDA_SAFE_CALL(cudaMalloc((void**)(&output_k),sizeof(float)*length_output));
-  CUDA_SAFE_CALL(cudaMemcpy(input_k,input_f,sizeof(float)*length_input,cudaMemcpyHostToDevice));
-  CUDA_SAFE_CALL(cudaMemcpy(output_k,output_f,sizeof(float)*length_output,cudaMemcpyHostToDevice));
-
-  // allocate indexes and programs arrays
-  int maxPopSize = MAX(EA->population->parentPopulationSize,EA->population->offspringPopulationSize);
-  CUDA_SAFE_CALL(cudaMalloc((void**)&indexes_k,sizeof(*indexes_k)*maxPopSize));
-  CUDA_SAFE_CALL( cudaMalloc((void**)&progs_k,sizeof(*progs_k)*MAX_PROGS_SIZE));
-
-  // allocate hits and results arrays
-  CUDA_SAFE_CALL(cudaMalloc((void**)&results_k,sizeof(*results_k)*maxPopSize));
-  CUDA_SAFE_CALL(cudaMalloc((void**)&hits_k,sizeof(*hits_k)*maxPopSize));
-}
-
-
-
-/**
-   Free gpu memory from the input and ouput arrays.
- */
-void free_gpu(){
-  cudaFree(input_k);
-  cudaFree(output_k);
-  cudaFree(progs_k);
-  cudaFree(indexes_k);
-  cout << "GPU freed" << endl;
-}
-
-
-__global__ static void 
-EvaluatePostFixIndividuals_128(const float * k_progs,
-			       const int maxprogssize,
-			       const int popsize,
-			       const float * k_inputs,
-			       const float * outputs,
-			       const int trainingSetSize,
-			       float * k_results,
-			       int *k_hits,
-			       int* k_indexes
-			       )
-{
-  __shared__ float tmpresult[NUMTHREAD2];
-  __shared__ float tmphits[NUMTHREAD2];
-  
-  const int tid = threadIdx.x; //0 to NUM_THREADS-1
-  const int bid = blockIdx.x; // 0 to NUM_BLOCKS-1
-  int gNO_FITNESS_CASES = trainingSetSize;
-
-  
-  int index;   // index of the prog processed by the block 
-  float sum = 0.0;
-  int hits = 0 ; // hits number
-
-  float ERROR;
-
-  index = bid; // one program per block => block ID = program number
- 
-  if (index >= popsize) // idle block (should never occur)
-    return;
-  if (k_progs[index] == -1.0) // already evaluated
-    return;
-
-  // Here, it's a busy thread
-
-  sum = 0.0;
-  hits = 0 ; // hits number
-  
-  // Loop on training cases, per cluster of 32 cases (= number of thread)
-  // (even if there are only 8 stream processors, we must spawn at least 32 threads) 
-  // We loop from 0 to upper bound INCLUDED in case trainingSetSize is not 
-  // a multiple of NUMTHREAD
-
-  \INSERT_GENOME_EVAL_HDR
-
-  for (int i=0; i < ((trainingSetSize-1)>>LOGNUMTHREAD2)+1; i++) {
-    
-    // are we on a busy thread?
-    if (i*NUMTHREAD2+tid >= trainingSetSize) // no!
-      continue;
-         
-    float EVOLVED_VALUE = eval_tree_gpu(i, k_progs+k_indexes[index], k_inputs+(i*NUMTHREAD2+tid));
- 
-\INSERT_GENOME_EVAL_BDY_GPU
-
-    
-    if (!(ERROR < BIG_NUMBER))
-      ERROR = BIG_NUMBER;
-    else if (ERROR < PROBABLY_ZERO)
-      ERROR = 0.0;
-    
-    if (ERROR <= HIT_LEVEL)
-      hits++;
-    
-    sum += ERROR; // sum raw error on all training cases
-    
-  } // LOOP ON TRAINING CASES
-  
-  // gather results from all threads => we need to synchronize
-  tmpresult[tid] = sum;
-  tmphits[tid] = hits;
-  __syncthreads();
-
-  if (tid == 0) {
-    for (int i = 1; i < NUMTHREAD2; i++) {
-      tmpresult[0] += tmpresult[i];
-      tmphits[0] += tmphits[i];
-    }    
-    ERROR = tmpresult[0];
-    \INSERT_GENOME_EVAL_FTR_GPU
-      
-    k_hits[index] = tmphits[0];
-  }  
-  // here results and hits have been stored in their respective array: we can leave
-}
-
-
-
-
 
 void simple_mutator(IndividualImpl* Genome){
 
@@ -530,49 +381,10 @@ void IndividualImpl::deserialize(string Line){
     this->valid=true;
 }
 
-
 void evale_pop_chunk(CIndividual** population, int popSize){
-
-  int index = 0;
-  for( int i=0 ; i<popSize ; i++ ){
-    indexes[i] = index;
-    flattening_tree_rpn( ((IndividualImpl*)population[i])->root, progs, &index,MAX_PROGS_SIZE,OP_ERC);
-    progs[index++] = OP_RETURN;
-  }
-
-  CUDA_SAFE_CALL(cudaMemcpy( progs_k, progs, sizeof(float)*index, cudaMemcpyHostToDevice ));
-  CUDA_SAFE_CALL(cudaMemcpy( indexes_k, indexes, sizeof(float)*popSize, cudaMemcpyHostToDevice ));
-
-  cudaStream_t st;
-  cudaStreamCreate(&st);
-
-  // Here we will do the real GPU evaluation
-  EvaluatePostFixIndividuals_128<<<popSize,128,0,st>>>( progs_k, index, popSize, input_k, output_k, gNO_FITNESS_CASES, results_k, hits_k, indexes_k);
-  CUDA_SAFE_CALL(cudaStreamSynchronize(st));
-
-
-  //CUDA_SAFE_CALL(cudaMemcpy( hits, hits_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost));
-  CUDA_SAFE_CALL(cudaMemcpy( results, results_k, sizeof(float)*popSize, cudaMemcpyDeviceToHost));
-
-  unsigned no_err = 0;
-  for( int i=0 ; i<popSize ; i++ ){
-    /*     population[i]->valid = false; */
-    /*     float res = population[i]->evaluate(); */
-    /*     float err = fabs(res-results[i]); */
-    /*     if( err>res*0.1 ){ */
-    /*     no_err++; */
-    /*     //printf("error in evaluation of %d : %f | %f %f\n",i,err,res,results[i]); */
-    /*     } */
-    
-    population[i]->valid = true;
-    population[i]->fitness = results[i];
-  }
-  
-  /*   printf("no_err : %d\n",no_err); */
-
   \INSTEAD_EVAL_FUNCTION
-
 }
+
 
 void EASEAInit(int argc, char** argv){
 
@@ -594,14 +406,11 @@ void EASEAInit(int argc, char** argv){
   results = new float[maxPopSize];
   progs   = new float[MAX_PROGS_SIZE];
   
-  INSTEAD_EVAL_STEP=true;
-
-  initialDataToGPU(inputs_f, gNO_FITNESS_CASES*VAR_LEN, outputs, gNO_FITNESS_CASES);
-  
+  INSTEAD_EVAL_STEP=false;
 }
 
 void EASEAFinal(CPopulation* pop){
-	\INSERT_FINALIZATION_FCT_CALL;
+  \INSERT_FINALIZATION_FCT_CALL;
 
   // not sure that the population is sorted now. So lets do another time (or check in the code;))
   // and dump the best individual in a graphviz file.
@@ -934,7 +743,7 @@ public:
 
 \START_CUDA_MAKEFILE_TPL
 
-NVCC=nvcc --compiler-options -fpermissive
+NVCC=g++
 EASEALIB_PATH=\EZ_PATHlibeasea/#/home/kruger/Bureau/Easea/libeasea/
 
 CXXFLAGS =  -g  -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
@@ -950,10 +759,9 @@ TARGET =	EASEA
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 $(TARGET):	$(OBJS)
-	$(NVCC) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a
+	$(NVCC) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a -lpthread
 
-	
-%.o:%.cu
+%.o:%.cpp
 	$(NVCC) -c $(CXXFLAGS) $^ $(NVCC_OPT)
 
 all:	$(TARGET)
@@ -961,7 +769,7 @@ clean:
 	rm -f $(OBJS) $(TARGET)
 easeaclean:
 	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot
-	
+
 \START_VISUAL_TPL<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"

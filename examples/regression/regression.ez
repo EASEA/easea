@@ -1,6 +1,4 @@
- 
-
-/*_________________________________________________________
+ /*_________________________________________________________
 
   This is a standard GP implementation on EASEA, 
   aimed for regression.
@@ -12,7 +10,7 @@
 __________________________________________________________*/
 
 \User declarations :
-#define PI (3.141592653589793)
+
 \end
 
 \User functions:
@@ -29,17 +27,17 @@ __________________________________________________________*/
 int generateData(float*** inputs, float** outputs){
   int i=0;
 
-  (*inputs) = new float*[NO_FITNESS_CASES];
-  (*outputs) = new float[NO_FITNESS_CASES];
+  (*inputs) = new float*[gNO_FITNESS_CASES];
+  (*outputs) = new float[gNO_FITNESS_CASES];
   
-  for( i=0 ; i<NO_FITNESS_CASES ; i++ ){
+  for( i=0 ; i<gNO_FITNESS_CASES ; i++ ){
     (*inputs)[i]=new float[VAR_LEN];
     float x = random(-10.,+10.);
     (*inputs)[i][0] = x;
     (*outputs)[i] = POLY(x);
   }
 
-  return NO_FITNESS_CASES;
+  return gNO_FITNESS_CASES;
 }
 
 
@@ -136,7 +134,7 @@ ERROR = powf(expected_value-EVOLVED_VALUE,2);
 \end
 
 \GenomeClass::evaluator accumulator :
-return sqrtf(ERROR/NO_FITNESS_CASES);
+return sqrtf(ERROR/gNO_FITNESS_CASES);
 \end
 
 \User Makefile options: 
@@ -177,5 +175,5 @@ LDFLAGS+=
   nb of GPUs : 1
   size of prog buffer : 20000000
 
-  nb of fitness cases : 128
+  nb of fitness cases : 4096
 \end
