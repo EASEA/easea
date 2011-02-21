@@ -1,7 +1,7 @@
 \TEMPLATE_START
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
-#pragma comment(lib, "libEasea.lib")
+#pragma comment(lib, "libEasea.lib")
 #endif
 /**
  This is program entry for TreeGP template for EASEA
@@ -743,26 +743,20 @@ public:
 
 \START_CUDA_MAKEFILE_TPL
 
-NVCC=g++
-EASEALIB_PATH=\EZ_PATHlibeasea/#/home/kruger/Bureau/Easea/libeasea/
-
+CXX=g++
+EASEALIB_PATH=\EZ_PATHlibeasea/
 CXXFLAGS =  -g  -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
-
-
-
 OBJS = EASEA.o EASEAIndividual.o 
-
 LIBS = 
-
-TARGET =	EASEA
+TARGET = EASEA
 
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 $(TARGET):	$(OBJS)
-	$(NVCC) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a -lpthread
+	$(CXX) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a -lpthread
 
 %.o:%.cpp
-	$(NVCC) -c $(CXXFLAGS) $^ $(NVCC_OPT)
+	$(CXX) -c $(CXXFLAGS) $^ $(CXX_OPT)
 
 all:	$(TARGET)
 clean:

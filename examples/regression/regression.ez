@@ -60,6 +60,7 @@ void free_data(){
 \After everything else function:
 {
   toDotFile( ((IndividualImpl*)EA->population->Best)->root, "best", 0);
+  toString(((IndividualImpl*)EA->population->Best)->root);
   free_data();
 }
 \end
@@ -88,7 +89,9 @@ GenomeClass {
 }
 \end
 
-\GenomeClass::display:
+\GenomeClass::display:{
+  cout << *this << endl;
+}	
 \end
 
 \GenomeClass::initialiser :
@@ -138,8 +141,7 @@ return sqrtf(ERROR/gNO_FITNESS_CASES);
 \end
 
 \User Makefile options: 
-
-CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/
+CXXFLAGS+=#-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/
 LDFLAGS+=
 \end
 
