@@ -6,7 +6,7 @@
 #ifndef BOOST_PROGRAM_OPTIONS_POSITIONAL_OPTIONS_VP_2004_03_02
 #define BOOST_PROGRAM_OPTIONS_POSITIONAL_OPTIONS_VP_2004_03_02
 
-#include <boost/program_options/config.hpp>
+#include "boost/program_options/config.hpp"
 
 #include <vector>
 #include <string>

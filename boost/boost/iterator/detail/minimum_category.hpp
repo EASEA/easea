@@ -4,10 +4,10 @@
 #ifndef MINIMUM_CATEGORY_DWA20031119_HPP
 # define MINIMUM_CATEGORY_DWA20031119_HPP
 
-# include <boost/type_traits/is_convertible.hpp>
-# include <boost/type_traits/is_same.hpp>
+# include "boost/type_traits/is_convertible.hpp"
+# include "boost/type_traits/is_same.hpp"
 
-# include <boost/mpl/aux_/lambda_support.hpp>
+# include "boost/mpl/aux_/lambda_support.hpp"
 
 namespace boost { namespace detail { 
 //

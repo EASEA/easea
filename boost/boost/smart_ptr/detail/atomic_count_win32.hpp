@@ -17,7 +17,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/detail/interlocked.hpp>
+#include "boost/detail/interlocked.hpp"
 
 namespace boost
 {

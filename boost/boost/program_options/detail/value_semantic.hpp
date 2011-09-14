@@ -6,7 +6,7 @@
 // This file defines template functions that are declared in
 // ../value_semantic.hpp.
 
-#include <boost/throw_exception.hpp>
+#include "boost/throw_exception.hpp"
 
 namespace boost { namespace program_options { 
 

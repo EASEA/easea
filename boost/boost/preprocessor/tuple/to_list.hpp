@@ -14,7 +14,7 @@
 # ifndef BOOST_PREPROCESSOR_TUPLE_TO_LIST_HPP
 # define BOOST_PREPROCESSOR_TUPLE_TO_LIST_HPP
 #
-# include <boost/preprocessor/config/config.hpp>
+# include "boost/preprocessor/config/config.hpp"
 #
 # /* BOOST_PP_TUPLE_TO_LIST */
 #

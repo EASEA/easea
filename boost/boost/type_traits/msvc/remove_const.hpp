@@ -5,11 +5,11 @@
 #ifndef BOOST_TYPE_TRAITS_MSVC_REMOVE_CONST_HOLT_2004_0828
 #define BOOST_TYPE_TRAITS_MSVC_REMOVE_CONST_HOLT_2004_0828
 
-#include <boost/type_traits/msvc/typeof.hpp>
-#include <boost/type_traits/is_volatile.hpp>
-#include <boost/type_traits/is_const.hpp>
-#include <boost/type_traits/is_pointer.hpp>
-#include <boost/type_traits/is_array.hpp>
+#include "boost/type_traits/msvc/typeof.hpp"
+#include "boost/type_traits/is_volatile.hpp"
+#include "boost/type_traits/is_const.hpp"
+#include "boost/type_traits/is_pointer.hpp"
+#include "boost/type_traits/is_array.hpp"
 
 namespace boost {
     namespace detail {

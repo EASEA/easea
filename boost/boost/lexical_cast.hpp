@@ -20,16 +20,16 @@
 #include <string>
 #include <typeinfo>
 #include <exception>
-#include <boost/config.hpp>
-#include <boost/limits.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/throw_exception.hpp>
-#include <boost/type_traits/is_pointer.hpp>
-#include <boost/type_traits/make_unsigned.hpp>
-#include <boost/call_traits.hpp>
-#include <boost/static_assert.hpp>
-#include <boost/detail/lcast_precision.hpp>
-#include <boost/detail/workaround.hpp>
+#include "boost/config.hpp"
+#include "boost/limits.hpp"
+#include "boost/mpl/if.hpp"
+#include "boost/throw_exception.hpp"
+#include "boost/type_traits/is_pointer.hpp"
+#include "boost/type_traits/make_unsigned.hpp"
+#include "boost/call_traits.hpp"
+#include "boost/static_assert.hpp"
+#include "boost/detail/lcast_precision.hpp"
+#include "boost/detail/workaround.hpp"
 
 #ifndef BOOST_NO_STD_LOCALE
 #include <locale>
@@ -328,7 +328,7 @@ namespace boost
         //
         // Constant is_specialized is used instead of constant 1
         // to prevent buffer overflow in a rare case when
-        // <boost/limits.hpp> doesn't add missing specialization for
+        // "boost/limits.hpp" doesn't add missing specialization for
         // numeric_limits<T> for some integral type T.
         // When is_specialized is false, the whole expression is 0.
         template<class Source>

@@ -20,14 +20,14 @@
 #define BOOST_OB_CALL_TRAITS_HPP
 
 #ifndef BOOST_CONFIG_HPP
-#include <boost/config.hpp>
+#include "boost/config.hpp"
 #endif
 
 #ifndef BOOST_ARITHMETIC_TYPE_TRAITS_HPP
-#include <boost/type_traits/arithmetic_traits.hpp>
+#include "boost/type_traits/arithmetic_traits.hpp"
 #endif
 #ifndef BOOST_COMPOSITE_TYPE_TRAITS_HPP
-#include <boost/type_traits/composite_traits.hpp>
+#include "boost/type_traits/composite_traits.hpp"
 #endif
 
 namespace boost{

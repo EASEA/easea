@@ -14,15 +14,15 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/lambda_fwd.hpp>
-#include <boost/mpl/bind.hpp>
-#include <boost/mpl/aux_/config/lambda.hpp>
+#include "boost/mpl/lambda_fwd.hpp"
+#include "boost/mpl/bind.hpp"
+#include "boost/mpl/aux_/config/lambda.hpp"
 
 #if !defined(BOOST_MPL_CFG_NO_FULL_LAMBDA_SUPPORT)
-#   include <boost/mpl/aux_/full_lambda.hpp>
+#   include "boost/mpl/aux_/full_lambda.hpp"
 #else
-#   include <boost/mpl/aux_/lambda_no_ctps.hpp>
-#   include <boost/mpl/aux_/lambda_support.hpp>
+#   include "boost/mpl/aux_/lambda_no_ctps.hpp"
+#   include "boost/mpl/aux_/lambda_support.hpp"
 #   define BOOST_MPL_CFG_NO_IMPLICIT_METAFUNCTIONS
 #endif
 

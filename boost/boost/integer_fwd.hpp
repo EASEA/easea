@@ -12,20 +12,20 @@
 #include <climits>  // for UCHAR_MAX, etc.
 #include <cstddef>  // for std::size_t
 
-#include <boost/config.hpp>  // for BOOST_NO_INTRINSIC_WCHAR_T
-#include <boost/limits.hpp>  // for std::numeric_limits
+#include "boost/config.hpp"  // for BOOST_NO_INTRINSIC_WCHAR_T
+#include "boost/limits.hpp"  // for std::numeric_limits
 
 
 namespace boost
 {
 
 
-//  From <boost/cstdint.hpp>  ------------------------------------------------//
+//  From "boost/cstdint.hpp"  ------------------------------------------------//
 
 // Only has typedefs or using statements, with #conditionals
 
 
-//  From <boost/integer_traits.hpp>  -----------------------------------------//
+//  From "boost/integer_traits.hpp"  -----------------------------------------//
 
 template < class T >
     class integer_traits;
@@ -74,7 +74,7 @@ template <  >
 #endif
 
 
-//  From <boost/integer.hpp>  ------------------------------------------------//
+//  From "boost/integer.hpp"  ------------------------------------------------//
 
 template < typename LeastInt >
     struct int_fast_t;
@@ -95,7 +95,7 @@ template< unsigned long Value >
     struct uint_value_t;
 
 
-//  From <boost/integer/integer_mask.hpp>  -----------------------------------//
+//  From "boost/integer/integer_mask.hpp"  -----------------------------------//
 
 template < std::size_t Bit >
     struct high_bit_mask_t;
@@ -122,7 +122,7 @@ template <  >
 #endif
 
 
-//  From <boost/integer/static_log2.hpp>  ------------------------------------//
+//  From "boost/integer/static_log2.hpp"  ------------------------------------//
 
 template < unsigned long Value >
     struct static_log2;
@@ -131,7 +131,7 @@ template <  >
     struct static_log2< 0ul >;
 
 
-//  From <boost/integer/static_min_max.hpp>  ---------------------------------//
+//  From "boost/integer/static_min_max.hpp"  ---------------------------------//
 
 template < long Value1, long Value2 >
     struct static_signed_min;

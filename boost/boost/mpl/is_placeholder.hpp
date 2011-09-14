@@ -14,13 +14,13 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/arg_fwd.hpp>
-#include <boost/mpl/bool.hpp>
-#include <boost/mpl/aux_/yes_no.hpp>
-#include <boost/mpl/aux_/type_wrapper.hpp>
-#include <boost/mpl/aux_/nttp_decl.hpp>
-#include <boost/mpl/aux_/config/ctps.hpp>
-#include <boost/mpl/aux_/config/static_constant.hpp>
+#include "boost/mpl/arg_fwd.hpp"
+#include "boost/mpl/bool.hpp"
+#include "boost/mpl/aux_/yes_no.hpp"
+#include "boost/mpl/aux_/type_wrapper.hpp"
+#include "boost/mpl/aux_/nttp_decl.hpp"
+#include "boost/mpl/aux_/config/ctps.hpp"
+#include "boost/mpl/aux_/config/static_constant.hpp"
 
 namespace boost { namespace mpl {
 

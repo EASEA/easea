@@ -7,35 +7,35 @@
 #ifndef BOOST_ITERATOR_ADAPTOR_23022003THW_HPP
 #define BOOST_ITERATOR_ADAPTOR_23022003THW_HPP
 
-#include <boost/static_assert.hpp>
-#include <boost/iterator.hpp>
-#include <boost/detail/iterator.hpp>
+#include "boost/static_assert.hpp"
+#include "boost/iterator.hpp"
+#include "boost/detail/iterator.hpp"
 
-#include <boost/iterator/iterator_categories.hpp>
-#include <boost/iterator/iterator_facade.hpp>
-#include <boost/iterator/detail/enable_if.hpp>
+#include "boost/iterator/iterator_categories.hpp"
+#include "boost/iterator/iterator_facade.hpp"
+#include "boost/iterator/detail/enable_if.hpp"
 
-#include <boost/mpl/and.hpp>
-#include <boost/mpl/not.hpp>
-#include <boost/mpl/or.hpp>
+#include "boost/mpl/and.hpp"
+#include "boost/mpl/not.hpp"
+#include "boost/mpl/or.hpp"
 
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/is_convertible.hpp>
+#include "boost/type_traits/is_same.hpp"
+#include "boost/type_traits/is_convertible.hpp"
 
 #ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
-# include <boost/type_traits/remove_reference.hpp>
+# include "boost/type_traits/remove_reference.hpp"
 
 # if BOOST_WORKAROUND(__CODEGEARC__, BOOST_TESTED_AT(0x610))
-#   include <boost/type_traits/add_reference.hpp>
+#   include "boost/type_traits/add_reference.hpp"
 # endif
 
 #else
-# include <boost/type_traits/add_reference.hpp>
+# include "boost/type_traits/add_reference.hpp"
 #endif
 
-#include <boost/iterator/detail/config_def.hpp>
+#include "boost/iterator/detail/config_def.hpp"
 
-#include <boost/iterator/iterator_traits.hpp>
+#include "boost/iterator/iterator_traits.hpp"
 
 namespace boost
 {
@@ -366,6 +366,6 @@ namespace boost
 
 } // namespace boost
 
-#include <boost/iterator/detail/config_undef.hpp>
+#include "boost/iterator/detail/config_undef.hpp"
 
 #endif // BOOST_ITERATOR_ADAPTOR_23022003THW_HPP

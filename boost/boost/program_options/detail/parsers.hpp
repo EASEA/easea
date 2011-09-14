@@ -6,7 +6,7 @@
 #ifndef BOOST_PARSERS_HPP_VP_2004_05_06
 #define BOOST_PARSERS_HPP_VP_2004_05_06
 
-#include <boost/program_options/detail/convert.hpp>
+#include "boost/program_options/detail/convert.hpp"
 
 #include <iterator>
 

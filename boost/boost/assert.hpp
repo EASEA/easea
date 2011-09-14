@@ -21,7 +21,7 @@
 
 #elif defined(BOOST_ENABLE_ASSERT_HANDLER)
 
-#include <boost/current_function.hpp>
+#include "boost/current_function.hpp"
 
 namespace boost
 {

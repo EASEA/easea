@@ -7,10 +7,10 @@
 #ifndef BOOST_VARIABLES_MAP_VP_2003_05_19
 #define BOOST_VARIABLES_MAP_VP_2003_05_19
 
-#include <boost/program_options/config.hpp>
+#include "boost/program_options/config.hpp"
 
-#include <boost/any.hpp>
-#include <boost/shared_ptr.hpp>
+#include "boost/any.hpp"
+#include "boost/shared_ptr.hpp"
 
 #include <string>
 #include <map>

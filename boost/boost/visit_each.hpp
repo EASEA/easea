@@ -10,7 +10,7 @@
 #ifndef BOOST_VISIT_EACH_HPP
 #define BOOST_VISIT_EACH_HPP
 
-#include <boost/config.hpp>
+#include "boost/config.hpp"
 
 namespace boost {
   template<typename Visitor, typename T>

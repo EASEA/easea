@@ -45,8 +45,8 @@
 
 #include <climits>
 #include <cfloat>
-#include <boost/config.hpp>
-#include <boost/detail/endian.hpp>
+#include "boost/config.hpp"
+#include "boost/detail/endian.hpp"
 
 #ifndef BOOST_NO_CWCHAR
 #include <cwchar> // for WCHAR_MIN and WCHAR_MAX

@@ -12,11 +12,11 @@
 # ifndef BOOST_PREPROCESSOR_SEQ_REST_N_HPP
 # define BOOST_PREPROCESSOR_SEQ_REST_N_HPP
 #
-# include <boost/preprocessor/arithmetic/inc.hpp>
-# include <boost/preprocessor/config/config.hpp>
-# include <boost/preprocessor/facilities/empty.hpp>
-# include <boost/preprocessor/seq/detail/split.hpp>
-# include <boost/preprocessor/tuple/elem.hpp>
+# include "boost/preprocessor/arithmetic/inc.hpp"
+# include "boost/preprocessor/config/config.hpp"
+# include "boost/preprocessor/facilities/empty.hpp"
+# include "boost/preprocessor/seq/detail/split.hpp"
+# include "boost/preprocessor/tuple/elem.hpp"
 #
 # /* BOOST_PP_SEQ_REST_N */
 #

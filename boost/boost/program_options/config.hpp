@@ -7,8 +7,8 @@
 #ifndef BOOST_PROGRAM_OPTIONS_CONFIG_HK_2004_01_11
 #define BOOST_PROGRAM_OPTIONS_CONFIG_HK_2004_01_11
 
-#include <boost/config.hpp>
-#include <boost/version.hpp>
+#include "boost/config.hpp"
+#include "boost/version.hpp"
 
 // Support for autolinking.
 #if BOOST_VERSION >= 103100   // works beginning from Boost V1.31.0
@@ -27,7 +27,7 @@
 #endif
 
 // And include the header that does the work:
-#include <boost/config/auto_link.hpp>
+#include "boost/config/auto_link.hpp"
 
 #endif  // auto-linking disabled
 

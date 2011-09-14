@@ -6,7 +6,7 @@
 #ifndef BOOST_EOF_ITERATOR_VP_2004_03_12
 #define BOOST_EOF_ITERATOR_VP_2004_03_12
 
-#include <boost/iterator/iterator_facade.hpp>
+#include "boost/iterator/iterator_facade.hpp"
 
 namespace boost {
 

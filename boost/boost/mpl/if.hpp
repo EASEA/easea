@@ -14,13 +14,13 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/aux_/value_wknd.hpp>
-#include <boost/mpl/aux_/static_cast.hpp>
-#include <boost/mpl/aux_/na_spec.hpp>
-#include <boost/mpl/aux_/lambda_support.hpp>
-#include <boost/mpl/aux_/config/integral.hpp>
-#include <boost/mpl/aux_/config/ctps.hpp>
-#include <boost/mpl/aux_/config/workaround.hpp>
+#include "boost/mpl/aux_/value_wknd.hpp"
+#include "boost/mpl/aux_/static_cast.hpp"
+#include "boost/mpl/aux_/na_spec.hpp"
+#include "boost/mpl/aux_/lambda_support.hpp"
+#include "boost/mpl/aux_/config/integral.hpp"
+#include "boost/mpl/aux_/config/ctps.hpp"
+#include "boost/mpl/aux_/config/workaround.hpp"
 
 namespace boost { namespace mpl {
 

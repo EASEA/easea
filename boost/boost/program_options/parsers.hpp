@@ -7,11 +7,11 @@
 #ifndef BOOST_PARSERS_VP_2003_05_19
 #define BOOST_PARSERS_VP_2003_05_19
 
-#include <boost/program_options/config.hpp>
-#include <boost/program_options/option.hpp>
-#include <boost/program_options/detail/cmdline.hpp>
+#include "boost/program_options/config.hpp"
+#include "boost/program_options/option.hpp"
+#include "boost/program_options/detail/cmdline.hpp"
 
-#include <boost/function/function1.hpp>
+#include "boost/function/function1.hpp"
 
 #include <iosfwd>
 #include <vector>

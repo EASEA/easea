@@ -50,7 +50,7 @@
 #ifndef ITERATOR_DWA122600_HPP_
 # define ITERATOR_DWA122600_HPP_
 
-# include <boost/config.hpp>
+# include "boost/config.hpp"
 # include <iterator>
 
 // STLPort 4.0 and betas have a bug when debugging is enabled and there is no
@@ -131,20 +131,20 @@ struct iterator_traits<T const*>
 
 #  else
 
-# include <boost/type_traits/remove_const.hpp>
-# include <boost/type_traits/detail/yes_no_type.hpp>
-# include <boost/type_traits/is_pointer.hpp>
+# include "boost/type_traits/remove_const.hpp"
+# include "boost/type_traits/detail/yes_no_type.hpp"
+# include "boost/type_traits/is_pointer.hpp"
 
 # ifdef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
-#  include <boost/type_traits/is_same.hpp>
-#  include <boost/type_traits/remove_pointer.hpp>
+#  include "boost/type_traits/is_same.hpp"
+#  include "boost/type_traits/remove_pointer.hpp"
 # endif
 # ifdef BOOST_BAD_OUTPUT_ITERATOR_SPECIALIZATION
-#  include <boost/type_traits/is_base_and_derived.hpp>
+#  include "boost/type_traits/is_base_and_derived.hpp"
 # endif
 
-# include <boost/mpl/if.hpp>
-# include <boost/mpl/has_xxx.hpp>
+# include "boost/mpl/if.hpp"
+# include "boost/mpl/has_xxx.hpp"
 # include <cstddef>
 
 // should be the last #include

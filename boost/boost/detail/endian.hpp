@@ -17,7 +17,7 @@
  */
 
 /*
- * Copyright notice reproduced from <boost/detail/limits.hpp>, from
+ * Copyright notice reproduced from "boost/detail/limits.hpp", from
  * which this code was originally taken.
  *
  * Modified by Caleb Epstein to use <endian.h> with GNU libc and to

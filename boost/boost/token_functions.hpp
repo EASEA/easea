@@ -36,10 +36,10 @@
 #include <string>
 #include <cctype>
 #include <algorithm> // for find_if
-#include <boost/config.hpp>
-#include <boost/assert.hpp>
-#include <boost/detail/workaround.hpp>
-#include <boost/mpl/if.hpp>
+#include "boost/config.hpp"
+#include "boost/assert.hpp"
+#include "boost/detail/workaround.hpp"
+#include "boost/mpl/if.hpp"
 
 //
 // the following must not be macros if we are to prefix them

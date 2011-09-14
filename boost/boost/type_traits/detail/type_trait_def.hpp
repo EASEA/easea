@@ -11,8 +11,8 @@
 // $Date: 2004-09-02 11:41:37 -0400 (Thu, 02 Sep 2004) $
 // $Revision: 24874 $
 
-#include <boost/type_traits/detail/template_arity_spec.hpp>
-#include <boost/mpl/aux_/lambda_support.hpp>
+#include "boost/type_traits/detail/template_arity_spec.hpp"
+#include "boost/mpl/aux_/lambda_support.hpp"
 
 #define BOOST_TT_AUX_TYPE_TRAIT_DEF1(trait,T,result) \
 template< typename T > struct trait \

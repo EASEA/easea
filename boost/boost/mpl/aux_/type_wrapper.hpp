@@ -15,7 +15,7 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/aux_/config/ctps.hpp>
+#include "boost/mpl/aux_/config/ctps.hpp"
 
 namespace boost { namespace mpl { namespace aux {
 

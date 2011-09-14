@@ -15,19 +15,19 @@
 // $Date: 2008-10-11 02:54:06 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49273 $
 
-#include <boost/mpl/bool.hpp>
-#include <boost/mpl/aux_/type_wrapper.hpp>
-#include <boost/mpl/aux_/yes_no.hpp>
-#include <boost/mpl/aux_/config/has_xxx.hpp>
-#include <boost/mpl/aux_/config/msvc_typename.hpp>
-#include <boost/mpl/aux_/config/msvc.hpp>
-#include <boost/mpl/aux_/config/static_constant.hpp>
-#include <boost/mpl/aux_/config/workaround.hpp>
+#include "boost/mpl/bool.hpp"
+#include "boost/mpl/aux_/type_wrapper.hpp"
+#include "boost/mpl/aux_/yes_no.hpp"
+#include "boost/mpl/aux_/config/has_xxx.hpp"
+#include "boost/mpl/aux_/config/msvc_typename.hpp"
+#include "boost/mpl/aux_/config/msvc.hpp"
+#include "boost/mpl/aux_/config/static_constant.hpp"
+#include "boost/mpl/aux_/config/workaround.hpp"
 
-#include <boost/preprocessor/cat.hpp>
+#include "boost/preprocessor/cat.hpp"
 
 #if BOOST_WORKAROUND( __BORLANDC__, BOOST_TESTED_AT(0x590) )
-# include <boost/type_traits/is_class.hpp>
+# include "boost/type_traits/is_class.hpp"
 #endif
 
 #if !defined(BOOST_MPL_CFG_NO_HAS_XXX)
@@ -41,8 +41,8 @@
 
 // Modified dwa 8/Oct/02 to handle reference types.
 
-#   include <boost/mpl/if.hpp>
-#   include <boost/mpl/bool.hpp>
+#   include "boost/mpl/if.hpp"
+#   include "boost/mpl/bool.hpp"
 
 namespace boost { namespace mpl { namespace aux {
 

@@ -15,10 +15,10 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/aux_/arity.hpp>
-#include <boost/mpl/aux_/config/dtp.hpp>
-#include <boost/mpl/aux_/nttp_decl.hpp>
-#include <boost/mpl/aux_/na_spec.hpp>
+#include "boost/mpl/aux_/arity.hpp"
+#include "boost/mpl/aux_/config/dtp.hpp"
+#include "boost/mpl/aux_/nttp_decl.hpp"
+#include "boost/mpl/aux_/na_spec.hpp"
 
 namespace boost { namespace mpl {
 

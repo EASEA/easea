@@ -11,19 +11,19 @@
 #ifndef BOOST_TT_REMOVE_CV_HPP_INCLUDED
 #define BOOST_TT_REMOVE_CV_HPP_INCLUDED
 
-#include <boost/type_traits/broken_compiler_spec.hpp>
-#include <boost/type_traits/detail/cv_traits_impl.hpp>
-#include <boost/config.hpp>
-#include <boost/detail/workaround.hpp>
+#include "boost/type_traits/broken_compiler_spec.hpp"
+#include "boost/type_traits/detail/cv_traits_impl.hpp"
+#include "boost/config.hpp"
+#include "boost/detail/workaround.hpp"
 
 #include <cstddef>
 
 #if BOOST_WORKAROUND(BOOST_MSVC,<=1300)
-#include <boost/type_traits/msvc/remove_cv.hpp>
+#include "boost/type_traits/msvc/remove_cv.hpp"
 #endif
 
 // should be the last #include
-#include <boost/type_traits/detail/type_trait_def.hpp>
+#include "boost/type_traits/detail/type_trait_def.hpp"
 
 namespace boost {
 
@@ -56,6 +56,6 @@ BOOST_TT_AUX_TYPE_TRAIT_DEF1(remove_cv,T,typename boost::detail::remove_cv_impl<
 
 } // namespace boost
 
-#include <boost/type_traits/detail/type_trait_undef.hpp>
+#include "boost/type_traits/detail/type_trait_undef.hpp"
 
 #endif // BOOST_TT_REMOVE_CV_HPP_INCLUDED

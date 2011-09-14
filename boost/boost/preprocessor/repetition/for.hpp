@@ -14,9 +14,9 @@
 # ifndef BOOST_PREPROCESSOR_REPETITION_FOR_HPP
 # define BOOST_PREPROCESSOR_REPETITION_FOR_HPP
 #
-# include <boost/preprocessor/cat.hpp>
-# include <boost/preprocessor/debug/error.hpp>
-# include <boost/preprocessor/detail/auto_rec.hpp>
+# include "boost/preprocessor/cat.hpp"
+# include "boost/preprocessor/debug/error.hpp"
+# include "boost/preprocessor/detail/auto_rec.hpp"
 #
 # /* BOOST_PP_FOR */
 #
@@ -33,13 +33,13 @@
 # define BOOST_PP_FOR_SR_M(r, s) BOOST_PP_NIL
 #
 # if BOOST_PP_CONFIG_FLAGS() & BOOST_PP_CONFIG_EDG()
-#    include <boost/preprocessor/repetition/detail/edg/for.hpp>
+#    include "boost/preprocessor/repetition/detail/edg/for.hpp"
 # elif BOOST_PP_CONFIG_FLAGS() & BOOST_PP_CONFIG_MSVC()
-#    include <boost/preprocessor/repetition/detail/msvc/for.hpp>
+#    include "boost/preprocessor/repetition/detail/msvc/for.hpp"
 # elif BOOST_PP_CONFIG_FLAGS() & BOOST_PP_CONFIG_DMC()
-#    include <boost/preprocessor/repetition/detail/dmc/for.hpp>
+#    include "boost/preprocessor/repetition/detail/dmc/for.hpp"
 # else
-#    include <boost/preprocessor/repetition/detail/for.hpp>
+#    include "boost/preprocessor/repetition/detail/for.hpp"
 # endif
 #
 # define BOOST_PP_FOR_257(s, p, o, m) BOOST_PP_ERROR(0x0002)

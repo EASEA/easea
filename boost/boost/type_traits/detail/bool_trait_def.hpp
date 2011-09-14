@@ -11,11 +11,11 @@
 // $Date: 2006-07-12 07:10:22 -0400 (Wed, 12 Jul 2006) $
 // $Revision: 34511 $
 
-#include <boost/type_traits/detail/template_arity_spec.hpp>
-#include <boost/type_traits/integral_constant.hpp>
-#include <boost/mpl/bool.hpp>
-#include <boost/mpl/aux_/lambda_support.hpp>
-#include <boost/config.hpp>
+#include "boost/type_traits/detail/template_arity_spec.hpp"
+#include "boost/type_traits/integral_constant.hpp"
+#include "boost/mpl/bool.hpp"
+#include "boost/mpl/aux_/lambda_support.hpp"
+#include "boost/config.hpp"
 
 //
 // Unfortunately some libraries have started using this header without

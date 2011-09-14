@@ -14,6 +14,6 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/next_prior.hpp>
+#include "boost/mpl/next_prior.hpp"
 
 #endif // BOOST_MPL_NEXT_HPP_INCLUDED

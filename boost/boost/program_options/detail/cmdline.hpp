@@ -7,17 +7,17 @@
 #ifndef BOOST_CMDLINE_VP_2003_05_19
 #define BOOST_CMDLINE_VP_2003_05_19
 
-#include <boost/program_options/config.hpp>
-#include <boost/program_options/errors.hpp>
-#include <boost/program_options/cmdline.hpp>
-#include <boost/program_options/option.hpp>
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/positional_options.hpp>
+#include "boost/program_options/config.hpp"
+#include "boost/program_options/errors.hpp"
+#include "boost/program_options/cmdline.hpp"
+#include "boost/program_options/option.hpp"
+#include "boost/program_options/options_description.hpp"
+#include "boost/program_options/positional_options.hpp"
 
 
-#include <boost/detail/workaround.hpp>
+#include "boost/detail/workaround.hpp"
 
-#include <boost/function.hpp>
+#include "boost/function.hpp"
 
 #include <string>
 #include <vector>

@@ -14,7 +14,7 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/aux_/config/ttp.hpp>
+#include "boost/mpl/aux_/config/ttp.hpp"
 
 #if !defined(BOOST_MPL_CFG_EXTENDED_TEMPLATE_PARAMETERS_MATCHING)
 #   define BOOST_MPL_AUX_LAMBDA_ARITY_PARAM(param)    

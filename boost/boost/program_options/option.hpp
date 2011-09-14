@@ -6,7 +6,7 @@
 #ifndef BOOST_OPTION_HPP_VP_2004_02_25
 #define BOOST_OPTION_HPP_VP_2004_02_25
 
-#include <boost/program_options/config.hpp>
+#include "boost/program_options/config.hpp"
 
 #include <string>
 #include <vector>

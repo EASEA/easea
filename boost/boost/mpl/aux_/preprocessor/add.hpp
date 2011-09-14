@@ -14,14 +14,14 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/aux_/config/preprocessor.hpp>
+#include "boost/mpl/aux_/config/preprocessor.hpp"
 
 #if !defined(BOOST_MPL_CFG_NO_OWN_PP_PRIMITIVES)
 
-#   include <boost/mpl/aux_/preprocessor/tuple.hpp>
+#   include "boost/mpl/aux_/preprocessor/tuple.hpp"
 
 #if defined(BOOST_MPL_CFG_BROKEN_PP_MACRO_EXPANSION)
-#   include <boost/preprocessor/cat.hpp>
+#   include "boost/preprocessor/cat.hpp"
 
 #   define BOOST_MPL_PP_ADD(i,j) \
     BOOST_MPL_PP_ADD_DELAY(i,j) \
@@ -54,7 +54,7 @@
 
 #else
 
-#   include <boost/preprocessor/arithmetic/add.hpp>
+#   include "boost/preprocessor/arithmetic/add.hpp"
 
 #   define BOOST_MPL_PP_ADD(i,j) \
     BOOST_PP_ADD(i,j) \

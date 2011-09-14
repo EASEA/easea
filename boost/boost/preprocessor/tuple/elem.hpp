@@ -14,7 +14,7 @@
 # ifndef BOOST_PREPROCESSOR_TUPLE_ELEM_HPP
 # define BOOST_PREPROCESSOR_TUPLE_ELEM_HPP
 #
-# include <boost/preprocessor/config/config.hpp>
+# include "boost/preprocessor/config/config.hpp"
 #
 # if ~BOOST_PP_CONFIG_FLAGS() & BOOST_PP_CONFIG_MWCC()
 #    define BOOST_PP_TUPLE_ELEM(size, index, tuple) BOOST_PP_TUPLE_ELEM_I(size, index, tuple)

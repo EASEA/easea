@@ -14,7 +14,7 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/has_xxx.hpp>
+#include "boost/mpl/has_xxx.hpp"
 
 namespace boost { namespace mpl { namespace aux {
 BOOST_MPL_HAS_XXX_TRAIT_NAMED_DEF(has_type, type, true)

@@ -6,11 +6,11 @@
 #ifndef BOOST_CONVERT_HPP_VP_2004_04_28
 #define BOOST_CONVERT_HPP_VP_2004_04_28
 
-#include <boost/program_options/config.hpp>
+#include "boost/program_options/config.hpp"
 
 #if !defined(BOOST_NO_STD_WSTRING)
 
-#include <boost/detail/workaround.hpp>
+#include "boost/detail/workaround.hpp"
 
 #include <string>
 #include <vector>

@@ -14,12 +14,12 @@
 // $Date: 2008-10-11 02:19:02 -0400 (Sat, 11 Oct 2008) $
 // $Revision: 49267 $
 
-#include <boost/mpl/aux_/config/dtp.hpp>
+#include "boost/mpl/aux_/config/dtp.hpp"
 
 #if defined(BOOST_MPL_CFG_BROKEN_DEFAULT_PARAMETERS_IN_NESTED_TEMPLATES)
 
-#   include <boost/mpl/aux_/nttp_decl.hpp>
-#   include <boost/mpl/aux_/config/static_constant.hpp>
+#   include "boost/mpl/aux_/nttp_decl.hpp"
+#   include "boost/mpl/aux_/config/static_constant.hpp"
 
 namespace boost { namespace mpl { namespace aux {
 

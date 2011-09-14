@@ -21,14 +21,14 @@
 //  See http://www.boost.org/libs/bind/bind.html for documentation.
 //
 
-#include <boost/config.hpp>
-#include <boost/ref.hpp>
-#include <boost/mem_fn.hpp>
-#include <boost/type.hpp>
-#include <boost/is_placeholder.hpp>
-#include <boost/bind/arg.hpp>
-#include <boost/detail/workaround.hpp>
-#include <boost/visit_each.hpp>
+#include "boost/config.hpp"
+#include "boost/ref.hpp"
+#include "boost/mem_fn.hpp"
+#include "boost/type.hpp"
+#include "boost/is_placeholder.hpp"
+#include "boost/bind/arg.hpp"
+#include "boost/detail/workaround.hpp"
+#include "boost/visit_each.hpp"
 
 // Borland-specific bug, visit_each() silently fails to produce code
 
@@ -38,7 +38,7 @@
 #  define BOOST_BIND_VISIT_EACH visit_each
 #endif
 
-#include <boost/bind/storage.hpp>
+#include "boost/bind/storage.hpp"
 
 #ifdef BOOST_MSVC
 # pragma warning(push)
@@ -859,7 +859,7 @@ public:
     bind_t(F f, L const & l): f_(f), l_(l) {}
 
 #define BOOST_BIND_RETURN return
-#include <boost/bind/bind_template.hpp>
+#include "boost/bind/bind_template.hpp"
 #undef BOOST_BIND_RETURN
 
 };
@@ -878,7 +878,7 @@ public:
     implementation(F f, L const & l): f_(f), l_(l) {}
 
 #define BOOST_BIND_RETURN return
-#include <boost/bind/bind_template.hpp>
+#include "boost/bind/bind_template.hpp"
 #undef BOOST_BIND_RETURN
 
 };
@@ -901,7 +901,7 @@ public:
     implementation(F f, L const & l): f_(f), l_(l) {}
 
 #define BOOST_BIND_RETURN
-#include <boost/bind/bind_template.hpp>
+#include "boost/bind/bind_template.hpp"
 #undef BOOST_BIND_RETURN
 
 };
@@ -1535,7 +1535,7 @@ template<class F, class A1, class A2, class A3, class A4, class A5, class A6, cl
 #define BOOST_BIND_CC
 #define BOOST_BIND_ST
 
-#include <boost/bind/bind_cc.hpp>
+#include "boost/bind/bind_cc.hpp"
 
 #undef BOOST_BIND_CC
 #undef BOOST_BIND_ST
@@ -1545,7 +1545,7 @@ template<class F, class A1, class A2, class A3, class A4, class A5, class A6, cl
 #define BOOST_BIND_CC __stdcall
 #define BOOST_BIND_ST
 
-#include <boost/bind/bind_cc.hpp>
+#include "boost/bind/bind_cc.hpp"
 
 #undef BOOST_BIND_CC
 #undef BOOST_BIND_ST
@@ -1557,7 +1557,7 @@ template<class F, class A1, class A2, class A3, class A4, class A5, class A6, cl
 #define BOOST_BIND_CC __fastcall
 #define BOOST_BIND_ST
 
-#include <boost/bind/bind_cc.hpp>
+#include "boost/bind/bind_cc.hpp"
 
 #undef BOOST_BIND_CC
 #undef BOOST_BIND_ST
@@ -1569,7 +1569,7 @@ template<class F, class A1, class A2, class A3, class A4, class A5, class A6, cl
 #define BOOST_BIND_ST pascal
 #define BOOST_BIND_CC
 
-#include <boost/bind/bind_cc.hpp>
+#include "boost/bind/bind_cc.hpp"
 
 #undef BOOST_BIND_ST
 #undef BOOST_BIND_CC
@@ -1581,8 +1581,8 @@ template<class F, class A1, class A2, class A3, class A4, class A5, class A6, cl
 #define BOOST_BIND_MF_NAME(X) X
 #define BOOST_BIND_MF_CC
 
-#include <boost/bind/bind_mf_cc.hpp>
-#include <boost/bind/bind_mf2_cc.hpp>
+#include "boost/bind/bind_mf_cc.hpp"
+#include "boost/bind/bind_mf2_cc.hpp"
 
 #undef BOOST_BIND_MF_NAME
 #undef BOOST_BIND_MF_CC
@@ -1592,8 +1592,8 @@ template<class F, class A1, class A2, class A3, class A4, class A5, class A6, cl
 #define BOOST_BIND_MF_NAME(X) X##_cdecl
 #define BOOST_BIND_MF_CC __cdecl
 
-#include <boost/bind/bind_mf_cc.hpp>
-#include <boost/bind/bind_mf2_cc.hpp>
+#include "boost/bind/bind_mf_cc.hpp"
+#include "boost/bind/bind_mf2_cc.hpp"
 
 #undef BOOST_BIND_MF_NAME
 #undef BOOST_BIND_MF_CC
@@ -1605,8 +1605,8 @@ template<class F, class A1, class A2, class A3, class A4, class A5, class A6, cl
 #define BOOST_BIND_MF_NAME(X) X##_stdcall
 #define BOOST_BIND_MF_CC __stdcall
 
-#include <boost/bind/bind_mf_cc.hpp>
-#include <boost/bind/bind_mf2_cc.hpp>
+#include "boost/bind/bind_mf_cc.hpp"
+#include "boost/bind/bind_mf2_cc.hpp"
 
 #undef BOOST_BIND_MF_NAME
 #undef BOOST_BIND_MF_CC
@@ -1618,8 +1618,8 @@ template<class F, class A1, class A2, class A3, class A4, class A5, class A6, cl
 #define BOOST_BIND_MF_NAME(X) X##_fastcall
 #define BOOST_BIND_MF_CC __fastcall
 
-#include <boost/bind/bind_mf_cc.hpp>
-#include <boost/bind/bind_mf2_cc.hpp>
+#include "boost/bind/bind_mf_cc.hpp"
+#include "boost/bind/bind_mf2_cc.hpp"
 
 #undef BOOST_BIND_MF_NAME
 #undef BOOST_BIND_MF_CC
@@ -1721,7 +1721,7 @@ BOOST_BIND( M T::*f, A1 a1 )
 
 #ifndef BOOST_BIND_NO_PLACEHOLDERS
 
-# include <boost/bind/placeholders.hpp>
+# include "boost/bind/placeholders.hpp"
 
 #endif
 

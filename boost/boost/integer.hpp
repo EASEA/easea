@@ -8,17 +8,17 @@
 
 //  Revision History
 //   22 Sep 01  Added value-based integer templates. (Daryle Walker)
-//   01 Apr 01  Modified to use new <boost/limits.hpp> header. (John Maddock)
+//   01 Apr 01  Modified to use new "boost/limits.hpp" header. (John Maddock)
 //   30 Jul 00  Add typename syntax fix (Jens Maurer)
 //   28 Aug 99  Initial version
 
 #ifndef BOOST_INTEGER_HPP
 #define BOOST_INTEGER_HPP
 
-#include <boost/integer_fwd.hpp>  // self include
+#include "boost/integer_fwd.hpp"  // self include
 
-#include <boost/integer_traits.hpp>  // for boost::integer_traits
-#include <boost/limits.hpp>          // for std::numeric_limits
+#include "boost/integer_traits.hpp"  // for boost::integer_traits
+#include "boost/limits.hpp"          // for std::numeric_limits
 
 namespace boost
 {

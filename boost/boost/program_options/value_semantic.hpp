@@ -6,12 +6,12 @@
 #ifndef BOOST_VALUE_SEMANTIC_HPP_VP_2004_02_24
 #define BOOST_VALUE_SEMANTIC_HPP_VP_2004_02_24
 
-#include <boost/program_options/config.hpp>
-#include <boost/program_options/errors.hpp>
+#include "boost/program_options/config.hpp"
+#include "boost/program_options/errors.hpp"
 
-#include <boost/any.hpp>
-#include <boost/function/function1.hpp>
-#include <boost/lexical_cast.hpp>
+#include "boost/any.hpp"
+#include "boost/function/function1.hpp"
+#include "boost/lexical_cast.hpp"
 
 
 #include <string>

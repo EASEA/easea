@@ -19,8 +19,8 @@
 //  See http://www.boost.org/libs/bind/bind.html for documentation.
 //
 
-#include <boost/config.hpp>
-#include <boost/is_placeholder.hpp>
+#include "boost/config.hpp"
+#include "boost/is_placeholder.hpp"
 
 namespace boost
 {
