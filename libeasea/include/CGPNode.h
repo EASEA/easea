@@ -82,6 +82,5 @@ GPNode* RAMPED_H_H(unsigned iINIT_TREE_DEPTH_MIN, unsigned iINIT_TREE_DEPTH_MAX,
 void flattenDatas2D( float** inputs, int length, int width, float** flat_inputs);
 
 GPNode* construction_method( const int constLen, const int totalLen , const int currentDepth, const int maxDepth, const bool full, const unsigned* opArity, const int OP_ERC);
-GPNode* pickNthNode(GPNode* root, int N, int* childId, unsigned tree_depth_max,unsigned max_arity);
-int flattening_tree_rpn( GPNode* root, float* buf, int* index,int max_prog_size, int op_erc_id);
+
 #endif // __C_GPNODE__

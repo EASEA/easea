@@ -204,74 +204,7 @@ GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, u
   return construction_method( VAR_LEN+1, OPCODE_SIZE , 1, currentDepth ,full, opArity, OP_ERC);
 }
 
-/**
- * Return the root of the nth node in a tree rooted at root. 
- *
- * @arg root: the root of the tree.
- * @arg N: the node number to return.
- * @arg childId: id of the child corresponding to the selected node.
- * @arg tree_depth_max: the maximum possible depth in trees.
- * @arg max_arity: the size of the arity array.
- *
- * @return: a pointer to the parent of the nth node.
- */
-GPNode* pickNthNode(GPNode* root, int N, int* childId, unsigned tree_depth_max, unsigned max_arity){
 
-  GPNode** stack = new GPNode*[tree_depth_max*max_arity];
-  GPNode** parentStack = new GPNode*[tree_depth_max*max_arity];
-  int stackPointer = 0;
 
-  parentStack[stackPointer] = NULL;
-  stack[stackPointer++] = root;
 
-  for( int i=0 ; i<N ; i++ ){
-    GPNode* currentNode = stack[stackPointer-1];
-    //cout <<  currentNode << endl;
-    stackPointer--;
-    for( int j=opArity[(int)currentNode->opCode] ; j>0 ; j--){
-      parentStack[stackPointer] = currentNode;
-      stack[stackPointer++] = currentNode->children[j-1];
-    }
-  }
-
-  if( stackPointer )
-    stackPointer--;
-
-  for( int i=0 ; i<(int)opArity[(int)parentStack[stackPointer]->opCode] ; i++ ){
-    if( parentStack[stackPointer]->children[i]==stack[stackPointer] ){
-      (*childId)=i;
-      break;
-    }
-  }
-
-  GPNode* ret = parentStack[stackPointer];
-  delete[] stack;
-  delete[] parentStack;
-
-  return ret;
-}
-
-/**
- * Flatten a tree inside a buffer using RPN notation.
- *
- * @arg root: the root of the tree to flatten.
- * @arg buf: the buffer where to flatten the tree.
- * @arg index: the filling counter of the buffer. Is is modified by the function in order to
- *             reflect the new size after flattening the current individual.
- * @arg max_prog_size: the size of the buffer.
- * @arg op_erc_id: the id of the ERC opcode.
- *
- * @return: nothing important.
- */
-int flattening_tree_rpn( GPNode* root, float* buf, int* index,int max_prog_size, int op_erc_id){
-  int i;
-
-  for( i=0 ; i<opArity[(int)root->opCode] ; i++ ){
-    flattening_tree_rpn(root->children[i],buf,index,max_prog_size,op_erc_id);
-  }
-  if( (*index)+2>max_prog_size )return 0;
-  buf[(*index)++] = root->opCode;
-  if( root->opCode == op_erc_id ) buf[(*index)++] = root->erc_value;
-  return 1;
-}
 

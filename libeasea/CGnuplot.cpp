@@ -1,8 +1,10 @@
 #include "include/CGnuplot.h"
+#include "include/Parameters.h"
 #include <stdio.h>
+#include <string.h>
 
-CGnuplot::CGnuplot(int nbEval){
-#ifdef __linux__
+CGnuplot::CGnuplot(Parameters* param, char* title){
+#ifndef WIN32
 	int toFils[2];
         int toPere[2];
         int sonPid;
@@ -35,11 +37,21 @@ CGnuplot::CGnuplot(int nbEval){
 				this->valid=0;
                                 abort();
                         }
-                        char *arg[2];
-                        arg[0] = (char*)"-persist";
-                        arg[1] = 0;
-                        if(execvp("gnuplot",arg)<0){
-                                perror("gnuplot not installed, please change plotStats parameter\n");
+                        char* pPath;
+                        pPath = getenv("EZ_PATH");
+                        if(pPath != NULL){
+                            pPath = strcat(pPath, "EaseaGrapher.jar");
+                        }
+                        else{
+                            pPath = (char*)"../../EaseaGrapher.jar";
+                        }
+                        char *arg[4];
+                        arg[0] = (char*)"java";
+                        arg[1] = (char*)"-jar";
+                        arg[2] = pPath;
+                        arg[3] = (char*)0;
+                        if(execvp("java",arg)<0){
+                                perror("java not installed, please change plotStats parameter\n");
                                 abort();
 				this->valid=0;
                         }
@@ -49,11 +61,18 @@ CGnuplot::CGnuplot(int nbEval){
                         	this->fWrit = (FILE *)fdopen(toFils[1],"w");
                         	this->fRead = (FILE *)fdopen(toPere[0],"r");
                         	this->pid = sonPid;
-				fprintf(this->fWrit,"set term wxt persist\n");
+				/*fprintf(this->fWrit,"set term wxt persist\n");
 				fprintf(this->fWrit,"set grid\n");
 				fprintf(this->fWrit,"set xrange[0:%d]\n",nbEval);
 				fprintf(this->fWrit,"set xlabel	\"Number of Evaluations\"\n");
-				fprintf(this->fWrit,"set ylabel \"Fitness\"\n");
+				fprintf(this->fWrit,"set ylabel \"Fitness\"\n");*/
+                int nbEval = param->offspringPopulationSize*param->nbGen + param->parentPopulationSize;
+                fprintf(this->fWrit,"set max eval:%d\n",nbEval);
+                fprintf(this->fWrit,"set title:%s\n",title);
+                if(param->remoteIslandModel){
+                    fprintf(this->fWrit,"set island model\n");
+                    fprintf(this->fWrit,"set max generation:%d\n",param->nbGen);
+                }
 				fflush(this->fWrit);
 			}
         }
@@ -61,8 +80,8 @@ CGnuplot::CGnuplot(int nbEval){
 }
 
 CGnuplot::~CGnuplot(){
-#ifdef __linux__
-	fprintf(this->fWrit,"quit\n");
+#ifndef WIN32 
+	//fprintf(this->fWrit,"quit\n");
 	fclose(this->fRead);
 	fclose(this->fWrit);
 #endif

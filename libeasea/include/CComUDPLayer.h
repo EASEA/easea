@@ -6,12 +6,16 @@
 #ifndef CCOMUDPLAYER_H_
 #define CCOMUDPLAYER_H_
 
+#ifdef WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <sys/socket.h> /* for socket(), bind(), and connect() */
 #include <netdb.h> /* for gethostbyname */
 #include <arpa/inet.h>  /* for sockaddr_in and inet_ntoa() */
 #include <netinet/in.h> /* for IP Socket data types */
-#include <string.h>     /* for memset() */
 #include <unistd.h>     /* for close() */
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -60,13 +64,18 @@ public:
 	int debug;
 	void CComUDP_client_send(char *individual);
 	CComUDPClient(unsigned short port, const char *ip,int dg);
+    CComUDPClient(struct sockaddr_in* addr, int dg);
 	~CComUDPClient();
 	std::string getIP();
+    int getPort();
 private:
 	struct sockaddr_in ServAddr;
 	int Socket;
 };
 
 bool isLocalMachine(const char* address);
+bool checkValidLine(std::string line);
+struct sockaddr_in parse_addr_string(const char* line);
+CComUDPClient** parse_file(const char* file_name, unsigned* p_no_client, int serverPort);
 
 #endif /* CCOMUDPLAYER_H_ */

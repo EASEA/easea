@@ -172,16 +172,12 @@ size_t MinTournament::selectNext(size_t populationSize){
     if( rg->tossCoin(currentSelectionPressure) ){
       if( population[i1]->getFitness() < population[i2]->getFitness() ){
 	bestIndex = i1;
-      } else {
-		  bestIndex = i2;
-	  }
+      }
     }
     else{
       if( population[i1]->getFitness() < population[i2]->getFitness() ){
 	bestIndex = i2;
-      } else {
-		  bestIndex = i1;
-	  }
+      }
     }
   }
   else{
@@ -230,16 +226,12 @@ size_t MaxTournament::selectNext(size_t populationSize){
     if( rg->tossCoin(currentSelectionPressure) ){
       if( population[i1]->getFitness() > population[i2]->getFitness() ){
 	bestIndex = i1;
-      } else {
-		  bestIndex = i2;
-	  }
+      }
     }
     else{
       if( population[i1]->getFitness() > population[i2]->getFitness() ){
 	bestIndex = i2;
-      } else {
-		  bestIndex = i1;
-	  }
+      }
     }
   }
   else{

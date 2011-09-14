@@ -12,6 +12,7 @@
 #include "include/CRandomGenerator.h"
 #include "include/CIndividual.h"
 #include "include/Parameters.h"
+#include "include/CStats.h"
 
 using namespace std;
 
@@ -37,7 +38,7 @@ CPopulation::CPopulation(){
 
 CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
 		       float pCrossover, float pMutation, float pMutationPerGene,
-		       CRandomGenerator* rg, Parameters* params){
+		       CRandomGenerator* rg, Parameters* params, CStats* cstats){
 
   this->parents     = new CIndividual*[parentPopulationSize];
   this->offsprings  = new CIndividual*[offspringPopulationSize];
@@ -60,6 +61,7 @@ CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopula
 
   this->currentEvaluationNb = 0;
   this->params = params;
+  this->cstats = cstats;
 }
 
 void CPopulation::syncInVector(){
@@ -323,10 +325,18 @@ void CPopulation::produceOffspringPopulation(){
     unsigned index = selectionOperator->selectNext(parentPopulationSize);
     p1 = parents[index];
 
+    //Check if Any Immigrants will reproduce
+    if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
+        this->cstats->currentNumberOfImmigrantReproductions++;
+    }
+
     if( rg->tossCoin(pCrossover) ){
       for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
-	index = selectionOperator->selectNext(parentPopulationSize);
-	ps[j] = parents[index];
+	    index = selectionOperator->selectNext(parentPopulationSize);
+	    ps[j] = parents[index];
+        if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
+            this->cstats->currentNumberOfImmigrantReproductions++;
+        }
       }
       child = p1->crossover(ps);
     }

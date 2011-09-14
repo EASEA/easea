@@ -23,6 +23,7 @@
 #include "CSelectionOperator.h"
 
 class Parameters;
+class CStats;
 
 class CPopulation {
 
@@ -56,11 +57,12 @@ public:
   std::vector<CIndividual*> pop_vect;
 
   Parameters* params;
+  CStats* cstats;
 
  public:
   CPopulation();
   CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
-	     float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params);
+	     float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* cstats);
   virtual ~CPopulation();
 
   //virtual void initializeParentPopulation() = 0;

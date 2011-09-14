@@ -14,6 +14,7 @@ class CRandomGenerator;
 class CIndividual {
 public:
 	bool valid;
+    bool isImmigrant;
 	float fitness;
 	static CRandomGenerator* rg;
 public:

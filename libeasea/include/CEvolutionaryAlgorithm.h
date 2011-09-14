@@ -15,6 +15,7 @@
 #include "CPopulation.h"
 #include "CStoppingCriterion.h"
 #include "CComUDPLayer.h"
+#include "CStats.h"
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -57,6 +58,7 @@ public:
   void initializeClients();
   void receiveIndividuals();
   void sendIndividual();
+  void refreshClient();
 
 #ifdef WIN32
   void showPopulationStats(clock_t beginTime);
@@ -70,8 +72,8 @@ public:
   Parameters* params;
 
   CGnuplot* gnuplot;
-  double currentAverageFitness;
-  double currentSTDEV;
+
+  CStats* cstats;
 
   virtual ~CEvolutionaryAlgorithm();
 

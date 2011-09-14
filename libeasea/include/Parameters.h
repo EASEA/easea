@@ -73,6 +73,7 @@ public:
 	bool remoteIslandModel;
 	char* ipFile;
 	float migrationProbability;
+    int serverPort;
 
 	char* outputFilename;
 	char* plotOutputFilename;
@@ -81,8 +82,9 @@ public:
 #ifdef WIN32
 	Parameters();
 	~Parameters();
-#endif
+#else
 	virtual ~Parameters(){;}
+#endif
 	virtual void setDefaultParameters(int argc, char** argv) = 0;
 	virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;
 	int setReductionSizes(int popSize, float popReducSize);

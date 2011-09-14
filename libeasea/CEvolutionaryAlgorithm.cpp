@@ -1,6 +1,6 @@
-#ifdef WIN32
-#pragma comment(lib, "WinMM.lib")
-#endif
+//#ifdef WIN32
+//#pragma comment(lib, "WinMM.lib")
+//#endif
 /*
  * CEvolutionaryAlgorithm.cpp
  *
@@ -83,12 +83,13 @@ extern bool INSTEAD_EVAL_STEP;
  */
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	this->params = params;
+    this->cstats = new CStats();
 
 	CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
 			params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
 	this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
-			params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params);
+			params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
 
 	this->currentGeneration = 0;
 
@@ -115,22 +116,25 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		fichier.append(".r");
 		remove(fichier.c_str());
 	}
-	#ifdef __linux__
+	#ifndef WIN32 
 	if(params->plotStats){
-		this->gnuplot = new CGnuplot((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize);
+        string str = "Plotting of the evolution of ";;
+        string str2 = this->params->outputFilename;
+        str.append(str2);
+		//this->gnuplot = new CGnuplot((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize, (char*)str.c_str());
+		this->gnuplot = new CGnuplot(this->params, (char*)str.c_str());
 	}
 	#endif
 
 
 	// INITIALIZE SERVER OBJECT ISLAND MODEL
 	if(params->remoteIslandModel){
-		server = new CComUDPServer(2909,0); //1 if debug
 		this->treatedIndividuals = 0;
 		this->numberOfClients = 0;
 		this->myClientNumber=0;	
 		this->initializeClients();
-		if(!params->remoteIslandModel)
-			delete this->server;
+		//if(params->remoteIslandModel)
+		server = new CComUDPServer(params->serverPort,0); //1 if debug
 	}
 }
 
@@ -192,7 +196,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     EASEABeginningGenerationFunction(this);
 
     // Sending individuals if remote island model
-    if(params->remoteIslandModel)
+    if(params->remoteIslandModel && this->numberOfClients>0)
 	    this->sendIndividual();
 
     population->produceOffspringPopulation();
@@ -244,12 +248,12 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     currentGeneration += 1;
   }
-#ifdef __linux__
-  if(this->params->plotStats && this->gnuplot->valid){
-  	outputGraph();
-  	delete this->gnuplot;
-  }
-#endif
+//#ifdef __linux__
+  //if(this->params->plotStats && this->gnuplot->valid){
+  	//outputGraph();
+  	//delete this->gnuplot;
+  //}
+//#endif
 
   if(this->params->printFinalPopulation){
   	population->sortParentPopulation();
@@ -273,6 +277,10 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   
   if(params->elitSize)
   	free(elitistPopulation);
+
+  if(this->params->plotStats){
+      delete this->gnuplot;
+  }
 }
 
 
@@ -281,14 +289,11 @@ void CEvolutionaryAlgorithm::showPopulationStats(clock_t beginTime){
 #else
 void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #endif
-  
-  currentAverageFitness=0.0;
-  currentSTDEV=0.0;
 
   //Calcul de la moyenne et de l'ecart type
   population->Best = population->Worst = population->parents[0];
   for(unsigned i=0; i<population->parentPopulationSize; i++){
-    currentAverageFitness+=population->parents[i]->getFitness();
+    this->cstats->currentAverageFitness+=population->parents[i]->getFitness();
 
     // here we are looking for the smaller individual's fitness if we are minimizing
     // or the greatest one if we are not
@@ -301,15 +306,19 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
     (!params->minimizing && population->parents[i]->getFitness() < population->Worst->getFitness()))
       population->Worst=population->parents[i];
 
+    if( params->remoteIslandModel && population->parents[i]->isImmigrant){
+        //Count number of Immigrants
+       this->cstats->currentNumberOfImmigrants++; 
+    }
   }
 
-  currentAverageFitness/=population->parentPopulationSize;
+  this->cstats->currentAverageFitness/=population->parentPopulationSize;
 
   for(unsigned i=0; i<population->parentPopulationSize; i++){
-    currentSTDEV+=(population->parents[i]->getFitness()-currentAverageFitness)*(population->parents[i]->getFitness()-currentAverageFitness);
+    this->cstats->currentStdDev+=(population->parents[i]->getFitness()-this->cstats->currentAverageFitness)*(population->parents[i]->getFitness()-this->cstats->currentAverageFitness);
   }
-  currentSTDEV/=population->parentPopulationSize;
-  currentSTDEV=sqrt(currentSTDEV);
+  this->cstats->currentStdDev/=population->parentPopulationSize;
+  this->cstats->currentStdDev=sqrt(this->cstats->currentStdDev);
 
 #ifdef WIN32
   clock_t end(clock());
@@ -324,13 +333,13 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   //Affichage
   if(params->printStats){
 	  if(currentGeneration==0)
-	    printf("GEN\tTIME\t\tEVAL\tBEST\t\t\t\tAVG\t\t\t\tSTDEV\t\t\tWORST\n\n");
+	    printf("GEN\tTIME\t\tEVAL\t\tBEST      AVG       STDDEV    WORST\n\n");
 #ifdef WIN32
-	  printf("%lu\t%2.6f\t%lu\t%.15e\t\t%.15e\t\t%.15e\t%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
+	  printf("%lu\t%2.6f\t%lu\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
-	    printf("%d\t%ld.%06ld\t%d\t%.15e\t\t%.15e\t\t%.15e\t%.15e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
+	    //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
+	    printf("%d\t%ld.%d\t\t%d\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #endif
-	  //printf("%lu\t%ld.%06ld\t%lu\t%f\t%f\t%f\n",currentGeneration,res.tv_sec,res.tv_usec,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV);
   }
 
   if((this->params->plotStats && this->gnuplot->valid) || this->params->generateGnuplotScript){
@@ -340,11 +349,12 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
  	f = fopen(fichier.c_str(),"a"); //ajouter .csv
 	if(f!=NULL){
 	  if(currentGeneration==0)
-	    fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDEV\t\tWORST\n\n");
+	    fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDDEV\t\tWORST\n\n");
 #ifdef WIN32
-          fprintf(f,"%lu\t%2.6f\t%lu\t%.15e\t%.15e\t%.15e\t%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV,population->Worst->getFitness());
+	  fprintf(f,"%lu\t%2.6f\t%lu\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
-	  fprintf(f,"%d\t%ld.%06ld\t%d\t%.15e\t%.15e\t%.15e\t%.15e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV,population->Worst->getFitness());
+	    //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
+	    fprintf(f,"%d\t%ld.%d\t\t%d\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #endif
 	  fclose(f);
         }
@@ -356,26 +366,41 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
  	f = fopen(fichier.c_str(),"a"); //ajouter .csv
 	if(f!=NULL){
 	  if(currentGeneration==0)
-		fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDEV,WORST\n");
+		fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDDEV,WORST\n");
 #ifdef WIN32
-	  fprintf(f,"%lu,%2.6f,%lu,%.15e,%.15e,%.15e,%.15e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV,population->Worst->getFitness());
+	  fprintf(f,"%lu\t%2.6f\t%lu\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
-	  fprintf(f,"%d,%ld.%ld,%d,%f,%f,%f,%f\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
+	    //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
+	    fprintf(f,"%d\t%ld.%d\t\t%d\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #endif
 	  fclose(f);
         }
   }
   //print Gnuplot
-  #ifdef __linux__
+  #ifndef WIN32
   if(this->params->plotStats && this->gnuplot->valid){
-	if(currentGeneration==0)
-		fprintf(this->gnuplot->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
-	else
-		fprintf(this->gnuplot->fWrit,"replot\n");
+	//if(currentGeneration==0)
+	//	fprintf(this->gnuplot->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
+	//else
+	//	fprintf(this->gnuplot->fWrit,"replot\n");
+    fprintf(this->gnuplot->fWrit,"add coordinate:%d;%f;%f;%f\n",population->currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitness, this->cstats->currentStdDev);
+    if(this->params->remoteIslandModel){
+        if(population->Best->isImmigrant){
+            fprintf(this->gnuplot->fWrit,"set immigrant\n");
+        }
+        fprintf(this->gnuplot->fWrit,"add stat:%d;%d;%d\n",currentGeneration, this->cstats->currentNumberOfImmigrants, this->cstats->currentNumberOfImmigrantReproductions);
+    }
+    if(currentGeneration==0){
+        fprintf(this->gnuplot->fWrit,"paint\n");
+    }
+    else{
+        fprintf(this->gnuplot->fWrit,"repaint\n");
+    }
 	fflush(this->gnuplot->fWrit);
  }
- 
 #endif
+ 
+#ifdef __linux__
   double elapsedTime = res.tv_sec + 0.0;
   double micSec = res.tv_usec + 0.0;
 
@@ -386,11 +411,16 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
 
   params->timeCriterion->setElapsedTime(elapsedTime);
+
+#endif
+
+  //Reset Current Gen Stats
+  this->cstats->resetCurrentStats();
 }
 
 //REMOTE ISLAND MODEL FUNCTIONS
 void CEvolutionaryAlgorithm::initializeClients(){
-	int clientNumber=0;
+	/*int clientNumber=0;
 	char (*clients)[16] = (char(*)[16])calloc(1,sizeof(char)*16);
 	
 	cout << "Reading IP address file: " << this->params->ipFile << endl;
@@ -406,19 +436,28 @@ void CEvolutionaryAlgorithm::initializeClients(){
 		else{
 			this->myClientNumber = clientNumber;	
 		}
-	}
+	}*/
+    this->refreshClient();
 
-	if(this->numberOfClients>0){
+	/*if(this->numberOfClients>0){
 		this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
 		for(int i=0; i<(signed)this->numberOfClients; i++){
 			this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);
 		}
 	}
-	else{
-		cout << "***WARNING***\nNo islands to communicate with. Aborting Island Model.\n***WARNING***" << endl;
-		params->remoteIslandModel=0;
+	else{*/
+    if(this->numberOfClients<=0){
+		cout << "***WARNING***\nNo islands to communicate with." << endl;
+	//	params->remoteIslandModel=0;
 	}
-	free(clients);
+}
+
+void CEvolutionaryAlgorithm::refreshClient(){
+    unsigned no_client;
+    this->Clients = parse_file(this->params->ipFile,&no_client, this->params->serverPort);
+
+    cout << "ip file : " << this->params->ipFile << " contains " << no_client << " client ip(s)" << endl;
+    this->numberOfClients = no_client;
 }
 
 void CEvolutionaryAlgorithm::sendIndividual(){
@@ -428,13 +467,12 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 		//cout << "I'm going to send an Individual now" << endl;
 		this->population->selectionOperator->initialize(this->population->parents, params->selectionPressure, this->population->actualParentPopulationSize);
 		//unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
-		//cout << "Going to send individual " << index << " with fitness " << this->population->parents[index]->fitness << endl;
 	
 		//selecting a client randomly
 		int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
 		//for(int client=0; client<this->numberOfClients; client++){
-		cout << "Going to send and individual to client " << client << endl;
-		cout << "His IP is " << this->Clients[client]->getIP() << endl;
+		cout << "    Going to send an individual to client " << client << endl;
+		cout << "    His IP is " << this->Clients[client]->getIP() << " and his port is " << this->Clients[client]->getPort() <<endl;
 		//cout << "Sending individual " << index << " to client " << client << " now" << endl;
 		//cout << this->population->parents[index]->serialize() << endl;
 		this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
@@ -462,6 +500,9 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 			this->server->read_data_lock();
 			string line = this->server->parm->data[this->treatedIndividuals].data;
 			this->population->parents[index]->deserialize(line);
+            //TAG THE INDIVIDUAL AS IMMIGRANT
+            this->population->parents[index]->isImmigrant = true;
+
 			this->server->read_data_unlock();
 			//cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
 			this->treatedIndividuals++;
@@ -470,13 +511,13 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 }
 
 void CEvolutionaryAlgorithm::outputGraph(){
-      	fprintf(this->gnuplot->fWrit,"set term png\n");
+    /*  	fprintf(this->gnuplot->fWrit,"set term png\n");
       	fprintf(this->gnuplot->fWrit,"set output \"%s\"\n",params->plotOutputFilename);
 	fprintf(this->gnuplot->fWrit,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
 	fprintf(this->gnuplot->fWrit,"set xlabel \"Number of Evaluations\"\n");
         fprintf(this->gnuplot->fWrit,"set ylabel \"Fitness\"\n");
         fprintf(this->gnuplot->fWrit,"replot \n");
-	fflush(this->gnuplot->fWrit);
+	fflush(this->gnuplot->fWrit);*/
 }
 
 void CEvolutionaryAlgorithm::generateGnuplotScript(){
@@ -529,7 +570,6 @@ int gettimeofday
 	t = timeGetTime();
 	tp->tv_sec = t / 1000;
 	tp->tv_usec = t % 1000;
-	/* 0 indicates success. */
 	return 0;
 }
 
