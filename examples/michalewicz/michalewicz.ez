@@ -176,6 +176,7 @@ CPPFLAGS+=
 
   Remote island model: false
   IP file: ip.txt 			//File containing all the remote island's IP
+  Server port:2929
   Migration probability : 1.0
 
   Save population: false

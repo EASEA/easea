@@ -640,7 +640,7 @@
     Reduce parents operator: Tournament 4 
     Surviving parents: 50%
     Reduce offspring operator: Tournament 2
-    Surviving offspring: 96%
+    Surviving offspring: 50%
     Final reduce operator: Tournament 2
     Elitism: Weak
 

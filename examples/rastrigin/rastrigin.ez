@@ -73,9 +73,6 @@ float gauss()
 \end
 
 \After everything else function:
-  ofstream SaveFile("save.csv", ios::app);
-  SaveFile << bBest->fitness << ";" << endl;
-  SaveFile.close();
 \end
 
 \At the beginning of each generation function:
@@ -172,6 +169,7 @@ CPPFLAGS+=
 
   Remote island model: false
   IP file: ip.txt 			//File containing all the remote island's IP
+  Server port: 2929
   Migration probability : 0.8
 
   Save population: false

@@ -48,7 +48,7 @@ __device__ __host__ inline float Weierstrass(float x[SIZE], int n)  // Weierstra
    float res = 0.;
    float val[SIZE];
    float b=2.;
-   float h = 0.25;
+   float h = 0.35;
 
    for (int i = 0;i<n; i++) {
 	val[i] = 0.;
@@ -164,14 +164,13 @@ return NbMut;
 \end
 
 \User Makefile options: 
-CPPFLAGS+=
 \end
 
 \Default run parameters :        // Please let the parameters appear in this order
-  Number of generations : 100     	// NB_GEN
+  Number of generations : 100   	// NB_GEN
   Time limit: 0 			// In seconds, 0 to deactivate
-  Population size : 100			//POP_SIZE
-  Offspring size : 100 // 40% 
+  Population size : 2048			//POP_SIZE
+  Offspring size : 2048 // 40% 
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
   Evaluator goal : minimise      // Maximise
@@ -186,15 +185,16 @@ CPPFLAGS+=
   Elite: 1
   Print stats: true				//Default: 1
   Generate csv stats file:false			
-  Generate gnuplot script:true
-  Generate R script:true
-  Plot stats:false				//Default: 0
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats:true				//Default: 0
 
   Remote island model: true
   IP file: ip.txt 			//File containing all the remote island's IP
-  Migration probability: 0.1
+  Server port : 2929
+  Migration probability: 0.33
 
-  Save population: true
+  Save population: false
   Start from file:false
 \end
 	
