@@ -698,7 +698,7 @@ exponent  ([Ee][+-]?[0-9]+)
       if( bCOPY_GP_EVAL_GPU ){
 	fprintf(fpOutputFile,"k_results[index] =");
       }
-      else fprintf(fpOutputFile,"%s",yytext);
+      else fprintf(fpOutputFile,"return fitness=");
  }
 
 
@@ -1218,10 +1218,9 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\RED_FINAL_PRM"  {fprintf(fpOutputFile,"%f",fRED_FINAL_PRM);}
 <TEMPLATE_ANALYSIS>"\\POP_SIZE"  {fprintf(fpOutputFile,"%d",nPOP_SIZE);}
 <TEMPLATE_ANALYSIS>"\\OFF_SIZE"  {fprintf(fpOutputFile,"%d",nOFF_SIZE);}
-<TEMPLATE_ANALYSIS>"\\ELITE_SIZE"  {
-  fprintf(fpOutputFile,"%d",nELITE);
-  ////DEBUG_PRT_PRT("elitism is %d, elite size is %d",bELITISM, nELITE);
- }
+<TEMPLATE_ANALYSIS>"\\ELITE_SIZE"  { fprintf(fpOutputFile,"%d",nELITE); }
+<TEMPLATE_ANALYSIS>"\\FC_SIZE"  { fprintf(fpOutputFile,"%d",iNO_FITNESS_CASES); }
+
 
 <TEMPLATE_ANALYSIS>"\\RED_PAR"  {
   if( TARGET==CUDA || TARGET==STD){
@@ -1308,10 +1307,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   if( TARGET==CUDA )
     strcat(sFileName,"Individual.cu");
   else if( TARGET==STD )
-    if( TARGET_FLAVOR==CUDA_FLAVOR_GP )
-      strcat(sFileName,"Individual.cu");
-    else
-      strcat(sFileName,"Individual.cpp");
+    strcat(sFileName,"Individual.cpp");
   fpOutputFile=fopen(sFileName,"w");    
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  }
@@ -2495,6 +2491,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       strcat(sTemp,"CMAES.tpl");
     else if (TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"STD_MEM.tpl");
+    else if (TARGET_FLAVOR == STD_FLAVOR_GP )
+      strcat(sTemp,"GP.tpl");
     else
       strcat(sTemp,"STD_MO.tpl");
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
