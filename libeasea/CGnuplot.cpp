@@ -40,10 +40,10 @@ CGnuplot::CGnuplot(Parameters* param, char* title){
                         char* pPath;
                         pPath = getenv("EZ_PATH");
                         if(pPath != NULL){
-                            pPath = strcat(pPath, "EaseaGrapher.jar");
+                            pPath = strcat(pPath, "easeagrapher/EaseaGrapher.jar");
                         }
                         else{
-                            pPath = (char*)"../../EaseaGrapher.jar";
+                            pPath = (char*)"../../easeagrapher/EaseaGrapher.jar";
                         }
                         char *arg[4];
                         arg[0] = (char*)"java";
