@@ -87,8 +87,6 @@ int main(int argc, char** argv){
 #include <iostream>
 #include <sstream>
 
-unsigned gNO_FITNESS_CASES=0;
-
 unsigned aborded_crossover;
 float* input_k;
 float* output_k;
@@ -169,6 +167,23 @@ __device__ float eval_tree_gpu(unsigned fc_id, const float * k_progs, const floa
   return stack[0];
 }
 
+
+
+
+int flattening_tree_rpn( GPNode* root, float* buf, int* index){
+  int i;
+
+  for( i=0 ; i<opArity[(int)root->opCode] ; i++ ){
+    flattening_tree_rpn(root->children[i],buf,index);
+  }
+  if( (*index)+2>MAX_PROGS_SIZE )return 0;
+  buf[(*index)++] = root->opCode;
+  if( root->opCode == OP_ERC ) buf[(*index)++] = root->erc_value;
+  return 1;
+}
+
+
+
 /**
    Send input and output data on the GPU memory.
    Allocate
@@ -223,7 +238,6 @@ EvaluatePostFixIndividuals_128(const float * k_progs,
   
   const int tid = threadIdx.x; //0 to NUM_THREADS-1
   const int bid = blockIdx.x; // 0 to NUM_BLOCKS-1
-  int gNO_FITNESS_CASES = trainingSetSize;
 
   
   int index;   // index of the prog processed by the block 
@@ -292,6 +306,40 @@ EvaluatePostFixIndividuals_128(const float * k_progs,
   // here results and hits have been stored in their respective array: we can leave
 }
 
+GPNode* pickNthNode(GPNode* root, int N, int* childId){
+
+  GPNode* stack[TREE_DEPTH_MAX*MAX_ARITY];
+  GPNode* parentStack[TREE_DEPTH_MAX*MAX_ARITY];
+  int stackPointer = 0;
+
+  parentStack[stackPointer] = NULL;
+  stack[stackPointer++] = root;
+
+  for( int i=0 ; i<N ; i++ ){
+    GPNode* currentNode = stack[stackPointer-1];
+    //cout <<  currentNode << endl;
+    stackPointer--;
+    for( int j=opArity[currentNode->opCode] ; j>0 ; j--){
+      parentStack[stackPointer] = currentNode;
+      stack[stackPointer++] = currentNode->children[j-1];
+    }
+  }
+
+  //assert(stackPointer>0);
+  if( stackPointer )
+    stackPointer--;
+
+  //cout << "f : \n\t n :" << stack[stackPointer ] << "\n\t p :" << parentStack[stackPointer] << " cId : " << \
+  //(*childId) << endl;
+
+  for( int i=0 ; i<opArity[parentStack[stackPointer]->opCode] ; i++ ){
+    if( parentStack[stackPointer]->children[i]==stack[stackPointer] ){
+      (*childId)=i;
+      break;
+    }
+  }
+  return parentStack[stackPointer];
+}
 
 
 
@@ -440,8 +488,8 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
 
 
     
-    if( Np1!=0 ) stockParentNode = pickNthNode(c.root, MIN(Np1,nbNodeP1) ,&stockPointChildId,TREE_DEPTH_MAX,MAX_ARITY);
-    if( Np2!=0 ) graftParentNode = pickNthNode(p2.root, MIN(Np2,nbNodeP1) ,&graftPointChildId,TREE_DEPTH_MAX,MAX_ARITY);
+    if( Np1!=0 ) stockParentNode = pickNthNode(c.root, MIN(Np1,nbNodeP1) ,&stockPointChildId);
+    if( Np2!=0 ) graftParentNode = pickNthNode(p2.root, MIN(Np2,nbNodeP1) ,&graftPointChildId);
 
     // is the stock and the graft an authorized type of node (leaf or inner-node)
     if( Np1 && !stockCouldBeTerminal && opArity[stockParentNode->children[stockPointChildId]->opCode]==0 ) goto choose_node;
@@ -489,7 +537,7 @@ float IndividualImpl::evaluate(){
  float sum = 0;
   \INSERT_GENOME_EVAL_HDR
 
-   for( int i=0 ; i<gNO_FITNESS_CASES ; i++ ){
+   for( int i=0 ; i<NO_FITNESS_CASES ; i++ ){
      float EVOLVED_VALUE = recEval(this->root,inputs[i]);
      \INSERT_GENOME_EVAL_BDY
      sum += ERROR;
@@ -536,7 +584,7 @@ void evale_pop_chunk(CIndividual** population, int popSize){
   int index = 0;
   for( int i=0 ; i<popSize ; i++ ){
     indexes[i] = index;
-    flattening_tree_rpn( ((IndividualImpl*)population[i])->root, progs, &index,MAX_PROGS_SIZE,OP_ERC);
+    flattening_tree_rpn( ((IndividualImpl*)population[i])->root, progs, &index);
     progs[index++] = OP_RETURN;
   }
 
@@ -547,7 +595,7 @@ void evale_pop_chunk(CIndividual** population, int popSize){
   cudaStreamCreate(&st);
 
   // Here we will do the real GPU evaluation
-  EvaluatePostFixIndividuals_128<<<popSize,128,0,st>>>( progs_k, index, popSize, input_k, output_k, gNO_FITNESS_CASES, results_k, hits_k, indexes_k);
+  EvaluatePostFixIndividuals_128<<<popSize,128,0,st>>>( progs_k, index, popSize, input_k, output_k, NO_FITNESS_CASES, results_k, hits_k, indexes_k);
   CUDA_SAFE_CALL(cudaStreamSynchronize(st));
 
 
@@ -583,11 +631,11 @@ void EASEAInit(int argc, char** argv){
 
   // load data from csv file.
   cout<<"Before everything else function called "<<endl;
-  cout << "number of point in fitness cases set : " << gNO_FITNESS_CASES << endl;
+  cout << "number of point in fitness cases set : " << NO_FITNESS_CASES << endl;
 
   float* inputs_f = NULL;
 
-  flattenDatas2D(inputs,gNO_FITNESS_CASES,VAR_LEN,&inputs_f);
+  flattenDatas2D(inputs,NO_FITNESS_CASES,VAR_LEN,&inputs_f);
 
   indexes = new int[maxPopSize];
   hits    = new int[maxPopSize];
@@ -596,7 +644,7 @@ void EASEAInit(int argc, char** argv){
   
   INSTEAD_EVAL_STEP=true;
 
-  initialDataToGPU(inputs_f, gNO_FITNESS_CASES*VAR_LEN, outputs, gNO_FITNESS_CASES);
+  initialDataToGPU(inputs_f, NO_FITNESS_CASES*VAR_LEN, outputs, NO_FITNESS_CASES);
   
 }
 
@@ -795,11 +843,10 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->outputFilename = (char*)"EASEA";
 	this->plotOutputFilename = (char*)"EASEA.png";
 
-        this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-        this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
-        this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
-	
-	gNO_FITNESS_CASES = setVariable("fcSize",\FC_SIZE);
+    this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
+    this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
+    this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
+    this->serverPort = setVariable("serverPort",\SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -853,8 +900,6 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 
 #ifndef PROBLEM_DEP_H
 #define PROBLEM_DEP_H
-
-extern unsigned gNO_FITNESS_CASES;
 
 \INSERT_GP_PARAMETERS
 
@@ -1103,7 +1148,6 @@ easeaclean:
 #                                         
 #***************************************
 # --seed=0   # -S : Random number seed. It is possible to give a specific seed.
---fcSize=\FC_SIZE
 
 ######    Evolution Engine    ######
 --popSize=\POP_SIZE # -P : Population Size
@@ -1144,5 +1188,5 @@ easeaclean:
 --remoteIslandModel=\REMOTE_ISLAND_MODEL #To initialize communications with remote AESAE's
 --ipFile=\IP_FILE
 --migrationProbability=\MIGRATION_PROBABILITY #Probability to send an individual every generation
-
+--serverPort=\SERVER_PORT
 \TEMPLATE_END

@@ -173,6 +173,7 @@ IndividualImpl::IndividualImpl() : CIndividual() {
   \GENOME_CTOR 
   \INSERT_EO_INITIALISER
   valid = false;
+  isImmigrant = false;
 }
 
 CIndividual* IndividualImpl::clone(){
@@ -210,6 +211,7 @@ void IndividualImpl::deserialize(string Line){
     \GENOME_DESERIAL
     AESAE_Line >> this->fitness;
     this->valid=true;
+    this->isImmigrant=false;
 }
 
 void IndividualImpl::optimise(int currentIteration){
@@ -228,6 +230,7 @@ IndividualImpl::IndividualImpl(const IndividualImpl& genome){
   // Generic part
   this->valid = genome.valid;
   this->fitness = genome.fitness;
+  this->isImmgrant = false;
 }
 
 
@@ -570,8 +573,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->plotOutputFilename = (char*)"EASEA.png";
 
         this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
+	    this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
         this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
+        this->serverPort = setVariable("serverPort",\SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -987,4 +991,5 @@ clean:
 --remoteIslandModel=\REMOTE_ISLAND_MODEL #To initialize communications with remote AESAE's
 --ipFile=\IP_FILE
 --migrationProbability=\MIGRATION_PROBABILITY #Probability to send an individual every generation
+--serverPort=\SERVER_PORT
 \TEMPLATE_END

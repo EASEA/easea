@@ -1,9 +1,4 @@
 \TEMPLATE_START
-#ifdef WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#pragma comment(lib, "libEasea.lib")
-#pragma comment(lib, "Winmm.lib")
-#endif
 /**
  This is program entry for STD template for EASEA
 
@@ -52,24 +47,13 @@ int main(int argc, char** argv){
 	delete pop;
 
 
-#ifdef WIN32
-	system("pause");
-#endif
 	return 0;
 }
 
 \START_CUDA_GENOME_CU_TPL
-#ifdef WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#pragma comment(lib, "libEasea.lib")
-#endif
 
 #include <fstream>
-#ifndef WIN32
-#include <sys/time.h>
-#else
 #include <time.h>
-#endif
 #include <string>
 #include <sstream>
 #include "CRandomGenerator.h"
@@ -128,6 +112,7 @@ IndividualImpl::IndividualImpl() : CIndividual() {
   \GENOME_CTOR 
   \INSERT_EO_INITIALISER
   valid = false;
+  isImmigrant = false;
 }
 
 CIndividual* IndividualImpl::clone(){
@@ -161,6 +146,7 @@ void IndividualImpl::deserialize(string Line){
     \GENOME_DESERIAL
     AESAE_Line >> this->fitness;
     this->valid=true;
+    this->isImmigrant=false;
 }
 
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
@@ -174,6 +160,7 @@ IndividualImpl::IndividualImpl(const IndividualImpl& genome){
   // Generic part
   this->valid = genome.valid;
   this->fitness = genome.fitness;
+  this->isImmigrant = false;
 }
 
 CIndividual* IndividualImpl::crossover(CIndividual** ps){
@@ -337,9 +324,10 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->outputFilename = (char*)"EASEA";
 	this->plotOutputFilename = (char*)"EASEA.png";
 
-        this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-        this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
-        this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
+    this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
+    this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
+    this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
+    this->serverPort = setVariable("serverPort",\SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -489,21 +477,32 @@ public:
 
 UNAME := $(shell uname)
 
+ifeq($(shell uname -o 2>/dev/null),Msys)
+	OS := MINGW
+endif
+
+ifneq ("$(OS)","")
+	EZ_PATH=../../
+endif
+
 EASEALIB_PATH=$(EZ_PATH)libeasea/
 
 CXXFLAGS =      -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
 
-#USER MAKEFILE OPTIONS :
-\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
-
 OBJS = EASEA.o EASEAIndividual.o 
 
 LIBS = -lpthread
+ifneq ("$(OS)","")
+	LIBS += -lw2_32 -lwinmm -L"C:\MinGW\lib"
+endif
+
+#USER MAKEFILE OPTIONS :
+\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 TARGET =	EASEA
 
 $(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LIBS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a
+	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a $(LIBS)
 
 	
 #%.o:%.cpp
@@ -511,143 +510,18 @@ $(TARGET):	$(OBJS)
 
 all:	$(TARGET)
 clean:
+ifneq ("^$(OS)","")
+	-del $(OBJS) $(TARGET).exe
+else
 	rm -f $(OBJS) $(TARGET)
+endif
 easeaclean:
+ifneq ("$(OS)","")
+	-del $(TARGET).exe *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
+else	
 	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
+endif
 	
-\START_VISUAL_TPL<?xml version="1.0" encoding="Windows-1252"?>
-<VisualStudioProject
-	ProjectType="Visual C++"
-	Version="9,00"
-	Name="EASEA"
-	ProjectGUID="{E73D5A89-F262-4F0E-A876-3CF86175BC30}"
-	RootNamespace="EASEA"
-	Keyword="Win32Proj"
-	TargetFrameworkVersion="196613"
-	>
-	<Platforms>
-		<Platform
-			Name="Win32"
-		/>
-	</Platforms>
-	<ToolFiles>
-	</ToolFiles>
-	<Configurations>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;\EZ_PATHlibEasea&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;\EZ_PATHlibEasea&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-	</Configurations>
-	<References>
-	</References>
-	<Files>
-		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-			>
-			<File
-				RelativePath=".\EASEA.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EASEAIndividual.cpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath=".\EASEAIndividual.hpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
-		</Filter>
-	</Files>
-	<Globals>
-	</Globals>
-</VisualStudioProject>
-
 \START_EO_PARAM_TPL#****************************************
 #                                         
 #  EASEA.prm
@@ -700,4 +574,5 @@ easeaclean:
 --remoteIslandModel=\REMOTE_ISLAND_MODEL #To initialize communications with remote AESAE's
 --ipFile=\IP_FILE
 --migrationProbability=\MIGRATION_PROBABILITY #Probability to send an individual every generation
+--serverPort=\SERVER_PORT
 \TEMPLATE_END
