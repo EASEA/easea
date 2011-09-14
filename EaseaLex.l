@@ -12,14 +12,28 @@ Centre de Math�matiques Appliqu�es
 #define _CRT_SECURE_NO_WARNINGS
 #pragma comment(lib, "libAlexYacc.lib")
 #endif
+#if defined __WIN32__ || defined __WIN64__
 #include "Easea.h"
 #include "EaseaParse.h"
-#ifdef WIN32
+#else
+#include "Easea.h"
+#include "EaseaParse.h"
+#endif
+#if defined WIN32 || defined WIN64
 #include <direct.h>
 #else
 #include <unistd.h>
 #endif
-#ifdef __APPLE__
+#ifndef SIZE_MAX
+# define SIZE_MAX ((size_t) -1)
+#endif
+#ifndef SSIZE_MAX
+# define SSIZE_MAX ((ssize_t) (SIZE_MAX / 2))
+#endif
+#include "debug.h"
+#include <iostream>
+#include <sstream>
+#if defined __WIN64__ || defined __APPLE__ || defined __WIN32__
 /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
 char *strndup (const char *s, size_t n){
     size_t len = strlen (s);
@@ -99,15 +113,6 @@ end:
 
 /* getline implementation is copied from glibc. */
 
-#ifndef SIZE_MAX
-# define SIZE_MAX ((size_t) -1)
-#endif
-#ifndef SSIZE_MAX
-# define SSIZE_MAX ((ssize_t) (SIZE_MAX / 2))
-#endif
-#include "debug.h"
-#include <iostream>
-#include <sstream>
 
   size_t genomeSize;
   bool genomeSizeValidity=false;
@@ -1282,6 +1287,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {fprintf(fpOutputFile,"%d",bREMOTE_ISLAND_MODEL);}
 <TEMPLATE_ANALYSIS>"\\IP_FILE" {if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
 <TEMPLATE_ANALYSIS>"\\MIGRATION_PROBABILITY" {fprintf(fpOutputFile,"%f",fMIGRATION_PROBABILITY);}
+<TEMPLATE_ANALYSIS>"\\SERVER_PORT" {fprintf(fpOutputFile,"%d",nSERVER_PORT);}
 
 <TEMPLATE_ANALYSIS>"\\PRINT_STATS" {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
 <TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
@@ -2307,6 +2313,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Remote"[ \t\n]+"island"[ \t\n]+"model"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf ("\tRemote Island Model...\n"); return REMOTE_ISLAND_MODEL;}
 <GET_PARAMETERS>"IP"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tIP File...\n"); return IP_FILE;}
 <GET_PARAMETERS>"Migration"[ \t\n]+"probability"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tMigration Probability...\n"); return MIGRATION_PROBABILITY;}
+<GET_PARAMETERS>"Server"[ \t\n]+"port"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tServer port...\n"); return SERVER_PORT;}
 
  
 // number
@@ -2491,8 +2498,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       strcat(sTemp,"CMAES.tpl");
     else if (TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"STD_MEM.tpl");
-    else if (TARGET_FLAVOR == STD_FLAVOR_GP )
-      strcat(sTemp,"GP.tpl");
+    //else if (TARGET_FLAVOR == STD_FLAVOR_GP )
+   //   strcat(sTemp,"GP.tpl");
     else
       strcat(sTemp,"STD_MO.tpl");
     if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){

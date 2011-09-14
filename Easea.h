@@ -25,7 +25,6 @@ Centre de Mathématiques Appliquées
 
 #define STD_FLAVOR_SO 0
 #define STD_FLAVOR_MO 1
-#define STD_FLAVOR_GP 2
 #define CUDA_FLAVOR_SO 0
 #define CUDA_FLAVOR_MO 1
 #define CUDA_FLAVOR_GP 2
@@ -53,6 +52,7 @@ extern bool bREMOTE_ISLAND_MODEL;
 extern bool bLINE_NUM_EZ_FILE;
 extern char* nGENOME_NAME;
 extern int nPOP_SIZE, nNB_GEN, nNB_OPT_IT, nOFF_SIZE, nPROBLEM_DIM, nTIME_LIMIT;
+extern int nSERVER_PORT;
 extern int nWARNINGS, nERRORS;
 extern int TARGET, OPERATING_SYSTEM;
 extern int TARGET_FLAVOR;

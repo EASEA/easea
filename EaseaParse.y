@@ -58,6 +58,7 @@ int nPROBLEM_DIM;
 int nNB_GEN=0;
 int nNB_OPT_IT=0;
 int nTIME_LIMIT=0;
+int nSERVER_PORT=0;
 float fMUT_PROB;
 float fXOVER_PROB;
 FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile;//, *fpExplodedGenomeFile;
@@ -139,6 +140,7 @@ class CSymbol;
 %token REMOTE_ISLAND_MODEL //island model
 %token IP_FILE  //island model
 %token MIGRATION_PROBABILITY //island model
+%token SERVER_PORT //server port
 %token PRINT_STATS
 %token PLOT_STATS
 %token GENERATE_CSV_FILE
@@ -637,7 +639,9 @@ Parameter
   | MIGRATION_PROBABILITY NUMBER2{
 	fMIGRATION_PROBABILITY=(float)$2;
 	}
-     
+  | SERVER_PORT NUMBER2{
+      nSERVER_PORT=(int)$2;
+    }
   | PRINT_STATS IDENTIFIER2{
       if (!mystricmp($2->sName,"False")) bPRINT_STATS=0;
       else if (!mystricmp($2->sName,"True")) bPRINT_STATS=1;
@@ -765,10 +769,6 @@ int main(int argc, char *argv[]){
     }
     else if (!mystricmp(sTemp,"memetic"))  {
       TARGET_FLAVOR = MEMETIC;
-    }
-    else if( !mystricmp(sTemp,"gp")){
-      TARGET = STD;
-      TARGET_FLAVOR = STD_FLAVOR_GP;
     }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;

@@ -1,5 +1,8 @@
 UNAME := $(shell uname)
-EXEC = easea 
+ifeq ($(shell uname -o 2>/dev/null),Msys)
+	OS := MINGW
+endif
+EXEC = easea
 CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated -DDEBUG -DLINE_NUM_EZ_FILE
 CPPC = g++ 
 LDFLAGS = 
@@ -12,6 +15,43 @@ $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o boos
 #$(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o libeasea/libeasea.a
 #endif
 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@ 
+ifneq ("$(OS)","")
+	@echo #
+	@echo # Congratulations !  It looks like you compiled EASEA successfully.
+	@echo # 
+	@echo # You can use easea from this directory by typing :
+	@echo #       For example : 
+	@echo #      easea.exe examples\weierstrass_std\weierstrass.ez
+	@echo # Go to the target directory and type make -f weierstrass.mak
+	@echo #
+	@echo # Thanks for using EASEA.
+	@echo #
+else ifeq ($(UNAME),Darwin)
+	#
+	# Congratulations !  It looks like you compiled EASEA successfully.
+	# 
+	# EZ_PATH was automatically added to your .profile at the end of the compilation
+	#
+	# Easea could be moved to a bin directory or included in the PATH 
+	# as long as users have defined a EZ_PATH environment variable 
+	# pointing to the Easea directory.
+	# To do this temporally type : 
+	#       export EZ_PATH=`pwd`/
+	# Or define EZ_PATH in your .profile file :
+	#       For example :
+	#       export EZ_PATH=/path/to/easea/directory/
+	#
+	# Otherwise you can use easea from this directory by typing :
+	#       For example : 
+	#       ./easea examples/weierstrass_std/weierstrass.ez
+	# Go to the taget directory and type make
+	#
+	# To Activate the EZ_PATH variable type:
+	# source ~/.profile
+	#
+	# Thanks for using EASEA.
+	#
+else
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
 	# 
@@ -26,7 +66,7 @@ $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o boos
 	# Easea could be moved to a bin directory or included in the PATH 
 	# as long as users have defined a EZ_PATH environment variable 
 	# pointing to the Easea directory.
-	# To do this temporarly type : 
+	# To do this temporally type : 
 	#       export EZ_PATH=`pwd`/
 	# Or define EZ_PATH in your bashrc file (for bash users) :
 	#       For example :
@@ -42,6 +82,7 @@ $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.a EaseaYTools.o boos
 	#
 	# Thanks for using EASEA.
 	#
+endif
 
 # $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.so
 # 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
@@ -81,9 +122,9 @@ endif
 
 
 EaseaParse.o: EaseaParse.cpp EaseaLex.cpp
-	$(CPPC) $(CPPFLAGS) $< -o $@ -c #2>/dev/null
+	$(CPPC) $(CPPFLAGS) $< -o $@ -c 
 EaseaLex.o:  EaseaLex.cpp
-	$(CPPC) $(CPPFLAGS) $< -o $@ -c #2>/dev/null
+	$(CPPC) $(CPPFLAGS) $< -o $@ -c
 
 
 %.o:%.cpp
@@ -106,9 +147,17 @@ libeasea/libeasea.a:libeasea/*.cpp
 	cd libeasea && make libeasea.a
 
 clean:
+ifneq ("$(OS)","")
+	-del *.o $(EXEC).exe $(EXEC)_bin
+	cd alexyacc && make clean
+	cd libeasea && make clean
+	cd boost && make clean
+else
 	rm -f *.o $(EXEC) $(EXEC)_bin
 	cd alexyacc && make clean
 	cd libeasea && make clean
+	cd boost && make clean
+endif
 #ifeq ($(UNAME),Darwin)
 	cd boost && make clean
 #endif
