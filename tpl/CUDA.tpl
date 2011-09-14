@@ -485,7 +485,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
         this->printStats = setVariable("printStats",\PRINT_STATS);
         this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
-        this->generateGnuplotScript = setVariable("generateGnuplotScript",\GENERATE_GNUPLOT_SCRIPT);
+        this->generatePlotScript = setVariable("generatePlotScript",\GENERATE_GNUPLOT_SCRIPT);
         this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
         this->plotStats = setVariable("plotStats",\PLOT_STATS);
 	this->printInitialPopulation = setVariable("printInitialPopulation",0);
@@ -886,9 +886,9 @@ clean:
 
 #####   Stats Ouput     #####
 --printStats=\PRINT_STATS #print Stats to screen
---plotStats=\PLOT_STATS #plot Stats with gnuplot (requires Gnuplot)
+--plotStats=\PLOT_STATS #plot Stats 
 --generateCSVFile=\GENERATE_CSV_FILE
---generateGnuplotScript=\GENERATE_GNUPLOT_SCRIPT
+--generatePlotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 
 #### Population save    ####

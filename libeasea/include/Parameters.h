@@ -60,7 +60,7 @@ public:
 	//Miscalleous parameters
 	int printStats;
 	int generateCSVFile;
-	int generateGnuplotScript;
+	int generatePlotScript;
 	int generateRScript;	
 	int plotStats;
 	int printInitialPopulation;

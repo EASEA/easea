@@ -22,7 +22,7 @@
 #include <string.h>
 #include "include/CIndividual.h"
 #include "include/Parameters.h"
-#include "include/CGnuplot.h"
+#include "include/CGrapher.h"
 #include "include/global.h"
 #include "include/CComUDPLayer.h"
 #include "include/CRandomGenerator.h"
@@ -95,13 +95,13 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 
 	this->reduceParents = 0;
 	this->reduceOffsprings = 0;
-	this->gnuplot = NULL;
-	if(params->plotStats || params->generateGnuplotScript){
+	this->grapher = NULL;
+	if(params->plotStats || params->generatePlotScript){
 		string fichier = params->outputFilename;
 		fichier.append(".dat");
 		remove(fichier.c_str());
 	}
-	if(params->generateGnuplotScript){
+	if(params->generatePlotScript){
 		string fichier = params->outputFilename;
 		fichier.append(".plot");
 		remove(fichier.c_str());
@@ -121,8 +121,8 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
         string str = "Plotting of the evolution of ";;
         string str2 = this->params->outputFilename;
         str.append(str2);
-		//this->gnuplot = new CGnuplot((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize, (char*)str.c_str());
-		this->gnuplot = new CGnuplot(this->params, (char*)str.c_str());
+		//this->grapher = new CGrapher((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize, (char*)str.c_str());
+		this->grapher = new CGrapher(this->params, (char*)str.c_str());
 	}
 	#endif
 
@@ -249,9 +249,9 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     currentGeneration += 1;
   }
 //#ifdef __linux__
-  //if(this->params->plotStats && this->gnuplot->valid){
+  //if(this->params->plotStats && this->grapher->valid){
   	//outputGraph();
-  	//delete this->gnuplot;
+  	//delete this->grapher;
   //}
 //#endif
 
@@ -269,8 +269,8 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   	population->serializePopulation();
   }
 
-  if(this->params->generateGnuplotScript || !this->params->plotStats)
-	generateGnuplotScript();
+  if(this->params->generatePlotScript || !this->params->plotStats)
+	generatePlotScript();
 
   if(this->params->generateRScript)
 	generateRScript();
@@ -279,7 +279,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   	free(elitistPopulation);
 
   if(this->params->plotStats){
-      delete this->gnuplot;
+      delete this->grapher;
   }
 }
 
@@ -342,7 +342,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #endif
   }
 
-  if((this->params->plotStats && this->gnuplot->valid) || this->params->generateGnuplotScript){
+  if((this->params->plotStats && this->grapher->valid) || this->params->generatePlotScript){
  	FILE *f;
 	string fichier = params->outputFilename;
 	fichier.append(".dat");
@@ -376,27 +376,27 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 	  fclose(f);
         }
   }
-  //print Gnuplot
+  //print grapher
   #ifndef WIN32
-  if(this->params->plotStats && this->gnuplot->valid){
+  if(this->params->plotStats && this->grapher->valid){
 	//if(currentGeneration==0)
-	//	fprintf(this->gnuplot->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
+	//	fprintf(this->grapher->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
 	//else
-	//	fprintf(this->gnuplot->fWrit,"replot\n");
-    fprintf(this->gnuplot->fWrit,"add coordinate:%d;%f;%f;%f\n",population->currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitness, this->cstats->currentStdDev);
+	//	fprintf(this->grapher->fWrit,"replot\n");
+    fprintf(this->grapher->fWrit,"add coordinate:%d;%f;%f;%f\n",population->currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitness, this->cstats->currentStdDev);
     if(this->params->remoteIslandModel){
         if(population->Best->isImmigrant){
-            fprintf(this->gnuplot->fWrit,"set immigrant\n");
+            fprintf(this->grapher->fWrit,"set immigrant\n");
         }
-        fprintf(this->gnuplot->fWrit,"add stat:%d;%d;%d\n",currentGeneration, this->cstats->currentNumberOfImmigrants, this->cstats->currentNumberOfImmigrantReproductions);
+        fprintf(this->grapher->fWrit,"add stat:%d;%d;%d\n",currentGeneration, this->cstats->currentNumberOfImmigrants, this->cstats->currentNumberOfImmigrantReproductions);
     }
     if(currentGeneration==0){
-        fprintf(this->gnuplot->fWrit,"paint\n");
+        fprintf(this->grapher->fWrit,"paint\n");
     }
     else{
-        fprintf(this->gnuplot->fWrit,"repaint\n");
+        fprintf(this->grapher->fWrit,"repaint\n");
     }
-	fflush(this->gnuplot->fWrit);
+	fflush(this->grapher->fWrit);
  }
 #endif
  
@@ -511,16 +511,16 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 }
 
 void CEvolutionaryAlgorithm::outputGraph(){
-    /*  	fprintf(this->gnuplot->fWrit,"set term png\n");
-      	fprintf(this->gnuplot->fWrit,"set output \"%s\"\n",params->plotOutputFilename);
-	fprintf(this->gnuplot->fWrit,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
-	fprintf(this->gnuplot->fWrit,"set xlabel \"Number of Evaluations\"\n");
-        fprintf(this->gnuplot->fWrit,"set ylabel \"Fitness\"\n");
-        fprintf(this->gnuplot->fWrit,"replot \n");
-	fflush(this->gnuplot->fWrit);*/
+    /*  	fprintf(this->grapher->fWrit,"set term png\n");
+      	fprintf(this->grapher->fWrit,"set output \"%s\"\n",params->plotOutputFilename);
+	fprintf(this->grapher->fWrit,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
+	fprintf(this->grapher->fWrit,"set xlabel \"Number of Evaluations\"\n");
+        fprintf(this->grapher->fWrit,"set ylabel \"Fitness\"\n");
+        fprintf(this->grapher->fWrit,"replot \n");
+	fflush(this->grapher->fWrit);*/
 }
 
-void CEvolutionaryAlgorithm::generateGnuplotScript(){
+void CEvolutionaryAlgorithm::generatePlotScript(){
 	FILE* f;
 	string fichier = this->params->outputFilename;
 	fichier.append(".plot");

@@ -1,9 +1,9 @@
-#include "include/CGnuplot.h"
+#include "include/CGrapher.h"
 #include "include/Parameters.h"
 #include <stdio.h>
 #include <string.h>
 
-CGnuplot::CGnuplot(Parameters* param, char* title){
+CGrapher::CGrapher(Parameters* param, char* title){
 #ifndef WIN32
 	int toFils[2];
         int toPere[2];
@@ -79,7 +79,7 @@ CGnuplot::CGnuplot(Parameters* param, char* title){
 #endif
 }
 
-CGnuplot::~CGnuplot(){
+CGrapher::~CGrapher(){
 #ifndef WIN32 
 	//fprintf(this->fWrit,"quit\n");
 	fclose(this->fRead);

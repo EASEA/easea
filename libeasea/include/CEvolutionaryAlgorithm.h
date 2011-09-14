@@ -21,7 +21,7 @@
 #endif
 
 class Parameters;
-class CGnuplot;
+class CGrapher;
 
 class CEvolutionaryAlgorithm {
 public:
@@ -65,13 +65,13 @@ public:
 #else
   void showPopulationStats(struct timeval beginTime);
 #endif
-  void generateGnuplotScript();
+  void generatePlotScript();
   void generateRScript();
 
   void outputGraph();
   Parameters* params;
 
-  CGnuplot* gnuplot;
+  CGrapher* grapher;
 
   CStats* cstats;
 
