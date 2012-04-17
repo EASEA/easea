@@ -30,6 +30,16 @@
 #include <sstream>
 #include <fstream>
 
+//#define INSTRUMENTED
+#ifdef INSTRUMENTED
+#define TIMING
+#include <timing.h>
+#else
+#define TIME_ST(f)
+#define TIME_END(f)
+#define TIME_ACC(f)
+#endif
+
 using namespace std;
 
 extern CRandomGenerator* globalRandomGenerator;
@@ -165,9 +175,30 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   gettimeofday(&begin,0);
 #endif
 
-  std::cout << "Population initialisation (Generation 0)... "<< std::endl;
-  this->initializeParentPopulation();
+#ifdef INSTRUMENTED
+  const char* timing_file_name = "timing.csv";
+  FILE* timing_file = NULL;
+  if( access(timing_file_name,W_OK)!=0 ){
+    // if file does not already exist, start by describing each field
+    timing_file = fopen("timing.csv","w");
+    fprintf(timing_file,"gen,popSize,init,eval,breeding,reduction\n");
+  }
+  else{
+    timing_file = fopen("timing.csv","a");
+  }
+  DECLARE_TIME(init);
+  DECLARE_TIME_ACC(eval);
+  //DECLARE_TIME_ACC(optim);
+  DECLARE_TIME_ACC(breeding);
+  DECLARE_TIME_ACC(reduction);  
 
+#endif
+
+  std::cout << "Population initialisation (Generation 0)... "<< std::endl;
+
+  TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
+
+  TIME_ST(eval);
   if(!INSTEAD_EVAL_STEP)
     this->population->evaluateParentPopulation();
   else
@@ -176,6 +207,8 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   if(this->params->optimise){
         population->optimiseParentPopulation();
   }
+  TIME_END(eval);
+  TIME_ACC(eval);
 
   this->population->currentEvaluationNb += this->params->parentPopulationSize;
   if(this->params->printInitialPopulation){
@@ -198,9 +231,12 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     // Sending individuals if remote island model
     if(params->remoteIslandModel && this->numberOfClients>0)
 	    this->sendIndividual();
-
+    TIME_ST(breeding);
     population->produceOffspringPopulation();
+    TIME_END(breeding);
+    TIME_ACC(breeding);
 
+    TIME_ST(eval);
     if(!INSTEAD_EVAL_STEP)
       population->evaluateOffspringPopulation();
     else
@@ -210,6 +246,8 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     if(this->params->optimise){
           population->optimiseOffspringPopulation();
     }
+    TIME_END(eval);
+    TIME_ACC(eval);
 
     EASEAGenerationFunctionBeforeReplacement(this);
 
@@ -227,6 +265,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 	
     }
 
+    TIME_ST(reduction);
     if( params->parentReduction )
       population->reduceParentPopulation(params->parentReductionSize);
 
@@ -234,6 +273,8 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
       population->reduceOffspringPopulation( params->offspringReductionSize );
 
     population->reduceTotalPopulation(elitistPopulation);
+    TIME_END(reduction);
+    TIME_ACC(reduction);
 
     population->sortParentPopulation();
     //if( this->params->printStats  || this->params->generateCSVFile )
@@ -281,6 +322,17 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   if(this->params->plotStats){
       delete this->grapher;
   }
+
+#ifdef INSTRUMENTED
+  COMPUTE_TIME(init);
+  fprintf(timing_file,"%d,%d,%ld.%06ld,%ld.%06ld,%ld.%06ld,%ld.%06ld\n",
+	  currentGeneration, population->parentPopulationSize,
+	  init_res.tv_sec,init_res.tv_usec,
+	  eval_acc.tv_sec,eval_acc.tv_usec,
+	  breeding_acc.tv_sec,breeding_acc.tv_usec,
+	  reduction_acc.tv_sec,reduction_acc.tv_usec);
+  fclose(timing_file);
+#endif
 }
 
 

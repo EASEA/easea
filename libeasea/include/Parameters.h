@@ -78,6 +78,9 @@ public:
 	char* outputFilename;
 	char* plotOutputFilename;
 
+	int fstGpu;
+	int lstGpu;
+
 public:
 #ifdef WIN32
 	Parameters();

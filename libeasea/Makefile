@@ -8,7 +8,7 @@ CXXFLAGS = -g -Wall -fmessage-length=0 #-I../boost/
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
 	CGrapher.o CCmaes.o CCmaesCuda.o Parameters.o CGPNode.o\
-	CComUDPLayer.o CCuda.o CStats.o
+	CComUDPLayer.o CStats.o
 
 ifneq ("$(OS)","")
 OBJS += inet_pton.o
@@ -26,7 +26,7 @@ TARGET = libeasea.a
 ifneq ("$(OS)","")
 	CPPFLAGS=-I..\boost\ #-pg
 else
-	CPPFLAGS=-I/usr/local/cuda/include/ -I../boost/ #-pg
+	CPPFLAGS=-I../boost/ #-pg
 endif
 
 $(TARGET): $(OBJS)

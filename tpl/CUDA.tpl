@@ -1,4 +1,4 @@
-eTEMPLATE_START
+\TEMPLATE_START
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #pragma comment(lib, "libEasea.lib")
@@ -78,7 +78,6 @@ int main(int argc, char** argv){
 #include "CEvolutionaryAlgorithm.h"
 #include "global.h"
 #include "CIndividual.h"
-#include "CCuda.h"
 #include <vector_types.h>
 
 
@@ -93,6 +92,9 @@ extern CEvolutionaryAlgorithm *EA;
 #define CUDA_TPL
 
 struct gpuArg* gpuArgs;
+
+int fstGpu = 0;
+int lstGpu = 0;
 
 
 struct my_struct_gpu* gpu_infos;
@@ -111,42 +113,39 @@ PopulationImpl* Pop = NULL;
 \INSERT_USER_FUNCTIONS
 
 void cudaPreliminaryProcess(unsigned PopulationSize){
-       int capacite_max = 0;
+  int noTotalMP = 0; // number of MP will be used to distribute the population
+  int count = 0;
 
-       //Recuperation of each device information's.
-       for( int index = 0; index < num_gpus; index++){
-             cudaDeviceProp deviceProp;
-             cudaGetDeviceProperties(&deviceProp, index);
+  //Recuperation of each device information's.
+  for( int index = 0; index < num_gpus; index++){
+    cudaDeviceProp deviceProp;
+    cudaError_t lastError = cudaGetDeviceProperties(&deviceProp, index+fstGpu);
+    if( lastError!=cudaSuccess ){
+      std::cerr << "Cannot get device information for device no : " << index+fstGpu << std::endl;
+      exit(-1);
+    }
 
-             gpu_infos[index].num_MP =  deviceProp.multiProcessorCount*2; //Two block on each MP
-	     gpu_infos[index].num_thread_max = deviceProp.maxThreadsPerBlock*0.5; //We are going to use 50% of the real maximun thread per block, we want to be sure to have enough memory for all of them. 
-             gpu_infos[index].num_Warp = deviceProp.warpSize;
-             capacite_max += gpu_infos[index].num_MP * gpu_infos[index].num_thread_max;
-       }
-      
-       int count = 0;
+    gpu_infos[index].num_MP =  deviceProp.multiProcessorCount; //Two block on each MP
+    gpu_infos[index].num_thread_max = deviceProp.maxThreadsPerBlock*0.5; //We are going to use 50% of the real maximun thread per block, we want to be sure to have enough memory for all of them. 
+    gpu_infos[index].num_Warp = deviceProp.warpSize;
+    noTotalMP += gpu_infos[index].num_MP;
+    gpu_infos[index].gpuProp = deviceProp;
 
-       //We can have different cards that's why we are going to put more or less individuals on each of them according to their respective capacity.
-       for( int index = 0; index < num_gpus; index++){
-           gpu_infos[index].indiv_start = count;
-           //On the first cards we are going to place a maximun of individuals.
-           if(index != (num_gpus - 1)) 
-	    gpu_infos[index].sh_pop_size = ceil((float)PopulationSize * (((float)gpu_infos[index].num_MP*(float)gpu_infos[index].num_thread_max) / (float)capacite_max) );
-           //On the last card we are going to place the remaining individuals.  
-          else 
-            gpu_infos[index].sh_pop_size = PopulationSize - count;
-                    
-          count += gpu_infos[index].sh_pop_size;
-	  
-          /*
-	  * The number of thread will be a multiple of the number of Warp less than or equal at the maximun number of thread per block.
-	  * The number of block will be a multiple of the double of MP.
-	  */
-          if( !repartition(&gpu_infos[index]))
-                 exit( -1 );
-           std::cout << "Device number : " << index << "  Number of block : " << gpu_infos[index].dimGrid << std::endl;
-           std::cout << "Device number : " << index << "  Number of thread : " << gpu_infos[index].dimBlock << std::endl;
-       }
+
+  }
+
+  for( int index = 0; index < num_gpus; index++){
+
+    gpu_infos[index].indiv_start = count;
+
+    if(index != (num_gpus - 1)) 
+      gpu_infos[index].sh_pop_size = ceil((float)PopulationSize * (((float)gpu_infos[index].num_MP) / (float)noTotalMP) );
+    //On the last card we are going to place the remaining individuals.  
+    else 
+      gpu_infos[index].sh_pop_size = PopulationSize - count;
+	     
+    count += gpu_infos[index].sh_pop_size;	     
+  }
 }
 
 __device__ __host__ inline IndividualImpl* INDIVIDUAL_ACCESS(void* buffer,unsigned id){
@@ -158,6 +157,7 @@ __device__ float cudaEvaluate(void* devBuffer, unsigned id, struct gpuOptions in
 }
   
 
+extern "C" 
 __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses, struct gpuOptions initOpts){
 
         unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
@@ -175,9 +175,25 @@ void* gpuThreadMain(void* arg){
 
   cudaError_t lastError;
   struct gpuArg* localArg = (struct gpuArg*)arg;
-  cudaSetDevice(localArg->threadId);
+  std::cout << " gpuId : " << localArg->gpuId << std::endl;
+  lastError = cudaSetDevice(localArg->gpuId);
+  if( lastError != cudaSuccess ){
+    std::cerr << "Error, cannot set device properly for device no " << localArg->gpuId << std::endl;
+    exit(-1);
+  }
+  
   int nbr_cudaPreliminaryProcess = 2;
 
+  struct my_struct_gpu* localGpuInfo = gpu_infos+localArg->threadId;
+
+  struct cudaFuncAttributes attr;
+  lastError = cudaFuncGetAttributes(&attr,"cudaEvaluatePopulation");
+
+  if( lastError != cudaSuccess ){
+    std::cerr << "Error, cannot get function attribute for cudaEvaluatePopulation on card: " << localGpuInfo->gpuProp.name  << std::endl;
+    exit(-1);
+  }
+  
   // Because of the context of each GPU thread, we have to put all user's CUDA 
   // initialisation here if we want to use them in the GPU, otherwise they are
   // not found in the GPU context
@@ -187,22 +203,61 @@ void* gpuThreadMain(void* arg){
    while(1){
 	    sem_wait(&localArg->sem_in);
 	    if( freeGPU ) {
-                        cudaFree(localArg->d_fitness);
-	                cudaFree(localArg->d_population);
-     			 break;
+	      // do we need to free gpu memory
+	      cudaFree(localArg->d_fitness);
+	      cudaFree(localArg->d_population);
+	      break;
 	    }
 	    if(nbr_cudaPreliminaryProcess > 0) {
-              	 lastError = cudaMalloc(&localArg->d_population,gpu_infos[localArg->threadId].sh_pop_size*(sizeof(IndividualImpl)));
-	         lastError = cudaMalloc(((void**)&localArg->d_fitness),gpu_infos[localArg->threadId].sh_pop_size*sizeof(float));
-	         nbr_cudaPreliminaryProcess--;
-            }		    
-            lastError = cudaMemcpy(localArg->d_population,(IndividualImpl*)(Pop->cuda->cudaBuffer)+gpu_infos[localArg->threadId].indiv_start,(sizeof(IndividualImpl)*gpu_infos[localArg->threadId].sh_pop_size),cudaMemcpyHostToDevice);
-				      
-	    cudaEvaluatePopulation<<< gpu_infos[localArg->threadId].dimGrid, gpu_infos[localArg->threadId].dimBlock>>>(localArg->d_population,gpu_infos[localArg->threadId].sh_pop_size,localArg->d_fitness,Pop->cuda->initOpts);
-	    lastError = cudaThreadSynchronize();
+	      // we should free GPU buffers when 
+
+	      //  here we will compute how to spread the population to evaluate on GPGPU cores
+	      int thLimit = attr.maxThreadsPerBlock;
+	      int N = localGpuInfo->sh_pop_size;
+	      int w = localGpuInfo->gpuProp.warpSize;
+
+	      int b=0,t=0;
+	      
+	      do{
+		b += localGpuInfo->num_MP;
+		t = ceilf( MIN(thLimit,(float)N/b)/w)*w;
+	      } while( (b*t<N) || t>thLimit );
+	      
+	      if( localArg->d_population!=NULL ){ cudaFree(localArg->d_population); }
+	      if( localArg->d_fitness!=NULL ){ cudaFree(localArg->d_fitness); }
+
+	      lastError = cudaMalloc(&localArg->d_population,localGpuInfo->sh_pop_size*(sizeof(IndividualImpl)));
+	      lastError = cudaMalloc(((void**)&localArg->d_fitness),localGpuInfo->sh_pop_size*sizeof(float));
+
+	      std::cout << "card (" << localArg->threadId << ") " << localGpuInfo->gpuProp.name << " has " << localGpuInfo->sh_pop_size << " individual to evaluate" 
+			<< ": t=" << t << " b: " << b << std::endl;
+	      localGpuInfo->dimGrid = b;
+	      localGpuInfo->dimBlock = t;
+
+	      nbr_cudaPreliminaryProcess--;
+
+	      if( b*t!=N ){
+		// due to lack of individuals, the population distribution is not optimial according to core organisation
+		// warn the user and propose a proper configuration
+		std::cerr << "Warning, population distribution is not optimial, consider adding " << (b*t-N) << " individuals to " 
+			  << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
+	      }
+            }
 		    
-	    lastError = cudaMemcpy(fitnessTemp + gpu_infos[localArg->threadId].indiv_start, localArg->d_fitness, gpu_infos[localArg->threadId].sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
+            lastError = cudaMemcpy(localArg->d_population,(IndividualImpl*)(Pop->cuda->cudaBuffer)+gpu_infos[localArg->threadId].indiv_start,
+				   (sizeof(IndividualImpl)*gpu_infos[localArg->threadId].sh_pop_size),cudaMemcpyHostToDevice);
+				      
+	    // the real GPU computation (kernel launch)
+	    cudaEvaluatePopulation<<< localGpuInfo->dimGrid, localGpuInfo->dimBlock>>>(localArg->d_population, localGpuInfo->sh_pop_size,
+										       localArg->d_fitness,Pop->cuda->initOpts);
+	    if( cudaGetLastError()!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
+
+	    // be sure the GPU has finished computing evaluations, and get results to CPU
+	    lastError = cudaThreadSynchronize();
+	    if( lastError!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
+	    lastError = cudaMemcpy(fitnessTemp + localGpuInfo->indiv_start, localArg->d_fitness, localGpuInfo->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
 	    
+	    // this thread has finished its phase, so lets tell it to the main thread
 	    sem_post(&localArg->sem_out);
    }
   sem_post(&localArg->sem_out);
@@ -213,22 +268,31 @@ void* gpuThreadMain(void* arg){
 void wake_up_gpu_thread(){
 	for( int i=0 ; i<num_gpus ; i++ ){
 		sem_post(&(gpuArgs[i].sem_in));
-		sem_wait(&gpuArgs[i].sem_out);
+	
   	}
+	for( int i=0 ; i<num_gpus ; i++ ){
+	  sem_wait(&gpuArgs[i].sem_out);
+  	}
+
 }
 				
 void InitialiseGPUs(){
 	//MultiGPU part on one CPU
 	gpuArgs = (struct gpuArg*)malloc(sizeof(struct gpuArg)*num_gpus);
 	pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
-	
+	int gpuId = fstGpu;
 	//here we want to create on thread per GPU
 	for( int i=0 ; i<num_gpus ; i++ ){
+	  
+		gpuArgs[i].d_fitness = NULL;
+		gpuArgs[i].d_population = NULL;
+		
+		gpuArgs[i].gpuId = gpuId++;
+
 	  	gpuArgs[i].threadId = i;
 	  	sem_init(&gpuArgs[i].sem_in,0,0);
 	  	sem_init(&gpuArgs[i].sem_out,0,0);
-	  	if( pthread_create(t+i,NULL,gpuThreadMain,gpuArgs+i) )
-		  	perror("pthread_create : ");
+	  	if( pthread_create(t+i,NULL,gpuThreadMain,gpuArgs+i) ){ perror("pthread_create : "); }
 	}
 }
 
@@ -240,8 +304,26 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 }
 
 void EASEAInit(int argc, char** argv){
-        cudaGetDeviceCount(&num_gpus);
-        gpu_infos = (struct my_struct_gpu*)malloc(sizeof(struct my_struct_gpu)*num_gpus);
+  fstGpu = setVariable("fstgpu",0);
+  lstGpu = setVariable("lstgpu",0);
+
+	if( lstGpu==fstGpu && fstGpu==0 ){
+	  // use all gpus available
+	  cudaGetDeviceCount(&num_gpus);
+	}
+	else{
+	  int queryGpuNum;
+	  cudaGetDeviceCount(&queryGpuNum);
+	  if( (lstGpu - fstGpu)>queryGpuNum || fstGpu<0 || lstGpu>queryGpuNum){
+	    std::cerr << "Error, not enough devices found on the system ("<< queryGpuNum <<") to satisfy user configuration ["<<fstGpu<<","<<lstGpu<<"["<<std::endl;
+	    exit(-1);
+	  }
+	  else{
+	    num_gpus = lstGpu-fstGpu;
+	  }
+	}
+
+	gpu_infos = (struct my_struct_gpu*)malloc(sizeof(struct my_struct_gpu)*num_gpus);
 	InitialiseGPUs();
 	\INSERT_INIT_FCT_CALL
 }
@@ -556,7 +638,9 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 
 
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
-	this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params);
+
+  // warning cstats parameter is null
+  this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params,NULL);
 	((PopulationImpl*)this->population)->cuda = new CCuda(params->parentPopulationSize, params->offspringPopulationSize, sizeof(IndividualImpl));
 	Pop = ((PopulationImpl*)this->population);
 	;
@@ -566,7 +650,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 
 }
 
-PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params){
+PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params, stats){
 	;
 }
 
@@ -584,8 +668,8 @@ PopulationImpl::~PopulationImpl(){
 #include <iostream>
 #include <CIndividual.h>
 #include <Parameters.h>
-#include <CCuda.h>
 #include <string>
+#include <CStats.h>
 
 using namespace std;
 
@@ -660,7 +744,7 @@ class PopulationImpl: public CPopulation {
 public:
 	CCuda *cuda;
 public:
-	PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params);
+  PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats);
         virtual ~PopulationImpl();
         void evaluateParentPopulation();
 	void evaluateOffspringPopulation();
@@ -673,7 +757,7 @@ NVCC= nvcc
 CPPC= g++
 LIBAESAE=$(EZ_PATH)libeasea/
 CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include -I$(EZ_PATH)boost
-LDFLAGS=$(EZ_PATH)boost/program_options.a $(LIBAESAE)libeasea.a -lpthread
+LDFLAGS=$(EZ_PATH)boost/program_options.a $(LIBAESAE)libeasea.a -lpthread 
 
 
 
@@ -691,8 +775,8 @@ OBJ= $(EASEA_SRC:.cpp=.o) $(EASEA_MAIN_HDR:.cpp=.o)
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
-CPPFLAGS+= -I$(LIBAESAE)include -I$(EZ_PATH)boost
-NVCCFLAGS+= --compiler-options -fpermissive
+CPPFLAGS+= -I$(LIBAESAE)include -I$(EZ_PATH)boost -I/usr/local/cuda/include/
+NVCCFLAGS+= #--ptxas-options="-v"# --gpu-architecture sm_23 --compiler-options -fpermissive 
 
 
 BIN= EASEA
