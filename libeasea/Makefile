@@ -3,12 +3,12 @@ ifeq ($(shell uname -o 2>/dev/null),Msys)
 	OS := MINGW
 endif
 
-CXXFLAGS = -g -Wall -fmessage-length=0 #-I../boost/
+CXXFLAGS = -g -Wall -fmessage-length=0 -I/usr/local/cuda/include #-I../boost/
 
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
 	CGrapher.o CCmaes.o CCmaesCuda.o Parameters.o CGPNode.o\
-	CComUDPLayer.o CStats.o
+	CComUDPLayer.o CStats.o CCuda.o
 
 ifneq ("$(OS)","")
 OBJS += inet_pton.o

@@ -6,7 +6,6 @@
 #endif
 /**
  This is program entry for STD template for EASEA
-
 */
 
 \ANALYSE_PARAMETERS
@@ -79,6 +78,7 @@ int main(int argc, char** argv){
 #include "global.h"
 #include "CIndividual.h"
 #include <vector_types.h>
+#include "CCuda.h"
 
 
 using namespace std;
