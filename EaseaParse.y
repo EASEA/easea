@@ -752,9 +752,14 @@ int main(int argc, char *argv[]){
       TARGET_FLAVOR = CUDA_FLAVOR_MO;
     }
     else if( !mystricmp(sTemp,"cuda_gp") ){
-      printf("tpl argu : is gp\n");
+      printf("tpl is cuda gp\n");
       TARGET=CUDA;
-      TARGET_FLAVOR = CUDA_FLAVOR_GP;
+      TARGET_FLAVOR = FLAVOR_GP;
+    }
+    else if( !mystricmp(sTemp,"gp") ){
+      printf("tpl is gp\n");
+      TARGET=STD;
+      TARGET_FLAVOR = FLAVOR_GP;
     }
     else if (!mystricmp(sTemp,"std"))  {
       TARGET=STD;
@@ -850,6 +855,7 @@ double CEASEAParser::divide(double a, double b)
 
 void CEASEAParser::yysyntaxerror(){
 
-  printf("Syntax Error at line : %d\nFor more details during the EASEA compiling, use the \"-v\" option\n",EASEALexer.yylineno);
+  printf("Syntax Error at line : %d (on text : %s)\nFor more details during the EASEA compiling, use the \"-v\" option\n",
+	 EASEALexer.yylineno,EASEALexer.yytext);
 }
 

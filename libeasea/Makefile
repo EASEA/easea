@@ -8,15 +8,15 @@ CXXFLAGS = -g -Wall -fmessage-length=0 -I/usr/local/cuda/include #-I../boost/
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
 	CGrapher.o CCmaes.o CCmaesCuda.o Parameters.o CGPNode.o\
-	CComUDPLayer.o CStats.o CCuda.o
+	CComUDPLayer.o CStats.o CGPNode.o
 
 ifneq ("$(OS)","")
 OBJS += inet_pton.o
 endif
 
-ifeq ($(EZ_CUDA),1)
-OBJS += CCuda.o
-endif
+#ifeq ($(EZ_CUDA),1)
+#OBJS += CCuda.o
+#endif
 
 ifneq ("$(OS)","")
 LIBS = -L"C:\MinGW\lib" -lws2_32 -lwinmm
@@ -38,7 +38,7 @@ $(TARGET): $(OBJS)
 all:	$(TARGET)
 clean:
 ifneq ("$(OS)","")
-	-del $(OBJS) $(TARGET) CCuda.o
+	-del $(OBJS) $(TARGET)
 else
-	rm -f $(OBJS) $(TARGET)  CCuda.o
+	rm -f $(OBJS) $(TARGET)
 endif

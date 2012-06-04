@@ -83,4 +83,8 @@ void flattenDatas2D( float** inputs, int length, int width, float** flat_inputs)
 
 GPNode* construction_method( const int constLen, const int totalLen , const int currentDepth, const int maxDepth, const bool full, const unsigned* opArity, const int OP_ERC);
 
+// display methods
+void toDotFile(GPNode* root, const char* baseFileName, int treeId, const unsigned* opArity , const char** opCodeName, int OP_ERC);
+std::string toString(GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC);
+
 #endif // __C_GPNODE__

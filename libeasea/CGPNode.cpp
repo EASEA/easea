@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include<iostream>
+#include<sstream>
+
 
 extern CRandomGenerator* globalRandomGenerator;
 extern unsigned opArity[];
@@ -187,7 +190,8 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
 }
 
 
-GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, unsigned actualParentPopulationSize, unsigned parentPopulationSize, float GROW_FULL_RATIO, unsigned VAR_LEN, unsigned OPCODE_SIZE, const unsigned* opArity, const int OP_ERC){
+GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, unsigned actualParentPopulationSize, unsigned parentPopulationSize, 
+		   float GROW_FULL_RATIO, unsigned VAR_LEN, unsigned OPCODE_SIZE, const unsigned* opArity, const int OP_ERC){
   /**
      This is the standard ramped half-and-half method
      for creation of trees.
@@ -208,3 +212,94 @@ GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, u
 
 
 
+void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+
+  (*oss) << '(';
+  if (opArity[(int)root->opCode] == 2) {
+    toString_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+    (*oss) << ' ';
+    (*oss) << opCodeName[(int)root->opCode];
+    (*oss) << ' ';
+    toString_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
+  } else {
+    if (root->opCode == OP_ERC) {
+      (*oss) << root->erc_value;
+    } else {
+      (*oss) << opCodeName[(int)root->opCode];
+    }
+    for (unsigned i = 0; i < opArity[(int)root->opCode]; ++i) {
+      if (root->children[i]) {
+	toString_r(oss,root->children[i],opArity,opCodeName,OP_ERC);
+	if (i < opArity[(int)root->opCode] - 1) {
+	  (*oss) << ' ';
+	}
+      }
+    }
+  }
+  (*oss) <<  ')';
+
+  return;
+}
+
+std::string toString(GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+  std::ostringstream oss;
+
+  toString_r(&oss,root,opArity,opCodeName,OP_ERC);
+
+  return oss.str();
+}
+
+
+/**
+   This function handles printing of tree.
+   Every node is identify by its address, in memory,
+   and labeled by the actual opCode.
+
+   On our architecture (64bits, ubuntu 8.04 and gcc-4.3.2)
+   the long int variable is sufficient to store the address
+   without any warning.
+ */
+void toDotFile_r(GPNode* root, FILE* outputFile, const unsigned* opArity , const char** opCodeName, int OP_ERC){
+  if( root->opCode==OP_ERC )
+    fprintf(outputFile," %ld [label=\"%s : %f\"];\n", (long int)root, opCodeName[(int)root->opCode],
+	    root->erc_value);
+ else
+   fprintf(outputFile," %ld [label=\"%s\"];\n", (long int)root, opCodeName[(int)root->opCode]);
+  
+  for( unsigned i=0 ; i<opArity[(int)root->opCode] ; i++ ){
+    if( root->children[i] ){
+      fprintf(outputFile,"%ld -> %ld;\n", (long int)root, (long int)root->children[i]);
+      toDotFile_r( root->children[i] , outputFile,opArity,opCodeName,OP_ERC);
+    }
+  }
+}
+
+
+
+
+/**
+   This function prints a tree in dot (graphviz format).
+   This is the entry point for the print operation. (see toDotFile_r,
+   for the actual function)
+
+   @arg root : set of trees, same type than in a individual.
+   @arg baseFileName : base of filename for the output file.
+   @arg treeId : the id of the tree to print, in the given set.
+ */
+void toDotFile(GPNode* root, const char* baseFileName, int treeId, const unsigned* opArity , const char** opCodeName, int OP_ERC){
+  std::ostringstream oss;
+  oss << baseFileName << "-" << treeId << ".gv";
+
+  FILE* outputFile = fopen(oss.str().c_str(),"w");
+  if( !outputFile ){
+    perror("Opening file for outputing dot representation ");
+    printf("%s\n",oss.str().c_str());
+    exit(-1);
+  }
+
+  fprintf(outputFile,"digraph trees {\n");
+  if(root)
+    toDotFile_r( root, outputFile,opArity,opCodeName,OP_ERC);
+  fprintf(outputFile,"}\n");
+  fclose(outputFile);
+}

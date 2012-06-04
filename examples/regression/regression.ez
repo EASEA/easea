@@ -1,5 +1,3 @@
- 
-
 /*_________________________________________________________
 
   This is a standard GP implementation on EASEA, 
@@ -12,6 +10,13 @@
 __________________________________________________________*/
 
 \User declarations :
+
+// these 3 defines are mandatory here. Adjust as you like.
+#define NO_FITNESS_CASES 1024
+#define VAR_LEN 1
+#define GROW_FULL_RATIO 0.5
+
+
 #define PI (3.141592653589793)
 \end
 
@@ -44,7 +49,7 @@ int generateData(float*** inputs, float** outputs){
 
 
 void free_data(){
-  for( int i=0 ; i<fitnessCasesSetLength ;i++ )
+  for( int i=0 ; i<NO_FITNESS_CASES ;i++ )
     delete[] inputs[i] ;
   delete[] outputs;
   delete[] inputs;
@@ -61,7 +66,9 @@ void free_data(){
 
 \After everything else function:
 {
-  toDotFile( ((IndividualImpl*)EA->population->Best)->root, "best", 0);
+  //toDotFile( ((IndividualImpl*)EA->population->Best)->root, "best", 0);
+  std::cout << toString(((IndividualImpl*)EA->population->Best)->root) << std::endl;
+
   free_data();
 }
 \end
@@ -91,11 +98,12 @@ GenomeClass {
 \end
 
 \GenomeClass::display:
+
 \end
 
 \GenomeClass::initialiser :
 {
-  Genome.root = RAMPED_H_H(INIT_TREE_DEPTH_MIN,INIT_TREE_DEPTH_MAX,EA->population->actualParentPopulationSize,EA->population->parentPopulationSize,GROW_FULL_RATIO, VAR_LEN, OPCODE_SIZE,opArity, OP_ERC);
+  Genome.root = ramped_hh();
 }
 \end
 
@@ -115,8 +123,10 @@ GenomeClass {
 }
 \end
 
+
 \begin operator description :
 OP_X, "x", 0, {RESULT=INPUT[0];};
+OP_ERC, "ERC", 0, {RESULT=ERC;};
 OP_ADD, "+", 2, {RESULT=OP1+OP2;};
 OP_SUB, "-", 2, {RESULT=OP1-OP2;};
 OP_MUL, "*", 2, {RESULT=OP1*OP2;};
@@ -124,20 +134,22 @@ OP_DIV, "/", 2, {
   if( !OP2 ) RESULT = 1;
   else RESULT = OP1/OP2;
 };
-OP_ERC, "ERC", 0, {RESULT=ERC;};
+
 \end
+
 
 \GenomeClass::evaluator header:
 \end
 
 \GenomeClass::evaluator for each fc :
 float expected_value = OUTPUT;
-ERROR = powf(expected_value-EVOLVED_VALUE,2);
+ERROR = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
 \end
 
 \GenomeClass::evaluator accumulator :
-return sqrtf(ERROR/NO_FITNESS_CASES);
+return sqrtf(ERROR);
 \end
+
 
 \User Makefile options: 
 
@@ -146,36 +158,40 @@ LDFLAGS+=
 \end
 
 \Default run parameters :         // Please let the parameters appear in this order
-  Number of generations : 100       // NB_GEN
-  Time limit: 0 		  // In seconds, 0 to deactivate
-  Population size : 4096	          //POP_SIZE
-  Offspring size : 4096              // 40% 
-  Mutation probability : 0.2        // MUT_PROB
-  Crossover probability : 0.9       // XOVER_PROB
-  Evaluator goal : minimise       // Maximise
-  Selection operator: Tournament 2
+  Number of generations : 50   	// NB_GEN
+  Time limit: 0 			// In seconds, 0 to deactivate
+  Population size : 5000			//POP_SIZE
+  Offspring size : 5000 // 40% 
+  Mutation probability : 0.1       // MUT_PROB
+  Crossover probability : 0.9      // XOVER_PROB
+  Evaluator goal : minimise      // Maximise
+  Selection operator: Tournament 7
   Surviving parents: 100%//percentage or absolute  
   Surviving offspring: 100%
   Reduce parents operator: Tournament 2
   Reduce offspring operator: Tournament 2
-  Final reduce operator: Tournament 2
+  Final reduce operator: Tournament 7
 
   Elitism: Strong			//Weak or Strong
   Elite: 1
+  Print stats: true				//Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats:true				//Default: 0
 
-  //  Print stats:1				//Default: 1
-  //  Generate csv stats file:0			
-  //  Generate gnuplot script:0
-  //  Generate R script:0
-  //  Plot stats:0				//Default: 0
+  //  Remote island model: true
+  //IP	  file: ip.txt 			//File containing all the remote island's IP
+  //Server port : 2929
+  //Migration probability: 0.33
 
-  max init tree depth : 9
-  min init tree depth : 4
+  Save population: false
+  Start from file:false
 
-  max tree depth : 12
+  max init tree depth : 4
+  min init tree depth : 2
 
-  nb of GPUs : 1
+  max tree depth : 8
+
   size of prog buffer : 20000000
-
-  nb of fitness cases : 128
 \end

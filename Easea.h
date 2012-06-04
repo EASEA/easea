@@ -27,7 +27,7 @@ Centre de Mathématiques Appliquées
 #define STD_FLAVOR_MO 1
 #define CUDA_FLAVOR_SO 0
 #define CUDA_FLAVOR_MO 1
-#define CUDA_FLAVOR_GP 2
+#define FLAVOR_GP 2
 
 
 #define UNIX 1

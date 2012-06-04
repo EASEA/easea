@@ -315,7 +315,7 @@ exponent  ([Ee][+-]?[0-9]+)
   fprintf(fpOutputFile,"#define MAX_PROGS_SIZE %d\n",iPRG_BUF_SIZE);
   fprintf(fpOutputFile,"#define NB_GPU %d\n",iNB_GPU);
 
-  fprintf(fpOutputFile,"#define NO_FITNESS_CASES %d\n",iNO_FITNESS_CASES);
+  //fprintf(fpOutputFile,"#define NO_FITNESS_CASES %d\n",iNO_FITNESS_CASES);
 }
 
 /*
@@ -345,14 +345,14 @@ exponent  ([Ee][+-]?[0-9]+)
   }
   fprintf(fpOutputFile,"};\n"); 
 
-
+  /*
   // count the number of variable (arity zero and non-erc operator)
   unsigned var_len = 0;
   for( unsigned i=0 ; i<iNoOp ; i++ ){
     if( opDesc[i]->arity==0 && !opDesc[i]->isERC ) var_len++;
   }
   if( bVERBOSE ) printf("var length is %d\n",var_len);
-  fprintf(fpOutputFile,"#define VAR_LEN %d\n",var_len); 
+  fprintf(fpOutputFile,"#define VAR_LEN %d\n",var_len); */
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GP_GPU_SWITCH" {
@@ -389,7 +389,6 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <GP_RULE_ANALYSIS>"\\end" { 
-  if (bVERBOSE) printf ("found end section\n");
   if( bGPOPCODE_ANALYSIS ){
     rewind(fpGenomeFile);
     yyin = fpTemplateFile;
@@ -468,7 +467,6 @@ exponent  ([Ee][+-]?[0-9]+)
     fprintf(stderr,"Error, code must be given at the forth place\n");
     exit(-1);
   }
-  if( bVERBOSE ) printf("begining of the code part\n");
   accolade_counter=1;
 
 //  printf("arity : %d\n",opDesc[iNoOp]->arity);
@@ -1109,7 +1107,8 @@ exponent  ([Ee][+-]?[0-9]+)
   lineCounter=1;
   BEGIN COPY_MUTATOR;   
  }
-<TEMPLATE_ANALYSIS>"\\INSERT_EVALUATOR"  {        
+<TEMPLATE_ANALYSIS>"\\INSERT_EVALUATOR"  {
+  printf("evaluator insert\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   lineCounter=1;
@@ -1967,6 +1966,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_EVALUATOR>. {}
 <COPY_EVALUATOR>\n {lineCounter++;}
 
+
 <COPY_OPTIMISER>"\\GenomeClass::optimiser"[ \t\n]*":" {
   BEGIN COPY_USER_FUNCTION;
   bWithinOptimiser=1;
@@ -2478,7 +2478,7 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       strcat(sTemp,"CUDA.tpl");
     else if(TARGET_FLAVOR == CMAES )
       strcat(sTemp,"CMAES_CUDA.tpl");
-    else if( TARGET_FLAVOR == CUDA_FLAVOR_GP )
+    else if( TARGET_FLAVOR == FLAVOR_GP )
       strcat(sTemp,"CUDA_GP.tpl");
     else if(TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"CUDA_MEM.tpl");
@@ -2496,6 +2496,8 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       strcat(sTemp,"STD.tpl");
     else if (TARGET_FLAVOR == CMAES)
       strcat(sTemp,"CMAES.tpl");
+    else if (TARGET_FLAVOR == FLAVOR_GP)
+      strcat(sTemp,"GP.tpl");
     else if (TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"STD_MEM.tpl");
     //else if (TARGET_FLAVOR == STD_FLAVOR_GP )
@@ -2508,7 +2510,6 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
       exit(1);
     }
   }
-  
   
   if ((sRAW_PROJECT_NAME[0]=='"')&&(OPERATING_SYSTEM!=WINDOWS)){
     strcpy(sRAW_PROJECT_NAME,&(sRAW_PROJECT_NAME[1]));

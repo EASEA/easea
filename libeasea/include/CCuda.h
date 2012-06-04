@@ -27,9 +27,7 @@
   }
    
 
-struct gpuOptions{};
-
-struct my_struct_gpu{
+struct gpuEvaluationData{
    int indiv_start;
    int sh_pop_size;
    
@@ -41,9 +39,7 @@ struct my_struct_gpu{
    int dimBlock;
 
   cudaDeviceProp gpuProp;
-};
 
-struct gpuArg{
   int gpuId;
   int threadId;
   sem_t sem_in;
@@ -53,17 +49,5 @@ struct gpuArg{
   float* d_fitness;
 
 };
-
-class CCuda {
-public:
-	void* cudaBuffer;
-	unsigned sizeOfIndividualImpl;
-	struct gpuOptions initOpts;
-public:
-	CCuda(unsigned parentSize, unsigned offSize, unsigned individualImplSize);
-	~CCuda();
-};
-
-bool repartition(struct my_struct_gpu* gpu_infos);
 
 #endif /* CCUDA_H_ */

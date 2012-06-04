@@ -91,7 +91,7 @@ extern CEvolutionaryAlgorithm *EA;
 
 #define CUDA_TPL
 
-struct gpuArg* gpuArgs;
+struct gpuEvaluationData* gpuData;
 
 int fstGpu = 0;
 int lstGpu = 0;
@@ -112,7 +112,8 @@ PopulationImpl* Pop = NULL;
 
 \INSERT_USER_FUNCTIONS
 
-void cudaPreliminaryProcess(unsigned PopulationSize){
+
+void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populationSize){
   int noTotalMP = 0; // number of MP will be used to distribute the population
   int count = 0;
 
@@ -125,40 +126,68 @@ void cudaPreliminaryProcess(unsigned PopulationSize){
       exit(-1);
     }
 
-    gpu_infos[index].num_MP =  deviceProp.multiProcessorCount; //Two block on each MP
-    gpu_infos[index].num_thread_max = deviceProp.maxThreadsPerBlock*0.5; //We are going to use 50% of the real maximun thread per block, we want to be sure to have enough memory for all of them. 
-    gpu_infos[index].num_Warp = deviceProp.warpSize;
-    noTotalMP += gpu_infos[index].num_MP;
-    gpu_infos[index].gpuProp = deviceProp;
+    localGpuData->num_MP =  deviceProp.multiProcessorCount; //Two block on each MP
+    localGpuData->num_Warp = deviceProp.warpSize;
+    noTotalMP += localGpuData->num_MP;
+    localGpuData->gpuProp = deviceProp;
 
 
   }
 
   for( int index = 0; index < num_gpus; index++){
 
-    gpu_infos[index].indiv_start = count;
+    localGpuData->indiv_start = count;
 
     if(index != (num_gpus - 1)) 
-      gpu_infos[index].sh_pop_size = ceil((float)PopulationSize * (((float)gpu_infos[index].num_MP) / (float)noTotalMP) );
+      localGpuData->sh_pop_size = ceil((float)populationSize * (((float)localGpuData->num_MP) / (float)noTotalMP) );
     //On the last card we are going to place the remaining individuals.  
     else 
-      gpu_infos[index].sh_pop_size = PopulationSize - count;
+      localGpuData->sh_pop_size = populationSize - count;
 	     
-    count += gpu_infos[index].sh_pop_size;	     
+    count += localGpuData->sh_pop_size;	     
   }
+
+  //  here we will compute how to spread the population to evaluate on GPGPU cores
+
+  struct cudaFuncAttributes attr;
+  CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr,"cudaEvaluatePopulation"));
+
+  int thLimit = attr.maxThreadsPerBlock;
+  int N = localGpuData->sh_pop_size;
+  int w = localGpuData->gpuProp.warpSize;
+
+  int b=0,t=0;
+	      
+  do{
+    b += localGpuData->num_MP;
+    t = ceilf( MIN(thLimit,(float)N/b)/w)*w;
+  } while( (b*t<N) || t>thLimit );
+	      
+  if( localGpuData->d_population!=NULL ){ cudaFree(localGpuData->d_population); }
+  if( localGpuData->d_fitness!=NULL ){ cudaFree(localGpuData->d_fitness); }
+
+  CUDA_SAFE_CALL(cudaMalloc(&localGpuData->d_population,localGpuData->sh_pop_size*(sizeof(IndividualImpl))));
+  CUDA_SAFE_CALL(cudaMalloc(((void**)&localGpuData->d_fitness),localGpuData->sh_pop_size*sizeof(float)));
+
+
+  std::cout << "card (" << localGpuData->threadId << ") " << localGpuData->gpuProp.name << " has " << localGpuData->sh_pop_size << " individual to evaluate" 
+	    << ": t=" << t << " b: " << b << std::endl;
+   localGpuData->dimGrid = b;
+   localGpuData->dimBlock = t;
+
 }
 
 __device__ __host__ inline IndividualImpl* INDIVIDUAL_ACCESS(void* buffer,unsigned id){
   return (IndividualImpl*)buffer+id;
 }
 
-__device__ float cudaEvaluate(void* devBuffer, unsigned id, struct gpuOptions initOpts){
+__device__ float cudaEvaluate(void* devBuffer, unsigned id){
   \INSERT_CUDA_EVALUATOR
 }
   
 
 extern "C" 
-__global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses, struct gpuOptions initOpts){
+__global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses){
 
         unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
 
@@ -166,7 +195,7 @@ __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, flo
         if( id >= popSize ) return;
   
         //void* indiv = ((char*)d_population)+id*(\GENOME_SIZE+sizeof(IndividualImpl*)); // compute the offset of the current individual
-        d_fitnesses[id] = cudaEvaluate(d_population,id,initOpts);
+        d_fitnesses[id] = cudaEvaluate(d_population,id);
 }
 
 
@@ -174,23 +203,23 @@ __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, flo
 void* gpuThreadMain(void* arg){
 
   cudaError_t lastError;
-  struct gpuArg* localArg = (struct gpuArg*)arg;
-  std::cout << " gpuId : " << localArg->gpuId << std::endl;
-  lastError = cudaSetDevice(localArg->gpuId);
+  struct gpuEvaluationData* localArg = (struct gpuEvaluationData*)arg;
+  std::cout << " gpuId : " << localGpuData->gpuId << std::endl;
+
+  lastError = cudaSetDevice(localGpuData->gpuId);
+
   if( lastError != cudaSuccess ){
-    std::cerr << "Error, cannot set device properly for device no " << localArg->gpuId << std::endl;
+    std::cerr << "Error, cannot set device properly for device no " << localGpuData->gpuId << std::endl;
     exit(-1);
   }
   
   int nbr_cudaPreliminaryProcess = 2;
 
-  struct my_struct_gpu* localGpuInfo = gpu_infos+localArg->threadId;
+  //struct my_struct_gpu* localGpuInfo = gpu_infos+localArg->threadId;
 
-  struct cudaFuncAttributes attr;
-  lastError = cudaFuncGetAttributes(&attr,"cudaEvaluatePopulation");
 
   if( lastError != cudaSuccess ){
-    std::cerr << "Error, cannot get function attribute for cudaEvaluatePopulation on card: " << localGpuInfo->gpuProp.name  << std::endl;
+    std::cerr << "Error, cannot get function attribute for cudaEvaluatePopulation on card: " << localGpuData->gpuProp.name  << std::endl;
     exit(-1);
   }
   
@@ -201,55 +230,41 @@ void* gpuThreadMain(void* arg){
 
   // Wait for population to evaluate
    while(1){
-	    sem_wait(&localArg->sem_in);
+	    sem_wait(&localGpuData->sem_in);
+
 	    if( freeGPU ) {
-	      // do we need to free gpu memory
-	      cudaFree(localArg->d_fitness);
-	      cudaFree(localArg->d_population);
+	      // do we need to free gpu memory ?
+	      cudaFree(localGpuData->d_fitness);
+	      cudaFree(localGpuData->d_population);
 	      break;
 	    }
+
 	    if(nbr_cudaPreliminaryProcess > 0) {
-	      // we should free GPU buffers when 
-
-	      //  here we will compute how to spread the population to evaluate on GPGPU cores
-	      int thLimit = attr.maxThreadsPerBlock;
-	      int N = localGpuInfo->sh_pop_size;
-	      int w = localGpuInfo->gpuProp.warpSize;
-
-	      int b=0,t=0;
 	      
-	      do{
-		b += localGpuInfo->num_MP;
-		t = ceilf( MIN(thLimit,(float)N/b)/w)*w;
-	      } while( (b*t<N) || t>thLimit );
-	      
-	      if( localArg->d_population!=NULL ){ cudaFree(localArg->d_population); }
-	      if( localArg->d_fitness!=NULL ){ cudaFree(localArg->d_fitness); }
-
-	      lastError = cudaMalloc(&localArg->d_population,localGpuInfo->sh_pop_size*(sizeof(IndividualImpl)));
-	      lastError = cudaMalloc(((void**)&localArg->d_fitness),localGpuInfo->sh_pop_size*sizeof(float));
-
-	      std::cout << "card (" << localArg->threadId << ") " << localGpuInfo->gpuProp.name << " has " << localGpuInfo->sh_pop_size << " individual to evaluate" 
-			<< ": t=" << t << " b: " << b << std::endl;
-	      localGpuInfo->dimGrid = b;
-	      localGpuInfo->dimBlock = t;
-
+	      cudaPreliminaryProcess(localGpuData);
 	      nbr_cudaPreliminaryProcess--;
 
-	      if( b*t!=N ){
+	      if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
 		// due to lack of individuals, the population distribution is not optimial according to core organisation
 		// warn the user and propose a proper configuration
-		std::cerr << "Warning, population distribution is not optimial, consider adding " << (b*t-N) << " individuals to " 
-			  << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
+		std::cerr << "Warning, population distribution is not optimial, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
+			  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
 	      }
             }
-		    
-            lastError = cudaMemcpy(localArg->d_population,(IndividualImpl*)(Pop->cuda->cudaBuffer)+gpu_infos[localArg->threadId].indiv_start,
-				   (sizeof(IndividualImpl)*gpu_infos[localArg->threadId].sh_pop_size),cudaMemcpyHostToDevice);
+	    
+	    // transfer data to GPU memory
+            lastError = cudaMemcpy(localGpuInfo->d_population,(IndividualImpl*)(Pop->cudaBuffer)+localGpuInfo->indiv_start,
+				   (sizeof(IndividualImpl)*localGpuData->sh_pop_size),cudaMemcpyHostToDevice);
+
+	    CUDA_SAFE_CALL(lastError);
+
+	    std::cout << localGpuData->dimGrid << ";"<<  localGpuData->dimBlock << std::endl;
 				      
 	    // the real GPU computation (kernel launch)
-	    cudaEvaluatePopulation<<< localGpuInfo->dimGrid, localGpuInfo->dimBlock>>>(localArg->d_population, localGpuInfo->sh_pop_size,
-										       localArg->d_fitness,Pop->cuda->initOpts);
+	    cudaEvaluatePopulation<<< localGpuData->dimGrid, localGpuData->dimBlock>>>(localArg->d_population, localGpuData->sh_pop_size, localData->d_fitness);
+	    lastError = cudaGetLastError();
+	    CUDA_SAFE_CALL(lastError);
+
 	    if( cudaGetLastError()!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
 
 	    // be sure the GPU has finished computing evaluations, and get results to CPU
@@ -466,8 +481,6 @@ void PopulationImpl::evaluateParentPopulation(){
         unsigned actualPopulationSize = this->actualParentPopulationSize;
 	fitnessTemp = new float[actualPopulationSize];
 	int index;
-        cudaPreliminaryProcess(actualPopulationSize);
-        
 	       	
  	wake_up_gpu_thread(); 
 
@@ -485,10 +498,9 @@ void PopulationImpl::evaluateOffspringPopulation(){
 	unsigned actualPopulationSize = this->actualOffspringPopulationSize;
 	fitnessTemp = new float[actualPopulationSize];
 	int index;
-	if(first_generation) cudaPreliminaryProcess(actualPopulationSize);
 
         for( index=(actualPopulationSize-1); index>=0; index--)
-	    ((IndividualImpl*)this->offsprings[index])->copyToCudaBuffer(this->cuda->cudaBuffer,index);
+	    ((IndividualImpl*)this->offsprings[index])->copyToCudaBuffer(this->cudaBuffer,index);
 
         wake_up_gpu_thread(); 
 
@@ -621,14 +633,14 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
              getline(AESAE_File, AESAE_Line);
             this->population->addIndividualParentPopulation(new IndividualImpl(),index);
             ((IndividualImpl*)this->population->parents[index])->deserialize(AESAE_Line);
-            ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cuda->cudaBuffer,index);
+            ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
          }
 
         }
         else{
                 for( index=(Size-1); index>=0; index--) {
                          this->population->addIndividualParentPopulation(new IndividualImpl(),index);
-                        ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cuda->cudaBuffer,index);
+                        ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
                 }
     }
     
@@ -641,9 +653,11 @@ EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvol
 
   // warning cstats parameter is null
   this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params,NULL);
-	((PopulationImpl*)this->population)->cuda = new CCuda(params->parentPopulationSize, params->offspringPopulationSize, sizeof(IndividualImpl));
-	Pop = ((PopulationImpl*)this->population);
-	;
+  int popSize = (params->parentPopulationSize>params->offspringPopulationSize?params->parentPopulationSize:params->offspringPopulationSize);
+  ((PopulationImpl*)this->population)->cudaBuffer = (void*)malloc(sizeof(IndividualImpl)*( popSize ));
+  
+  // = new CCuda(params->parentPopulationSize, params->offspringPopulationSize, sizeof(IndividualImpl));
+  Pop = ((PopulationImpl*)this->population);
 }
 
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
@@ -742,7 +756,9 @@ public:
 
 class PopulationImpl: public CPopulation {
 public:
-	CCuda *cuda;
+  //CCuda *cuda;
+  void* cudaBuffer;
+
 public:
   PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats);
         virtual ~PopulationImpl();
