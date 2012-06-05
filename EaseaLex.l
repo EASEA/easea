@@ -314,8 +314,7 @@ exponent  ([Ee][+-]?[0-9]+)
 
   fprintf(fpOutputFile,"#define MAX_PROGS_SIZE %d\n",iPRG_BUF_SIZE);
   fprintf(fpOutputFile,"#define NB_GPU %d\n",iNB_GPU);
-
-  //fprintf(fpOutputFile,"#define NO_FITNESS_CASES %d\n",iNO_FITNESS_CASES);
+  /*fprintf(fpOutputFile,"#define NO_FITNESS_CASES %d\n",iNO_FITNESS_CASES);*/
 }
 
 /*
@@ -428,7 +427,7 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <GP_RULE_ANALYSIS>"//".*"\n" {}
 
-<GP_RULE_ANALYSIS>"\""([a-zA-Z0-9]|\*|\+|\-|\/|\%)*"\"" {
+<GP_RULE_ANALYSIS>"\""([a-zA-Z0-9]|\(|\)|\*|\+|\-|\/|\%)*"\"" {
   if( iGP_OPCODE_FIELD != 1 ){
     fprintf(stderr,"Error, op code real name must be given at the second place\n");
     exit(-1);

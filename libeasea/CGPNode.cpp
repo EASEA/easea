@@ -135,11 +135,6 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
 
 
 
-
-
-
-
-
 /**
    Recursive construction method for trees.
    Koza construction methods. Function set has to be ordered,
@@ -189,7 +184,6 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
   return node;
 }
 
-
 GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, unsigned actualParentPopulationSize, unsigned parentPopulationSize, 
 		   float GROW_FULL_RATIO, unsigned VAR_LEN, unsigned OPCODE_SIZE, const unsigned* opArity, const int OP_ERC){
   /**
@@ -207,10 +201,6 @@ GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, u
   //cout << seg << " " <<  currentDepth << " " << full ;
   return construction_method( VAR_LEN+1, OPCODE_SIZE , 1, currentDepth ,full, opArity, OP_ERC);
 }
-
-
-
-
 
 void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
 

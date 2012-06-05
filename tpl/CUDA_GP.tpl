@@ -1,7 +1,11 @@
 \TEMPLATE_START
+#ifdef WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#pragma comment(lib, "libEasea.lib")
+#pragma comment(lib, "Winmm.lib")
+#endif
 /**
  This is program entry for STD template for EASEA
-
 */
 
 \ANALYSE_PARAMETERS
@@ -18,7 +22,7 @@ using namespace std;
 
 /** Global variables for the whole algorithm */
 CIndividual** pPopulation = NULL;
-CIndividual*  bBest = NULL;
+CIndividual* bBest = NULL;
 float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
 unsigned *EZ_NB_GEN;
@@ -46,14 +50,24 @@ int main(int argc, char** argv){
 
 	delete pop;
 
-
+#ifdef WIN32
+	system("pause");
+#endif
 	return 0;
 }
 
 \START_CUDA_GENOME_CU_TPL
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#define WIN32
+#endif
 
 #include <fstream>
+#ifndef WIN32
+#include <sys/time.h>
+#else
 #include <time.h>
+#endif
 #include <string>
 #include <sstream>
 #include "CRandomGenerator.h"
@@ -63,6 +77,9 @@ int main(int argc, char** argv){
 #include "CEvolutionaryAlgorithm.h"
 #include "global.h"
 #include "CIndividual.h"
+#include <vector_types.h>
+#include "CCuda.h"
+#include "CGPNode.h"
 
 using namespace std;
 
@@ -70,8 +87,41 @@ using namespace std;
 bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
-extern CEvolutionaryAlgorithm* EA;
-#define STD_TPL
+extern CEvolutionaryAlgorithm *EA;
+
+#define CUDAGP_TPL
+
+unsigned aborded_crossover;
+float** inputs;
+float* outputs;
+
+struct gpuEvaluationData* gpuData;
+
+int fstGpu = 0;
+int lstGpu = 0;
+
+
+struct gpuEvaluationData* globalGpuData;
+float* fitnessTemp;  
+bool freeGPU = false;
+bool first_generation = true;
+int num_gpus = 0;       // number of CUDA GPUs
+
+PopulationImpl* Pop = NULL;
+
+\INSERT_GP_PARAMETERS
+\ANALYSE_GP_OPCODE
+/* Insert declarations about opcodes*/
+\INSERT_GP_OPCODE_DECL
+
+
+GPNode* ramped_hh(){
+  return RAMPED_H_H(INIT_TREE_DEPTH_MIN,INIT_TREE_DEPTH_MAX,EA->population->actualParentPopulationSize,EA->population->parentPopulationSize,0, VAR_LEN, OPCODE_SIZE,opArity, OP_ERC);
+}
+
+std::string toString(GPNode* root){
+  return toString(root,opArity,opCodeName,OP_ERC);
+}
 
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
@@ -80,33 +130,249 @@ extern CEvolutionaryAlgorithm* EA;
 
 \INSERT_USER_FUNCTIONS
 
-\INSERT_INITIALISATION_FUNCTION
-\INSERT_FINALIZATION_FUNCTION
 
-float recEval(GPNode* root, float* input) {
-  float OP1=0, OP2= 0, RESULT = 0;
-  if( opArity[root->opCode]>=1) OP1 = recEval(root->children[0],input);
-  if( opArity[root->opCode]>=2) OP2 = recEval(root->children[1],input);
-  switch( root->opCode ){
-\INSERT_GP_CPU_SWITCH
-  default:
-    fprintf(stderr,"error unknown terminal opcode %d\n",root->opCode);
-    exit(-1);
+void dispatchPopulation(int populationSize){
+  int noTotalMP = 0; // number of MP will be used to distribute the population
+  int count = 0;
+
+  //Recuperation of each device information's.
+  for( int index = 0; index < num_gpus; index++){
+    cudaDeviceProp deviceProp;
+    cudaError_t lastError = cudaGetDeviceProperties(&deviceProp, index+fstGpu);
+    if( lastError!=cudaSuccess ){
+      std::cerr << "Cannot get device information for device no : " << index+fstGpu << std::endl;
+      exit(-1);
+    }
+
+    globalGpuData[index].num_MP =  deviceProp.multiProcessorCount; 
+    globalGpuData[index].num_Warp = deviceProp.warpSize;
+    noTotalMP += globalGpuData[index].num_MP;
+    globalGpuData[index].gpuProp = deviceProp;
   }
-  return RESULT;
+
+  for( int index = 0; index < num_gpus; index++){
+
+    globalGpuData[index].indiv_start = count;
+
+    if(index != (num_gpus - 1)) {
+      globalGpuData[index].sh_pop_size = ceil((float)populationSize * (((float)globalGpuData[index].num_MP) / (float)noTotalMP) );
+    
+    }
+    //On the last card we are going to place the remaining individuals.  
+    else 
+      globalGpuData[index].sh_pop_size = populationSize - count;
+	     
+    count += globalGpuData[index].sh_pop_size;	     
+  }
+}
+
+void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populationSize){
+
+  //  here we will compute how to spread the population to evaluate on GPGPU cores
+  struct cudaFuncAttributes attr;
+  CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr,"cudaEvaluatePopulation"));
+
+  int thLimit = attr.maxThreadsPerBlock;
+  int N = localGpuData->sh_pop_size;
+  int w = localGpuData->gpuProp.warpSize;
+
+  int b=0,t=0;
+	      
+  do{
+    b += localGpuData->num_MP;
+    t = ceilf( MIN(thLimit,(float)N/b)/w)*w;
+  } while( (b*t<N) || t>thLimit );
+	      
+  if( localGpuData->d_population!=NULL ){ cudaFree(localGpuData->d_population); }
+  if( localGpuData->d_fitness!=NULL ){ cudaFree(localGpuData->d_fitness); }
+
+  CUDA_SAFE_CALL(cudaMalloc(&localGpuData->d_population,localGpuData->sh_pop_size*(sizeof(IndividualImpl))));
+  CUDA_SAFE_CALL(cudaMalloc(((void**)&localGpuData->d_fitness),localGpuData->sh_pop_size*sizeof(float)));
+
+
+  std::cout << "card (" << localGpuData->threadId << ") " << localGpuData->gpuProp.name << " has " << localGpuData->sh_pop_size << " individual to evaluate" 
+	    << ": t=" << t << " b: " << b << std::endl;
+   localGpuData->dimGrid = b;
+   localGpuData->dimBlock = t;
+
+}
+
+__device__ __host__ inline IndividualImpl* INDIVIDUAL_ACCESS(void* buffer,unsigned id){
+  return (IndividualImpl*)buffer+id;
+}
+
+__device__ float cudaEvaluate(void* devBuffer, unsigned id){
+  //\INSERT_CUDA_EVALUATOR
+}
+  
+
+extern "C" 
+__global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses){
+
+        unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
+
+  	// escaping for the last block
+        if( id >= popSize ) return;
+  
+        //void* indiv = ((char*)d_population)+id*(\GENOME_SIZE+sizeof(IndividualImpl*)); // compute the offset of the current individual
+        d_fitnesses[id] = cudaEvaluate(d_population,id);
 }
 
 
+
+void* gpuThreadMain(void* arg){
+
+  cudaError_t lastError;
+  struct gpuEvaluationData* localGpuData = (struct gpuEvaluationData*)arg;
+  //std::cout << " gpuId : " << localGpuData->gpuId << std::endl;
+
+  lastError = cudaSetDevice(localGpuData->gpuId);
+
+  if( lastError != cudaSuccess ){
+    std::cerr << "Error, cannot set device properly for device no " << localGpuData->gpuId << std::endl;
+    exit(-1);
+  }
+  
+  int nbr_cudaPreliminaryProcess = 2;
+
+  //struct my_struct_gpu* localGpuInfo = gpu_infos+localArg->threadId;
+
+
+  if( lastError != cudaSuccess ){
+    std::cerr << "Error, cannot get function attribute for cudaEvaluatePopulation on card: " << localGpuData->gpuProp.name  << std::endl;
+    exit(-1);
+  }
+  
+  // Because of the context of each GPU thread, we have to put all user's CUDA 
+  // initialisation here if we want to use them in the GPU, otherwise they are
+  // not found in the GPU context
+  \INSERT_USER_CUDA
+
+  // Wait for population to evaluate
+   while(1){
+	    sem_wait(&localGpuData->sem_in);
+
+	    if( freeGPU ) {
+	      // do we need to free gpu memory ?
+	      cudaFree(localGpuData->d_fitness);
+	      cudaFree(localGpuData->d_population);
+	      break;
+	    }
+
+	    if(nbr_cudaPreliminaryProcess > 0) {
+	      
+	      if( nbr_cudaPreliminaryProcess==2 ) 
+		cudaPreliminaryProcess(localGpuData,EA->population->parentPopulationSize);
+	      else {
+		cudaPreliminaryProcess(localGpuData,EA->population->offspringPopulationSize);
+	      }
+	      nbr_cudaPreliminaryProcess--;
+
+	      if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
+		// due to lack of individuals, the population distribution is not optimial according to core organisation
+		// warn the user and propose a proper configuration
+		std::cerr << "Warning, population distribution is not optimial, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
+			  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
+	      }
+            }
+	    
+	    // transfer data to GPU memory
+            lastError = cudaMemcpy(localGpuData->d_population,(IndividualImpl*)(Pop->cudaBuffer)+localGpuData->indiv_start,
+				   (sizeof(IndividualImpl)*localGpuData->sh_pop_size),cudaMemcpyHostToDevice);
+
+	    CUDA_SAFE_CALL(lastError);
+	    
+	    
+	    //std::cout << localGpuData->sh_pop_size << ";" << localGpuData->dimGrid << ";"<<  localGpuData->dimBlock << std::endl;
+				      
+	    // the real GPU computation (kernel launch)
+	    cudaEvaluatePopulation<<< localGpuData->dimGrid, localGpuData->dimBlock>>>(localGpuData->d_population, localGpuData->sh_pop_size, localGpuData->d_fitness);
+	    lastError = cudaGetLastError();
+	    CUDA_SAFE_CALL(lastError);
+
+	    if( cudaGetLastError()!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
+
+	    // be sure the GPU has finished computing evaluations, and get results to CPU
+	    lastError = cudaThreadSynchronize();
+	    if( lastError!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
+	    lastError = cudaMemcpy(fitnessTemp + localGpuData->indiv_start, localGpuData->d_fitness, localGpuData->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
+	    
+	    // this thread has finished its phase, so lets tell it to the main thread
+	    sem_post(&localGpuData->sem_out);
+   }
+  sem_post(&localGpuData->sem_out);
+  fflush(stdout);
+  return NULL;
+}
+				
+void wake_up_gpu_thread(){
+	for( int i=0 ; i<num_gpus ; i++ ){
+		sem_post(&(globalGpuData[i].sem_in));
+	
+  	}
+	for( int i=0 ; i<num_gpus ; i++ ){
+	  sem_wait(&globalGpuData[i].sem_out);
+  	}
+
+}
+				
+void InitialiseGPUs(){
+	//MultiGPU part on one CPU
+	globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
+	pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
+	int gpuId = fstGpu;
+	//here we want to create on thread per GPU
+	for( int i=0 ; i<num_gpus ; i++ ){
+	  
+		globalGpuData[i].d_fitness = NULL;
+		globalGpuData[i].d_population = NULL;
+		
+		globalGpuData[i].gpuId = gpuId++;
+
+	  	globalGpuData[i].threadId = i;
+	  	sem_init(&globalGpuData[i].sem_in,0,0);
+	  	sem_init(&globalGpuData[i].sem_out,0,0);
+	  	if( pthread_create(t+i,NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
+	}
+}
+
+\INSERT_INITIALISATION_FUNCTION
+\INSERT_FINALIZATION_FUNCTION
 
 void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
 
 void EASEAInit(int argc, char** argv){
+  fstGpu = setVariable("fstgpu",0);
+  lstGpu = setVariable("lstgpu",0);
+
+	if( lstGpu==fstGpu && fstGpu==0 ){
+	  // use all gpus available
+	  cudaGetDeviceCount(&num_gpus);
+	}
+	else{
+	  int queryGpuNum;
+	  cudaGetDeviceCount(&queryGpuNum);
+	  if( (lstGpu - fstGpu)>queryGpuNum || fstGpu<0 || lstGpu>queryGpuNum){
+	    std::cerr << "Error, not enough devices found on the system ("<< queryGpuNum <<") to satisfy user configuration ["<<fstGpu<<","<<lstGpu<<"["<<std::endl;
+	    exit(-1);
+	  }
+	  else{
+	    num_gpus = lstGpu-fstGpu;
+	  }
+	}
+
+	//globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
+	InitialiseGPUs();
 	\INSERT_INIT_FCT_CALL
 }
 
 void EASEAFinal(CPopulation* pop){
+	freeGPU=true;
+	wake_up_gpu_thread();
+        free(globalGpuData);
+	
 	\INSERT_FINALIZATION_FCT_CALL;
 }
 
@@ -119,7 +385,7 @@ void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
 }
 
 void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
-	\INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT
+        \INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT
 }
 
 
@@ -149,8 +415,9 @@ float IndividualImpl::evaluate(){
 }
 
 void IndividualImpl::boundChecking(){
-	\INSERT_BOUND_CHECKING
+        \INSERT_BOUND_CHECKING
 }
+
 
 string IndividualImpl::serialize(){
     ostringstream AESAE_Line(ios_base::app);
@@ -165,7 +432,7 @@ void IndividualImpl::deserialize(string Line){
     \GENOME_DESERIAL
     AESAE_Line >> this->fitness;
     this->valid=true;
-    this->isImmigrant = false;
+    this->isImmigrant=false;
 }
 
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
@@ -233,91 +500,138 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
   \INSERT_MUTATOR
 }
 
-void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
-	this->minimizing = \MINIMAXI;
-	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
-
-	seed = setVariable("seed",(int)time(0));
-	globalRandomGenerator = new CRandomGenerator(seed);
-	this->randomGenerator = globalRandomGenerator;
-
-
-	selectionOperator = getSelectionOperator(setVariable("selectionOperator","\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
-	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
-	parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator","\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
-	offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator","\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
-	selectionPressure = setVariable("selectionPressure",(float)\SELECT_PRM);
-	replacementPressure = setVariable("reduceFinalPressure",(float)\RED_FINAL_PRM);
-	parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
-	offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
-	pCrossover = \XOVER_PROB;
-	pMutation = \MUT_PROB;
-	pMutationPerGene = 0.05;
-
-	parentPopulationSize = setVariable("popSize",(int)\POP_SIZE);
-	offspringPopulationSize = setVariable("nbOffspring",(int)\OFF_SIZE);
-
-
-	parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents",(float)\SURV_PAR_SIZE));
-	offspringReductionSize = setReductionSizes(offspringPopulationSize, setVariable("survivingOffspring",(float)\SURV_OFF_SIZE));
-
-	this->elitSize = setVariable("elite",(int)\ELITE_SIZE);
-	this->strongElitism = setVariable("eliteType",(int)\ELITISM);
-
-	if((this->parentReductionSize + this->offspringReductionSize) < this->parentPopulationSize){
-		printf("*WARNING* parentReductionSize + offspringReductionSize < parentPopulationSize\n");
-		printf("*WARNING* change Sizes in .prm or .ez\n");
-		printf("EXITING\n");
-		exit(1);	
-	} 
-	if((this->parentPopulationSize-this->parentReductionSize)>this->parentPopulationSize-this->elitSize){
-		printf("*WARNING* parentPopulationSize - parentReductionSize > parentPopulationSize - elitSize\n");
-		printf("*WARNING* change Sizes in .prm or .ez\n");
-		printf("EXITING\n");
-		exit(1);	
-	} 
-	if(!this->strongElitism && ((this->offspringPopulationSize - this->offspringReductionSize)>this->offspringPopulationSize-this->elitSize)){
-		printf("*WARNING* offspringPopulationSize - offspringReductionSize > offspringPopulationSize - elitSize\n");
-		printf("*WARNING* change Sizes in .prm or .ez\n");
-		printf("EXITING\n");
-		exit(1);	
-	} 
+void PopulationImpl::evaluateParentPopulation(){
+        unsigned actualPopulationSize = this->actualParentPopulationSize;
+	fitnessTemp = new float[actualPopulationSize];
+	int index;
+	static bool dispatchedParents = false;
 	
+	if( dispatchedParents==false ){
+	  dispatchPopulation(EA->population->parentPopulationSize);
+	  dispatchedParents=true;
+	}
 
-	/*
-	 * The reduction is set to true if reductionSize (parent or offspring) is set to a size less than the
-	 * populationSize. The reduction size is set to populationSize by default
-	 */
-	if(offspringReductionSize<offspringPopulationSize) offspringReduction = true;
-	else offspringReduction = false;
+	       	
+ 	wake_up_gpu_thread(); 
 
-	if(parentReductionSize<parentPopulationSize) parentReduction = true;
-	else parentReduction = false;
+ 	
+	for( index=(actualPopulationSize-1); index>=0; index--){
+		this->parents[index]->fitness = fitnessTemp[index];
+		this->parents[index]->valid = true;
+	}  
 
-	generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
-	controlCStopingCriterion = new CControlCStopingCriterion();
-	timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
+        delete[](fitnessTemp);
 
-	this->optimise = 0;
+}
 
-	this->printStats = setVariable("printStats",\PRINT_STATS);
-	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
-	this->generatePlotScript = setVariable("generatePlotScript",\GENERATE_GNUPLOT_SCRIPT);
-	this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
-	this->plotStats = setVariable("plotStats",\PLOT_STATS);
+void PopulationImpl::evaluateOffspringPopulation(){
+	unsigned actualPopulationSize = this->actualOffspringPopulationSize;
+	fitnessTemp = new float[actualPopulationSize];
+	int index;
+	static bool dispatchedOffspring = false;
+	
+	if( dispatchedOffspring==false ){
+	  dispatchPopulation(EA->population->offspringPopulationSize);
+	  dispatchedOffspring=true;
+	}
+
+        for( index=(actualPopulationSize-1); index>=0; index--)
+	    ((IndividualImpl*)this->offsprings[index])->copyToCudaBuffer(this->cudaBuffer,index);
+
+        wake_up_gpu_thread(); 
+
+	for( index=(actualPopulationSize-1); index>=0; index--){
+		this->offsprings[index]->fitness = fitnessTemp[index];
+		this->offsprings[index]->valid = true;
+	}	  
+ 
+        first_generation = false;
+        delete[](fitnessTemp);
+}
+
+
+
+
+
+void ParametersImpl::setDefaultParameters(int argc, char** argv){
+        this->minimizing = \MINIMAXI;
+        this->nbGen = setVariable("nbGen",(int)\NB_GEN);
+
+        seed = setVariable("seed",(int)time(0));
+        globalRandomGenerator = new CRandomGenerator(seed);
+        this->randomGenerator = globalRandomGenerator;
+
+        selectionOperator = getSelectionOperator(setVariable("selectionOperator","\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
+        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
+        parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator","\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
+        offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator","\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
+        selectionPressure = setVariable("selectionPressure",(float)\SELECT_PRM);
+        replacementPressure = setVariable("reduceFinalPressure",(float)\RED_FINAL_PRM);
+        parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
+        offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
+        pCrossover = \XOVER_PROB;
+        pMutation = \MUT_PROB;
+        pMutationPerGene = 0.05;
+
+        parentPopulationSize = setVariable("popSize",(int)\POP_SIZE);
+        offspringPopulationSize = setVariable("nbOffspring",(int)\OFF_SIZE);
+
+
+        parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents",(float)\SURV_PAR_SIZE));
+        offspringReductionSize = setReductionSizes(offspringPopulationSize, setVariable("survivingOffspring",(float)\SURV_OFF_SIZE));
+
+        this->elitSize = setVariable("elite",(int)\ELITE_SIZE);
+        this->strongElitism = setVariable("eliteType",(int)\ELITISM);
+
+        if((this->parentReductionSize + this->offspringReductionSize) < this->parentPopulationSize){
+                printf("*WARNING* parentReductionSize + offspringReductionSize < parentPopulationSize\n");
+                printf("*WARNING* change Sizes in .prm or .ez\n");
+                printf("EXITING\n");
+                exit(1);
+        }
+        if((this->parentPopulationSize - this->parentReductionSize)>this->parentPopulationSize-this->elitSize){
+                printf("*WARNING* parentPopulationSize - parentReductionSize > parentPopulationSize - elitSize\n");
+                printf("*WARNING* change Sizes in .prm or .ez\n");
+                printf("EXITING\n");
+                exit(1);
+        }
+        if(!this->strongElitism && ((this->offspringPopulationSize - this->offspringReductionSize)>this->offspringPopulationSize-this->elitSize)){
+                printf("*WARNING* offspringPopulationSize - offspringReductionSize > offspringPopulationSize - elitSize\n");
+                printf("*WARNING* change Sizes in .prm or .ez\n");
+                printf("EXITING\n");
+                exit(1);
+        }
+        if(offspringReductionSize<offspringPopulationSize) offspringReduction = true;
+        else offspringReduction = false;
+
+        if(parentReductionSize<parentPopulationSize) parentReduction = true;
+        else parentReduction = false;
+
+        generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
+        controlCStopingCriterion = new CControlCStopingCriterion();
+        timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
+
+	this->optimise=0;
+
+        this->printStats = setVariable("printStats",\PRINT_STATS);
+        this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
+        this->generatePlotScript = setVariable("generatePlotScript",\GENERATE_GNUPLOT_SCRIPT);
+        this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
+        this->plotStats = setVariable("plotStats",\PLOT_STATS);
 	this->printInitialPopulation = setVariable("printInitialPopulation",0);
 	this->printFinalPopulation = setVariable("printFinalPopulation",0);
 	this->savePopulation = setVariable("savePopulation",\SAVE_POPULATION);
 	this->startFromFile = setVariable("startFromFile",\START_FROM_FILE);
 
-	this->outputFilename = (char*)"EASEA";
-	this->plotOutputFilename = (char*)"EASEA.png";
+        this->outputFilename = (char*)"EASEA";
+        this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
-	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
+    this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
+    this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
     this->serverPort = setVariable("serverPort",\SERVER_PORT);
+
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -329,43 +643,71 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
-	ea->addStoppingCriterion(generationalCriterion);
+	 ea->addStoppingCriterion(generationalCriterion);
 	ea->addStoppingCriterion(controlCStopingCriterion);
-	ea->addStoppingCriterion(timeCriterion);	
+	ea->addStoppingCriterion(timeCriterion);
 
-	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
-	EZ_current_generation=&(ea->currentGeneration);
+	  EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
+	  EZ_current_generation=&(ea->currentGeneration);
 
 	 return ea;
 }
 
+inline void IndividualImpl::copyToCudaBuffer(void* buffer, unsigned id){
+  
+ memcpy(((IndividualImpl*)buffer)+id,this,sizeof(IndividualImpl)); 
+  
+}
+
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
-	if(this->params->startFromFile){
-	  ifstream AESAE_File("EASEA.pop");
-	  string AESAE_Line;
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-	  	  getline(AESAE_File, AESAE_Line);
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-		  ((IndividualImpl*)this->population->parents[i])->deserialize(AESAE_Line);
-	  }
-	  
-	}
-	else{
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-	  }
-	}
-        this->population->actualParentPopulationSize = this->params->parentPopulationSize;
+    //DEBUG_PRT("Creation of %lu/%lu parents (other could have been loaded from input file)",this->params->parentPopulationSize-this->params->actualParentPopulationSize,this->params->parentPopulationSize);
+    int index,Size = this->params->parentPopulationSize;
+    
+    if(this->params->startFromFile){
+          ifstream AESAE_File("EASEA.pop");
+          string AESAE_Line;
+          for( index=(Size-1); index>=0; index--) {
+             getline(AESAE_File, AESAE_Line);
+            this->population->addIndividualParentPopulation(new IndividualImpl(),index);
+            ((IndividualImpl*)this->population->parents[index])->deserialize(AESAE_Line);
+            ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
+         }
+
+        }
+        else{
+                for( index=(Size-1); index>=0; index--) {
+                         this->population->addIndividualParentPopulation(new IndividualImpl(),index);
+                        ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
+                }
+    }
+    
+    this->population->actualOffspringPopulationSize = 0;
+    this->population->actualParentPopulationSize = Size;
 }
 
 
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
-	;
+
+  // warning cstats parameter is null
+  this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params,NULL);
+  int popSize = (params->parentPopulationSize>params->offspringPopulationSize?params->parentPopulationSize:params->offspringPopulationSize);
+  ((PopulationImpl*)this->population)->cudaBuffer = (void*)malloc(sizeof(IndividualImpl)*( popSize ));
+  
+  // = new CCuda(params->parentPopulationSize, params->offspringPopulationSize, sizeof(IndividualImpl));
+  Pop = ((PopulationImpl*)this->population);
 }
 
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 
 }
+
+PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params, stats){
+	;
+}
+
+PopulationImpl::~PopulationImpl(){
+}
+
 
 \START_CUDA_GENOME_H_TPL
 
@@ -378,6 +720,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <CIndividual.h>
 #include <Parameters.h>
 #include <string>
+#include <CStats.h>
 
 using namespace std;
 
@@ -387,6 +730,8 @@ class CGenerationalCriterion;
 class CEvolutionaryAlgorithm;
 class CPopulation;
 class Parameters;
+class CCuda;
+
 
 \INSERT_USER_CLASSES_DEFINITIONS
 
@@ -410,14 +755,14 @@ public:
 
 	unsigned mutate(float pMutationPerGene);
 
-	void boundChecking();      
+	void boundChecking();
 
 	string serialize();
 	void deserialize(string AESAE_Line);
+	void copyToCudaBuffer(void* buffer, unsigned id);
 
 	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
 	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
-
 };
 
 
@@ -446,64 +791,211 @@ public:
 	void initializeParentPopulation();
 };
 
+class PopulationImpl: public CPopulation {
+public:
+  //CCuda *cuda;
+  void* cudaBuffer;
+
+public:
+  PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats);
+        virtual ~PopulationImpl();
+        void evaluateParentPopulation();
+	void evaluateOffspringPopulation();
+};
+
 #endif /* PROBLEM_DEP_H */
 
 \START_CUDA_MAKEFILE_TPL
+NVCC= nvcc
+CPPC= g++
+LIBAESAE=$(EZ_PATH)libeasea/
+CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include -I$(EZ_PATH)boost
+LDFLAGS=$(EZ_PATH)boost/program_options.a $(LIBAESAE)libeasea.a -lpthread 
 
-UNAME := $(shell uname)
 
-ifeq ($(shell uname -o 2>/dev/null),Msys)
-	OS := MINGW
-endif
 
-ifneq ("$(OS)","")
-	EZ_PATH=../../
-endif
+EASEA_SRC= EASEAIndividual.cpp
+EASEA_MAIN_HDR= EASEA.cpp
+EASEA_UC_HDR= EASEAIndividual.hpp
 
-EASEALIB_PATH=$(EZ_PATH)/libeasea/
+EASEA_HDR= $(EASEA_SRC:.cpp=.hpp) 
 
-CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
-
-OBJS = EASEA.o EASEAIndividual.o 
-
-LIBS = -lpthread 
-ifneq ("$(OS)","")
-	LIBS += -lws2_32 -lwinmm -L"C:\MinGW\lib"
-endif
+SRC= $(EASEA_SRC) $(EASEA_MAIN_HDR)
+CUDA_SRC = EASEAIndividual.cu
+HDR= $(EASEA_HDR) $(EASEA_UC_HDR)
+OBJ= $(EASEA_SRC:.cpp=.o) $(EASEA_MAIN_HDR:.cpp=.o)
 
 #USER MAKEFILE OPTIONS :
-\INSERT_MAKEFILE_OPTION
-#END OF USER MAKEFILE OPTIONS
+\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
-TARGET =	EASEA
+CPPFLAGS+= -I$(LIBAESAE)include -I$(EZ_PATH)boost -I/usr/local/cuda/include/
+NVCCFLAGS+= #--ptxas-options="-v"# --gpu-architecture sm_23 --compiler-options -fpermissive 
 
-$(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) -g $(EASEALIB_PATH)/libeasea.a $(EZ_PATH)boost/program_options.a $(LIBS)
 
-	
-#%.o:%.cpp
-#	$(CXX) -c $(CXXFLAGS) $^
+BIN= EASEA
+  
+all:$(BIN)
 
-all:	$(TARGET)
+$(BIN):$(OBJ)
+	$(NVCC) $^ -o $@ $(LDFLAGS) 
+
+%.o:%.cu
+	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -Wall
+
+easeaclean: clean
+	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj EASEA.plot EASEA.r EASEA.csv EASEA.pop
 clean:
-ifneq ("$(OS)","")
-	-del $(OBJS) $(TARGET).exe
-else
-	rm -f $(OBJS) $(TARGET)
-endif
-easeaclean:
-ifneq ("$(OS)","")
-	-del $(TARGET).exe *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
-else
-	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
-endif
+	rm -f $(OBJ) $(BIN) 	
+	
+\START_VISUAL_TPL<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9,00"
+	Name="EASEA"
+	ProjectGUID="{E73D5A89-F262-4F0E-A876-3CF86175BC30}"
+	RootNamespace="EASEA"
+	Keyword="WIN32Proj"
+	TargetFrameworkVersion="196613"
+	>
+	<Platforms>
+		<Platform
+			Name="WIN32"
+		/>
+	</Platforms>
+	<ToolFiles>
+		<ToolFile
+			RelativePath="\CUDA_RULE_DIRcommon\Cuda.rules"
+		/>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Release|WIN32"
+			OutputDirectory="$(SolutionDir)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="CUDA Build Rule"
+				Include="\EZ_PATHlibEasea"
+				Keep="false"
+				Runtime="0"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;\EZ_PATHlibEasea&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="$(CUDA_LIB_PATH)\cudart.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;\EZ_PATHlibEasea&quot;"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<Filter
+			Name="Source Files"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			>
+			<File
+				RelativePath=".\EASEA.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EASEAIndividual.cu"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			>
+			<File
+				RelativePath=".\EASEAIndividual.hpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Resource Files"
+			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>
 
 \START_EO_PARAM_TPL#****************************************
-#                                         
+#
 #  EASEA.prm
-#                                         
-#  Parameter file generated by STD.tpl AESAE v1.0
-#                                         
+#
+#  Parameter file generated by CUDA.tpl AESAE v1.0
+#
 #***************************************
 # --seed=0   # -S : Random number seed. It is possible to give a specific seed.
 
@@ -511,7 +1003,7 @@ endif
 --popSize=\POP_SIZE # -P : Population Size
 --nbOffspring=\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
 
-######	  Stopping Criterions    #####
+######    Stopping Criterions    #####
 --nbGen=\NB_GEN #Nb of generations
 --timeLimit=\TIME_LIMIT # Time Limit: desactivate with (0) (in Seconds)
 
@@ -520,25 +1012,23 @@ endif
 --eliteType=\ELITISM # Strong (1) or weak (0) elitism (set elite to 0 for none)
 --survivingParents=\SURV_PAR_SIZE # Nb of surviving parents (percentage or absolute)
 --survivingOffspring=\SURV_OFF_SIZE  # Nb of surviving offspring (percentage or absolute)
---selectionOperator=\SELECTOR_OPERATOR # Selector: Deterministic, Tournament, Random, Roulette 
+--selectionOperator=\SELECTOR_OPERATOR # Selector: Deterministic, Tournament, Random, Roulette
 --selectionPressure=\SELECT_PRM
---reduceParentsOperator=\RED_PAR_OPERATOR 
+--reduceParentsOperator=\RED_PAR_OPERATOR
 --reduceParentsPressure=\RED_PAR_PRM
---reduceOffspringOperator=\RED_OFF_OPERATOR 
+--reduceOffspringOperator=\RED_OFF_OPERATOR
 --reduceOffspringPressure=\RED_OFF_PRM
 --reduceFinalOperator=\RED_FINAL_OPERATOR
 --reduceFinalPressure=\RED_FINAL_PRM
 
-#####	Stats Ouput 	#####
+#####   Stats Ouput     #####
 --printStats=\PRINT_STATS #print Stats to screen
---plotStats=\PLOT_STATS #plot Stats
---printInitialPopulation=0 #Print initial population
---printFinalPopulation=0 #Print final population
---generateCSV=\GENERATE_CSV_FILE
+--plotStats=\PLOT_STATS #plot Stats 
+--generateCSVFile=\GENERATE_CSV_FILE
 --generatePlotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 
-#### Population save	####
+#### Population save    ####
 --savePopulation=\SAVE_POPULATION #save population to EASEA.pop file
 --startFromFile=\START_FROM_FILE #start optimisation from EASEA.pop file
 

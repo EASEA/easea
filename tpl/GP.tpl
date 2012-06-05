@@ -72,7 +72,7 @@ bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
-#define STD_TPL
+#define GP_TPL
 
 
 

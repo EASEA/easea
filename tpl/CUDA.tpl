@@ -97,7 +97,7 @@ int fstGpu = 0;
 int lstGpu = 0;
 
 
-struct my_struct_gpu* gpu_infos;
+struct gpuEvaluationData* globalGpuData;
 float* fitnessTemp;  
 bool freeGPU = false;
 bool first_generation = true;
@@ -113,7 +113,7 @@ PopulationImpl* Pop = NULL;
 \INSERT_USER_FUNCTIONS
 
 
-void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populationSize){
+void dispatchPopulation(int populationSize){
   int noTotalMP = 0; // number of MP will be used to distribute the population
   int count = 0;
 
@@ -126,26 +126,30 @@ void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populati
       exit(-1);
     }
 
-    localGpuData->num_MP =  deviceProp.multiProcessorCount; //Two block on each MP
-    localGpuData->num_Warp = deviceProp.warpSize;
-    noTotalMP += localGpuData->num_MP;
-    localGpuData->gpuProp = deviceProp;
-
-
+    globalGpuData[index].num_MP =  deviceProp.multiProcessorCount; 
+    globalGpuData[index].num_Warp = deviceProp.warpSize;
+    noTotalMP += globalGpuData[index].num_MP;
+    globalGpuData[index].gpuProp = deviceProp;
   }
 
   for( int index = 0; index < num_gpus; index++){
 
-    localGpuData->indiv_start = count;
+    globalGpuData[index].indiv_start = count;
 
-    if(index != (num_gpus - 1)) 
-      localGpuData->sh_pop_size = ceil((float)populationSize * (((float)localGpuData->num_MP) / (float)noTotalMP) );
+    if(index != (num_gpus - 1)) {
+      globalGpuData[index].sh_pop_size = ceil((float)populationSize * (((float)globalGpuData[index].num_MP) / (float)noTotalMP) );
+    
+    }
     //On the last card we are going to place the remaining individuals.  
     else 
-      localGpuData->sh_pop_size = populationSize - count;
+      globalGpuData[index].sh_pop_size = populationSize - count;
 	     
-    count += localGpuData->sh_pop_size;	     
+    count += globalGpuData[index].sh_pop_size;	     
   }
+}
+
+void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populationSize){
+
 
   //  here we will compute how to spread the population to evaluate on GPGPU cores
 
@@ -203,8 +207,8 @@ __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, flo
 void* gpuThreadMain(void* arg){
 
   cudaError_t lastError;
-  struct gpuEvaluationData* localArg = (struct gpuEvaluationData*)arg;
-  std::cout << " gpuId : " << localGpuData->gpuId << std::endl;
+  struct gpuEvaluationData* localGpuData = (struct gpuEvaluationData*)arg;
+  //std::cout << " gpuId : " << localGpuData->gpuId << std::endl;
 
   lastError = cudaSetDevice(localGpuData->gpuId);
 
@@ -241,7 +245,11 @@ void* gpuThreadMain(void* arg){
 
 	    if(nbr_cudaPreliminaryProcess > 0) {
 	      
-	      cudaPreliminaryProcess(localGpuData);
+	      if( nbr_cudaPreliminaryProcess==2 ) 
+		cudaPreliminaryProcess(localGpuData,EA->population->parentPopulationSize);
+	      else {
+		cudaPreliminaryProcess(localGpuData,EA->population->offspringPopulationSize);
+	      }
 	      nbr_cudaPreliminaryProcess--;
 
 	      if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
@@ -253,15 +261,16 @@ void* gpuThreadMain(void* arg){
             }
 	    
 	    // transfer data to GPU memory
-            lastError = cudaMemcpy(localGpuInfo->d_population,(IndividualImpl*)(Pop->cudaBuffer)+localGpuInfo->indiv_start,
+            lastError = cudaMemcpy(localGpuData->d_population,(IndividualImpl*)(Pop->cudaBuffer)+localGpuData->indiv_start,
 				   (sizeof(IndividualImpl)*localGpuData->sh_pop_size),cudaMemcpyHostToDevice);
 
 	    CUDA_SAFE_CALL(lastError);
-
-	    std::cout << localGpuData->dimGrid << ";"<<  localGpuData->dimBlock << std::endl;
+	    
+	    
+	    //std::cout << localGpuData->sh_pop_size << ";" << localGpuData->dimGrid << ";"<<  localGpuData->dimBlock << std::endl;
 				      
 	    // the real GPU computation (kernel launch)
-	    cudaEvaluatePopulation<<< localGpuData->dimGrid, localGpuData->dimBlock>>>(localArg->d_population, localGpuData->sh_pop_size, localData->d_fitness);
+	    cudaEvaluatePopulation<<< localGpuData->dimGrid, localGpuData->dimBlock>>>(localGpuData->d_population, localGpuData->sh_pop_size, localGpuData->d_fitness);
 	    lastError = cudaGetLastError();
 	    CUDA_SAFE_CALL(lastError);
 
@@ -270,44 +279,44 @@ void* gpuThreadMain(void* arg){
 	    // be sure the GPU has finished computing evaluations, and get results to CPU
 	    lastError = cudaThreadSynchronize();
 	    if( lastError!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
-	    lastError = cudaMemcpy(fitnessTemp + localGpuInfo->indiv_start, localArg->d_fitness, localGpuInfo->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
+	    lastError = cudaMemcpy(fitnessTemp + localGpuData->indiv_start, localGpuData->d_fitness, localGpuData->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
 	    
 	    // this thread has finished its phase, so lets tell it to the main thread
-	    sem_post(&localArg->sem_out);
+	    sem_post(&localGpuData->sem_out);
    }
-  sem_post(&localArg->sem_out);
+  sem_post(&localGpuData->sem_out);
   fflush(stdout);
   return NULL;
 }
 				
 void wake_up_gpu_thread(){
 	for( int i=0 ; i<num_gpus ; i++ ){
-		sem_post(&(gpuArgs[i].sem_in));
+		sem_post(&(globalGpuData[i].sem_in));
 	
   	}
 	for( int i=0 ; i<num_gpus ; i++ ){
-	  sem_wait(&gpuArgs[i].sem_out);
+	  sem_wait(&globalGpuData[i].sem_out);
   	}
 
 }
 				
 void InitialiseGPUs(){
 	//MultiGPU part on one CPU
-	gpuArgs = (struct gpuArg*)malloc(sizeof(struct gpuArg)*num_gpus);
+	globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
 	pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
 	int gpuId = fstGpu;
 	//here we want to create on thread per GPU
 	for( int i=0 ; i<num_gpus ; i++ ){
 	  
-		gpuArgs[i].d_fitness = NULL;
-		gpuArgs[i].d_population = NULL;
+		globalGpuData[i].d_fitness = NULL;
+		globalGpuData[i].d_population = NULL;
 		
-		gpuArgs[i].gpuId = gpuId++;
+		globalGpuData[i].gpuId = gpuId++;
 
-	  	gpuArgs[i].threadId = i;
-	  	sem_init(&gpuArgs[i].sem_in,0,0);
-	  	sem_init(&gpuArgs[i].sem_out,0,0);
-	  	if( pthread_create(t+i,NULL,gpuThreadMain,gpuArgs+i) ){ perror("pthread_create : "); }
+	  	globalGpuData[i].threadId = i;
+	  	sem_init(&globalGpuData[i].sem_in,0,0);
+	  	sem_init(&globalGpuData[i].sem_out,0,0);
+	  	if( pthread_create(t+i,NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
 	}
 }
 
@@ -338,7 +347,7 @@ void EASEAInit(int argc, char** argv){
 	  }
 	}
 
-	gpu_infos = (struct my_struct_gpu*)malloc(sizeof(struct my_struct_gpu)*num_gpus);
+	//globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
 	InitialiseGPUs();
 	\INSERT_INIT_FCT_CALL
 }
@@ -346,9 +355,8 @@ void EASEAInit(int argc, char** argv){
 void EASEAFinal(CPopulation* pop){
 	freeGPU=true;
 	wake_up_gpu_thread();
-        free(gpuArgs);
+        free(globalGpuData);
 	
-        free(gpu_infos);
 	\INSERT_FINALIZATION_FCT_CALL;
 }
 
@@ -481,6 +489,13 @@ void PopulationImpl::evaluateParentPopulation(){
         unsigned actualPopulationSize = this->actualParentPopulationSize;
 	fitnessTemp = new float[actualPopulationSize];
 	int index;
+	static bool dispatchedParents = false;
+	
+	if( dispatchedParents==false ){
+	  dispatchPopulation(EA->population->parentPopulationSize);
+	  dispatchedParents=true;
+	}
+
 	       	
  	wake_up_gpu_thread(); 
 
@@ -498,6 +513,12 @@ void PopulationImpl::evaluateOffspringPopulation(){
 	unsigned actualPopulationSize = this->actualOffspringPopulationSize;
 	fitnessTemp = new float[actualPopulationSize];
 	int index;
+	static bool dispatchedOffspring = false;
+	
+	if( dispatchedOffspring==false ){
+	  dispatchPopulation(EA->population->offspringPopulationSize);
+	  dispatchedOffspring=true;
+	}
 
         for( index=(actualPopulationSize-1); index>=0; index--)
 	    ((IndividualImpl*)this->offsprings[index])->copyToCudaBuffer(this->cudaBuffer,index);

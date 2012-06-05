@@ -129,7 +129,7 @@ OP_X, "x", 0, {RESULT=INPUT[0];};
 OP_ERC, "ERC", 0, {RESULT=ERC;};
 OP_ADD, "+", 2, {RESULT=OP1+OP2;};
 OP_SUB, "-", 2, {RESULT=OP1-OP2;};
-OP_MUL, "*", 2, {RESULT=OP1*OP2;};
+OP_MUL, "*()", 2, {RESULT=OP1*OP2;};
 OP_DIV, "/", 2, {
   if( !OP2 ) RESULT = 1;
   else RESULT = OP1/OP2;
