@@ -882,9 +882,9 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
 #line 641 "EaseaLex.l"
 
   if( bIsCopyingGPEval) 
-    if( bCOPY_GP_EVAL_GPU )
-      fprintf(fpOutputFile, "outputs[i*NUMTHREAD2+tid]" );
-    else fprintf(fpOutputFile, "outputs[i]" );
+    //if( bCOPY_GP_EVAL_GPU )
+      fprintf(fpOutputFile, "outputs[i]" );
+    //else fprintf(fpOutputFile, "outputs[i]" );
   
  
 #line 891 "EaseaLex.cpp"
