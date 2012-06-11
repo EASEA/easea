@@ -16,6 +16,11 @@ __________________________________________________________*/
 #define VAR_LEN 1
 #define GROW_FULL_RATIO 0.5
 
+// this is the number of learning cases computed in parallel.
+// note that on 1024 is the maximum size on fermi architectures 512 on older cards.
+#define NUMTHREAD 1024
+#define MAX_STACK 15
+
 
 #define PI (3.141592653589793)
 \end
@@ -49,8 +54,8 @@ int generateData(float*** inputs, float** outputs){
 
 
 void free_data(){
-  for( int i=0 ; i<NO_FITNESS_CASES ;i++ )
-    delete[] inputs[i] ;
+  for( int i=0 ; i<NO_FITNESS_CASES ;i++ ) delete[] inputs[i] ;
+
   delete[] outputs;
   delete[] inputs;
 } 
@@ -66,7 +71,6 @@ void free_data(){
 
 \After everything else function:
 {
-  //toDotFile( ((IndividualImpl*)EA->population->Best)->root, "best", 0);
   std::cout << toString(((IndividualImpl*)EA->population->Best)->root) << std::endl;
 
   free_data();
@@ -116,7 +120,6 @@ GenomeClass {
 
 \GenomeClass::mutator : // Must return the number of mutations
 {
-
   simple_mutator(&Genome);
 
   return 1;
@@ -129,7 +132,7 @@ OP_X, "x", 0, {RESULT=INPUT[0];};
 OP_ERC, "ERC", 0, {RESULT=ERC;};
 OP_ADD, "+", 2, {RESULT=OP1+OP2;};
 OP_SUB, "-", 2, {RESULT=OP1-OP2;};
-OP_MUL, "*()", 2, {RESULT=OP1*OP2;};
+OP_MUL, "*", 2, {RESULT=OP1*OP2;};
 OP_DIV, "/", 2, {
   if( !OP2 ) RESULT = 1;
   else RESULT = OP1/OP2;
@@ -193,5 +196,5 @@ LDFLAGS+=
 
   max tree depth : 8
 
-  size of prog buffer : 20000000
+  size of prog buffer : 200000000
 \end

@@ -21,7 +21,7 @@
   cudaError_t err;					\
     err = f;						\
     if( err != cudaSuccess ){				\
-      printf("Error : %s\n",cudaGetErrorString(err));	\
+      printf("Cuda Execution Error : %s at line : %s:%d\n",cudaGetErrorString(err),__FILE__,__LINE__); \
       exit(-1);						\
     }							\
   }
@@ -47,6 +47,19 @@ struct gpuEvaluationData{
   
   void* d_population;
   float* d_fitness;
+
+  float* progs;
+  float* d_progs;
+
+  int* indexes;
+  int* d_indexes;
+
+  float* fitness;
+  
+  float* flatInputs; // flattened inputs for GP
+
+  float* d_inputs;
+  float* d_outputs;
 
 };
 

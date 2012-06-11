@@ -91,9 +91,15 @@ extern CEvolutionaryAlgorithm *EA;
 
 #define CUDAGP_TPL
 
+#define HIT_LEVEL  0.01f
+#define PROBABLY_ZERO  1.11E-15f
+#define BIG_NUMBER 1.0E15f
+
+
 unsigned aborded_crossover;
 float** inputs;
 float* outputs;
+
 
 struct gpuEvaluationData* gpuData;
 
@@ -109,10 +115,15 @@ int num_gpus = 0;       // number of CUDA GPUs
 
 PopulationImpl* Pop = NULL;
 
+\INSERT_USER_DECLARATIONS
+\ANALYSE_USER_CLASSES
+
 \INSERT_GP_PARAMETERS
 \ANALYSE_GP_OPCODE
 /* Insert declarations about opcodes*/
 \INSERT_GP_OPCODE_DECL
+
+
 
 
 GPNode* ramped_hh(){
@@ -123,13 +134,12 @@ std::string toString(GPNode* root){
   return toString(root,opArity,opCodeName,OP_ERC);
 }
 
-\INSERT_USER_DECLARATIONS
-\ANALYSE_USER_CLASSES
 
 \INSERT_USER_CLASSES
-
 \INSERT_USER_FUNCTIONS
 
+\INSERT_INITIALISATION_FUNCTION
+\INSERT_FINALIZATION_FUNCTION
 
 void dispatchPopulation(int populationSize){
   int noTotalMP = 0; // number of MP will be used to distribute the population
@@ -166,29 +176,37 @@ void dispatchPopulation(int populationSize){
   }
 }
 
-void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populationSize){
+void cudaPreliminaryProcessGP(struct gpuEvaluationData* localGpuData){
 
   //  here we will compute how to spread the population to evaluate on GPGPU cores
   struct cudaFuncAttributes attr;
-  CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr,"cudaEvaluatePopulation"));
+  CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr,"EvaluatePostFixIndividuals"));
 
   int thLimit = attr.maxThreadsPerBlock;
-  int N = localGpuData->sh_pop_size;
-  int w = localGpuData->gpuProp.warpSize;
+  //int N = localGpuData->sh_pop_size;
+  //int w = localGpuData->gpuProp.warpSize;
 
   int b=0,t=0;
-	      
-  do{
-    b += localGpuData->num_MP;
-    t = ceilf( MIN(thLimit,(float)N/b)/w)*w;
-  } while( (b*t<N) || t>thLimit );
+
+  if( thLimit < NUMTHREAD ){
+    
+  }
+
+  b = ceilf(((float)localGpuData->sh_pop_size)/localGpuData->num_MP)*localGpuData->num_MP;
+  t = NUMTHREAD;
+
+  b = ( b<localGpuData->gpuProp.maxGridSize[0] ? b : localGpuData->gpuProp.maxGridSize[0]);
 	      
   if( localGpuData->d_population!=NULL ){ cudaFree(localGpuData->d_population); }
   if( localGpuData->d_fitness!=NULL ){ cudaFree(localGpuData->d_fitness); }
 
-  CUDA_SAFE_CALL(cudaMalloc(&localGpuData->d_population,localGpuData->sh_pop_size*(sizeof(IndividualImpl))));
-  CUDA_SAFE_CALL(cudaMalloc(((void**)&localGpuData->d_fitness),localGpuData->sh_pop_size*sizeof(float)));
+  localGpuData->indexes = new int[localGpuData->sh_pop_size];
+  localGpuData->fitness = new float[localGpuData->sh_pop_size];
+  //std::cout << "mem : " << (sizeof(*localGpuData->d_indexes)*localGpuData->sh_pop_size) << std::endl;
+  CUDA_SAFE_CALL(cudaMalloc(&localGpuData->d_indexes,sizeof(*localGpuData->d_indexes)*localGpuData->sh_pop_size));
+  CUDA_SAFE_CALL(cudaMalloc(&localGpuData->d_fitness,sizeof(*localGpuData->d_fitness)*localGpuData->sh_pop_size));
 
+  
 
   std::cout << "card (" << localGpuData->threadId << ") " << localGpuData->gpuProp.name << " has " << localGpuData->sh_pop_size << " individual to evaluate" 
 	    << ": t=" << t << " b: " << b << std::endl;
@@ -197,147 +215,403 @@ void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populati
 
 }
 
-__device__ __host__ inline IndividualImpl* INDIVIDUAL_ACCESS(void* buffer,unsigned id){
-  return (IndividualImpl*)buffer+id;
+
+float recEval(GPNode* root, float* input) {
+  float OP1=0, OP2= 0, RESULT = 0;
+  if( opArity[(int)root->opCode]>=1) OP1 = recEval(root->children[0],input);
+  if( opArity[(int)root->opCode]>=2) OP2 = recEval(root->children[1],input);
+  switch( root->opCode ){
+\INSERT_GP_CPU_SWITCH
+  default:
+    fprintf(stderr,"error unknown terminal opcode %d\n",root->opCode);
+    exit(-1);
+  }
+  return RESULT;
 }
 
-__device__ float cudaEvaluate(void* devBuffer, unsigned id){
-  //\INSERT_CUDA_EVALUATOR
-}
+__device__ float eval_tree_gpu(const float * k_progs, const float * input){
+  float RESULT;
+  float OP1, OP2;
+  float stack[MAX_STACK];
+  int sp=0;
+  int start_prog = 0;
+  int codop =  k_progs[start_prog++];
+
+
+  while (codop != OP_RETURN){
+    switch(codop){
+
+\INSERT_GP_GPU_SWITCH
+    }
+    codop =  k_progs[start_prog++];
+  }
+
   
-
-extern "C" 
-__global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses){
-
-        unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
-
-  	// escaping for the last block
-        if( id >= popSize ) return;
-  
-        //void* indiv = ((char*)d_population)+id*(\GENOME_SIZE+sizeof(IndividualImpl*)); // compute the offset of the current individual
-        d_fitnesses[id] = cudaEvaluate(d_population,id);
+  return stack[0];
 }
 
+
+extern "C"
+__global__ void 
+EvaluatePostFixIndividuals( const float * k_progs, const int maxprogssize,  const int popsize, const float * k_inputs,
+			   const float * outputs, const int trainingSetSize, float * k_results,  int* k_indexes )
+{
+  __shared__ float tmpresult[NUMTHREAD];
+  
+  const int tid = threadIdx.x; //0 to NUM_THREADS-1
+  const int bid = blockIdx.x; // 0 to NUM_BLOCKS-1
+
+   
+  for( int index = bid; index<popsize ; index+=gridDim.x ){
+    //    int index;   // index of the prog processed by the block 
+    float sum = 0.0;
+    float ERROR;
+
+    // index = bid; // one program per block => block ID = program number
+ 
+    if (index >= popsize) // idle block (should never occur)
+      return;
+    if (k_progs[index] == -1.0) // already evaluated
+      return;
+
+    // Here, it's a busy thread
+    sum = 0.0;
+  
+    // Loop on training cases, per cluster of 32 cases (= number of thread)
+    // (even if there are only 8 stream processors, we must spawn at least 32 threads) 
+    // We loop from 0 to upper bound INCLUDED in case trainingSetSize is not 
+    // a multiple of NUMTHREAD
+
+    \INSERT_GENOME_EVAL_HDR;
+    
+    for (int i=tid; i < trainingSetSize ; i+=NUMTHREAD) {
+    
+      // are we on a busy thread?
+      if (i >= trainingSetSize) // no!
+	continue;
+         
+      float EVOLVED_VALUE = eval_tree_gpu( k_progs+k_indexes[index], k_inputs+i*VAR_LEN);
+ 
+      \INSERT_GENOME_EVAL_BDY_GPU;
+
+    
+      if (!(ERROR < BIG_NUMBER)) ERROR = BIG_NUMBER;
+      else if (ERROR < PROBABLY_ZERO) ERROR = 0.0;
+    
+    
+      sum += ERROR; // sum raw error on all training cases
+    
+    } // LOOP ON TRAINING CASES
+  
+    // gather results from all threads => we need to synchronize
+    tmpresult[tid] = sum;
+
+    __syncthreads();
+
+    if (tid == 0) {
+      for (int i = 1; i < NUMTHREAD; i++) {
+	tmpresult[0] += tmpresult[i];
+      }    
+      ERROR = tmpresult[0];
+      \INSERT_GENOME_EVAL_FTR_GPU;
+    }  
+    // here results and hits have been stored in their respective array: we can leave
+  }
+}
+
+
+
+int flattening_tree_rpn( GPNode* root, float* buf, int* index){
+  for( unsigned i=0 ; i<opArity[(int)root->opCode] ; i++ ){
+    flattening_tree_rpn(root->children[i],buf,index);
+  }
+
+  if( (*index)+2>MAX_PROGS_SIZE )return 0;
+  buf[(*index)++] = root->opCode;
+  if( root->opCode == OP_ERC ) buf[(*index)++] = root->erc_value;
+  return 1;
+}
+
+
+int flatteningSubPopulation( struct gpuEvaluationData* localGpuData, IndividualImpl** population){
+  int index = 0;
+  for( int i=0 ; i<localGpuData->sh_pop_size ; i++ ){
+    localGpuData->indexes[i] = index;
+    flattening_tree_rpn( population[localGpuData->indiv_start+i]->root, localGpuData->progs, &index);
+    localGpuData->progs[index++] = OP_RETURN;
+    if( index > MAX_PROGS_SIZE ){
+      std::cerr << "Error, impossible to flatten the population. Consider to increase the MAX_PROGS_SIZE. " << std::endl;
+      exit(-1);
+    }
+  }
+  return index;
+}
 
 
 void* gpuThreadMain(void* arg){
 
-  cudaError_t lastError;
-  struct gpuEvaluationData* localGpuData = (struct gpuEvaluationData*)arg;
-  //std::cout << " gpuId : " << localGpuData->gpuId << std::endl;
-
-  lastError = cudaSetDevice(localGpuData->gpuId);
-
-  if( lastError != cudaSuccess ){
-    std::cerr << "Error, cannot set device properly for device no " << localGpuData->gpuId << std::endl;
-    exit(-1);
-  }
-  
+  int index = 0;
   int nbr_cudaPreliminaryProcess = 2;
 
-  //struct my_struct_gpu* localGpuInfo = gpu_infos+localArg->threadId;
+  cudaError_t lastError;
+  struct gpuEvaluationData* localGpuData = (struct gpuEvaluationData*)arg;
+
+  CUDA_SAFE_CALL(cudaSetDevice(localGpuData->gpuId));
+
+  CUDA_SAFE_CALL(cudaMalloc(&localGpuData->d_inputs,sizeof(*localGpuData->d_inputs)*VAR_LEN*NO_FITNESS_CASES));
+  CUDA_SAFE_CALL(cudaMalloc(&localGpuData->d_outputs,sizeof(*localGpuData->d_outputs)*NO_FITNESS_CASES));
+  // transfert inputs to GPGPU
+  CUDA_SAFE_CALL(cudaMemcpy( localGpuData->d_inputs,localGpuData->flatInputs,sizeof(*localGpuData->d_inputs)*VAR_LEN*NO_FITNESS_CASES,cudaMemcpyHostToDevice));
+  CUDA_SAFE_CALL(cudaMemcpy( localGpuData->d_outputs,outputs,sizeof(*localGpuData->d_outputs)*NO_FITNESS_CASES,cudaMemcpyHostToDevice));
+
+  // allocation of program buffers (GPU and CPU sides)
+  localGpuData->progs = new float[MAX_PROGS_SIZE];
+  CUDA_SAFE_CALL(cudaMalloc( &localGpuData->d_progs, sizeof(*localGpuData->d_progs)*MAX_PROGS_SIZE));
 
 
-  if( lastError != cudaSuccess ){
-    std::cerr << "Error, cannot get function attribute for cudaEvaluatePopulation on card: " << localGpuData->gpuProp.name  << std::endl;
-    exit(-1);
-  }
   
   // Because of the context of each GPU thread, we have to put all user's CUDA 
   // initialisation here if we want to use them in the GPU, otherwise they are
   // not found in the GPU context
-  \INSERT_USER_CUDA
-
+  \INSERT_USER_CUDA;
+  
   // Wait for population to evaluate
-   while(1){
-	    sem_wait(&localGpuData->sem_in);
+  while(1){
+    sem_wait(&localGpuData->sem_in);
+    
+    if( freeGPU ) {
+      // do we need to free gpu memory ?
+      cudaFree(localGpuData->d_fitness);
+      //cudaFree(localGpuData->d_population);
 
-	    if( freeGPU ) {
-	      // do we need to free gpu memory ?
-	      cudaFree(localGpuData->d_fitness);
-	      cudaFree(localGpuData->d_population);
-	      break;
-	    }
+      cudaFree(localGpuData->d_indexes);
+      cudaFree(localGpuData->d_progs);
 
-	    if(nbr_cudaPreliminaryProcess > 0) {
+      delete[] localGpuData->progs;
+      delete[] localGpuData->indexes;	break;
+    }
+
+    if(nbr_cudaPreliminaryProcess > 0) {
 	      
-	      if( nbr_cudaPreliminaryProcess==2 ) 
-		cudaPreliminaryProcess(localGpuData,EA->population->parentPopulationSize);
-	      else {
-		cudaPreliminaryProcess(localGpuData,EA->population->offspringPopulationSize);
-	      }
-	      nbr_cudaPreliminaryProcess--;
+      if( nbr_cudaPreliminaryProcess==2 ) 
+	cudaPreliminaryProcessGP(localGpuData);
+      else {
+	cudaPreliminaryProcessGP(localGpuData);
+      }
+      nbr_cudaPreliminaryProcess--;
+	
+      if( localGpuData->sh_pop_size%localGpuData->num_MP!=0 ){
 
-	      if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
-		// due to lack of individuals, the population distribution is not optimial according to core organisation
-		// warn the user and propose a proper configuration
-		std::cerr << "Warning, population distribution is not optimial, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
-			  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
-	      }
-            }
-	    
-	    // transfer data to GPU memory
-            lastError = cudaMemcpy(localGpuData->d_population,(IndividualImpl*)(Pop->cudaBuffer)+localGpuData->indiv_start,
-				   (sizeof(IndividualImpl)*localGpuData->sh_pop_size),cudaMemcpyHostToDevice);
+	std::cerr << "Warning, population distribution is not optimial, consider adding " << ceilf(((float)localGpuData->sh_pop_size)/localGpuData->num_MP)*localGpuData->num_MP-localGpuData->sh_pop_size  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
+      }
+    }
 
-	    CUDA_SAFE_CALL(lastError);
+
+    if( nbr_cudaPreliminaryProcess==1 ){ index = flatteningSubPopulation(localGpuData,(IndividualImpl**)EA->population->parents); }
+    else{ index = flatteningSubPopulation(localGpuData,(IndividualImpl**)EA->population->offsprings); }
+
+    // transfer the programs to the GPU
+    CUDA_SAFE_CALL(cudaMemcpy( localGpuData->d_progs, localGpuData->progs, sizeof(*localGpuData->d_progs)*index, cudaMemcpyHostToDevice ));
+    CUDA_SAFE_CALL(cudaMemcpy( localGpuData->d_indexes, localGpuData->indexes, sizeof(*localGpuData->d_indexes)*localGpuData->sh_pop_size, cudaMemcpyHostToDevice ));
+
 	    
+    cudaStream_t st;
+    cudaStreamCreate(&st);
 	    
-	    //std::cout << localGpuData->sh_pop_size << ";" << localGpuData->dimGrid << ";"<<  localGpuData->dimBlock << std::endl;
 				      
-	    // the real GPU computation (kernel launch)
-	    cudaEvaluatePopulation<<< localGpuData->dimGrid, localGpuData->dimBlock>>>(localGpuData->d_population, localGpuData->sh_pop_size, localGpuData->d_fitness);
-	    lastError = cudaGetLastError();
-	    CUDA_SAFE_CALL(lastError);
+    // the real GPU computation (kernel launch)
+    EvaluatePostFixIndividuals<<<localGpuData->dimGrid,NUMTHREAD,0,st>>>
+      ( localGpuData->d_progs,index,localGpuData->sh_pop_size,localGpuData->d_inputs,localGpuData->d_outputs,NO_FITNESS_CASES,localGpuData->d_fitness,localGpuData->d_indexes );
+    
+    CUDA_SAFE_CALL(cudaStreamSynchronize(st));
+    
+    // be sure the GPU has finished computing evaluations, and get results to CPU
+    lastError = cudaThreadSynchronize();
+    if( lastError!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
+    lastError = cudaMemcpy(localGpuData->fitness, localGpuData->d_fitness, localGpuData->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
 
-	    if( cudaGetLastError()!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
+    if( nbr_cudaPreliminaryProcess==1 ){
+      for( int i=0 ; i<localGpuData->sh_pop_size ; i++ ){
+	EA->population->parents[i+localGpuData->indiv_start]->fitness = localGpuData->fitness[i];
+	//std::cout << i+localGpuData->indiv_start << ":" << localGpuData->fitness[i] <<std::endl;
+      }
+    }
+    else{
+       for( int i=0 ; i<localGpuData->sh_pop_size ; i++ ){
+	 EA->population->offsprings[i+localGpuData->indiv_start]->fitness = localGpuData->fitness[i];
 
-	    // be sure the GPU has finished computing evaluations, and get results to CPU
-	    lastError = cudaThreadSynchronize();
-	    if( lastError!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
-	    lastError = cudaMemcpy(fitnessTemp + localGpuData->indiv_start, localGpuData->d_fitness, localGpuData->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
-	    
-	    // this thread has finished its phase, so lets tell it to the main thread
-	    sem_post(&localGpuData->sem_out);
-   }
+	 //float t = ((IndividualImpl*)EA->population->offsprings[i+localGpuData->indiv_start])->evaluate();
+	 //std::cout << i+localGpuData->indiv_start << ":" << localGpuData->fitness[i] << " : " << t <<std::endl;
+      }
+    }
+    
+    // this thread has finished its phase, so lets tell it to the main thread
+    sem_post(&localGpuData->sem_out);
+  }
   sem_post(&localGpuData->sem_out);
   fflush(stdout);
   return NULL;
 }
 				
 void wake_up_gpu_thread(){
-	for( int i=0 ; i<num_gpus ; i++ ){
-		sem_post(&(globalGpuData[i].sem_in));
-	
-  	}
-	for( int i=0 ; i<num_gpus ; i++ ){
-	  sem_wait(&globalGpuData[i].sem_out);
-  	}
+	for( int i=0 ; i<num_gpus ; i++ ){ sem_post(&(globalGpuData[i].sem_in)); }
+	for( int i=0 ; i<num_gpus ; i++ ){ sem_wait(&globalGpuData[i].sem_out); }
 
 }
 				
 void InitialiseGPUs(){
-	//MultiGPU part on one CPU
-	globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
-	pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
-	int gpuId = fstGpu;
-	//here we want to create on thread per GPU
-	for( int i=0 ; i<num_gpus ; i++ ){
-	  
-		globalGpuData[i].d_fitness = NULL;
-		globalGpuData[i].d_population = NULL;
-		
-		globalGpuData[i].gpuId = gpuId++;
 
-	  	globalGpuData[i].threadId = i;
-	  	sem_init(&globalGpuData[i].sem_in,0,0);
-	  	sem_init(&globalGpuData[i].sem_out,0,0);
-	  	if( pthread_create(t+i,NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
-	}
+  // We will use flat inputs data for GPGPU(s)
+  float* flatInputs = new float[NO_FITNESS_CASES*VAR_LEN];
+  for( int i=0 ; i<NO_FITNESS_CASES ; i++ ){
+    memcpy( flatInputs+(i*VAR_LEN),inputs[i],sizeof(float)*VAR_LEN);
+  }
+
+  //MultiGPU part on one CPU
+  globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
+  pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
+  int gpuId = fstGpu;
+  //here we want to create on thread per GPU
+  for( int i=0 ; i<num_gpus ; i++ ){
+	  
+    globalGpuData[i].d_fitness = NULL;
+    globalGpuData[i].d_population = NULL;
+		
+    globalGpuData[i].gpuId = gpuId++;
+
+    globalGpuData[i].threadId = i;
+    sem_init(&globalGpuData[i].sem_in,0,0);
+    sem_init(&globalGpuData[i].sem_out,0,0);
+    if( pthread_create(t+i,NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
+
+    globalGpuData[i].flatInputs = flatInputs;
+  }
 }
 
-\INSERT_INITIALISATION_FUNCTION
-\INSERT_FINALIZATION_FUNCTION
+GPNode* pickNthNode(GPNode* root, int N, int* childId){
+
+  GPNode* stack[TREE_DEPTH_MAX*MAX_ARITY];
+  GPNode* parentStack[TREE_DEPTH_MAX*MAX_ARITY];
+  int stackPointer = 0;
+
+  parentStack[stackPointer] = NULL;
+  stack[stackPointer++] = root;
+
+  for( int i=0 ; i<N ; i++ ){
+    GPNode* currentNode = stack[stackPointer-1];
+    stackPointer--;
+    for( int j=opArity[(int)currentNode->opCode] ; j>0 ; j--){
+      parentStack[stackPointer] = currentNode;
+      stack[stackPointer++] = currentNode->children[j-1];
+    }
+  }
+
+  //assert(stackPointer>0);
+  if( stackPointer )
+    stackPointer--;
+
+  for( unsigned i=0 ; i<opArity[(int)parentStack[stackPointer]->opCode] ; i++ ){
+    if( parentStack[stackPointer]->children[i]==stack[stackPointer] ){
+      (*childId)=i;
+      break;
+    }
+  }
+  return parentStack[stackPointer];
+}
+
+
+void simple_mutator(IndividualImpl* Genome){
+
+  // Cassical  mutation
+  // select a node
+  int mutationPointChildId = 0;
+  int mutationPointDepth = 0;
+  GPNode* mutationPointParent = selectNode(Genome->root, &mutationPointChildId, &mutationPointDepth);
+  
+  
+  if( !mutationPointParent ){
+    mutationPointParent = Genome->root;
+    mutationPointDepth = 0;
+  }
+  delete mutationPointParent->children[mutationPointChildId] ;
+  mutationPointParent->children[mutationPointChildId] =
+    construction_method( VAR_LEN+1, OPCODE_SIZE , 1, TREE_DEPTH_MAX-mutationPointDepth ,0,opArity,OP_ERC);
+}
+
+void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
+  int depthP1 = depthOfTree(p1.root);
+  int depthP2 = depthOfTree(p2.root);
+
+  int nbNodeP1 = enumTreeNodes(p1.root);
+   int nbNodeP2 = enumTreeNodes(p2.root);
+
+  int stockPointChildId=0;
+  int graftPointChildId=0;
+
+  bool stockCouldBeTerminal = globalRandomGenerator->tossCoin(0.1);
+  bool graftCouldBeTerminal = globalRandomGenerator->tossCoin(0.1);
+
+  int childrenDepth = 0, Np1 = 0 , Np2 = 0;
+  GPNode* stockParentNode = NULL;
+  GPNode* graftParentNode = NULL;
+
+  unsigned tries = 0;
+  do{
+  choose_node:
+    
+    tries++;
+    if( tries>=10 ){
+      aborded_crossover++;
+      Np1=0;
+      Np2=0;
+      break;
+    }
+
+    if( nbNodeP1<2 ) Np1=0;
+    else Np1 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP1);
+    if( nbNodeP2<2 ) Np2=0;
+    else Np2 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP2);
+
+
+    
+    if( Np1!=0 ) stockParentNode = pickNthNode(c.root, MIN(Np1,nbNodeP1) ,&stockPointChildId);
+    if( Np2!=0 ) graftParentNode = pickNthNode(p2.root, MIN(Np2,nbNodeP1) ,&graftPointChildId);
+
+    // is the stock and the graft an authorized type of node (leaf or inner-node)
+    if( Np1 && !stockCouldBeTerminal && opArity[(int)stockParentNode->children[stockPointChildId]->opCode]==0 ) goto choose_node;
+    if( Np2 && !graftCouldBeTerminal && opArity[(int)graftParentNode->children[graftPointChildId]->opCode]==0 ) goto choose_node;
+    
+    if( Np2 && Np1)
+      childrenDepth = depthOfNode(c.root,stockParentNode)+depthOfTree(graftParentNode->children[graftPointChildId]);
+    else if( Np1 ) childrenDepth = depthOfNode(c.root,stockParentNode)+depthP1;
+    else if( Np2 ) childrenDepth = depthOfTree(graftParentNode->children[graftPointChildId]);
+    else childrenDepth = depthP2;
+    
+  }while( childrenDepth>TREE_DEPTH_MAX );
+
+  
+  if( Np1 && Np2 ){
+    delete stockParentNode->children[stockPointChildId];
+    stockParentNode->children[stockPointChildId] = graftParentNode->children[graftPointChildId];
+    graftParentNode->children[graftPointChildId] = NULL;
+  }
+  else if( Np1 ){ // && Np2==NULL
+    // We want to use the root of the parent 2 as graft
+    delete stockParentNode->children[stockPointChildId];
+    stockParentNode->children[stockPointChildId] = p2.root;
+    p2.root = NULL;
+  }else if( Np2 ){ // && Np1==NULL
+    // We want to use the root of the parent 1 as stock
+    delete c.root;
+    c.root = graftParentNode->children[graftPointChildId];
+    graftParentNode->children[graftPointChildId] = NULL;
+  }else{
+    // We want to switch root nodes between parents
+    delete c.root;
+    c.root  = p2.root;
+    p2.root = NULL;
+  }
+}
 
 void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
@@ -364,8 +638,9 @@ void EASEAInit(int argc, char** argv){
 	}
 
 	//globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
-	InitialiseGPUs();
 	\INSERT_INIT_FCT_CALL
+
+	InitialiseGPUs();
 }
 
 void EASEAFinal(CPopulation* pop){
@@ -406,12 +681,18 @@ IndividualImpl::~IndividualImpl(){
 
 
 float IndividualImpl::evaluate(){
-  if(valid)
-    return fitness;
-  else{
-    valid = true;
-    \INSERT_EVALUATOR
-  }
+  float ERROR; 
+ float sum = 0;
+  \INSERT_GENOME_EVAL_HDR
+
+   for( int i=0 ; i<NO_FITNESS_CASES ; i++ ){
+     float EVOLVED_VALUE = recEval(this->root,inputs[i]);
+     \INSERT_GENOME_EVAL_BDY
+     sum += ERROR;
+   }
+  this->valid = true;
+  ERROR = sum;
+  \INSERT_GENOME_EVAL_FTR    
 }
 
 void IndividualImpl::boundChecking(){
@@ -502,52 +783,31 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
 
 
 void PopulationImpl::evaluateParentPopulation(){
-        unsigned actualPopulationSize = this->actualParentPopulationSize;
-	fitnessTemp = new float[actualPopulationSize];
-	int index;
-	static bool dispatchedParents = false;
-	
-	if( dispatchedParents==false ){
-	  dispatchPopulation(EA->population->parentPopulationSize);
-	  dispatchedParents=true;
-	}
-
-	       	
- 	wake_up_gpu_thread(); 
-
- 	
-	for( index=(actualPopulationSize-1); index>=0; index--){
-		this->parents[index]->fitness = fitnessTemp[index];
-		this->parents[index]->valid = true;
-	}  
-
-        delete[](fitnessTemp);
-
+  static bool dispatchedParents = false;
+  
+  if( dispatchedParents==false ){
+    dispatchPopulation(EA->population->parentPopulationSize);
+    dispatchedParents=true;
+  }
+  
+  wake_up_gpu_thread(); 
 }
 
 void PopulationImpl::evaluateOffspringPopulation(){
-	unsigned actualPopulationSize = this->actualOffspringPopulationSize;
-	fitnessTemp = new float[actualPopulationSize];
-	int index;
-	static bool dispatchedOffspring = false;
-	
-	if( dispatchedOffspring==false ){
-	  dispatchPopulation(EA->population->offspringPopulationSize);
-	  dispatchedOffspring=true;
-	}
-
-        for( index=(actualPopulationSize-1); index>=0; index--)
-	    ((IndividualImpl*)this->offsprings[index])->copyToCudaBuffer(this->cudaBuffer,index);
-
-        wake_up_gpu_thread(); 
-
-	for( index=(actualPopulationSize-1); index>=0; index--){
-		this->offsprings[index]->fitness = fitnessTemp[index];
-		this->offsprings[index]->valid = true;
-	}	  
- 
-        first_generation = false;
-        delete[](fitnessTemp);
+  unsigned actualPopulationSize = this->actualOffspringPopulationSize;
+  int index;
+  static bool dispatchedOffspring = false;
+  
+  if( dispatchedOffspring==false ){
+    dispatchPopulation(EA->population->offspringPopulationSize);
+    dispatchedOffspring=true;
+  }
+  
+  for( index=(actualPopulationSize-1); index>=0; index--)
+    ((IndividualImpl*)this->offsprings[index])->copyToCudaBuffer(this->cudaBuffer,index);
+  
+  wake_up_gpu_thread(); 
+  first_generation = false;
 }
 
 
@@ -721,6 +981,7 @@ PopulationImpl::~PopulationImpl(){
 #include <Parameters.h>
 #include <string>
 #include <CStats.h>
+#include "CGPNode.h"
 
 using namespace std;
 

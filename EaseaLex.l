@@ -640,9 +640,9 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <COPY_GP_EVAL>"OUTPUT" {
   if( bIsCopyingGPEval) 
-    if( bCOPY_GP_EVAL_GPU )
-      fprintf(fpOutputFile, "outputs[i*NUMTHREAD2+tid]" );
-    else fprintf(fpOutputFile, "outputs[i]" );
+    //if( bCOPY_GP_EVAL_GPU )
+      fprintf(fpOutputFile, "outputs[i]" );
+    //else fprintf(fpOutputFile, "outputs[i]" );
   
  }
 
