@@ -427,7 +427,7 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <GP_RULE_ANALYSIS>"//".*"\n" {}
 
-<GP_RULE_ANALYSIS>"\""([a-zA-Z0-9]|\(|\)|\*|\+|\-|\/|\%)*"\"" {
+<GP_RULE_ANALYSIS>"\""([a-zA-Z0-9_]|\(|\)|\*|\+|\-|\/|\%|\[|\])*"\"" {
   if( iGP_OPCODE_FIELD != 1 ){
     fprintf(stderr,"Error, op code real name must be given at the second place\n");
     exit(-1);

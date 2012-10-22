@@ -151,7 +151,7 @@ endif
 #ifeq ($(UNAME),Darwin)
 	cd boost && make clean
 #endif
-
+	
 #install:$(EXEC)
 #	sudo cp $< /usr/bin/dev-easea
 
@@ -159,10 +159,10 @@ endif
 #realclean: clean
 #	rm -f EaseaParse.cpp EaseaParse.h EaseaLex.cpp EaseaLex.h
 
+# AT commented these lines, because they imply the presence of wine + programs in a specific location
+#EaseaParse.cpp: EaseaParse.y
+#	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d
 
-EaseaParse.cpp: EaseaParse.y
-	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ayacc.exe $< -Tcpp -d
-
-EaseaLex.cpp: EaseaLex.l
-	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i
+#EaseaLex.cpp: EaseaLex.l
+#	wine ~/.wine/drive_c/Program\ Files/Parser\ Generator/BIN/ALex.exe $< -Tcpp -i
 #endif

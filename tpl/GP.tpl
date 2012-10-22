@@ -1,6 +1,6 @@
 \TEMPLATE_START
 /**
- This is program entry for STD template for EASEA
+ This is program entry for GP and STD template for EASEA
 
 */
 
@@ -532,6 +532,8 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <CIndividual.h>
 #include <Parameters.h>
 #include <string>
+#include <list>
+#include <map>
 #include "CGPNode.h"
 
 using namespace std;

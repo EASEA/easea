@@ -16,6 +16,13 @@ public:
     for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
          children[EASEA_Ndx]=NULL;
   }
+
+  GPNode(int var_id, double erc_value, char opCode, GPNode** childrenToAdd) : var_id(var_id), erc_value(erc_value), opCode(opCode)// other constructor
+  {
+    for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
+         this->children[EASEA_Ndx]=childrenToAdd[EASEA_Ndx];
+  }  
+
   GPNode(const GPNode &EASEA_Var) {  // Copy constructor
     var_id=EASEA_Var.var_id;
     erc_value=EASEA_Var.erc_value;
@@ -67,7 +74,8 @@ public:
 // Class members 
   int var_id;
   double erc_value;
-  char opCode;
+  // char opCode;
+  int opCode;
   GPNode* children[2];
 };
 

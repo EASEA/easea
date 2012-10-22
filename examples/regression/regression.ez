@@ -3,7 +3,12 @@
   This is a standard GP implementation on EASEA, 
   aimed for regression.
 
-  use : easea -cuda_gp regression.ez
+  use : easea -gp regression.ez
+	make
+
+	OR (if you'd like to exploit a CUDA-compatible graphic card)
+
+	easea -cuda_gp regression.ez
         make
 
   in order to generate and compile this code.

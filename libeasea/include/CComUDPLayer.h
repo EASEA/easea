@@ -22,7 +22,9 @@
 #include <typeinfo>
 #include <float.h>
 #include <limits.h>
+#if not defined(__APPLE__) 
 #include <omp.h>
+#endif
 #include <string>
 
 #define _MULTI_THREADED

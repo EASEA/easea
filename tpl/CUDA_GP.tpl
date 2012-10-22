@@ -5,7 +5,7 @@
 #pragma comment(lib, "Winmm.lib")
 #endif
 /**
- This is program entry for STD template for EASEA
+ This is program entry for GP template for EASEA
 */
 
 \ANALYSE_PARAMETERS
@@ -981,6 +981,8 @@ PopulationImpl::~PopulationImpl(){
 #include <Parameters.h>
 #include <string>
 #include <CStats.h>
+#include <list>
+#include <map>
 #include "CGPNode.h"
 
 using namespace std;
