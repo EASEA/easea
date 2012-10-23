@@ -1,0 +1,424 @@
+/*_________________________________________________________
+
+  This is a standard GP implementation on EASEA, 
+  aimed for regression.
+
+  use : easea -cuda_gp regression.ez
+  make
+
+  in order to generate and compile this code.
+  __________________________________________________________*/
+
+\User declarations :
+
+// these 3 defines are mandatory here. Adjust as you like.
+#define NO_FITNESS_CASES 634
+#define VAR_LEN 11
+#define OBJECTIVE_FUNCTION 2
+#define GROW_FULL_RATIO 0.5
+#define FILENAME1 "swing1.csv"
+#define FILENAME2 "swing2.csv"
+
+#define NUMTHREAD 1024
+#define MAX_STACK 15
+
+// Some options
+//#define NORMALIZE
+//#define DIVISION      // You have to comment or uncomment the OP_DIV.
+                      //Look for //DIVISION
+#define DIVPENALTY 4  // 1)INCREMENT, 2)MULTIPLY, 3)GEN_PROGRESSIVE,
+                      //4)INVALID_PROGRESSIVE, 5) REPLACE, 6)KILL(default)
+//#define SINCOS      // You have to comment or uncomment
+                      // the OP_SIN OP_COS. Look for //SINCOS
+//#define PMUTVAR 1     // 1)EXP, 2)INVERSE(default)
+                      // You have to set mutation probability for the initial value.
+//#define FILES2
+#define FITNESS 6    // 1) sum sqrt(abs(ERROR)) 2) sum abs(ERROR), 3) sum ERROR*ERROR,
+                     // 4) sqrt of 1, 5) sqrt of 2, 6) sqrt of 3 (default)
+#define MUTATOR 5    // 1) ch opCode or ERC, select height 
+                     // 2) ch ERC value, select an erc node
+                     // 3) ch opCode or ERC, select heights (mutation per gene)
+                     // 4) ch opCode or ERC, select nodes (mutation per gene)
+                     // 5) replace a node by a random tree, select height
+#define CROSSOVER
+#define INITIALIZER  // creates 0.5 full, 1/(init_max_depth-init_min_depth) depth.
+                     // non-necessary-terminal nodes are 0.5 operator, 0.5 terminal.
+#define PRINT
+#define FILEOUT
+
+
+// Options dependancy
+
+// If the division is not used create a false OP_CODE to avoid
+// problems in tests.
+#ifndef DIVISION
+#define OP_DIV 100
+#endif
+
+// Cannot normalize sine and cosine.
+#ifdef NORMALIZE
+#undef SINCOS
+#endif
+
+// Cannot perform division test if not normalized
+// Perform division test is useless if there is no division.
+#if !defined DIVISION || !defined NORMALIZE
+#undef DIVPENALTY
+#endif
+
+// Normalization does not handle several files.
+#ifdef NORMALIZE
+#undef FILES2
+#endif
+
+// If there is only one file, th second filename is useless.
+#ifndef FILES2
+#undef FILENAME2
+#endif
+
+// There is an output file only if there are things to print.
+#ifndef PRINT
+#undef FILEOUT
+#endif
+
+// If new mutation or crossover operator are used, they will
+// need to perform some action on GPNode.
+#if defined MUTATOR || defined CROSSOVER || defined FILEOUT
+#define GPNODEOP
+#endif
+
+// If the mutation creates a part of the tree it will need
+// the function which initialize trees.
+#if defined MUTATOR && !defined INITIALIZER
+#if MUTATOR==5 || MUTATOR==6
+#define INITIALIZER
+#endif
+#endif
+
+\end
+
+\User functions:
+// include
+#include "add/globalDeclarations.add"
+#include "add/generateAndFreeData.add"
+//#include "add/GPNodeCompare.add"
+#include "add/SNode.add"
+#include "add/best.add"
+
+#ifdef INITIALIZER
+#include "add/initializer.add"
+#endif
+
+#ifdef NORMALIZE
+#include "add/normalize.add"
+#endif
+
+#ifdef GPNODEOP
+#include "add/GPNodeOp.add"
+#endif
+
+#ifdef MUTATOR
+#include "add/mutator.add"
+#endif
+
+#ifdef DIVISION
+#include "add/divisionTest.add"
+#endif
+
+#ifdef PMUTVAR
+#include "add/mutation.add"
+#endif
+
+#ifdef PRINT
+#include "add/print.add"
+#endif
+
+#ifdef CROSSOVER
+#include "add/crossover.add"
+#endif
+
+\end
+
+
+
+\Before everything else function:
+{
+    // ///////////////// TEST
+    // GPNode* b = best();
+    // SNode* s = createSNode(b, opArity);
+    // std::cout << sNodeToMatlab(s) << endl;
+    // exit(0);
+
+    ///////////// Set parameters.
+    setParam(); // See globalDeclaration.add
+
+    ///////////// Generate data.
+#ifdef FILES2
+    generateData(&inputs1, &output1, FILENAME1, &inputs2, &output2, FILENAME2, VAR_LEN, OBJECTIVE_FUNCTION);
+    inputs = new float*[NO_FITNESS_CASES];
+    for (int i = 0; i < NO_FITNESS_CASES; i++) {
+	inputs[i] = new float[VAR_LEN];
+    }
+    outputs = new float[NO_FITNESS_CASES];
+    inputs = inputs2;
+    outputs = output2;
+#else
+    generateData(&inputs, &outputs, FILENAME1, VAR_LEN, OBJECTIVE_FUNCTION);
+#endif    
+    
+    ////////////// Normalize.
+#ifdef NORMALIZE
+    // see normalize.add
+    normalizeData(&inputs, &normalizationCoeff, NO_FITNESS_CASES, VAR_LEN);
+#endif
+
+    ///////////// Print parameters.
+#ifdef PRINT
+    // see print.add
+    setDescriptions();
+    print_prm();
+#endif
+
+}
+\end
+
+\After everything else function:
+{
+#ifdef PRINT
+    printSolution();
+#endif    
+
+    free_data();
+}
+\end
+
+\At the beginning of each generation function:
+{
+    /////////// Test the diversity (take a LONG time)
+    /*
+    printf("mut: %d, cross: %d, mutClone: %d, crossClone: %d\n",
+	   mut, cross, mutClone, crossClone);
+    mut = cross = mutClone = crossClone = 0;
+    
+    // Initialisation du tableau d'index.
+    int length = EA->population->parentPopulationSize;
+    IndividualImpl** pop = (IndividualImpl**)EA->population->parents;
+    int index[length];
+    for (int i = 0; i < length; i++) {
+	index[i] = i;
+    }
+    long nbTest = 0;
+    int fit = 0, tree = 0;
+    // Crible de la population pour n'avoir que des individus différents.
+    for (int i = 0; i < length; i++) {
+	for (int j = i+1; j < length; j++) {
+	    nbTest++;
+	    if (pop[index[i]]->fitness != pop[index[j]]->fitness) continue;
+	    fit++;
+	    if (GPNodeCompare(pop[index[i]]->root, pop[index[j]]->root))
+		{index[j] = index[--length];tree++;}
+	}
+    }
+    printf("test: %ld, fitness: %d, tree: %d\n", nbTest, fit, tree);
+    printf("different individuals: %d\n", length);
+    */
+    /////////////// Change mutation probability
+#ifdef PMUTVAR
+    // see mutation.add
+    updatePMut();
+#endif
+
+    /////////////// Change data
+#ifdef FILES2
+    if (EA->getCurrentGeneration()%2) {
+	outputs = output1;
+	inputs = inputs1;
+    } else {
+	outputs = output2;
+	inputs = inputs2;
+    }
+    /*    for (int i = 0; i < VAR_LEN-1; i++) {
+	std::cout << inputs[2][i] << ", ";
+    }
+    std::cout << inputs[2][VAR_LEN-1] << endl;*/
+#endif
+
+}
+\end
+
+\At the end of each generation function:
+{    
+}
+\end
+
+\At each generation before reduce function:
+{
+
+    /////////////// Test population for division
+#ifdef DIVPENALTY
+    // see divisionTest.add
+    populationDivisionValidity();
+#endif
+
+}
+\end
+
+
+\User classes :
+
+GenomeClass {
+    GPNode* root;
+}
+\end
+
+\GenomeClass::display:
+
+\end
+
+\GenomeClass::initialiser :
+{
+#ifdef INITIALIZER
+    Genome.root = initializer();
+#else
+    Genome.root = ramped_hh();
+    //Genome.root = best();
+#endif
+}
+\end
+
+\GenomeClass::crossover :
+{
+#ifdef CROSSOVER
+    crossOver(parent1, parent2, child);
+#else
+    simpleCrossOver(parent1,parent2,child);
+#endif
+    child.valid = false;
+}
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+{
+#ifdef MUTATOR // See mutator.add
+    return mutator(&Genome, pMutationPerGene);
+#else
+    simple_mutator(&Genome);
+    return 1;
+#endif
+}
+\end
+
+
+\begin operator description :
+
+OP_PHI, "x(PHI)", 0, {RESULT=INPUT[1];};
+OP_DPHI, "x(DPHI)", 0, {RESULT=INPUT[2];};
+OP_TETA, "x(TETA)", 0, {RESULT=INPUT[3];};
+OP_DTETA, "x(DTETA)", 0, {RESULT=INPUT[4];};
+OP_PSI, "x(PSI)", 0, {RESULT=INPUT[5];};
+OP_DPSI, "x(DPSI)", 0, {RESULT=INPUT[6];};
+
+OP_U1, "x(OMEGA1)", 0, {RESULT=INPUT[7];};
+OP_U2, "x(OMEGA3)", 0, {RESULT=INPUT[8];};
+OP_U3, "x(OMEGA5)", 0, {RESULT=INPUT[9];};
+OP_U4, "x(OMEGA7)", 0, {RESULT=INPUT[10];};
+
+OP_ERC, "ERC", 0, {RESULT=ERC;};
+
+OP_ADD, "+", 2, {RESULT=OP1+OP2;};
+OP_SUB, "-", 2, {RESULT=OP1-OP2;};
+OP_MUL, "*", 2, {RESULT=OP1*OP2;};
+
+//SINCOS
+//OP_COS, "cos",1, {RESULT=cos(OP1);};
+//OP_SIN, "sin",1, {RESULT=sin(OP1);};
+
+//DIVISION
+// OP_DIV, "/", 2, {
+//    if( !OP2 ) RESULT = 1;
+//    else RESULT = OP1/OP2;
+// };
+
+
+\end
+
+
+\GenomeClass::evaluator header:
+\end
+
+\GenomeClass::evaluator for each fc :
+float expected_value = OUTPUT;
+
+#ifdef FITNESS
+#if FITNESS==1 || FITNESS==4
+ERROR = sqrt(abs(expected_value-EVOLVED_VALUE));
+#elif FITNESS==2 || FITNESS==5
+ERROR = abs(expected_value-EVOLVED_VALUE);
+#else
+ERROR = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
+#endif
+#else
+ERROR = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
+#endif
+
+\end
+
+\GenomeClass::evaluator accumulator :
+
+#ifdef FITNESS
+#if FITNESS==1 || FITNESS==2 || FITNESS==3
+return ERROR;
+#else
+return sqrt(ERROR);
+#endif
+#else
+return sqrt(ERROR);
+#endif
+
+\end
+
+
+\User Makefile options: 
+
+CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/
+LDFLAGS+=
+\end
+
+\Default run parameters :              // Please let the parameters appear in this order
+Number of generations : 500   	         // NB_GEN
+Time limit: 0 			       // In seconds, 0 to deactivate
+Population size : 1000000		        //POP_SIZE
+Offspring size : 1000000                   // 40% 
+Mutation probability : 0.045              // MUT_PROB
+Crossover probability : 1.             // XOVER_PROB
+Evaluator goal : minimise               // Maximise
+Selection operator: Tournament 11
+Surviving parents: 100%                //percentage or absolute  
+Surviving offspring: 100%
+Reduce parents operator: Tournament 2
+Reduce offspring operator: Tournament 2
+Final reduce operator: Tournament 7
+
+Elitism: Strong			       //Weak or Strong
+Elite: 1
+Print stats: true		       //Default: 1
+Generate csv stats file:false
+Generate gnuplot script:false
+Generate R script:false
+Plot stats:false		      	//Default: 0
+
+//  Remote island model: true
+//IP	  file: ip.txt 			//File containing all the remote island's IP
+//Server port : 2929
+//Migration probability: 0.33
+
+Save population: false
+Start from file:false
+
+max init tree depth : 6
+min init tree depth : 2
+
+max tree depth : 8
+
+size of prog buffer : 35000000
+\end

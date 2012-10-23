@@ -1,0 +1,332 @@
+/////////////////// BEGIN SNODE ////////////////////////////
+
+typedef struct SNode_r {
+    int arity;
+    double erc_value;
+    char opCode;
+    SNode_r** children;
+} SNode;
+
+/////////////////// END SNODE ///////////////////////////
+SNode* createSNode(GPNode* root, const unsigned* opArity);
+//////////////////////// BEGIN SORT SNODE //////////////////////
+
+SNode** sortSNode(GPNode** nodes, int arity, const unsigned* opArity) {
+
+    SNode** sortedNodes = (SNode**)malloc(arity*sizeof(SNode*));
+
+    int index = 0;
+
+    for (int i = 0; i < arity; i++) {
+	if (nodes[i]->opCode == OP_ERC) {
+	    sortedNodes[index++] = createSNode(nodes[i], opArity);
+	}
+    }
+
+    for (int i = 0; i < arity; i++) {
+	if (!opArity[(int)nodes[i]->opCode]) {
+	    sortedNodes[index++] = createSNode(nodes[i], opArity);
+	}
+    }
+
+    for (int i = 0; i < arity; i++) {
+	if (opArity[(int)nodes[i]->opCode] == 2) {
+	    sortedNodes[index++] = createSNode(nodes[i], opArity);
+	}
+    }
+
+
+    for (int i = 0; i < arity; i++) {
+	if (opArity[(int)nodes[i]->opCode] == 1) {
+	    sortedNodes[index++] = createSNode(nodes[i], opArity);
+	}
+    }
+
+    printf("%d = %d\n", arity, index);
+
+    return sortedNodes;
+
+}
+
+//////////////////////// END SORT SNODE /////////////////////////
+
+///////////////////// BEGIN NUMBER OF LEAVES ////////////////////////
+
+int numberOfLeaves(GPNode* root, const unsigned* opArity) {
+    
+    char code = root->opCode;
+    int arity = opArity[(int)code];
+
+    bool isLeaf[arity]; // The value at position i is true if children[i] is a leaf for the current node.
+    if (code == OP_MUL || code == OP_DIV) {
+	for (int i = 0; i < arity; i++) {
+	    isLeaf[i] = root->children[i]->opCode != OP_MUL && root->children[i]->opCode != OP_DIV;
+	}
+    } else if (code == OP_ADD || code == OP_SUB) {
+	for (int i = 0; i < arity; i++) {
+	    isLeaf[i] = root->children[i]->opCode != OP_ADD && root->children[i]->opCode != OP_SUB;
+	}
+    } else return 0; // In all other cases, root can't have leaves.
+
+    int leaves = 0; // Number of children which are leaves.
+    int notLeaves[arity]; // Element of notLeaves are the indexes of the children which are not leaves.
+    for (int i = 0; i < arity; i++) {
+	notLeaves[i] = i;
+    }
+
+    for (int i = 0; i < arity; i++) {
+	// If children[i] is a leaf, it is dicarded from the array by placing the current last index at its place.
+	// The last element which is not a leaf is at index arity-(leaves+1) in notLeaves.
+	if (isLeaf[i]) notLeaves[i] = notLeaves[arity - (++leaves)];
+    }
+
+    // totalLeaves, is the sum of the number of children which are leaves and the number of leaves of the other children.
+    int totalLeaves = leaves;
+    for (int i = 0; i < arity-leaves; i++) {
+	totalLeaves += numberOfLeaves(root->children[notLeaves[i]], opArity);
+    }
+
+    return totalLeaves;
+
+}
+
+///////////////////// END NUMBER OF LEAVES /////////////////////////
+
+////////////////////// BEGIN PLACE GPNODE IN SNODE /////////////////////
+
+void placeNodes(GPNode* root, bool leftSide, GPNode*** left, GPNode*** right, int* arity0, int* arity1) {
+
+    // This function finds the future leaves of the SNode which will be created from the GPNode root.
+    // The future SNode consists in a division (respectively a substraction) of two multiplications
+    // (respectively additions).
+    // The leaves are sorted so that the children of the left (respectively right) multiplication
+    // (respectively addition) are in the left (respectively right) array.
+    // Right and Left must be intialised and large enough to countain all their future leaves.
+    // arity0 (respectively arity1) is the real number of GPNodes in left (respectively right).
+
+    char code = root->opCode;
+
+    bool isLeave0;
+    bool isLeave1;
+    bool isInvOp;
+
+    if (code == OP_MUL || code == OP_DIV) {
+	isLeave0 = root->children[0]->opCode != OP_MUL && root->children[0]->opCode != OP_DIV;
+	isLeave1 = root->children[1]->opCode != OP_MUL && root->children[1]->opCode != OP_DIV;
+	isInvOp = code == OP_DIV;
+    } else if (code == OP_ADD || code == OP_SUB) {
+	isLeave0 = root->children[0]->opCode != OP_ADD && root->children[0]->opCode != OP_SUB;
+	isLeave1 = root->children[1]->opCode != OP_ADD && root->children[1]->opCode != OP_SUB;
+	isInvOp = code == OP_SUB;
+    } else return; // Has no effects on GPNodes which can't be transformed.
+	
+    // Recursively place the leaves in the proper array.
+
+    if (isLeave0 && isLeave1) {
+	if (leftSide) {
+	    (*left)[(*arity0)++] = root->children[0];
+	    if (isInvOp) (*right)[(*arity1)++] = root->children[1];
+	    else (*left)[(*arity0)++] = root->children[1];
+	} else {
+	    (*right)[(*arity1)++] = root->children[0];
+	    if (isInvOp) (*left)[(*arity0)++] = root->children[1];
+	    else (*right)[(*arity1)++] = root->children[1];
+	}
+	return;
+    }
+	
+    if (isLeave0) {
+	if (leftSide) (*left)[(*arity0)++] = root->children[0];
+	else (*right)[(*arity1)++] = root->children[0];
+	    
+	if (isInvOp) placeNodes(root->children[1], !leftSide, left, right, arity0, arity1);
+	else  placeNodes(root->children[1], leftSide, left, right, arity0, arity1);
+	    
+	return;
+    }
+	
+    if (isLeave1) {
+	placeNodes(root->children[0], leftSide, left, right, arity0, arity1);
+	    
+	if ((leftSide && isInvOp) || (!leftSide && !isInvOp)) (*right)[(*arity1)++] = root->children[1];
+	else (*left)[(*arity0)++] = root->children[1];
+	    
+	return;
+    }
+	
+    placeNodes(root->children[0], leftSide, left, right, arity0, arity1);
+    if (isInvOp) placeNodes(root->children[1], !leftSide, left, right, arity0, arity1);
+    else placeNodes(root->children[1], leftSide, left, right, arity0, arity1);
+	    
+}
+
+////////////////////// END PLACE GPNODE IN SNODE ///////////////////////
+
+///////////////////// BEGIN CREATE SNODE ////////////////////
+
+SNode* createSNode(GPNode* root, const unsigned* opArity) {
+    // This function transforms a GPNode into a SNode.
+    // The SNode allows a variable number of children.
+    // The aim of the transformation is to group multiplications
+    // and divisions (respectively additions and substractions)
+    // in a minimal tree.
+    // This minimal tree is the division (respectively substraction) between
+    // two multiplications (respectively additions) and the children of
+    // the two multiplications (respectively additions) are neither a
+    // multiplication (respectively additions), nor a division (respectively
+    // substraction).
+
+    char code = root->opCode;
+
+    SNode* sRoot = (SNode*)malloc(sizeof(SNode));
+
+    // Just transforms root into an SNode by copying its members and transforming its children.
+    if (code != OP_ADD && code != OP_SUB && code != OP_MUL && code != OP_DIV) {
+	sRoot->arity = opArity[(int)code];
+	sRoot->opCode = code;
+	if (!opArity[(int)code]) {
+	    if (code == OP_ERC) sRoot->erc_value = root->erc_value;
+	    sRoot->children = NULL;
+	    return sRoot;
+	}
+	sRoot->children = (SNode**)malloc(opArity[(int)code]*sizeof(SNode*));
+	for (int i = 0; i < (int)opArity[(int)code]; i++) {
+	    sRoot->children[i] = createSNode(root->children[i], opArity);
+	}
+	return sRoot;
+    }
+
+    int arity0 = 0; // Future arity of children[0].
+    int arity1 = 0; // Future arity of children[1].
+    
+    // leaves is the total number of leaves of the future SNode.
+    int leaves = numberOfLeaves(root, opArity);
+    // right and left are initialized in order to be large enough for
+    // containing all the leaves of the future SNode.
+    GPNode** left = (GPNode**)malloc(leaves*sizeof(GPNode*));
+    GPNode** right = (GPNode**)malloc(leaves*sizeof(GPNode*));
+    
+    // The leaves are placed in the proper array (right or left) 
+    // and arities are fixed.
+    placeNodes(root, true, &left, &right, &arity0, &arity1);
+    
+    if (!arity0) return NULL; // Shouldn't happen because
+    // if the opCode is OP_DIV, or OP_MUL, or OP_ADD, or OP_SUB,
+    // there is at least two leaves and at least one of those is
+    // in the left array.
+    if (!arity1) { // In this case the SNode is a simple multiplication
+	// (respectively addition) without division (respectively
+	// substraction)
+	sRoot->arity = arity0;
+	if (code == OP_MUL) sRoot->opCode = OP_MUL;
+	else if (code == OP_ADD) sRoot->opCode = OP_ADD;
+	else return NULL; // Shouldn't happen.
+	sRoot->children = (SNode**)malloc(arity0*sizeof(SNode*));
+	for (int i = 0; i < arity0; i++) {
+	    sRoot->children[i] = createSNode(left[i], opArity);
+	}
+    } else { // General case. The minimal tree is created.
+	sRoot->children = (SNode**)malloc(2*sizeof(SNode*));
+	sRoot->children[0] = (SNode*)malloc(sizeof(SNode));
+	sRoot->children[1] = (SNode*)malloc(sizeof(SNode));
+	
+	if (code == OP_MUL || code == OP_DIV) {
+	    sRoot->opCode = OP_DIV;
+	    sRoot->children[0]->opCode = OP_MUL;
+	    sRoot->children[1]->opCode = OP_MUL;
+	}
+	else if (code == OP_ADD || code == OP_SUB) {
+	    sRoot->opCode = OP_SUB;
+	    sRoot->children[0]->opCode = OP_ADD;
+	    sRoot->children[1]->opCode = OP_ADD;
+	}
+	sRoot->arity = 2;
+	sRoot->children[0]->arity = arity0;
+	sRoot->children[1]->arity = arity1;
+	sRoot->children[0]->children = sortSNode(left, arity0, opArity);
+	sRoot->children[1]->children = sortSNode(right, arity1, opArity);
+    }
+    
+    return sRoot;
+    
+}
+
+/////////////////////// END CREATE SNODE /////////////////////////
+
+/////////////////////// BEGIN FREE SNODE /////////////////////////
+
+void freeSNode(SNode* root) {
+
+    for (int i = 0; i < root->arity; i++) {
+	freeSNode(root->children[i]);
+	free(root->children);
+	free(root);
+    }
+
+}
+
+/////////////////////// END FREE SNODE ///////////////////////////
+
+/////////////////////// BEGIN PRINT SNODE /////////////////////////////
+
+void sNodeToMatlab_r(std::ostringstream* oss, SNode* root) {
+
+    if (!root) return;
+
+    if ((int)root->opCode == OP_DIV) {
+	(*oss) << "protectedDiv(";
+	sNodeToMatlab_r(oss,root->children[0]);
+	(*oss) << ", ";
+	sNodeToMatlab_r(oss,root->children[1]);
+	(*oss) << ')';
+    } else if ((int)root->opCode == OP_MUL) {
+	for (int i = 0; i < root->arity-1; i++) {
+	    sNodeToMatlab_r(oss, root->children[i]);
+	    (*oss) << " * ";
+	}
+	sNodeToMatlab_r(oss, root->children[root->arity - 1]);	
+    } else if ((int)root->opCode == OP_ADD) {
+	(*oss) << '(';
+	for (int i = 0; i < root->arity-1; i++) {
+	    sNodeToMatlab_r(oss, root->children[i]);
+	    (*oss) << " + ";
+	}
+	sNodeToMatlab_r(oss, root->children[root->arity - 1]);
+	(*oss) << ')';
+    } else if ((int)root->opCode == OP_SUB) {
+	(*oss) << '(';
+	sNodeToMatlab_r(oss,root->children[0]);
+	(*oss) << ' ';
+	(*oss) << opCodeName[(int)root->opCode];
+	(*oss) << ' ';
+	sNodeToMatlab_r(oss,root->children[1]);
+	(*oss) << ')';
+	/*    } else if ((int)root->opCode == OP_SIN || (int)root->opCode == OP_COS) {
+	(*oss) << opCodeName[(int)root->opCode] << '(';
+	sNodeToMatlab_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << ')';*/
+    } else if ((int)root->opCode == OP_ERC){
+	(*oss) << root->erc_value;
+    } else {
+       	if (root->opCode == OP_PHI) (*oss) << "phi";
+	else if (root->opCode == OP_PSI) (*oss) << "psi";
+	else if (root->opCode == OP_TETA) (*oss) << "theta ";
+	else if (root->opCode == OP_DPHI) (*oss) << "dot{phi}";
+	else if (root->opCode == OP_DPSI) (*oss) << "dot{psi}";
+	else if (root->opCode == OP_DTETA) (*oss) << "dot{theta}";
+	else if (root->opCode == OP_U1) (*oss) << "u1";
+	else if (root->opCode == OP_U2) (*oss) << "u2";
+	else if (root->opCode == OP_U3) (*oss) << "u3";
+	else if (root->opCode == OP_U4) (*oss) << "u4";
+    }
+}
+
+std::string sNodeToMatlab(SNode* root) {
+    std::ostringstream oss;
+
+    sNodeToMatlab_r(&oss,root);
+
+    return oss.str();
+}
+
+/////////////////////// END PRINT SNODE ///////////////////////////////

@@ -1,0 +1,49 @@
+//////////////////////// BEGIN CREATE TREE ///////////////////////
+GPNode* createTree(const int depth, const bool full) {
+
+    if (depth <= 0) return NULL;
+
+    GPNode* root = new GPNode();
+
+    if (depth == 1) {
+	root->opCode = globalRandomGenerator->random(0, VAR_LEN);
+	if (root->opCode == OP_ERC)
+	    root->erc_value = globalRandomGenerator->random(-10.f, 10.f);
+    } else {
+ 
+	if (full) root->opCode = globalRandomGenerator->random(VAR_LEN, OPCODE_SIZE);
+	else {
+	    if (globalRandomGenerator->tossCoin(0.1)) return createTree(1, full);
+	    root->opCode = globalRandomGenerator->random(VAR_LEN, OPCODE_SIZE);
+	}
+
+    }
+	
+    //printf("code: %d\n", root->opCode);
+    //if (root->opCode == OP_ERC) printf("erc: %f\n", root->erc_value);
+
+    root->children[0] = createTree(depth-1, full);
+    root->children[1] = createTree(depth-1, full);
+
+    return root;
+
+}
+///////////////////////// END CREATE TREE ////////////////////////
+
+//////////////////// BEGIN MANUAL INITIALIZER ////////////////////
+GPNode* initializer(const float fullRatio, const int minDepth, const int maxDepth) {
+    bool full = globalRandomGenerator->tossCoin(fullRatio);
+    int depth = globalRandomGenerator->random(minDepth, maxDepth+1);
+
+    return createTree(depth, full);
+}
+///////////////////// END MANUAL INITIALIZER /////////////////////
+
+///////////////////////// BEGIN INITIALIZER //////////////////////
+GPNode* initializer() {
+    bool full = globalRandomGenerator->tossCoin(GROW_FULL_RATIO);
+    int depth = globalRandomGenerator->random(INIT_TREE_DEPTH_MIN, INIT_TREE_DEPTH_MAX+1);
+
+    return createTree(depth, full);
+}
+////////////////////////// END INITIALIZER ///////////////////////

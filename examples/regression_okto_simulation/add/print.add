@@ -1,0 +1,436 @@
+#ifdef FILEOUT
+#include <time.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#endif
+
+////////////////////// BEGIN DESCRIPTIONS //////////////////////
+
+void setDescriptions() {
+
+    // Mutation probability description.
+#ifdef PMUTVAR
+#if PMUTVAR==1
+    pMutVarDesc << EA->population->pMutation << " (initially)"
+		<< endl <<"\tif population does not progress for "
+		<< flatGenMax << " generation(s), " << endl
+		<< "\tmutation probability is multiplied by " << pMutUp
+		<< " else by " << pMutDown << '.' << endl
+		<< "\tthere is a progress between two consecutive generations " << endl
+		<< "\tif the relative difference is greater than " << pMutThreshold;
+#else
+    pMutVarDesc << pMutInit << '/' << pMutRatio  << "curentGeneration";
+#endif
+#endif
+
+    // Division penaties description.
+#ifdef DIVPENALTY
+    divPenaltyDesc << '\t';
+#if DIVPENALTY==1
+    divPenaltyDesc << "if a tree is invalid, its fitness is incremented by "
+		   << divPenaltyInc;
+#elif DIVPENALTY==2
+    divPenaltyDesc << "if a tree is invalid, its fitness is multiplied by "
+		   << divPenaltyMult;
+#elif DIVPENALTY==3
+    divPenaltyDesc << "if a tree is invalid, its fitness is multiplied by " << endl
+		   << "\t(1-t)*" << divPenaltyProgInit << " + t*" << divPenaltyProgFinal
+		   << " where t stands for currentGeneration/nbGen.";
+#elif DIVPENALTY==4
+    divPenaltyDesc << "if a tree is invalid, its fitness is multiplied by " << endl
+		   << "\t(1-t)*" << divPenaltyProgInit << " + t*" << divPenaltyProgFinal
+		   << " where t is the maximum between" << endl
+		   << "\t1 and previousNbPenalizedTree" << " / ("
+		   << EA->population->offspringPopulationSize << '*'
+		   << nbInvalidTreePenaltyThreshold << ')';
+#elif DIVPENALTY==5
+    divPenaltyDesc << "If a tree is invalid it is replaced by a new one";
+#else
+    divPenaltyDesc << "if a tree is invalid, its fitness is set to "
+		   << divPenaltyKill << '.';
+#endif
+#endif
+
+    // Fitness descritption.
+#ifdef FITNESS
+#if FITNESS==1
+    fitnessDesc << "the fitness is the sum of sqrt(abs(ERROR))." << endl;
+#elif FITNESS==2
+    fitnessDesc << "the fitness is the sum of abs(ERROR)." << endl;
+#elif FITNESS==3
+    fitnessDesc << "the fitness is the sum of ERROR*ERROR." << endl;
+#elif FITNESS==4
+    fitnessDesc << "the fitness is the square root of the sum of sqrt(abs(ERROR))." << endl;
+#elif FITNESS==5
+    fitnessDesc << "the fitness is the square root of the sum of abs(ERROR)." << endl;
+#else
+    fitnessDesc << "the fitness is the square root of the sum of ERROR*ERROR." << endl;
+#endif
+#else
+    fitnessDesc << "the fitness is the square root of the sum of ERROR*ERROR." << endl;
+#endif
+    fitnessDesc  << "\tWhere ERROR stands for the difference between the aim " << endl
+		 << "\toutput and the result of the evaluation of the tree.";
+
+    // Mutator description.
+#ifdef MUTATOR
+#if MUTATOR==1
+    mutatorDesc << "The mutation consists in: " << endl
+		<< "\tthe selection of a node, and replacing its opcode with " << endl
+		<< "\tanother of the same arity, if the node is an ERC, the " << endl
+		<< "\tvalue is changed by adding a gaussian value. " << endl
+		<< "\tThe selection consists in: " << endl
+		<< "\tchoosing an height (not a depth) and choosing a node " << endl
+		<< "\tamong those at this height.";
+#elif MUTATOR==2
+    mutatorDesc << "The mutation consists in: " << endl
+		<< "\tthe selection of an ERC node, and changing its value" << endl
+		<< "\tby adding a gaussian value of mean 0" << endl
+		<< "\tand standard deviation the current value.";
+#elif MUTATOR==3
+    mutatorDesc << "The mutation consists in: " << endl
+		<< "\trandomly choose some nodes to be mutated "<< endl
+		<< "\t(mutation probability is per gene) " << endl
+		<< "\tand replace each opCode with one of the same arity" << endl
+		<< "\tor add a gaussian value if it is an ERC." << endl
+		<< "\tThe selection consists in: " << endl
+		<< "\trandomly choosing the number of nodes to be mutated and" << endl
+		<< "\tfor each node, select the height and a node at this height." << endl;
+#elif MUTATOR==4
+    mutatorDesc << "The mutation consists in: " << endl
+		<< "\tfor each node, randomly determine if it will be mutated " << endl
+		<< "\t(there is a probability of mutation per gene) " << endl
+		<< "\tand if it is, change its opCode with one of the same arity" << endl
+		<< "\tor add a gaussian value if it is an ERC." << endl;
+#else
+    mutatorDesc << "The mutation consists in: " << endl
+		<< "\tselecting a node and replacing it by a random tree." << endl
+		<< "\tcreated with initialization of initialization.add" << endl
+		<< "\tThe selection consists in: " << endl
+		<< "\tchoosing an height and a node among those at this height.";
+#endif
+#else
+    mutatorDesc << "The mutation consists in: " << endl
+		<< "\tselecting a node and replacing it by a random tree." << endl
+		<< "\tcreated with Ogier initialization" << endl
+		<< "\tThe selection consists in: " << endl
+		<< "\tchoosing a depth and a node among those at this depth.";
+#endif
+
+}
+
+/////////////////////// END DESCRIPTION ////////////////////////
+
+////////////////// BEGIN PRINT PARAMETERS //////////////////
+
+void print_prm(){
+    std::cout << endl << "PARAMETERS LIST:" << endl << endl;
+    std::cout << "number of fitness cases: " << NO_FITNESS_CASES << endl;
+
+    std::cout << "used file(s): " << FILENAME1;
+#ifdef FILES2
+    std::cout << " and " << FILENAME2;
+#endif
+    std::cout << endl;
+
+#ifdef NORMALIZE
+    std::cout << "normalized input file: yes" << endl;
+#else
+    std::cout << "normalized input file: no" << endl;
+#endif
+
+    std::cout << "seed: " << EA->params->seed << endl;
+    std::cout << "size of parent population: " << EA->population->parentPopulationSize << endl;
+    std::cout << "size of offspring population: " << EA->population->offspringPopulationSize << endl;
+    std::cout << "number of generation: " << EA->params->nbGen << endl;
+    std::cout << "selection pressure: " << EA->population->selectionPressure << endl;
+    std::cout << "reduction pressure: " << EA->population->replacementPressure << endl;
+    std::cout << "trees' maximum depth: " << TREE_DEPTH_MAX << endl;
+    std::cout << "crossover probability: " << EA->population->pCrossover << endl;
+
+#ifdef PMUTVAR
+    std::cout << "mutation probability: " << pMutVarDesc.str() << endl;
+#else
+    std::cout << "mutation probability: " << EA->population->pMutation << endl;
+#endif
+
+    std::cout << mutatorDesc.str() << endl;
+    std::cout << fitnessDesc.str() << endl;
+    std::cout << "initial trees' maximum depth: " << INIT_TREE_DEPTH_MAX << endl;
+    std::cout << "initial trees' minimum depth: " << INIT_TREE_DEPTH_MIN << endl;
+
+    std::cout << "used operators: ";
+    for (int i = VAR_LEN; i < OPCODE_SIZE-1; i++){
+	std::cout << opCodeName[i] << ", ";
+    }
+    std::cout << opCodeName[OPCODE_SIZE-1] << endl;
+    
+#ifdef DIVPENALTY
+    std::cout << "division test perform at each generation: yes" << endl;
+    std::cout << divPenaltyDesc.str() << endl;
+#elif defined DIVISION
+    std::cout << "division test perform at each generation: no" << endl;
+#endif
+
+    std::cout << endl << endl;
+}
+
+/////////////////// END PRINT PARAMETERS ///////////////////
+
+///////////////// BEGIN STRING MATLAB //////////////////////
+
+void toStringMatlab_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+
+#ifdef DIVISION
+    if ((int)root->opCode == OP_DIV) {
+	(*oss) << "protectedDiv(";
+	toStringMatlab_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << ", ";
+	toStringMatlab_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
+	(*oss) << ')';
+    } else
+#endif
+
+	if ((int)root->opCode == OP_MUL) {
+	int opCode0 = (int)root->children[0]->opCode;
+	int opCode1 = (int)root->children[1]->opCode;
+	if (opCode0 == OP_ADD || opCode0 == OP_SUB) (*oss) << '(';
+	toStringMatlab_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	if (opCode0 == OP_ADD || opCode0 == OP_SUB) (*oss) << ')';
+	(*oss) << ' ';
+	(*oss) << opCodeName[(int)root->opCode];
+	(*oss) << ' ';
+	if (opCode1 == OP_ADD || opCode1 == OP_SUB) (*oss) << '(';
+	toStringMatlab_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
+	if (opCode1 == OP_ADD || opCode1 == OP_SUB) (*oss) << ')';
+    } else if ((int)root->opCode == OP_ADD) {
+	toStringMatlab_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << ' ';
+	(*oss) << opCodeName[(int)root->opCode];
+	(*oss) << ' ';
+	toStringMatlab_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
+    } else if ((int)root->opCode == OP_SUB) {
+	int opCode1 = (int)root->children[1]->opCode;
+	toStringMatlab_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << ' ';
+	(*oss) << opCodeName[(int)root->opCode];
+	(*oss) << ' ';
+	if (opCode1 == OP_ADD || opCode1 == OP_SUB) (*oss) << '(';
+	toStringMatlab_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
+	if (opCode1 == OP_ADD || opCode1 == OP_SUB) (*oss) << ')';
+    
+#ifdef SINCOS
+    } else if ((int)root->opCode == OP_SIN || (int)root->opCode == OP_COS) {
+	(*oss) << opCodeName[(int)root->opCode] << '(';
+	toStringMatlab_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << ')';
+#endif
+
+    } else if ((int)root->opCode == OP_ERC){
+	(*oss) << root->erc_value;
+    }else {
+	(*oss) << opCodeName[(int)root->opCode];
+    }
+}
+
+
+std::string toStringMatlab(GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+    std::ostringstream oss;
+
+    toStringMatlab_r(&oss,root,opArity,opCodeName,OP_ERC);
+
+    return oss.str();
+}
+
+std::string toStringMatlab(GPNode* root){
+  return toStringMatlab(root,opArity,opCodeName,OP_ERC);
+}
+
+///////////////////// END STRING MATLAB /////////////////////////
+
+//////////////////// BEGIN STRING LATEX //////////////////////////
+
+void toStringLatex_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+
+    int code = (int)root->opCode;
+
+#ifdef DIVISION
+    if (code == OP_DIV) {
+	(*oss) << "\\frac{";
+	toStringLatex_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << "}{";
+	toStringLatex_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
+	(*oss) << '}';
+    } else
+#endif
+
+    if (code == OP_MUL) {
+	int opCode[2] = {(int)root->children[0]->opCode, (int)root->children[1]->opCode};
+	
+	for (int i = 0; i < 2; i++) {
+	    if (opCode[i] == OP_ERC) {
+		toStringLatex_r(oss,root->children[i],opArity,opCodeName,OP_ERC);
+		if (opCode[(i+1)%2] == OP_MUL || opCode[(i+1)%2] == OP_ERC) (*oss) << " * ";
+		else if (opCode[(i+1)%2] == OP_ADD || opCode[(i+1)%2] == OP_SUB) (*oss) << "\\left(";
+		toStringLatex_r(oss,root->children[(i+1)%2],opArity,opCodeName,OP_ERC);
+		if (opCode[(i+1)%2] == OP_ADD || opCode[(i+1)%2] == OP_SUB) (*oss) << "\\right)";
+		return;
+	    }
+	}
+	
+	for (int i = 0; i < 2; i++) {
+	    if (opCode[i] == OP_ADD || opCode[i] == OP_SUB) {
+		(*oss) << "\\left(";
+		toStringLatex_r(oss,root->children[i],opArity,opCodeName,OP_ERC);
+		(*oss) << "\\right)";
+		if (opCode[(i+1)%2] == OP_ADD || opCode[(i+1)%2] == OP_SUB) (*oss) << "\\left(";		
+		toStringLatex_r(oss,root->children[(i+1)%2],opArity,opCodeName,OP_ERC);
+		if (opCode[(i+1)%2] == OP_ADD || opCode[(i+1)%2] == OP_SUB) (*oss) << "\\right)";
+		return;
+	    }
+	}
+	
+#ifdef SINCOS
+	if (opCode[0] == OP_SIN || opCode[0] == OP_COS) {
+	    toStringLatex_r(oss,root->children[1],opArity,opCodeName,OP_ERC);         
+	    (*oss) << opCodeName[opCode[0]] << "\\left(";
+	    toStringLatex_r(oss,root->children[0],opArity,opCodeName,OP_ERC);         
+	    (*oss) << "\\right)";
+	    return;
+	    }
+#endif
+       
+	toStringLatex_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	toStringLatex_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
+
+    } else if (code == OP_SUB) {
+	int opCode1 = (int)root->children[1]->opCode;
+	toStringLatex_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << " - ";
+	if (opCode1 == OP_ADD || opCode1 == OP_SUB) (*oss) << "\\left(";
+	toStringLatex_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
+	if (opCode1 == OP_ADD || opCode1 == OP_SUB) (*oss) << "\\right)";
+	
+    } else if (code == OP_ADD) {
+	toStringLatex_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << " + ";
+	toStringLatex_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
+
+#ifdef SINCOS	
+    } else if (code == OP_SIN) {
+	(*oss) << "\\sin\\left(";
+	toStringLatex_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << "\\right)";
+	
+    } else if (code == OP_COS) {
+	(*oss) << "\\cos\\left(";
+	toStringLatex_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
+	(*oss) << "\\right)";
+#endif
+	
+    } else if (code == OP_ERC){
+	(*oss) << root->erc_value;
+    } else {
+       	if (code == OP_PHI) (*oss) << "\\phi ";
+	else if (code == OP_PSI) (*oss) << "\\psi ";
+	else if (code == OP_TETA) (*oss) << "\\theta ";
+	else if (code == OP_DPHI) (*oss) << "\\dot{\\phi}";
+	else if (code == OP_DPSI) (*oss) << "\\dot{\\psi}";
+	else if (code == OP_DTETA) (*oss) << "\\dot{\\theta}";
+	else if (code == OP_U1) (*oss) << "u_1";
+	else if (code == OP_U2) (*oss) << "u_2";
+	else if (code == OP_U3) (*oss) << "u_3";
+	else if (code == OP_U4) (*oss) << "u_4";
+    }
+    
+}
+
+std::string toStringLatex(GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+    std::ostringstream oss;
+
+    toStringLatex_r(&oss,root,opArity,opCodeName,OP_ERC);
+
+    return oss.str();
+}
+
+std::string toStringLatex(GPNode* root){
+    return toStringLatex(root,opArity,opCodeName,OP_ERC);
+}
+
+/////////////////////// END STRING LATEX ////////////////////////////
+
+/////////////////////// BEGIN PRINT SOLUTION ///////////////////////
+
+void printSolution() {
+
+    std::cout << endl << "solution found: " << endl;
+    std::cout << toStringMatlab(((IndividualImpl*)EA->population->Best)->root) << std::endl;
+    
+#ifdef DIVISION
+#ifdef NORMALIZE
+    double alpha, beta;
+    // see dividionTest.add
+    if (isDivisionValid(((IndividualImpl*)EA->population->Best)->root, opArity, false, &alpha, &beta))
+	std::cout << endl << "this tree is valid for division" << endl;
+    else 
+	std::cout << endl << "DIVISION BY ZERO" << endl;
+#else
+    std::cout << endl 
+	      << "This tree has not been tested for division because the inputs are not normalized"
+	      << endl;
+#endif
+#endif
+
+#ifdef NORMALIZE
+    std::cout << endl << "solution normalized: " << endl;
+    std::cout << toStringMatlab(createNormalizedTree(((IndividualImpl*)EA->population->Best)->root, opArity, normalizationCoeff)) << std::endl; 
+#endif
+    
+    std::cout << endl << "function for LaTeX: " << endl;
+    std::cout << toStringLatex(((IndividualImpl*)EA->population->Best)->root) << std::endl;
+
+#ifdef FILEOUT
+
+    char* date = (char*) malloc(100*sizeof(char));
+    time_t now;
+
+    if ( ((int) strftime(date, 100, "%Y%m%d%H%M%S", localtime(&now)) ) == 0 ) {
+	perror("erreur dans la création de la date pour le nom du fichier de sortie");
+	//exit(10);
+    }
+
+    printf("date: %s\n", date);
+
+    char* fileName = (char*)malloc(250*sizeof(char));
+    snprintf(fileName, 250, "out%s.csv", date);
+
+    //std::ofstream outFile(fileName);
+    FILE* outFile = fopen(fileName, "w");
+
+    int finalPopSize = EA->population->parentPopulationSize;
+    IndividualImpl** finalPop = (IndividualImpl**)EA->population->parents;
+    for (int i = 0; i < finalPopSize; i++) {
+	
+	std::string str = toStringMatlab(finalPop[i]->root);
+	const char* indStr = str.c_str();
+	
+	fprintf(outFile, "%f;%d;%s\n",
+		finalPop[i]->fitness,
+		nbOfNodes(finalPop[i]->root),
+		indStr);
+
+	/*outFile << finalPop[i]->fitness << ";"
+		<< nbOfNodes(finalPop[i]->root) << ";"
+		<< toStringMatlab(finalPop[i]->root) << endl;*/
+
+    }
+    
+    //outFile.close();                                                                  
+    fclose(outFile);
+
+#endif
+
+}
+
+///////////////////////// END PRINT SOLUTION ///////////////////////

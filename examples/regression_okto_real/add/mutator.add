@@ -1,0 +1,238 @@
+#if MUTATOR==1
+/////////////////////// BEGIN MUTATOR 1 /////////////////////////
+/* Change the opCode of a node in the tree. The arity remains the same,
+   so a binary operator just change for another and a variable is
+   replaced by another.
+   The ERC is a particular case because a gaussian value is added to it.
+*/
+
+int mutator1(GPNode* root) {
+
+    // The node which will be mutated is selected.
+    GPNode* mutationNode = selectNode1(root);
+
+    char code = mutationNode->opCode;
+    char nCode;
+
+    //printf("ancient op code: %d\n", mutationNode->opCode);
+
+    // The particular case of ERC is treated.
+    if (code == OP_ERC) {
+	mutationNode->erc_value += globalRandomGenerator->random_gauss(0, mutationNode->erc_value);
+	//printf("new ERC: %f\n", mutationNode->erc_value);
+	return 1;
+    }
+
+    // General case:
+    // An opCode is randomly choosen until it is valid AND different.
+    do {
+	if (opArity[(int)code] == 0) {
+	    nCode = globalRandomGenerator->random(0, VAR_LEN-1);
+	} else {
+	    nCode = globalRandomGenerator->random(VAR_LEN, OPCODE_SIZE);
+	}
+    } while (code == nCode || opArity[(int)code] != opArity[(int)nCode]);
+    
+    // nCode is a different but compatible opCode.
+    // The selected node is mutated by changing the opCode.
+    mutationNode->opCode = nCode;
+    //printf("new op code: %d\n", mutationNode->opCode);
+    return 1;
+
+}
+//////////////////////// END MUTATOR 1 //////////////////////////
+#endif
+
+#if MUTATOR==2
+/////////////////////// BEGIN MUTATOR 2 /////////////////////////
+/* Select an ERC node if any and add a gaussian value to the current value
+   of the ERC. Gaussian has a mean of 0 and a standard devaition of the
+   current value of the ERC.
+*/
+
+int mutator2(GPNode* root) {
+
+    // The node which will be mutated is selected.
+    GPNode* mutationNode = selectERCNode(root);
+
+    if (!mutationNode) return 0;
+
+    if (mutationNode->opCode == OP_ERC) {
+	mutationNode->erc_value += globalRandomGenerator->random_gauss(0, mutationNode->erc_value);
+	//printf("new ERC: %f\n", mutationNode->erc_value);
+	return 1;
+    } else return 0; // Should not happen.
+
+}
+//////////////////////// END MUTATOR 2 //////////////////////////
+#endif
+
+#if MUTATOR==3
+/////////////////////// BEGIN MUTATOR 3 /////////////////////////
+/* Randomly choose the number of mutation and then randomly choose
+   the nodes which will be mutated.
+   The mutation is a change of the opcode for another with the same arity,
+   or a gaussian mutation if the node is an ERC.
+*/
+
+int mutator3(GPNode* root, float pMutPerGene) {
+
+    int nbNodes = nbOfNodes(root);
+    int nbMutation = 0;
+
+    for (int i = 0; i < nbNodes; i++) {
+	if (globalRandomGenerator->tossCoin(pMutPerGene)) nbMutation++;
+    }
+
+    for (int i = 0; i < nbMutation; i++) {
+	GPNode* mutationNode = selectNode1(root);
+
+	char code = mutationNode->opCode;
+	char nCode;
+
+	//printf("ancient op code: %d\n", mutationNode->opCode);
+
+	// The particular case of ERC is treated.
+	if (code == OP_ERC) {
+	    mutationNode->erc_value += globalRandomGenerator->random_gauss(0, mutationNode->erc_value);
+	    //printf("new ERC: %f\n", mutationNode->erc_value);
+	    continue;
+	}
+
+	// General case:
+	// An opCode is randomly choosen until it is valid AND different.
+	do {
+	    if (opArity[(int)code] == 0) {
+		nCode = globalRandomGenerator->random(0, VAR_LEN-1);
+	    } else {
+		nCode = globalRandomGenerator->random(VAR_LEN, OPCODE_SIZE);
+	    }
+	} while (code == nCode || opArity[(int)code] != opArity[(int)nCode]);
+    
+	// nCode is a different but compatible opCode.
+	// The selected node is mutated by changing the opCode.
+	mutationNode->opCode = nCode;
+	//printf("new op code: %d\n", mutationNode->opCode);
+    }
+
+    return nbMutation;
+
+}
+//////////////////////// END MUTATOR 3 /////////////////////////
+#endif
+
+#if MUTATOR==4
+/////////////////////// BEGIN MUTATOR 4 ////////////////////////
+/* Each node in root is mutated with a probability of
+   pMutPerGene.
+   The mutation is a change of the opcode for another with the
+   same arity, or a gaussian mutation if the node is an ERC.
+*/
+int mutator4(GPNode* root, float pMutPerGene) {
+
+    int nbNodes = nbOfNodes(root);
+    GPNode** nodes = (GPNode**)malloc(nbNodes*sizeof(GPNode*));
+    int collected = 0; // Mandatory variable for collectAllNodes().
+                   // Should be equal to nbNodes when the function returns.
+    int nbMutation = 0;
+
+    // Collect the nodes.
+    collectAllNodes(root, &nodes, &collected);
+    
+    for (int i = 0; i < collected; i++) {
+	if (!globalRandomGenerator->tossCoin(pMutPerGene)) continue;
+	
+	char code = nodes[i]->opCode;
+	char nCode;
+
+	nbMutation++;
+	//printf("ancient op code: %d\n", nodes[i]->opCode);
+
+	// The particular case of ERC is treated.
+	if (code == OP_ERC) {
+	    nodes[i]->erc_value += globalRandomGenerator->random_gauss(0, nodes[i]->erc_value);
+	    //printf("new ERC: %f\n", nodes[i]->erc_value);
+	    continue;
+	}
+
+	// General case:
+	// An opCode is randomly choosen until it is valid AND different.
+	do {
+	    if (opArity[(int)code] == 0) {
+		nCode = globalRandomGenerator->random(0, VAR_LEN-1);
+	    } else {
+		nCode = globalRandomGenerator->random(VAR_LEN, OPCODE_SIZE);
+	    }
+	} while (code == nCode || opArity[(int)code] != opArity[(int)nCode]);
+    
+	// nCode is a different but compatible opCode.
+	// The selected node is mutated by changing the opCode.
+	nodes[i]->opCode = nCode;
+	//printf("new op code: %d\n", nodes[i]->opCode);
+    }
+
+    free(nodes);
+
+    return nbMutation;
+
+}
+//////////////////////// END MUTATOR 4 /////////////////////////
+#endif
+
+#if MUTATOR==5
+/////////////////////// BEGIN MUTATOR 5 ///////////////////////
+/* Select a height, a node at this height and replace it by a
+   new randomly created node which cannot be too deep.
+*/
+int mutator5(GPNode* root) {
+
+    // The node which will be mutated is selected.
+    GPNode* mutationNode = selectNode1(root);
+
+    // Gets the depth of the node which will be mutated.
+    int depth = depthOfNodeInTree(root, mutationNode);
+    if (depth <= 0 || depth > TREE_DEPTH_MAX) return 0; // Should not happen.
+
+    // Replaces the node by a random one.
+    GPNode* nNode = initializer(0.5, 1, TREE_DEPTH_MAX-depth+1);
+    delete mutationNode->children[0];
+    delete mutationNode->children[1];
+    mutationNode->opCode = nNode->opCode;
+    mutationNode->erc_value = nNode->erc_value;
+    mutationNode->children[0] = nNode->children[0];
+    mutationNode->children[1] = nNode->children[1];
+    nNode->children[0] = NULL;
+    nNode->children[1] = NULL;
+    delete nNode;
+
+    return 1;
+}
+//////////////////////// END MUTATOR 5 ////////////////////////
+#endif
+
+/////////////////////// BEGIN MUTATOR ///////////////////////////
+int mutator(IndividualImpl* Genome, float pMutPerGene) {
+
+    //GPNode* root = new GPNode(*(Genome->root));
+
+    int nbMutation = 0;    
+#if MUTATOR==1
+    nbMutation = mutator1(Genome->root);
+#elif MUTATOR==2
+    nbMutation = mutator2(Genome->root);
+#elif MUTATOR==3
+    nbMutation = mutator3(Genome->root, pMutPerGene);
+#elif MUTATOR==4
+    nbMutation = mutator4(Genome->root, pMutPerGene);
+#else
+    nbMutation = mutator5(Genome->root);
+#endif
+
+    //mut += nbMutation;
+    //if (GPNodeCompare(root, Genome->root)) mutClone++;
+    //delete root;
+    
+    return nbMutation;
+
+}
+/////////////////////// END MUTATOR /////////////////////////////
