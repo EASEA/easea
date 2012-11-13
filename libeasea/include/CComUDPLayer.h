@@ -26,6 +26,8 @@
 #include <omp.h>
 #endif
 #include <string>
+#include <list>
+#include <set>
 
 #define _MULTI_THREADED
 #define MAXINDSIZE 50000 /*maximum size of an individual in number of characters*/
@@ -59,6 +61,27 @@ private:
 	pthread_t thread;
 	int Socket;
 };
+
+class CComFileServer{
+  public:
+	int debug;
+	RECV_DATA *data;
+	int nb_data;
+	static void * File_server_thread(void *parm);
+	CComFileServer(char *path, char *expname, int dbg);
+	std::string workername;
+	std::string fullpath;
+	std::set<std::string> processed_files;
+	std::list<std::string> worker_list;
+  private:
+	pthread_t thread;
+	long wait_time;
+	int create_ind_repository();
+	int determine_worker_name(int start=1);
+	int refresh_worker_list();
+};
+
+	
 
 class CComUDPClient {
 

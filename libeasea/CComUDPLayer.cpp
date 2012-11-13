@@ -1,7 +1,14 @@
 #include "include/CComUDPLayer.h"
 #ifndef WIN32
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <net/if.h>
+#include <sstream>
+#include <sys/types.h>
+#include <dirent.h>
+#include <error.h>
+#include <errno.h>
+
 #else
 #include <winsock.h>
 #include <winsock2.h>
@@ -402,3 +409,120 @@ CComUDPClient** parse_file(const char* file_name, unsigned* p_no_client, int por
     delete[] client_addr;
     return clients;
 }
+
+
+
+
+
+int CComFileServer::refresh_worker_list()
+{
+  // read the directory list, each folder is a worker
+  worker_list.clear();
+  
+  // taken from GNU C manual
+  
+  DIR *dp;
+  struct dirent *ep;
+     
+  dp = opendir (fullpath.c_str());
+  if (dp != NULL)
+  {
+       while ((ep = readdir (dp)))
+       {
+	 //only take into account folders
+	 if(ep->d_type == DT_DIR)
+	 {  
+	      string s(ep->d_name);
+              worker_list.push_back(s);
+	      if(debug)
+		printf("Worker %s added to the list\n",s.c_str());
+	 }
+       } 
+       (void) closedir (dp);
+  }      
+  else
+  {  
+       printf ("Cannot scan the experiment directory for find workers");
+       return -1;
+  }      
+  return 0;
+}
+
+
+
+
+int CComFileServer::determine_worker_name(int start)
+{
+  
+  // scan experiment directory to find a suitable worker name
+  while(1)
+  {
+      std::stringstream s;
+      s << fullpath << "/worker_" << start;
+  
+      int result = mkdir( s.str().c_str(),0777);
+    
+    // check error condition
+    
+      if(result == 0)
+      {
+	  if(debug)printf("Experiment worker folder sucessfuly created, the path is %s\n", fullpath.c_str());
+	  workername = s.str();
+	  break;
+      }	
+      // worker already in use, increase worker number
+      else if(result!= EEXIST)
+	start++;
+      
+      else
+      {
+	  printf("Cannot create worker experiment folder; check user permissions or disk space");
+	  return -1;
+      }
+  }
+  return 0;
+}
+
+CComFileServer::CComFileServer(char *expname, char *path, int dg) {
+  
+    std::string exp(expname);
+    std::string pathname(path);
+    fullpath = pathname + expname + '/';
+    
+    
+    struct sockaddr_in ServAddr; /* Local address */
+    debug = dg;
+    this->nb_data = 0;
+    this->data = (RECV_DATA*)calloc(1,sizeof(RECV_DATA));
+
+    // create the main directory
+    
+    int result = mkdir(fullpath.c_str(),0777);
+    
+    // check error condition
+    
+    if(result!=0 && result!= EEXIST)
+    {
+        printf("Cannot create experiment folder; check user permissions or disk space");
+	exit(1);
+    }
+    else if(debug)
+    {
+        
+	printf("Experiment folder %s, the path is %s\n", (result==0 ? "created" : "exits already"), fullpath.c_str());
+    }
+    
+    // now determine the worker name, that is, the directory where where
+    // the server will "listen" to new files
+    
+    if(determine_worker_name() != 0)
+    {
+        printf("Cannot create experiment worker folder; check user permissions or disk space");
+	exit(1);
+    }
+    
+    // now create thread to listen for incoming files
+    if(pthread_create(&thread, NULL, &CComFileServer::File_server_thread, (void *)NULL) != 0) {
+        printf("pthread create failed. exiting\n"); exit(1);
+    }
+};
