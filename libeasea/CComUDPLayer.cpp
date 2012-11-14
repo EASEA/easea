@@ -8,7 +8,7 @@
 #include <dirent.h>
 #include <error.h>
 #include <errno.h>
-
+#include <fcntl.h>
 #else
 #include <winsock.h>
 #include <winsock2.h>
@@ -67,7 +67,7 @@ void * CComUDPServer::UDP_server_thread(void *parm) {
 		/*reset receiving buffer*/
 		memset(buffer,0,MAXINDSIZE);
    }
-};
+}
 
 CComUDPServer::CComUDPServer(unsigned short port, int dg) {
     struct sockaddr_in ServAddr; /* Local address */
@@ -460,7 +460,7 @@ int CComFileServer::refresh_file_list()
   struct dirent *ep;
   
   std::string workerpath = fullpath + '/' + workername + '/';
-  std::list<string>::iterator it;   
+  std::set<string>::iterator it;   
   dp = opendir (workerpath.c_str());
   if (dp != NULL)
   {
@@ -531,7 +531,6 @@ CComFileServer::CComFileServer(char *expname, char *path, int dg) {
     fullpath = pathname + expname + '/';
     
     
-    struct sockaddr_in ServAddr; /* Local address */
     debug = dg;
     this->nb_data = 0;
     this->data = (RECV_DATA*)calloc(1,sizeof(RECV_DATA));
@@ -563,33 +562,44 @@ CComFileServer::CComFileServer(char *expname, char *path, int dg) {
     }
     
     // now create thread to listen for incoming files
-    if(pthread_create(&thread, NULL, &CComFileServer::File_server_thread, (void *)NULL) != 0) {
+    if(pthread_create(&thread, NULL, &CComFileServer::File_server_thread, (void *)this) != 0) {
         printf("pthread create failed. exiting\n"); exit(1);
     }
 }
 
 
-int CComFileServer::determine_file_name(ofstream &out, int dest)
+int CComFileServer::determine_file_name(FILE *&fp, int dest)
 {
-    ifstream checkfile;
     while(1)
     {
         time_t tstamp = time(NULL);
 	std::stringstream s;
 	s << fullpath << '/' << worker_list[dest] << "/individual_" << tstamp << ".txt";
 	string fullfilename = s.str();
-	checkfile.open(fullfilename.c_str());
-	if(checkfile.is_open())
-	{
-	    checkfile.close();
-	    continue;
-	}   
+	
+	
+	int fd;
+ 
+	/* initialize file_name and new_file_mode */
+	
+	
+	// try to open the file in exclusive mode
+	fd = open( fullfilename.c_str(), O_CREAT | O_EXCL | O_WRONLY);
+	if (fd != -1) {
+	        //associate with file
+	  	fp = fdopen(fd, "w");
+		if (fp != NULL) {
+		   if(debug)
+		     printf("Create file for sending individual %s \n :", fullfilename.c_str());
+		   break;
+		}
+		else return -1;
+	}
 	else
 	{
-	    
-	  out.open(fullfilename.c_str());
-	  if( !out.is_open() )return -1;
-	  else break;
+	    if(debug)
+	      printf("Failed to create filename %s failed, trying another name \n :", fullfilename.c_str());
+	    continue;
 	}  
     }
     return 0;
@@ -598,6 +608,8 @@ int CComFileServer::determine_file_name(ofstream &out, int dest)
 int CComFileServer::send_file(char *buffer, int dest)
 {
      //first thing, prevent send to myself
+     FILE *outputfile;
+     
      if(workername == worker_list[dest])
      {
         if(debug)
@@ -606,21 +618,21 @@ int CComFileServer::send_file(char *buffer, int dest)
      }
      
      // determine the name to send a file
-     ofstream outputfile;
      
      if( determine_file_name(outputfile, dest) )
      {
-	  outputfile << buffer;
-	  outputfile.close();
+	  fputs(buffer,outputfile);
+	  fclose(outputfile);
      }
      else
      {
         printf("Cannot write individual to file in path %s/%s", fullpath.c_str(), workername.c_str() ); 
      }
+     return 0;
 }
 
 
-int CComFileServer::file_read(char *filename, char *&buffer)
+int CComFileServer::file_read(const char *filename)
 {
     std::string workerfile(filename);
     std::string fullfilename = fullpath + '/' + workername + '/' + workerfile;
@@ -644,11 +656,9 @@ int CComFileServer::file_read(char *filename, char *&buffer)
     return 0;
 }
 
-
-void * CComFileServer::File_server_thread(void *parm) {
-        char buffer[MAXINDSIZE];
-        unsigned int recvMsgSize;
-        for(;;) {/*forever loop*/
+void CComFileServer::run()
+{
+       for(;;) {/*forever loop*/
 	  
 		// check for new files
 		if(refresh_file_list() == 0)
@@ -656,11 +666,11 @@ void * CComFileServer::File_server_thread(void *parm) {
 		    std::list<string>::iterator it;
 		    for(it= new_files.begin(); it != new_files.end(); it++)
 		    {
-		      if(file_read((*it).c_str(),buffer))
+		      if(file_read((*it).c_str()))
 		      {
-			  if(p->debug) {
+			  if(debug) {
 			      printf("Reading file %s sucescully\n", (*it).c_str());
-			      printf("\nData entry[%i]\n",*p->nb_data);
+			      printf("\nData entry[%i]\n",nb_data);
 			      printf("Received the following:\n");
 			      printf("%s\n",buffer);
 			      printf("%d\n",(int)strlen(buffer));
@@ -669,10 +679,10 @@ void * CComFileServer::File_server_thread(void *parm) {
 			// blocking call
 			pthread_mutex_lock(&server_mutex);
 			/*process received data */
-			memmove(p->data[(*p->nb_data)].data,buffer,sizeof(char)*MAXINDSIZE);
-			(*p->nb_data)++;
+			memmove(data[nb_data].data,buffer,sizeof(char)*MAXINDSIZE);
+			nb_data++;
 		//	printf("address %p\n",(p->data));
-			p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
+			data = (RECV_DATA*)realloc(data,sizeof(RECV_DATA)*(nb_data+1));
 		//	printf("address %p\n",(p->data));
 			pthread_mutex_unlock(&server_mutex);
 			/*reset receiving buffer*/
@@ -690,8 +700,13 @@ void * CComFileServer::File_server_thread(void *parm) {
 		}  
 		// we should wit some time after 
 		sleep(wait_time);
-		  
 	}
+}
+
+void * CComFileServer::File_server_thread(void *parm) {
+	CComFileServer *server = (CComFileServer*)parm;
+	server->run();
+	return NULL;
 }	
 		  
 	  

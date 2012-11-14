@@ -75,16 +75,18 @@ class CComFileServer{
 	std::set<std::string> processed_files;
 	std::vector<std::string> worker_list;
 	std::list<std::string> new_files;
+	char buffer[MAXINDSIZE];
   private:
 	pthread_t thread;
 	long wait_time;
 	int create_ind_repository();
 	int determine_worker_name(int start=1);
-	int determine_file_name(std::ofstream &, int);
+	int determine_file_name(FILE*& fp, int dest);
 	int refresh_worker_list();
 	int refresh_file_list();
-	int file_read(char *filename, char *&buffer);
+	int file_read(const char* filename);
 	int send_file(char *buffer, int dest);
+	void run();
 };
 
 
