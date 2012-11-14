@@ -28,6 +28,7 @@
 #include <string>
 #include <list>
 #include <set>
+#include <vector>
 
 #define _MULTI_THREADED
 #define MAXINDSIZE 50000 /*maximum size of an individual in number of characters*/
@@ -72,14 +73,20 @@ class CComFileServer{
 	std::string workername;
 	std::string fullpath;
 	std::set<std::string> processed_files;
-	std::list<std::string> worker_list;
+	std::vector<std::string> worker_list;
+	std::list<std::string> new_files;
   private:
 	pthread_t thread;
 	long wait_time;
 	int create_ind_repository();
 	int determine_worker_name(int start=1);
+	int determine_file_name(std::ofstream &, int);
 	int refresh_worker_list();
+	int refresh_file_list();
+	int file_read(char *filename, char *&buffer);
+	int send_file(char *buffer, int dest);
 };
+
 
 	
 

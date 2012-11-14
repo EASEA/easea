@@ -449,6 +449,47 @@ int CComFileServer::refresh_worker_list()
 }
 
 
+int CComFileServer::refresh_file_list()
+{
+  // clear the file to process
+  new_files.clear();
+  
+  // taken from GNU C manual
+  
+  DIR *dp;
+  struct dirent *ep;
+  
+  std::string workerpath = fullpath + '/' + workername + '/';
+  std::list<string>::iterator it;   
+  dp = opendir (workerpath.c_str());
+  if (dp != NULL)
+  {
+       while ((ep = readdir (dp)))
+       {
+	 //only take into account folders
+	 if(ep->d_type == DT_REG)
+	 {  
+	      string s(ep->d_name);
+	      it = processed_files.find(s);
+	      // new file to be processed
+	      if(it == processed_files.end() )
+	      {
+		if(debug)printf("New file found in path %s : %s\n", workerpath.c_str(), s.c_str());
+		new_files.push_back(s);
+	      }
+	 }      
+      }
+      (void) closedir (dp);
+  }      
+  else
+  {  
+       printf ("Cannot scan the experiment directory for find workers");
+       return -1;
+  }      
+  return 0;
+}
+
+
 
 
 int CComFileServer::determine_worker_name(int start)
@@ -525,4 +566,133 @@ CComFileServer::CComFileServer(char *expname, char *path, int dg) {
     if(pthread_create(&thread, NULL, &CComFileServer::File_server_thread, (void *)NULL) != 0) {
         printf("pthread create failed. exiting\n"); exit(1);
     }
-};
+}
+
+
+int CComFileServer::determine_file_name(ofstream &out, int dest)
+{
+    ifstream checkfile;
+    while(1)
+    {
+        time_t tstamp = time(NULL);
+	std::stringstream s;
+	s << fullpath << '/' << worker_list[dest] << "/individual_" << tstamp << ".txt";
+	string fullfilename = s.str();
+	checkfile.open(fullfilename.c_str());
+	if(checkfile.is_open())
+	{
+	    checkfile.close();
+	    continue;
+	}   
+	else
+	{
+	    
+	  out.open(fullfilename.c_str());
+	  if( !out.is_open() )return -1;
+	  else break;
+	}  
+    }
+    return 0;
+}
+
+int CComFileServer::send_file(char *buffer, int dest)
+{
+     //first thing, prevent send to myself
+     if(workername == worker_list[dest])
+     {
+        if(debug)
+	    printf("I will not send the individual to myself, it is not a fatal error, so continue\n");
+        return 0;
+     }
+     
+     // determine the name to send a file
+     ofstream outputfile;
+     
+     if( determine_file_name(outputfile, dest) )
+     {
+	  outputfile << buffer;
+	  outputfile.close();
+     }
+     else
+     {
+        printf("Cannot write individual to file in path %s/%s", fullpath.c_str(), workername.c_str() ); 
+     }
+}
+
+
+int CComFileServer::file_read(char *filename, char *&buffer)
+{
+    std::string workerfile(filename);
+    std::string fullfilename = fullpath + '/' + workername + '/' + workerfile;
+    ifstream inputfile(fullfilename.c_str());
+    
+    if(inputfile.is_open())
+    {
+        // get individual
+	inputfile.getline(buffer,MAXINDSIZE);
+	inputfile.close();
+	// fail some read operation
+	if(inputfile.fail())
+	    return -1;
+	processed_files.insert(workerfile);
+	
+    }
+    else
+    {
+	return -1;
+    }
+    return 0;
+}
+
+
+void * CComFileServer::File_server_thread(void *parm) {
+        char buffer[MAXINDSIZE];
+        unsigned int recvMsgSize;
+        for(;;) {/*forever loop*/
+	  
+		// check for new files
+		if(refresh_file_list() == 0)
+		{
+		    std::list<string>::iterator it;
+		    for(it= new_files.begin(); it != new_files.end(); it++)
+		    {
+		      if(file_read((*it).c_str(),buffer))
+		      {
+			  if(p->debug) {
+			      printf("Reading file %s sucescully\n", (*it).c_str());
+			      printf("\nData entry[%i]\n",*p->nb_data);
+			      printf("Received the following:\n");
+			      printf("%s\n",buffer);
+			      printf("%d\n",(int)strlen(buffer));
+			  }
+			    
+			// blocking call
+			pthread_mutex_lock(&server_mutex);
+			/*process received data */
+			memmove(p->data[(*p->nb_data)].data,buffer,sizeof(char)*MAXINDSIZE);
+			(*p->nb_data)++;
+		//	printf("address %p\n",(p->data));
+			p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
+		//	printf("address %p\n",(p->data));
+			pthread_mutex_unlock(&server_mutex);
+			/*reset receiving buffer*/
+			memset(buffer,0,MAXINDSIZE);
+		      }
+		      else
+		      {
+			  printf("Error reading file %s , we will ignore it \n", (*it).c_str()); 
+		      }	
+		    }
+		}
+		else
+		{
+		     printf("Cannot get the list of files for this worker, we will try later again ...\n");
+		}  
+		// we should wit some time after 
+		sleep(wait_time);
+		  
+	}
+}	
+		  
+	  
+ 
