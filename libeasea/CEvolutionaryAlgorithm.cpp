@@ -140,11 +140,14 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	// INITIALIZE SERVER OBJECT ISLAND MODEL
 	if(params->remoteIslandModel){
 		this->treatedIndividuals = 0;
+		this->treatedFileIndividuals = 0;
 		this->numberOfClients = 0;
 		this->myClientNumber=0;	
+		fileserver = new CComFileServer(params->expId,params->working_path,  1);
 		this->initializeClients();
 		//if(params->remoteIslandModel)
 		server = new CComUDPServer(params->serverPort,0); //1 if debug
+		
 	}
 }
 
@@ -286,7 +289,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     if(params->remoteIslandModel){
 	this->receiveIndividuals();
     }
-
+    this->fileserver->refresh_worker_list();
     currentGeneration += 1;
   }
 //#ifdef __linux__
@@ -510,10 +513,12 @@ void CEvolutionaryAlgorithm::refreshClient(){
 
     cout << "ip file : " << this->params->ipFile << " contains " << no_client << " client ip(s)" << endl;
     this->numberOfClients = no_client;
+    fileserver->refresh_worker_list();
 }
 
 void CEvolutionaryAlgorithm::sendIndividual(){
 	//Sending an individual every n generations	
+
 	if(globalRandomGenerator->random(0.0,1.0)<=params->migrationProbability){
 	//if((this->currentGeneration+this->myClientNumber)%3==0 && this->currentGeneration!=0){
 		//cout << "I'm going to send an Individual now" << endl;
@@ -521,13 +526,18 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 		//unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
 	
 		//selecting a client randomly
-		int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
+		int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients + fileserver->number_of_workers());
 		//for(int client=0; client<this->numberOfClients; client++){
 		cout << "    Going to send an individual to client " << client << endl;
-		cout << "    His IP is " << this->Clients[client]->getIP() << " and his port is " << this->Clients[client]->getPort() <<endl;
 		//cout << "Sending individual " << index << " to client " << client << " now" << endl;
 		//cout << this->population->parents[index]->serialize() << endl;
-		this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
+		if(client < this->numberOfClients)
+		{
+		    cout << "    His IP is " << this->Clients[client]->getIP() << " and his port is " << this->Clients[client]->getPort() <<endl;
+		    this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
+		}    
+		else
+		    fileserver->send_file((char*)bBest->serialize().c_str(), client -this->numberOfClients);
 	}
 }
 
@@ -560,6 +570,38 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 			this->treatedIndividuals++;
 		}
 	}
+	
+	// now with the fileserver
+	if(this->treatedFileIndividuals<(unsigned)this->fileserver->nb_data){
+		cout << "number of received individuals :" << this->fileserver->nb_data << endl;
+		//cout << "number of treated individuals :" << this->treatedIndividuals << endl;
+		CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
+
+		//Treating all the individuals before continuing
+		while(this->treatedFileIndividuals < (unsigned)this->fileserver->nb_data){
+			//selecting the individual to erase
+			antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
+			unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
+			
+			//We're selecting the worst element to replace
+			//size_t index = this->population->getWorstIndividualIndex(this->population->parents);
+
+			//cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
+			//cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
+			this->fileserver->read_data_lock();
+			string line = this->fileserver->data[this->treatedFileIndividuals].data;
+			this->population->parents[index]->deserialize(line);
+            //TAG THE INDIVIDUAL AS IMMIGRANT
+			this->population->parents[index]->isImmigrant = true;
+
+			this->fileserver->read_data_unlock();
+			//cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
+			this->treatedFileIndividuals++;
+		}
+	}
+
+	
+	
 }
 
 void CEvolutionaryAlgorithm::outputGraph(){

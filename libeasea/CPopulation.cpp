@@ -327,7 +327,9 @@ void CPopulation::produceOffspringPopulation(){
 
     //Check if Any Immigrants will reproduce
     if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
-        this->cstats->currentNumberOfImmigrantReproductions++;
+        if(this->cstats!=NULL)this->cstats->currentNumberOfImmigrantReproductions++;
+	else std::cout << "Cstats is null";
+      
     }
 
     if( rg->tossCoin(pCrossover) ){
@@ -335,7 +337,8 @@ void CPopulation::produceOffspringPopulation(){
 	    index = selectionOperator->selectNext(parentPopulationSize);
 	    ps[j] = parents[index];
         if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
-            this->cstats->currentNumberOfImmigrantReproductions++;
+            if(this->cstats!=NULL)this->cstats->currentNumberOfImmigrantReproductions++;
+	    else std::cout << "Cstats is null"; 
         }
       }
       child = p1->crossover(ps);

@@ -76,17 +76,22 @@ class CComFileServer{
 	std::vector<std::string> worker_list;
 	std::list<std::string> new_files;
 	char buffer[MAXINDSIZE];
+	int number_of_workers();
+	int send_file(char *buffer, int dest);
+	int refresh_worker_list();
+	void read_data_lock();
+	void read_data_unlock();
+
   private:
 	pthread_t thread;
 	long wait_time;
 	int create_ind_repository();
 	int determine_worker_name(int start=1);
-	int determine_file_name(FILE*& fp, int dest);
-	int refresh_worker_list();
+	int determine_file_name(FILE*& fp, int& fd, int dest);
 	int refresh_file_list();
 	int file_read(const char* filename);
-	int send_file(char *buffer, int dest);
 	void run();
+	
 };
 
 

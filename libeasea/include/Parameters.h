@@ -70,11 +70,17 @@ public:
 	bool startFromFile;
 
 	//Parameters for the Island Model
+	
+	// socket model
 	bool remoteIslandModel;
 	char* ipFile;
 	float migrationProbability;
-    int serverPort;
+	int serverPort;
 
+	// fileserver model
+	char *expId;
+	char *working_path;
+	
 	char* outputFilename;
 	char* plotOutputFilename;
 

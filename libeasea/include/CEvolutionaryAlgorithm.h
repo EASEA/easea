@@ -55,6 +55,10 @@ public:
   unsigned myClientNumber;
   CComUDPServer *server;
   CComUDPClient **Clients;
+  
+  //file server
+  CComFileServer *fileserver;
+  
   void initializeClients();
   void receiveIndividuals();
   void sendIndividual();
@@ -81,6 +85,7 @@ public:
 
   std::string* outputfile;
   std::string* inputfile;
+  unsigned treatedFileIndividuals;
 };
 
 #endif /* CEVOLUTIONARYALGORITHM_H_ */

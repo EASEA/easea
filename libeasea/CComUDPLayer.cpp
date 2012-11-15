@@ -26,6 +26,7 @@
 using namespace std;
 
 pthread_mutex_t server_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t fileserver_mutex = PTHREAD_MUTEX_INITIALIZER;
 /* UDP SERVER*/
 CComUDPServer::~CComUDPServer() {
 	pthread_cancel(thread);
@@ -417,7 +418,7 @@ CComUDPClient** parse_file(const char* file_name, unsigned* p_no_client, int por
 int CComFileServer::refresh_worker_list()
 {
   // read the directory list, each folder is a worker
-  worker_list.clear();
+  if(worker_list.size()>0)worker_list.clear();
   
   // taken from GNU C manual
   
@@ -433,9 +434,12 @@ int CComFileServer::refresh_worker_list()
 	 if(ep->d_type == DT_DIR)
 	 {  
 	      string s(ep->d_name);
-              worker_list.push_back(s);
-	      if(debug)
-		printf("Worker %s added to the list\n",s.c_str());
+	      if( s.substr(0,6) == "worker")
+	      {
+		  worker_list.push_back(s);
+		  if(debug)
+		    printf("Worker %s added to the list\n",s.c_str());
+	      }	  
 	 }
        } 
        (void) closedir (dp);
@@ -470,12 +474,15 @@ int CComFileServer::refresh_file_list()
 	 if(ep->d_type == DT_REG)
 	 {  
 	      string s(ep->d_name);
-	      it = processed_files.find(s);
-	      // new file to be processed
-	      if(it == processed_files.end() )
+	      if(s.substr(0,10) == "individual")
 	      {
-		if(debug)printf("New file found in path %s : %s\n", workerpath.c_str(), s.c_str());
-		new_files.push_back(s);
+		it = processed_files.find(s);
+		// new file to be processed
+		if(it == processed_files.end() )
+		{
+		  if(debug)printf("New file found in path %s : %s\n", workerpath.c_str(), s.c_str());
+		  new_files.push_back(s);
+		}
 	      }
 	 }      
       }
@@ -498,9 +505,9 @@ int CComFileServer::determine_worker_name(int start)
   // scan experiment directory to find a suitable worker name
   while(1)
   {
-      std::stringstream s;
+      std::stringstream s,t;
       s << fullpath << "/worker_" << start;
-  
+      t << "worker_" << start;
       int result = mkdir( s.str().c_str(),0777);
     
     // check error condition
@@ -508,16 +515,16 @@ int CComFileServer::determine_worker_name(int start)
       if(result == 0)
       {
 	  if(debug)printf("Experiment worker folder sucessfuly created, the path is %s\n", fullpath.c_str());
-	  workername = s.str();
+	  workername = t.str();
 	  break;
       }	
       // worker already in use, increase worker number
-      else if(result!= EEXIST)
+      else if(errno == EEXIST)
 	start++;
       
       else
       {
-	  printf("Cannot create worker experiment folder; check user permissions or disk space");
+	  printf("Cannot create worker experiment folder %s; check user permissions or disk space", s.str().c_str());
 	  return -1;
       }
   }
@@ -541,7 +548,7 @@ CComFileServer::CComFileServer(char *expname, char *path, int dg) {
     
     // check error condition
     
-    if(result!=0 && result!= EEXIST)
+    if(result!=0 && errno!= EEXIST)
     {
         printf("Cannot create experiment folder; check user permissions or disk space");
 	exit(1);
@@ -568,7 +575,7 @@ CComFileServer::CComFileServer(char *expname, char *path, int dg) {
 }
 
 
-int CComFileServer::determine_file_name(FILE *&fp, int dest)
+int CComFileServer::determine_file_name(FILE *&fp, int &fd, int dest)
 {
     while(1)
     {
@@ -584,7 +591,7 @@ int CComFileServer::determine_file_name(FILE *&fp, int dest)
 	
 	
 	// try to open the file in exclusive mode
-	fd = open( fullfilename.c_str(), O_CREAT | O_EXCL | O_WRONLY);
+	fd = open( fullfilename.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0777);
 	if (fd != -1) {
 	        //associate with file
 	  	fp = fdopen(fd, "w");
@@ -609,6 +616,7 @@ int CComFileServer::send_file(char *buffer, int dest)
 {
      //first thing, prevent send to myself
      FILE *outputfile;
+     int fd;
      
      if(workername == worker_list[dest])
      {
@@ -619,10 +627,11 @@ int CComFileServer::send_file(char *buffer, int dest)
      
      // determine the name to send a file
      
-     if( determine_file_name(outputfile, dest) )
+     if( determine_file_name(outputfile, fd, dest) == 0)
      {
 	  fputs(buffer,outputfile);
 	  fclose(outputfile);
+	  close(fd);
      }
      else
      {
@@ -666,7 +675,7 @@ void CComFileServer::run()
 		    std::list<string>::iterator it;
 		    for(it= new_files.begin(); it != new_files.end(); it++)
 		    {
-		      if(file_read((*it).c_str()))
+		      if(file_read((*it).c_str()) == 0)
 		      {
 			  if(debug) {
 			      printf("Reading file %s sucescully\n", (*it).c_str());
@@ -677,14 +686,14 @@ void CComFileServer::run()
 			  }
 			    
 			// blocking call
-			pthread_mutex_lock(&server_mutex);
+			pthread_mutex_lock(&fileserver_mutex);
 			/*process received data */
 			memmove(data[nb_data].data,buffer,sizeof(char)*MAXINDSIZE);
 			nb_data++;
 		//	printf("address %p\n",(p->data));
 			data = (RECV_DATA*)realloc(data,sizeof(RECV_DATA)*(nb_data+1));
 		//	printf("address %p\n",(p->data));
-			pthread_mutex_unlock(&server_mutex);
+			pthread_mutex_unlock(&fileserver_mutex);
 			/*reset receiving buffer*/
 			memset(buffer,0,MAXINDSIZE);
 		      }
@@ -708,6 +717,18 @@ void * CComFileServer::File_server_thread(void *parm) {
 	server->run();
 	return NULL;
 }	
-		  
-	  
+
+int CComFileServer::number_of_workers()
+{
+      return worker_list.size();
+}  
+
+void CComFileServer::read_data_lock() {
+	pthread_mutex_lock(&server_mutex);
+};
+
+void CComFileServer::read_data_unlock() {
+	pthread_mutex_unlock(&server_mutex);
+};
+
  
