@@ -55,6 +55,7 @@ public:
   unsigned myClientNumber;
   CComUDPServer *server;
   CComUDPClient **Clients;
+  std::queue<std::string> receivedIndividuals;
   
   //file server
   CComFileServer *fileserver;

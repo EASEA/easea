@@ -143,10 +143,10 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		this->treatedFileIndividuals = 0;
 		this->numberOfClients = 0;
 		this->myClientNumber=0;	
-		fileserver = new CComFileServer(params->expId,params->working_path,  1);
+		fileserver = new CComFileServer(params->expId,params->working_path, receivedIndividuals,  1);
 		this->initializeClients();
 		//if(params->remoteIslandModel)
-		server = new CComUDPServer(params->serverPort,0); //1 if debug
+		server = new CComUDPServer(params->serverPort,receivedIndividuals,0); //1 if debug
 		
 	}
 }
@@ -156,6 +156,7 @@ CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
 	delete population;
         if(this->params->remoteIslandModel){
                 delete this->server;
+		delete this->fileserver;
                 if(this->numberOfClients>1){
                         for(int i=0; (unsigned)i<this->numberOfClients; i++)
                                 delete this->Clients[i];
@@ -543,7 +544,27 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 
 void CEvolutionaryAlgorithm::receiveIndividuals(){
 	//Checking every generation for received individuals
-	if(this->treatedIndividuals<(unsigned)this->server->nb_data){
+	if(receivedIndividuals.size()>0)
+	{
+	  CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
+
+	  while(!receivedIndividuals.empty())
+	  {
+    		antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
+		unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
+		this->server->read_data_lock();
+		this->population->parents[index]->deserialize(receivedIndividuals.front());
+		this->population->parents[index]->isImmigrant = true;
+		this->server->read_data_unlock();
+		receivedIndividuals.pop();
+			//cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
+		this->treatedIndividuals++;
+		
+	  }
+	  
+	}
+
+/*	if(this->treatedIndividuals<(unsigned)this->server->nb_data){
 		//cout << "number of received individuals :" << this->server->nb_data << endl;
 		//cout << "number of treated individuals :" << this->treatedIndividuals << endl;
 		CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
@@ -598,7 +619,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 			//cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
 			this->treatedFileIndividuals++;
 		}
-	}
+	}*/
 
 	
 	

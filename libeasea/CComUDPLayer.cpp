@@ -442,7 +442,7 @@ int CComFileServer::refresh_worker_list()
 	 if(ep->d_type == DT_DIR)
 	 {  
 	      string s(ep->d_name);
-	      if( s.substr(0,6) == "worker")
+	      if( s.substr(0,6) == "worker" && s!=workername)
 	      {
 		  worker_list.push_back(s);
 		  if(debug)
@@ -545,7 +545,7 @@ CComFileServer::CComFileServer(char *expname, char *path, std::queue<std::string
     std::string exp(expname);
     std::string pathname(path);
     fullpath = pathname + expname + '/';
-    
+    wait_time = 1500;
     
     debug = dg;
  
@@ -584,9 +584,10 @@ CComFileServer::CComFileServer(char *expname, char *path, std::queue<std::string
 
 int CComFileServer::determine_file_name(FILE *&fp, int &fd, int dest)
 {
+   time_t tstamp = time(NULL);
     while(1)
     {
-        time_t tstamp = time(NULL);
+        
 	std::stringstream s;
 	s << fullpath << '/' << worker_list[dest] << "/individual_" << tstamp << ".txt";
 	string fullfilename = s.str();
@@ -613,6 +614,8 @@ int CComFileServer::determine_file_name(FILE *&fp, int &fd, int dest)
 	{
 	    if(debug)
 	      printf("Failed to create filename %s failed, trying another name \n :", fullfilename.c_str());
+	    
+	    tstamp++;
 	    continue;
 	}  
     }
@@ -717,7 +720,7 @@ void CComFileServer::run()
 		     printf("Cannot get the list of files for this worker, we will try later again ...\n");
 		}  
 		// we should wit some time after 
-		sleep(wait_time);
+		sleep(1);
 	}
 }
 
@@ -740,4 +743,51 @@ void CComFileServer::read_data_unlock() {
 	pthread_mutex_unlock(&server_mutex);
 };
 
- 
+
+CComFileServer::~CComFileServer()	
+{
+    printf("Calling the destructor ....\n");
+    pthread_cancel(thread);
+    // erase working path
+    int tries=0;
+    std::string workerpath = fullpath + '/' + workername + '/';
+    while(tries < 10)
+    {
+	DIR *dp;
+	struct dirent *ep;
+	
+	
+	dp = opendir (workerpath.c_str());
+	if (dp != NULL)
+	{
+	    int countfiles=0;
+	    while ((ep = readdir (dp)))
+	    {
+	      //only take into account folders
+	      std::string s(ep->d_name);
+	      std::string fullfilename = workerpath + s;
+	      if(ep->d_type == DT_REG)
+	      {  
+		    if( unlink(fullfilename.c_str()) != 0)
+		    {
+		      if(debug)printf("Finish worker : Cannot erase  the file %s\n", fullfilename.c_str());
+		      break;
+		    }  
+	      }      
+	    }
+	    (void) closedir (dp);
+            if( rmdir(workerpath.c_str()) == 0 )
+	    {
+		if(debug)
+		    printf("Worker removed sucessfully, removing the path %s\n", workerpath.c_str());
+	        break;
+	    }	
+	    else if(debug)
+		      printf("Worker pâth %s be removed sucessfully, trying again\n", workerpath.c_str());
+              		 
+	}
+	sleep(wait_time);
+        tries++;
+    }
+    if(tries == 10) printf("Cannot remove the worker path %s, worker not properly finished\n", workerpath.c_str());
+}    

@@ -85,6 +85,7 @@ class CComFileServer{
 	int refresh_worker_list();
 	void read_data_lock();
 	void read_data_unlock();
+	~CComFileServer();
 
   private:
 	pthread_t thread;
