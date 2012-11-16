@@ -29,6 +29,7 @@
 #include <list>
 #include <set>
 #include <vector>
+#include <queue>
 
 #define _MULTI_THREADED
 #define MAXINDSIZE 50000 /*maximum size of an individual in number of characters*/
@@ -41,23 +42,25 @@ typedef struct {
 	int Socket; /* Socket descriptor for server */
         struct sockaddr_in ServAddr;   /* Local address */
         int debug;
-	RECV_DATA *data;
-	int *nb_data;
+	//RECV_DATA *data;
+	//int *nb_data;
 }UDP_server_thread_parm_t;
 
 class CComUDPServer {
 
 public:
 	int debug;
-	RECV_DATA *data;
-	int nb_data;
+	//RECV_DATA *data;
+	//int nb_data;
+	std::queue<std::string> &data;
 	UDP_server_thread_parm_t *parm;
-	CComUDPServer(unsigned short port, int dg);
+	CComUDPServer(unsigned short port, std::queue<std::string> &_data, int dbg);
 	static void * UDP_server_thread(void *parm);
 	~CComUDPServer();
 	void read_data_lock();
 	void read_data_unlock();
 private:
+	void run();
 	int ServerSocket;
 	pthread_t thread;
 	int Socket;
@@ -66,10 +69,11 @@ private:
 class CComFileServer{
   public:
 	int debug;
-	RECV_DATA *data;
-	int nb_data;
+	//RECV_DATA *data;
+	//int nb_data;
+	std::queue<std::string> &data;
 	static void * File_server_thread(void *parm);
-	CComFileServer(char *path, char *expname, int dbg);
+	CComFileServer(char *path, char *expname, std::queue<std::string> &_data, int dbg);
 	std::string workername;
 	std::string fullpath;
 	std::set<std::string> processed_files;
@@ -91,7 +95,6 @@ class CComFileServer{
 	int refresh_file_list();
 	int file_read(const char* filename);
 	void run();
-	
 };
 
 

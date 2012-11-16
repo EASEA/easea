@@ -38,31 +38,34 @@ CComUDPServer::~CComUDPServer() {
 #endif
 };
 
-void * CComUDPServer::UDP_server_thread(void *parm) {
-	UDP_server_thread_parm_t *p = (UDP_server_thread_parm_t*)parm;
+
+void CComUDPServer::run()
+{
         struct sockaddr_in cliaddr; /* Client address */
         socklen_t len = sizeof(cliaddr);
         char buffer[MAXINDSIZE];
         unsigned int recvMsgSize;
         for(;;) {/*forever loop*/
                 /*receive UDP datagrams from client*/
-                if ((recvMsgSize = recvfrom(p->Socket,buffer,MAXINDSIZE,0,(struct sockaddr *)&cliaddr,&len)) < 0) {
+                if ((recvMsgSize = recvfrom(ServerSocket,buffer,MAXINDSIZE,0,(struct sockaddr *)&cliaddr,&len)) < 0) {
                         printf("\nError recvfrom()\n"); exit(1);
                 }
-		if(p->debug) {
+		if(debug) {
                 	buffer[recvMsgSize] = 0;
-			     printf("\nData entry[%i]\n",*p->nb_data);
+			printf("\nData entry[%i]\n", data.size());
                 	printf("Received the following:\n");
                 	printf("%s\n",buffer);
-                    printf("%d\n",(int)strlen(buffer));
+			printf("%d\n",(int)strlen(buffer));
 		}
 		printf("    Received individual from %s:%d\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
 		pthread_mutex_lock(&server_mutex);
 		/*process received data */
-		memmove(p->data[(*p->nb_data)].data,buffer,sizeof(char)*MAXINDSIZE);
-		(*p->nb_data)++;
+		//memmove(p->data[(*p->nb_data)].data,buffer,sizeof(char)*MAXINDSIZE);
+		//(*p->nb_data)++;
 	//	printf("address %p\n",(p->data));
-		p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
+		//p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
+		std::string bufferstream(buffer);
+		data.push(bufferstream);
 	//	printf("address %p\n",(p->data));
 		pthread_mutex_unlock(&server_mutex);
 		/*reset receiving buffer*/
@@ -70,11 +73,16 @@ void * CComUDPServer::UDP_server_thread(void *parm) {
    }
 }
 
-CComUDPServer::CComUDPServer(unsigned short port, int dg) {
+void * CComUDPServer::UDP_server_thread(void *parm) {
+	CComUDPServer *server = (CComUDPServer *)parm;
+	server->run();
+	return NULL;
+}
+
+CComUDPServer::CComUDPServer(unsigned short port, std::queue<std::string> &_data, int dg):data(_data) {
     struct sockaddr_in ServAddr; /* Local address */
     debug = dg;
-	this->nb_data = 0;
-	this->data = (RECV_DATA*)calloc(1,sizeof(RECV_DATA));
+    data = _data;
 
 	#ifdef WIN32
 	WSADATA wsadata;
@@ -108,14 +116,14 @@ CComUDPServer::CComUDPServer(unsigned short port, int dg) {
     }
 
     //UDP_server_thread_parm_t   *parm;
-    this->parm = (UDP_server_thread_parm_t*)malloc(sizeof(UDP_server_thread_parm_t));
+   /* this->parm = (UDP_server_thread_parm_t*)malloc(sizeof(UDP_server_thread_parm_t));
     this->parm->Socket = ServerSocket;
     this->parm->ServAddr = ServAddr;
 	this->parm->nb_data = &this->nb_data;
 	this->parm->data = this->data;
-    this->parm->debug = this->debug;
+    this->parm->debug = this->debug;*/
 
-    if(pthread_create(&thread, NULL, &CComUDPServer::UDP_server_thread, (void *)this->parm) != 0) {
+    if(pthread_create(&thread, NULL, &CComUDPServer::UDP_server_thread, (void *)this) != 0) {
         printf("pthread create failed. exiting\n"); exit(1);
     }
 };
@@ -531,17 +539,16 @@ int CComFileServer::determine_worker_name(int start)
   return 0;
 }
 
-CComFileServer::CComFileServer(char *expname, char *path, int dg) {
+CComFileServer::CComFileServer(char *expname, char *path, std::queue<std::string> &_data, int dg):data(_data) {
   
+    data = _data;
     std::string exp(expname);
     std::string pathname(path);
     fullpath = pathname + expname + '/';
     
     
     debug = dg;
-    this->nb_data = 0;
-    this->data = (RECV_DATA*)calloc(1,sizeof(RECV_DATA));
-
+ 
     // create the main directory
     
     int result = mkdir(fullpath.c_str(),0777);
@@ -679,21 +686,23 @@ void CComFileServer::run()
 		      {
 			  if(debug) {
 			      printf("Reading file %s sucescully\n", (*it).c_str());
-			      printf("\nData entry[%i]\n",nb_data);
+			      printf("\nData entry[%i]\n",data.size());
 			      printf("Received the following:\n");
 			      printf("%s\n",buffer);
 			      printf("%d\n",(int)strlen(buffer));
 			  }
 			    
 			// blocking call
-			pthread_mutex_lock(&fileserver_mutex);
+			pthread_mutex_lock(&server_mutex);
+			std::string bufferstream(buffer);
+			data.push(buffer);
 			/*process received data */
-			memmove(data[nb_data].data,buffer,sizeof(char)*MAXINDSIZE);
-			nb_data++;
+			//memmove(data[nb_data].data,buffer,sizeof(char)*MAXINDSIZE);
+			//nb_data++;
 		//	printf("address %p\n",(p->data));
-			data = (RECV_DATA*)realloc(data,sizeof(RECV_DATA)*(nb_data+1));
+			//data = (RECV_DATA*)realloc(data,sizeof(RECV_DATA)*(nb_data+1));
 		//	printf("address %p\n",(p->data));
-			pthread_mutex_unlock(&fileserver_mutex);
+			pthread_mutex_unlock(&server_mutex);
 			/*reset receiving buffer*/
 			memset(buffer,0,MAXINDSIZE);
 		      }
