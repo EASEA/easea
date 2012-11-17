@@ -6,7 +6,7 @@
 #include <sstream>
 #include <sys/types.h>
 #include <dirent.h>
-#include <error.h>
+//#include <error.h>
 #include <errno.h>
 #include <fcntl.h>
 #else
