@@ -654,12 +654,23 @@ int CComFileServer::determine_file_name(FILE *&fp, int &fd, int dest)
 	}
 	else
 	{
-	    if(debug)
+	    // error ocurred, so two alternatives
+	    // the path does not exit anymore (race condition)
+	  DIR *dp;
+	  std::string workerpath = fullpath + '/' + worker_list[dest];
+	  dp = opendir (workerpath.c_str());
+	  if( dp == NULL)
+	  {  
+	     printf("The worker path is not accesible %s, maybe worker finishes\n", workerpath.c_str());
+	     return -1;
+	  }
+	  closedir(dp);
+	  if(debug)
 	      printf("Failed to create filename %s failed, trying another name \n :", fullfilename.c_str());
 	    
 	    tstamp++;
 	    continue;
-	}  
+	  }  
     }
     return 0;
 }
@@ -688,6 +699,7 @@ int CComFileServer::send_file(char *buffer, int dest)
      else
      {
         printf("Cannot write individual to file in path %s/%s", fullpath.c_str(), workername.c_str() ); 
+	return -1;
      }
      return 0;
 }
