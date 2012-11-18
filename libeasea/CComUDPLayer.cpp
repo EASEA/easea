@@ -29,7 +29,9 @@ pthread_mutex_t server_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t fileserver_mutex = PTHREAD_MUTEX_INITIALIZER;
 /* UDP SERVER*/
 CComUDPServer::~CComUDPServer() {
+	printf("calling destructor UDP Server\n");
 	pthread_cancel(thread);
+	printf("UDP Server thread cancelled\n");
 #ifndef WIN32
 	close(this->ServerSocket);
 #else
@@ -803,6 +805,7 @@ CComFileServer::~CComFileServer()
     printf("Calling the destructor ....\n");
     pthread_cancel(thread);
     // erase working path
+    printf("Filserver thread cancelled ....\n");
     int tries=0;
     std::string workerpath = fullpath + '/' + workername + '/';
     while(tries < 10)
