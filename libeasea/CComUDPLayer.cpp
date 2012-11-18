@@ -449,8 +449,6 @@ int CComFileServer::refresh_worker_list()
        while ((ep = readdir (dp)))
        {
 	 //only take into account folders
-        if(debug)
-  	   printf("listing directory item %s:\n", ep->d_name);
 	 string s(ep->d_name);
 	 string fullpathworker = fullpath + s;
 	 struct stat statusfile;
@@ -501,7 +499,6 @@ int CComFileServer::refresh_file_list()
   {
        while ((ep = readdir (dp)))
        {
-	 if(debug)printf("listing directory item %s and type %d:\n", ep->d_name, ep->d_type);
 	 //only take into account folders
 	 string s(ep->d_name);
 	 string fullfilename = workerpath + s;
