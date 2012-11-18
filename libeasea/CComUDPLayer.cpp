@@ -433,6 +433,11 @@ int CComFileServer::refresh_worker_list()
   DIR *dp;
   struct dirent *ep;
      
+  // refresh nfs file list
+  
+  std::string command = "ls -a "+fullpath;
+  system(command.c_str());
+  
   dp = opendir (fullpath.c_str());
   if (dp != NULL)
   {
@@ -473,6 +478,11 @@ int CComFileServer::refresh_file_list()
   
   std::string workerpath = fullpath + '/' + workername + '/';
   std::set<string>::iterator it;   
+
+  std::string command = "ls -a "+workerpath;
+  system(command.c_str());
+
+  
   dp = opendir (workerpath.c_str());
   if (dp != NULL)
   {
@@ -517,13 +527,14 @@ int CComFileServer::determine_worker_name(int start)
       s << fullpath << "/worker_" << start;
       t << "worker_" << start;
       int result = mkdir( s.str().c_str(), 0777);
-      chmod( s.str().c_str(), 0777 );
+      
     
     // check error condition
     
       if(result == 0)
       {
 	  if(debug)printf("Experiment worker folder sucessfuly created, the path is %s\n", fullpath.c_str());
+	  chmod( s.str().c_str(), 0777 );
 	  workername = t.str();
 	  break;
       }	
@@ -533,7 +544,7 @@ int CComFileServer::determine_worker_name(int start)
       
       else
       {
-	  printf("Cannot create worker experiment folder %s; check user permissions or disk space", s.str().c_str());
+	  printf("Cannot create worker experiment folder %s; error reported is %d\n", s.str().c_str(), errno);
 	  return -1;
       }
   }
