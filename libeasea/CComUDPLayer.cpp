@@ -446,10 +446,14 @@ int CComFileServer::refresh_worker_list()
 	 //only take into account folders
         if(debug)
   	   printf("listing directory item %s:\n", ep->d_name);
+	 string s(ep->d_name);
+	 string fullpathworker = fullpath + s;
+	 struct stat statusfile;
+	 stat(fullpathworker.c_str(), &statusfile);
 
-	 if(ep->d_type == DT_DIR)
+	 if( S_ISDIR(statusfile.st_mode))
 	 {  
-	      string s(ep->d_name);
+	      
 	      
 	      if( s.substr(0,6) == "worker" && s!=workername)
 	      {
@@ -492,11 +496,16 @@ int CComFileServer::refresh_file_list()
   {
        while ((ep = readdir (dp)))
        {
-	 if(debug)printf("listing directory item %s:\n", ep->d_name);
+	 if(debug)printf("listing directory item %s and type %d:\n", ep->d_name, ep->d_type);
 	 //only take into account folders
-	 if(ep->d_type == DT_REG)
+	 string s(ep->d_name);
+	 string fullfilename = workerpath + s;
+	 struct stat statusfile;
+	 stat(fullfilename.c_str(), &statusfile);
+	 
+	 if( S_ISREG(statusfile.st_mode) )
 	 {  
-	      string s(ep->d_name);
+	      
 	      if(s.substr(0,10) == "individual")
 	      {
 		it = processed_files.find(s);
