@@ -69,6 +69,7 @@ private:
 class CComFileServer{
   public:
 	int debug;
+	int cancel;
 	//RECV_DATA *data;
 	//int nb_data;
 	std::queue<std::string> &data;

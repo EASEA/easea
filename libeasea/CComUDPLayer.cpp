@@ -31,6 +31,7 @@ pthread_mutex_t fileserver_mutex = PTHREAD_MUTEX_INITIALIZER;
 CComUDPServer::~CComUDPServer() {
 	printf("calling destructor UDP Server\n");
 	pthread_cancel(thread);
+	pthread_join(thread, NULL);
 	printf("UDP Server thread cancelled\n");
 #ifndef WIN32
 	close(this->ServerSocket);
@@ -733,7 +734,7 @@ int CComFileServer::file_read(const char *filename)
 
 void CComFileServer::run()
 {
-       for(;;) {/*forever loop*/
+       while(!cancel) {/*forever loop*/
 	  
 		// check for new files
 		if(refresh_file_list() == 0)
@@ -803,7 +804,8 @@ void CComFileServer::read_data_unlock() {
 CComFileServer::~CComFileServer()	
 {
     printf("Calling the destructor ....\n");
-    pthread_cancel(thread);
+    this->cancel =1;
+    pthread_join(thread, NULL);
     // erase working path
     printf("Filserver thread cancelled ....\n");
     int tries=0;
