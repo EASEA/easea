@@ -64,13 +64,15 @@ void CComUDPServer::run()
 		//(*p->nb_data)++;
 	//	printf("address %p\n",(p->data));
 		//p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
+		buffer[recvMsgSize] = 0;
 		std::string bufferstream(buffer);
 		data.push(bufferstream);
 	//	printf("address %p\n",(p->data));
 		pthread_mutex_unlock(&server_mutex);
 		/*reset receiving buffer*/
 		memset(buffer,0,MAXINDSIZE);
-   }
+     }
+     if(debug)printf("Finishing thread... bye\n");
 }
 
 void * CComUDPServer::UDP_server_thread(void *parm) {
@@ -540,6 +542,16 @@ int CComFileServer::determine_worker_name(int start)
       std::stringstream s,t;
       s << fullpath << "/worker_" << start;
       t << "worker_" << start;
+
+      DIR *dp;
+  
+     
+  // refresh nfs file list
+  
+  
+      dp = opendir (fullpath.c_str());
+      closedir(dp);
+
       int result = mkdir( s.str().c_str(), 0777);
       
     
@@ -796,7 +808,11 @@ CComFileServer::~CComFileServer()
 	      //only take into account folders
 	      std::string s(ep->d_name);
 	      std::string fullfilename = workerpath + s;
-	      if(ep->d_type == DT_REG)
+
+	      struct stat statusfile;
+	      stat(fullfilename.c_str(), &statusfile);
+
+	      if( S_ISREG(statusfile.st_mode))
 	      {  
 		    if( unlink(fullfilename.c_str()) != 0)
 		    {
