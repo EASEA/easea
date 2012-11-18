@@ -516,7 +516,8 @@ int CComFileServer::determine_worker_name(int start)
       std::stringstream s,t;
       s << fullpath << "/worker_" << start;
       t << "worker_" << start;
-      int result = mkdir( s.str().c_str(),0777);
+      int result = mkdir( s.str().c_str(), 0777);
+      chmod( s.str().c_str(), 0777 );
     
     // check error condition
     
@@ -566,6 +567,8 @@ CComFileServer::CComFileServer(char *expname, char *path, std::queue<std::string
 	printf("Experiment folder %s, the path is %s\n", (result==0 ? "created" : "exits already"), fullpath.c_str());
     }
     
+    chmod(fullpath.c_str(), 0777);
+    
     // now determine the worker name, that is, the directory where where
     // the server will "listen" to new files
     
@@ -602,7 +605,8 @@ int CComFileServer::determine_file_name(FILE *&fp, int &fd, int dest)
 	fd = open( fullfilename.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0777);
 	if (fd != -1) {
 	        //associate with file
-	  	fp = fdopen(fd, "w");
+	        chmod(fullfilename.c_str(), 777);
+	        fp = fdopen(fd, "w");
 		if (fp != NULL) {
 		   if(debug)
 		     printf("Create file for sending individual %s \n :", fullfilename.c_str());
