@@ -445,7 +445,7 @@ int CComFileServer::refresh_worker_list()
        {
 	 //only take into account folders
         if(debug)
-  	   printf("listing directory item:\n", ep->d_name);
+  	   printf("listing directory item %s:\n", ep->d_name);
 
 	 if(ep->d_type == DT_DIR)
 	 {  
@@ -492,7 +492,7 @@ int CComFileServer::refresh_file_list()
   {
        while ((ep = readdir (dp)))
        {
-	 if(debug)printf("listing directory item:\n", ep->d_name);
+	 if(debug)printf("listing directory item %s:\n", ep->d_name);
 	 //only take into account folders
 	 if(ep->d_type == DT_REG)
 	 {  
