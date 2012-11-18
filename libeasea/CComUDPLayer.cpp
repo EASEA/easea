@@ -435,8 +435,8 @@ int CComFileServer::refresh_worker_list()
      
   // refresh nfs file list
   
-  std::string command = "ls -a "+fullpath;
-  system(command.c_str());
+  //std::string command = "ls -a "+fullpath;
+  //system(command.c_str());
   
   dp = opendir (fullpath.c_str());
   if (dp != NULL)
@@ -487,8 +487,8 @@ int CComFileServer::refresh_file_list()
   std::string workerpath = fullpath + '/' + workername + '/';
   std::set<string>::iterator it;   
 
-  std::string command = "ls -a "+workerpath;
-  system(command.c_str());
+  //std::string command = "ls -a "+workerpath;
+  //system(command.c_str());
 
   
   dp = opendir (workerpath.c_str());
@@ -630,8 +630,9 @@ int CComFileServer::determine_file_name(FILE *&fp, int &fd, int dest)
 	fd = open( fullfilename.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0777);
 	if (fd != -1) {
 	        //associate with file
-	        chmod(fullfilename.c_str(), 777);
+	        
 	        fp = fdopen(fd, "w");
+		fchmod(fd, 0777);
 		if (fp != NULL) {
 		   if(debug)
 		     printf("Create file for sending individual %s \n :", fullfilename.c_str());
