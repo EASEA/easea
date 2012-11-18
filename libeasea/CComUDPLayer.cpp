@@ -806,7 +806,7 @@ CComFileServer::~CComFileServer()
 		      printf("Worker pâth %s be removed sucessfully, trying again\n", workerpath.c_str());
               		 
 	}
-	sleep(wait_time);
+	sleep(2);
         tries++;
     }
     if(tries == 10) printf("Cannot remove the worker path %s, worker not properly finished\n", workerpath.c_str());
