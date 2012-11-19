@@ -55,7 +55,7 @@ void CComUDPServer::run()
                 }
 		if(debug) {
                 	buffer[recvMsgSize] = 0;
-			printf("\nData entry[%i]\n", data.size());
+			printf("\nData entry[%i]\n", data->size());
                 	printf("Received the following:\n");
                 	printf("%s\n",buffer);
 			printf("%d\n",(int)strlen(buffer));
@@ -69,7 +69,7 @@ void CComUDPServer::run()
 		//p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
 		buffer[recvMsgSize] = 0;
 		std::string bufferstream(buffer);
-		data.push(bufferstream);
+		data->push(bufferstream);
 	//	printf("address %p\n",(p->data));
 		pthread_mutex_unlock(&server_mutex);
 		/*reset receiving buffer*/
@@ -84,9 +84,9 @@ void * CComUDPServer::UDP_server_thread(void *parm) {
 	return NULL;
 }
 
-CComUDPServer::CComUDPServer(unsigned short port, std::queue<std::string> &_data, int dg):data(_data) {
+CComUDPServer::CComUDPServer(short unsigned int port, queue< string >* _data, int dbg) {
     struct sockaddr_in ServAddr; /* Local address */
-    debug = dg;
+    debug = dbg;
     data = _data;
 
 	#ifdef WIN32
@@ -577,15 +577,15 @@ int CComFileServer::determine_worker_name(int start)
   return 0;
 }
 
-CComFileServer::CComFileServer(char *expname, char *path, std::queue<std::string> &_data, int dg):data(_data) {
+CComFileServer::CComFileServer(char* path, char* expname, std::queue< string >* _data, int dbg) {
   
     data = _data;
     std::string exp(expname);
     std::string pathname(path);
     fullpath = pathname + expname + '/';
     wait_time = 1500;
-    
-    debug = dg;
+    //cancel = 0;
+    debug = dbg;
  
     // create the main directory
     
@@ -595,7 +595,7 @@ CComFileServer::CComFileServer(char *expname, char *path, std::queue<std::string
     
     if(result!=0 && errno!= EEXIST)
     {
-        printf("Cannot create experiment folder; check user permissions or disk space");
+        printf("Cannot create experiment folder %s; check user permissions or disk space", fullpath.c_str());
 	exit(1);
     }
     else if(debug)
@@ -622,15 +622,57 @@ CComFileServer::CComFileServer(char *expname, char *path, std::queue<std::string
 }
 
 
-int CComFileServer::determine_file_name(FILE *&fp, int &fd, int dest)
+
+int CComFileServer::determine_file_name(std::string fulltmpfilename, int dest)
+{
+   time_t tstamp = time(NULL);
+    while(1)
+    {
+ 	std::stringstream s;
+	s << fullpath << '/' << worker_list[dest] << "/individual_" << tstamp << ".txt";
+	std::string fullfilename = s.str();
+        int fd = open( fullfilename.c_str(), O_RDONLY, 0777);
+	// the file does not exit, so we can create the individual
+	if(fd ==-1 && errno == ENOENT)
+	{
+	   int result = rename(fulltmpfilename.c_str(), fullfilename.c_str());
+	   
+	    if(result==0)
+	    {
+	      chmod(fullfilename.c_str(), 0777);
+	      if(debug)
+		printf("Individual file %s created sucessfully\n", fullfilename.c_str());
+	      return 0;
+	    }
+	    else
+	    {
+		DIR *dp;
+		std::string workerpath = fullpath + '/' + worker_list[dest];
+		dp = opendir (workerpath.c_str());
+		if( dp == NULL)
+		{  
+		  printf("The worker path is not accesible %s, maybe worker finishes\n", workerpath.c_str());
+		  return -1;
+		}
+		closedir(dp);
+
+	    }
+	}
+	if(debug)printf("unable to rename tmp file to %s,  trying another name\n", fullfilename.c_str());
+        tstamp++;
+    }	
+}  
+
+
+int CComFileServer::create_tmp_file(FILE *&fp, int &fd, int dest, std::string &fullfilename)
 {
    time_t tstamp = time(NULL);
     while(1)
     {
         
 	std::stringstream s;
-	s << fullpath << '/' << worker_list[dest] << "/individual_" << tstamp << ".txt";
-	string fullfilename = s.str();
+	s << fullpath << '/' << worker_list[dest] << "/temp_" << tstamp << ".txt";
+	fullfilename = s.str();
 	
 	
 	int fd;
@@ -639,12 +681,11 @@ int CComFileServer::determine_file_name(FILE *&fp, int &fd, int dest)
 	
 	
 	// try to open the file in exclusive mode
-	fd = open( fullfilename.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0777);
+	fd = open( fullfilename.c_str(), O_CREAT | O_WRONLY, 0777);
 	if (fd != -1) {
 	        //associate with file
 	        
 	        fp = fdopen(fd, "w");
-		fchmod(fd, 0777);
 		if (fp != NULL) {
 		   if(debug)
 		     printf("Create file for sending individual %s \n :", fullfilename.c_str());
@@ -680,6 +721,7 @@ int CComFileServer::send_file(char *buffer, int dest)
      //first thing, prevent send to myself
      FILE *outputfile;
      int fd;
+     std::string tmpfilename;
      
      if(workername == worker_list[dest])
      {
@@ -690,11 +732,15 @@ int CComFileServer::send_file(char *buffer, int dest)
      
      // determine the name to send a file
      
-     if( determine_file_name(outputfile, fd, dest) == 0)
+     if( create_tmp_file(outputfile, fd, dest, tmpfilename) == 0)
      {
 	  fputs(buffer,outputfile);
 	  fclose(outputfile);
 	  close(fd);
+	  if( determine_file_name(tmpfilename, dest) == 0) return 0;
+	  else return -1;
+	  // now rename 
+	  
      }
      else
      {
@@ -743,7 +789,7 @@ void CComFileServer::run()
 		      {
 			  if(debug) {
 			      printf("Reading file %s sucescully\n", (*it).c_str());
-			      printf("\nData entry[%i]\n",data.size());
+			      printf("\nData entry[%i]\n",data->size());
 			      printf("Received the following:\n");
 			      printf("%s\n",buffer);
 			      printf("%d\n",(int)strlen(buffer));
@@ -752,7 +798,7 @@ void CComFileServer::run()
 			// blocking call
 			pthread_mutex_lock(&server_mutex);
 			std::string bufferstream(buffer);
-			data.push(buffer);
+			data->push(buffer);
 			/*process received data */
 			//memmove(data[nb_data].data,buffer,sizeof(char)*MAXINDSIZE);
 			//nb_data++;
