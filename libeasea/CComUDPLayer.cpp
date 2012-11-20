@@ -222,7 +222,10 @@ bool isLocalMachine(const char*  address, int clientPort, int serverPort){
 
 	        if((strcmp(address,addressBuffer)==0)
                 && serverPort==clientPort)
+		{
+			freeifaddrs(ifAddrStruct);
 		        return true;
+		}
         }    
     }
     

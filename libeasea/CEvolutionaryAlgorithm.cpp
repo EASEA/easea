@@ -143,10 +143,10 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		this->treatedFileIndividuals = 0;
 		this->numberOfClients = 0;
 		this->myClientNumber=0;	
-		fileserver = new CComFileServer(params->expId,params->working_path, receivedIndividuals,  1);
+		fileserver = new CComFileServer(params->working_path,params->expId, &receivedIndividuals,  1);
 		this->initializeClients();
 		//if(params->remoteIslandModel)
-		server = new CComUDPServer(params->serverPort,receivedIndividuals,0); //1 if debug
+		server = new CComUDPServer(params->serverPort,&receivedIndividuals,0); //1 if debug
 		
 	}
 }
@@ -154,15 +154,18 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 /* DESTRUCTOR */
 CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
 	delete population;
+	
         if(this->params->remoteIslandModel){
                 delete this->server;
 		delete this->fileserver;
-                if(this->numberOfClients>1){
+                if(this->numberOfClients>0){
                         for(int i=0; (unsigned)i<this->numberOfClients; i++)
                                 delete this->Clients[i];
-                        delete this->Clients;
+                        delete [] this->Clients;
                 }
         }
+        delete cstats;
+        
 }
 void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
   this->stoppingCriteria.push_back(sc);

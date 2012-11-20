@@ -92,7 +92,19 @@ public:
 	Parameters();
 	~Parameters();
 #else
-	virtual ~Parameters(){;}
+	virtual ~Parameters(){;
+	   delete selectionOperator;
+	   delete replacementOperator;
+	   delete parentReductionOperator;
+	   delete offspringReductionOperator;
+
+	   delete generationalCriterion;
+	   delete controlCStopingCriterion;
+	   delete timeCriterion;
+	   delete randomGenerator;
+	  
+	
+	}
 #endif
 	virtual void setDefaultParameters(int argc, char** argv) = 0;
 	virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;
