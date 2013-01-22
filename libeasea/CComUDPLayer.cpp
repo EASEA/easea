@@ -907,6 +907,9 @@ CComFileServer::~CComFileServer()
 
 int CComCloudFileServer::refresh_worker_list()
 {
+  
+  readfiles();
+  
   // read the directory list, each folder is a worker
   if(worker_list.size()>0)worker_list.clear();
   
@@ -920,7 +923,7 @@ int CComCloudFileServer::refresh_worker_list()
   //std::string command = "ls -a "+fullpath;
   //system(command.c_str());
 
-  pthread_mutex_lock(&directoryread_mutex);  
+
   dp = gfal_opendir (fullpath.c_str());
   
   if (dp != NULL)
@@ -946,20 +949,21 @@ int CComCloudFileServer::refresh_worker_list()
 			 }
 			 else if(status==-1)
 			 {
+			   (void)gfal_closedir (dp);
 			   printf ("Cannot scan the experiment directory for find workers %s\n", fullpathworker.c_str());
-			   pthread_mutex_unlock(&directoryread_mutex);
+			   
 			   return -1;
 			 } 
 		}
-        gfal_closedir (dp);
+        (void)gfal_closedir (dp);
   }      
   else
   {  
        printf ("Cannot scan the experiment directory for find workers %s\n", fullpath.c_str());
-       pthread_mutex_unlock(&directoryread_mutex);
+//        
        return -1;
   }      
-  pthread_mutex_unlock(&directoryread_mutex);
+
   return 0;
 }
 
@@ -968,7 +972,7 @@ int CComCloudFileServer::refresh_file_list()
 {
   // clear the file to process
   new_files.clear();
-  return 0;
+  
   // taken from GNU C manual
   
   DIR *dp;
@@ -980,10 +984,11 @@ int CComCloudFileServer::refresh_file_list()
   //std::string command = "ls -a "+workerpath;
   //system(command.c_str());
 
-  pthread_mutex_lock(&directoryread_mutex);
+
   dp = gfal_opendir (workerpath.c_str());
   if (dp != NULL)
   {
+       printf("Refreshing filelist (new individuals) in %s\n",workerpath.c_str());
        while ((ep = gfal_readdir (dp)))
        {
 		 //only take into account folders
@@ -1008,20 +1013,18 @@ int CComCloudFileServer::refresh_file_list()
 		 }
 		 else if(status==-1) 
 		 {
-			pthread_mutex_unlock(&directoryread_mutex); 
+			(void)gfal_closedir (dp);
 		    return 0;
 		 }   
 	        
       }
-      gfal_closedir (dp);
+      (void)gfal_closedir (dp);
   }      
   else
   {  
        printf ("Cannot scan the experiment directory for find workers %s \n", workerpath.c_str() );
-       pthread_mutex_unlock(&directoryread_mutex);
        return -1;
   }      
-  pthread_mutex_unlock(&directoryread_mutex);
   return 0;
 }
 
@@ -1045,13 +1048,13 @@ int CComCloudFileServer::determine_worker_name(int start)
   
   
       dp = gfal_opendir (fullpath.c_str());
-      gfal_closedir(dp);
+      (void)gfal_closedir(dp);
 
       dp = gfal_opendir( s.str().c_str() );
       // verify if directory exist
       if(dp != NULL)
       {
-		gfal_closedir(dp);  
+		(void)gfal_closedir(dp);  
 		start++;
 	  }
 	  else if(errno == ENOENT)
@@ -1063,7 +1066,7 @@ int CComCloudFileServer::determine_worker_name(int start)
 		  if(result == 0)
 		  {
 			  if(debug)printf("Experiment worker folder sucessfuly created, the path is %s\n", s.str().c_str());
-			  gfal_chmod( s.str().c_str(), 0777 );
+			  result = gfal_chmod( s.str().c_str(), 0777 );
 			  workername = t.str();
 			  break;
 		  }	
@@ -1104,7 +1107,7 @@ CComCloudFileServer::CComCloudFileServer(char* path, char* expname, std::queue< 
 	printf("Experiment folder %s, the path is %s\n", (result==0 ? "created" : "exits already"), fullpath.c_str());
     }
     
-    gfal_chmod(fullpath.c_str(), 0777);
+    result = gfal_chmod(fullpath.c_str(), 0777);
     
     // now determine the worker name, that is, the directory where where
     // the server will "listen" to new files
@@ -1140,7 +1143,7 @@ int CComCloudFileServer::determine_file_name(std::string fulltmpfilename, int de
 	   
 	    if(result==0)
 	    {
-	      gfal_chmod(fullfilename.c_str(), 0777);
+	      result=gfal_chmod(fullfilename.c_str(), 0777);
 	      if(debug)
 		printf("Individual file %s created sucessfully\n", fullfilename.c_str());
 	      return 0;
@@ -1155,7 +1158,7 @@ int CComCloudFileServer::determine_file_name(std::string fulltmpfilename, int de
 		  printf("The worker path is not accesible %s, maybe worker finishes\n", workerpath.c_str());
 		  return -1;
 		}
-		gfal_closedir(dp);
+		(void)gfal_closedir(dp);
 
 	    }
 	}
@@ -1201,7 +1204,7 @@ int CComCloudFileServer::create_tmp_file(int &fd, int dest, std::string &fullfil
 	     printf("The worker path is not accesible %s, maybe worker finishes\n", workerpath.c_str());
 	     return -1;
 	  }
-	  gfal_closedir(dp);
+	  (void)gfal_closedir(dp);
 	  if(debug)
 	      printf("Failed to create filename %s failed, trying another name \n :", fullfilename.c_str());
 	    
@@ -1215,6 +1218,7 @@ int CComCloudFileServer::create_tmp_file(int &fd, int dest, std::string &fullfil
 int CComCloudFileServer::send_file(char *buffer, int dest)
 {
      //first thing, prevent send to myself
+     
      int fd;
      std::string tmpfilename;
      
@@ -1233,11 +1237,16 @@ int CComCloudFileServer::send_file(char *buffer, int dest)
 	  if(result >0)
 	  {
 		printf("gfal_write returns %d for written %d bytes \n", result, strlen(buffer) );
-		gfal_close(fd);
+		(void)gfal_close(fd);
 		if( determine_file_name(tmpfilename, dest) == 0) return 0;
 		else return -1;
 	  }
-	  else return -1;
+	  else
+	  {
+	    (void)gfal_close(fd);
+	    return -1;
+	    
+	  }  
 	  // now rename 
 	  
      }
@@ -1261,23 +1270,72 @@ int CComCloudFileServer::file_read(const char *filename)
     {
         // get individual
         int result = gfal_read(fd, buffer, MAXINDSIZE );
-        if( result < 0) return -1;
-		gfal_close(fd);
+        if( result < 0)
+	{  
+	  (void)gfal_close(fd);
+	  return -1;
+	}    
+	
+	(void)gfal_close(fd);
 	// fail some read operation
-	}
-	else 
-	    return -1;
-	processed_files.insert(workerfile);
+    }
+     else 
+	return -1;
+     processed_files.insert(workerfile);
 	
     return 0;
 }
+
+
+void CComCloudFileServer::readfiles()
+{
+      if(refresh_file_list() == 0)
+      {
+	  std::list<string>::iterator it;
+	  for(it= new_files.begin(); it != new_files.end(); it++)
+	  {
+	    if(file_read((*it).c_str()) == 0)
+	    {
+		if(debug) {
+		    printf("Reading file %s sucescully\n", (*it).c_str());
+		    printf("\nData entry[%i]\n",data->size());
+		    printf("Received the following:\n");
+		    printf("%s\n",buffer);
+		    printf("%d\n",(int)strlen(buffer));
+		}
+		  
+	      // blocking call
+	      pthread_mutex_lock(&server_mutex);
+	      std::string bufferstream(buffer);
+	      data->push(buffer);
+	      /*process received data */
+	      //memmove(data[nb_data].data,buffer,sizeof(char)*MAXINDSIZE);
+	      //nb_data++;
+      //	printf("address %p\n",(p->data));
+	      //data = (RECV_DATA*)realloc(data,sizeof(RECV_DATA)*(nb_data+1));
+      //	printf("address %p\n",(p->data));
+	      pthread_mutex_unlock(&server_mutex);
+	      /*reset receiving buffer*/
+	      memset(buffer,0,MAXINDSIZE);
+	    }
+	    else
+	    {
+		printf("Error reading file %s , we will ignore it \n", (*it).c_str()); 
+	    }	
+	  }
+      }
+      else
+      {
+	    printf("Cannot get the list of files for this worker, we will try later again ...\n");
+      }  
+}  
 
 void CComCloudFileServer::run()
 {
        while(!cancel) {/*forever loop*/
 	  
 		// check for new files
-		if(refresh_file_list() == 0)
+	/*	if(refresh_file_list() == 0)
 		{
 		    std::list<string>::iterator it;
 		    for(it= new_files.begin(); it != new_files.end(); it++)
@@ -1302,9 +1360,9 @@ void CComCloudFileServer::run()
 		//	printf("address %p\n",(p->data));
 			//data = (RECV_DATA*)realloc(data,sizeof(RECV_DATA)*(nb_data+1));
 		//	printf("address %p\n",(p->data));
-			pthread_mutex_unlock(&server_mutex);
+		/*	pthread_mutex_unlock(&server_mutex);
 			/*reset receiving buffer*/
-			memset(buffer,0,MAXINDSIZE);
+		/*	memset(buffer,0,MAXINDSIZE);
 		      }
 		      else
 		      {
@@ -1315,7 +1373,7 @@ void CComCloudFileServer::run()
 		else
 		{
 		     printf("Cannot get the list of files for this worker, we will try later again ...\n");
-		}  
+		}  */
 		// we should wit some time after 
 		sleep(4);
 	}
@@ -1379,13 +1437,13 @@ CComCloudFileServer::~CComCloudFileServer()
 	      }      
 	      else if(result == -1)
 	      {
-			    gfal_closedir (dp);
+			    (void)gfal_closedir (dp);
 			  	sleep(4);
 				tries++;
 				continue;
 		  }		
 	    }
-	        gfal_closedir (dp);
+	        (void)gfal_closedir (dp);
             if( gfal_rmdir(workerpath.c_str()) == 0 )
 	    {
 		if(debug)

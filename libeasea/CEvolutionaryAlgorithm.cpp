@@ -291,8 +291,9 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     //Receiving individuals if cluster island model
     if(params->remoteIslandModel){
-	this->receiveIndividuals();
+	
 	fileserver->refresh_worker_list();
+	this->receiveIndividuals();
     }
     
     currentGeneration += 1;

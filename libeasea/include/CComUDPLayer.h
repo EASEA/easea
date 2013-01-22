@@ -135,6 +135,7 @@ class CComCloudFileServer{
 	int determine_file_name(std::string tmpfilename, int dest);
 	int refresh_file_list();
 	int file_read(const char* filename);
+	void readfiles();
 	void run();
     int create_tmp_file(int& fd, int dest, std::string &tmpfilename);
 };
