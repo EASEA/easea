@@ -3,7 +3,7 @@ ifeq ($(shell uname -o 2>/dev/null),Msys)
 	OS := MINGW
 endif
 EXEC = bin/easea
-CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated -DDEBUG -DLINE_NUM_EZ_FILE
+CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g2  -Wno-deprecated -DDEBUG -DLINE_NUM_EZ_FILE
 CPPC = g++ 
 LDFLAGS = 
 

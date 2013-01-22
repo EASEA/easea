@@ -58,7 +58,7 @@ public:
   std::queue<std::string> receivedIndividuals;
   
   //file server
-  CComFileServer *fileserver;
+  CComCloudFileServer *fileserver;
   
   void initializeClients();
   void receiveIndividuals();

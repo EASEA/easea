@@ -143,7 +143,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		this->treatedFileIndividuals = 0;
 		this->numberOfClients = 0;
 		this->myClientNumber=0;	
-		fileserver = new CComFileServer(params->working_path,params->expId, &receivedIndividuals,  1);
+		fileserver = new CComCloudFileServer(params->working_path,params->expId, &receivedIndividuals,  1);
 		this->initializeClients();
 		//if(params->remoteIslandModel)
 		server = new CComUDPServer(params->serverPort,&receivedIndividuals,0); //1 if debug
@@ -292,8 +292,9 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     //Receiving individuals if cluster island model
     if(params->remoteIslandModel){
 	this->receiveIndividuals();
+	fileserver->refresh_worker_list();
     }
-    this->fileserver->refresh_worker_list();
+    
     currentGeneration += 1;
   }
 //#ifdef __linux__

@@ -30,6 +30,7 @@
 #include <set>
 #include <vector>
 #include <queue>
+#include "gfal_api.h"
 
 #define _MULTI_THREADED
 #define MAXINDSIZE 50000 /*maximum size of an individual in number of characters*/
@@ -102,6 +103,41 @@ class CComFileServer{
         int create_tmp_file(FILE* &outputfile, int& fd, int dest, std::string &tmpfilename);
 };
 
+class CComCloudFileServer{
+  public:
+	int debug;
+	//int cancel;
+	//RECV_DATA *data;
+	//int nb_data;
+	std::queue<std::string> *data;
+	static void * File_server_thread(void *parm);
+	CComCloudFileServer(char *path, char *expname, std::queue<std::string> *_data, int dbg);
+	std::string workername;
+	std::string fullpath;
+	std::set<std::string> processed_files;
+	std::vector<std::string> worker_list;
+	std::list<std::string> new_files;
+	char buffer[MAXINDSIZE];
+	int number_of_workers();
+	int send_file(char *buffer, int dest);
+	int refresh_worker_list();
+	void read_data_lock();
+	void read_data_unlock();
+	~CComCloudFileServer();
+
+  private:
+        
+	pthread_t thread;
+	int cancel;
+	long wait_time;
+	int create_ind_repository();
+	int determine_worker_name(int start=1);
+	int determine_file_name(std::string tmpfilename, int dest);
+	int refresh_file_list();
+	int file_read(const char* filename);
+	void run();
+    int create_tmp_file(int& fd, int dest, std::string &tmpfilename);
+};
 
 	
 

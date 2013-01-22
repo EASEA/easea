@@ -3,7 +3,7 @@ ifeq ($(shell uname -o 2>/dev/null),Msys)
 	OS := MINGW
 endif
 
-CXXFLAGS = -g -Wall -fmessage-length=0 -I/usr/local/cuda/include #-I../boost/
+CXXFLAGS = -g2 -Wall -fmessage-length=0 -I/usr/local/cuda/include #-I../boost/ -lgfal
 
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
@@ -24,9 +24,9 @@ endif
 
 TARGET = libeasea.a
 ifneq ("$(OS)","")
-	CPPFLAGS=-I..\boost\ #-pg
+	CPPFLAGS=-g2 -I..\boost\ #-pg
 else
-	CPPFLAGS=-I../boost/ #-pg
+	CPPFLAGS=-g2 -I../boost/ #-pg
 endif
 
 $(TARGET): $(OBJS)
