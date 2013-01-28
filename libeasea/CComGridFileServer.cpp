@@ -25,11 +25,9 @@
 #endif
 using namespace std;
 
-pthread_mutex_t server_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t fileserver_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t directoryread_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t cloudfileserver_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t sendind_mutex = PTHREAD_MUTEX_INITIALIZER;
+extern pthread_mutex_t server_mutex;
+pthread_mutex_t sending_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t worker_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 CComGridFileServer::CComGridFileServer(char* path, char* expname, std::queue< string >* _data, int dbg) {
   
@@ -72,12 +70,12 @@ CComGridFileServer::CComGridFileServer(char* path, char* expname, std::queue< st
     }
     
     
-    gfal_pthr_init(Cglobals_get);
+    //gfal_pthr_init(Cglobals_get);
     // now create thread to listen for incoming files
-    if( read_thread = Cthread_create(&CComGridFileServer::file_read_thread, (void *)this) != 0) {
+    if( thread_read = Cthread_create(&CComGridFileServer::file_read_thread, (void *)this) < 0) {
         printf("pthread create failed. exiting\n"); exit(1);
     }
-    if( write_thread = Cthread_create(&CComGridFileServer::file_write_thread, (void *)this) != 0) {
+    if( thread_write = Cthread_create(&CComGridFileServer::file_write_thread, (void *)this) < 0) {
         printf("pthread create failed. exiting\n"); exit(1);
     }
 
@@ -91,6 +89,8 @@ int CComGridFileServer::refresh_worker_list()
 {
   
   // read the directory list, each folder is a worker
+  
+  pthread_mutex_lock(&worker_list_mutex);
   if(worker_list.size()>0)worker_list.clear();
   
   // taken from GNU C manual
@@ -108,7 +108,7 @@ int CComGridFileServer::refresh_worker_list()
   
   if (dp != NULL)
   {
-       while ((ep = gfal_readdir (dp)))
+       while ((ep = gfal_readdir (dp)) && !cancel)
        {
 			 //only take into account folders
 			 string s(ep->d_name);
@@ -131,16 +131,18 @@ int CComGridFileServer::refresh_worker_list()
 			 {
 			   (void)gfal_closedir (dp);
 			   printf ("Cannot scan the experiment directory for find workers %s\n", fullpathworker.c_str());
-			   
+			   pthread_mutex_unlock(&worker_list_mutex); 
 			   return -1;
 			 } 
-		}
+	}
+	if(cancel) printf("Stop finding workers, thread canceled\n");
+        pthread_mutex_unlock(&worker_list_mutex); 		
         (void)gfal_closedir (dp);
   }      
   else
   {  
        printf ("Cannot scan the experiment directory for find workers %s\n", fullpath.c_str());
-//        
+       pthread_mutex_unlock(&worker_list_mutex);    
        return -1;
   }      
 
@@ -169,7 +171,7 @@ int CComGridFileServer::refresh_file_list()
   if (dp != NULL)
   {
        printf("Refreshing filelist (new individuals) in %s\n",workerpath.c_str());
-       while ((ep = gfal_readdir (dp)))
+       while ((ep = gfal_readdir (dp)) && !cancel)
        {
 		 //only take into account folders
 		 string s(ep->d_name);
@@ -198,6 +200,7 @@ int CComGridFileServer::refresh_file_list()
 		 }   
 	        
       }
+      if(cancel) printf("Stop scanning incoming files, thread canceled\n");
       (void)gfal_closedir (dp);
   }      
   else
@@ -263,14 +266,14 @@ int CComGridFileServer::determine_worker_name(int start)
 
 
 
-int CComGridFileServer::determine_file_name(std::string fulltmpfilename, int dest)
+int CComGridFileServer::determine_file_name(std::string fulltmpfilename, std::string workerdestname)
 {
 	
    time_t tstamp = time(NULL);
     while(1)
     {
  	std::stringstream s;
-	s << fullpath << '/' << worker_list[dest] << "/individual_" << tstamp << ".txt";
+	s << fullpath << '/' << workerdestname << "/individual_" << tstamp << ".txt";
 	std::string fullfilename = s.str();
         int fd = gfal_open( fullfilename.c_str(), O_RDONLY, 0777);
 	// the file does not exit, so we can create the individual
@@ -288,7 +291,7 @@ int CComGridFileServer::determine_file_name(std::string fulltmpfilename, int des
 	    else
 	    {
 		DIR *dp;
-		std::string workerpath = fullpath + '/' + worker_list[dest];
+		std::string workerpath = fullpath + '/' + workerdestname;
 		dp = gfal_opendir (workerpath.c_str());
 		if( dp == NULL)
 		{  
@@ -305,14 +308,14 @@ int CComGridFileServer::determine_file_name(std::string fulltmpfilename, int des
 }  
 
 
-int CComGridFileServer::create_tmp_file(int &fd, int dest, std::string &fullfilename)
+int CComGridFileServer::create_tmp_file(int &fd, std::string workerdestname, std::string &fullfilename)
 {
    time_t tstamp = time(NULL);
     while(1)
     {
         
 	std::stringstream s;
-	s << fullpath << '/' << worker_list[dest] << "/temp_" << tstamp << ".txt";
+	s << fullpath << '/' << workerdestname << "/temp_" << tstamp << ".txt";
 	fullfilename = s.str();
 	
 	
@@ -334,7 +337,7 @@ int CComGridFileServer::create_tmp_file(int &fd, int dest, std::string &fullfile
 	    // error ocurred, so two alternatives
 	    // the path does not exit anymore (race condition)
 	  DIR *dp;
-	  std::string workerpath = fullpath + '/' + worker_list[dest];
+	  std::string workerpath = fullpath + '/' + workerdestname;
 	  dp = gfal_opendir (workerpath.c_str());
 	  if( dp == NULL)
 	  {  
@@ -353,47 +356,40 @@ int CComGridFileServer::create_tmp_file(int &fd, int dest, std::string &fullfile
 }
 
 
-void CComGridFileServer::send_files()
+void CComGridFileServer::send_individuals()
 {
-  
-}
+    std::list<std::pair<std::string,std::string> >::iterator it = writedata.begin();
+    std::list<std::pair<std::string,std::string> >::iterator it2 = it;
+    std::pair<std::string,std::string> item;
+    while( it != writedata.end() && !cancel )
+    {
+        if(send_file_worker( (*it).first, (*it).second ) ==0 )
+	{  
+	     pthread_mutex_lock(&sending_mutex);
+     	     it2 = it;
+	     ++it;
+	     writedata.erase(it2);
+	     pthread_mutex_unlock(&sending_mutex);
+	} 
+	else ++it;
+      
+    }  
+    if(cancel)printf("Stop sending individuals, thread canceled\n");
+    
+}  
 
-int CComGridFileServer::send_file(char *buffer, int dest)
+int CComGridFileServer::send_file_worker(std::string buffer, std::string workerdestname)
 {
-     //first thing, prevent send to myself
-     
-     int fd;
-     std::string tmpfilename;
-     
-     if(workername == worker_list[dest])
+    int fd;
+    std::string tmpfilename;
+    if( create_tmp_file(fd, workerdestname, tmpfilename) == 0)
      {
-        if(debug)
-	    printf("I will not send the individual to myself, it is not a fatal error, so continue\n");
-        return 0;
-     }
-     
-     
-     pthread_mutex_lock(sendind_mutex);
-     std::string buffer(buffer);
-     std::pair<std::string,int> item(buffer,dest);
-     writedata.push(item);
-     pthread_mutex_unlock(sendind_mutex);
-     return 0;
-     
-     
-     
-     
-     
-     // determine the name to send a file
-     
-     if( create_tmp_file(fd, dest, tmpfilename) == 0)
-     {
-	  int result = gfal_write( fd, buffer, strlen(buffer) );
+	  int result = gfal_write( fd, buffer.c_str(), buffer.size() );
 	  if(result >0)
 	  {
-		printf("gfal_write returns %d for written %d bytes \n", result, strlen(buffer) );
+		printf("gfal_write returns %d for written %d bytes \n", result, buffer.size() );
 		(void)gfal_close(fd);
-		if( determine_file_name(tmpfilename, dest) == 0) return 0;
+		if( determine_file_name(tmpfilename, workerdestname) == 0) return 0;
 		else return -1;
 	  }
 	  else
@@ -412,6 +408,60 @@ int CComGridFileServer::send_file(char *buffer, int dest)
      }
      return 0;
 }
+  
+  
+
+int CComGridFileServer::send_file(char *buffer, int dest)
+{
+     //first thing, prevent send to myself
+     
+     int fd;
+     std::string tmpfilename;
+     std::string workdest;
+     
+     
+     pthread_mutex_lock(&worker_list_mutex);
+     // worker list can be changed since last refresh
+     if(dest>=worker_list.size()){
+       
+       if(worker_list.size()>0)
+       {	 
+          workdest = worker_list[worker_list.size()-1];
+          if(debug)
+             printf("Invalid destination worker, send to another worker : %s\n", workdest.c_str());
+       }	  
+       else
+       {	 
+	     printf("No destination workers available \n");
+	     return 0;
+       }     
+     }     
+     if(workername == worker_list[dest])
+     {
+        if(debug)
+	    printf("I will not send the individual to myself, it is not a fatal error, so continue\n");
+        return 0;
+     }
+          
+     workdest = worker_list[dest];
+     pthread_mutex_unlock(&worker_list_mutex);
+
+     std::string buffer_str(buffer);
+     std::pair<std::string,std::string> item(buffer_str,workdest);
+
+     
+     pthread_mutex_lock(&sending_mutex);
+     writedata.push_back(item);
+     pthread_mutex_unlock(&sending_mutex);
+     return 0;
+}     
+     
+     
+     
+     
+     // determine the name to send a file
+     
+ 
 
 
 int CComGridFileServer::file_read(const char *filename)
@@ -447,7 +497,7 @@ void CComGridFileServer::readfiles()
       if(refresh_file_list() == 0)
       {
 	  std::list<string>::iterator it;
-	  for(it= new_files.begin(); it != new_files.end(); it++)
+	  for(it= new_files.begin(); it != new_files.end() && !cancel; it++)
 	  {
 	    if(file_read((*it).c_str()) == 0)
 	    {
@@ -478,6 +528,7 @@ void CComGridFileServer::readfiles()
 		printf("Error reading file %s , we will ignore it \n", (*it).c_str()); 
 	    }	
 	  }
+	  if(cancel) printf("Stop reading individuals, thread canceled\n");
       }
       else
       {
@@ -485,16 +536,27 @@ void CComGridFileServer::readfiles()
       }  
 }  
 
-void CComGridFileServer::run()
+void CComGridFileServer::run_read()
 {
        while(!cancel) {/*forever loop*/
 	  
-		read_files();
+		readfiles();
 		refresh_worker_list();
 		// check for new files
 		sleep(4);
 	}
 }
+
+void CComGridFileServer::run_write()
+{
+       while(!cancel) {/*forever loop*/
+	  
+		send_individuals();
+		// check for new files
+		sleep(4);
+	}
+}
+
 
 void * CComGridFileServer::file_read_thread(void *parm) {
 	CComGridFileServer *server = (CComGridFileServer*)parm;
@@ -527,7 +589,8 @@ CComGridFileServer::~CComGridFileServer()
 {
     printf("Calling the destructor ....\n");
     this->cancel =1;
-    pthread_join(thread, NULL);
+    Cthread_join(thread_read, NULL);
+    Cthread_join(thread_write, NULL);
     // erase working path
     printf("Filserver thread cancelled ....\n");
     int tries=0;

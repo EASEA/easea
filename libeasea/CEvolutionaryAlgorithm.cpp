@@ -25,6 +25,7 @@
 #include "include/CGrapher.h"
 #include "include/global.h"
 #include "include/CComUDPLayer.h"
+#include "include/CComGridFileServer.h"
 #include "include/CRandomGenerator.h"
 #include <stdio.h>
 #include <sstream>
@@ -143,7 +144,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		this->treatedFileIndividuals = 0;
 		this->numberOfClients = 0;
 		this->myClientNumber=0;	
-		fileserver = new CComCloudFileServer(params->working_path,params->expId, &receivedIndividuals,  1);
+		fileserver = new CComGridFileServer(params->working_path,params->expId, &receivedIndividuals,  1);
 		this->initializeClients();
 		//if(params->remoteIslandModel)
 		server = new CComUDPServer(params->serverPort,&receivedIndividuals,0); //1 if debug
@@ -292,7 +293,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     //Receiving individuals if cluster island model
     if(params->remoteIslandModel){
 	
-	fileserver->refresh_worker_list();
+	//fileserver->refresh_worker_list();
 	this->receiveIndividuals();
     }
     
@@ -519,7 +520,7 @@ void CEvolutionaryAlgorithm::refreshClient(){
 
     cout << "ip file : " << this->params->ipFile << " contains " << no_client << " client ip(s)" << endl;
     this->numberOfClients = no_client;
-    fileserver->refresh_worker_list();
+    //fileserver->refresh_worker_list();
 }
 
 void CEvolutionaryAlgorithm::sendIndividual(){

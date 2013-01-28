@@ -1,3 +1,5 @@
+#ifndef CCOMGRIDFILESERVER
+#define CCOMGRIDFILESERVER
 #ifdef WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -22,9 +24,10 @@
 #include <set>
 #include <vector>
 #include <queue>
+#include <utility>
 #include "gfal_api.h"
 #include "Cglobals.h"
-#include "Cthread_api.h
+#include "Cthread_api.h"
 
 
 #define _MULTI_THREADED
@@ -38,7 +41,7 @@ class CComGridFileServer{
 	//RECV_DATA *data;
 	//int nb_data;
 	std::queue<std::string> *data;
-	std::queue<std::pair<std::string,int> writedata;
+	std::list<std::pair<std::string,std::string> > writedata;
 	static void * file_read_thread(void *parm);
 	static void * file_write_thread(void *parm);
 	CComGridFileServer(char *path, char *expname, std::queue<std::string> *_data, int dbg);
@@ -62,11 +65,15 @@ class CComGridFileServer{
 	long wait_time;
 	int create_ind_repository();
 	int determine_worker_name(int start=1);
-	int determine_file_name(std::string tmpfilename, int dest);
+	int determine_file_name(std::string tmpfilename, std::string workerdestname);
 	int refresh_file_list();
 	int file_read(const char* filename);
 	void readfiles();
+	void send_individuals();
 	void run_read();
 	void run_write();
-        int create_tmp_file(int& fd, int dest, std::string &tmpfilename);
+        int create_tmp_file(int& fd, std::string workerdestname, std::string &tmpfilename);
+	int send_file_worker(std::string buffer, std::string workerdestname);
+	
 };
+#endif

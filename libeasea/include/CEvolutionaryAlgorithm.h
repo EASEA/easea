@@ -16,6 +16,7 @@
 #include "CStoppingCriterion.h"
 #include "CComUDPLayer.h"
 #include "CStats.h"
+#include "CComGridFileServer.h"
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -58,7 +59,7 @@ public:
   std::queue<std::string> receivedIndividuals;
   
   //file server
-  CComCloudFileServer *fileserver;
+  CComGridFileServer *fileserver;
   
   void initializeClients();
   void receiveIndividuals();
