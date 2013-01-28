@@ -1,0 +1,72 @@
+#ifdef WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <sys/socket.h> /* for socket(), bind(), and connect() */
+#include <netdb.h> /* for gethostbyname */
+#include <arpa/inet.h>  /* for sockaddr_in and inet_ntoa() */
+#include <netinet/in.h> /* for IP Socket data types */
+#include <unistd.h>     /* for close() */
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <typeinfo>
+#include <float.h>
+#include <limits.h>
+#if not defined(__APPLE__) 
+#include <omp.h>
+#endif
+#include <string>
+#include <list>
+#include <set>
+#include <vector>
+#include <queue>
+#include "gfal_api.h"
+#include "Cglobals.h"
+#include "Cthread_api.h
+
+
+#define _MULTI_THREADED
+#define MAXINDSIZE 50000 /*maximum size of an individual in number of characters*/
+
+
+class CComGridFileServer{
+  public:
+	int debug;
+	//int cancel;
+	//RECV_DATA *data;
+	//int nb_data;
+	std::queue<std::string> *data;
+	std::queue<std::pair<std::string,int> writedata;
+	static void * file_read_thread(void *parm);
+	static void * file_write_thread(void *parm);
+	CComGridFileServer(char *path, char *expname, std::queue<std::string> *_data, int dbg);
+	std::string workername;
+	std::string fullpath;
+	std::set<std::string> processed_files;
+	std::vector<std::string> worker_list;
+	std::list<std::string> new_files;
+	char buffer[MAXINDSIZE];
+	int number_of_workers();
+	int send_file(char *buffer, int dest);
+	int refresh_worker_list();
+	void read_data_lock();
+	void read_data_unlock();
+	~CComGridFileServer();
+
+  private:
+        
+	int thread_read, thread_write;
+	int cancel;
+	long wait_time;
+	int create_ind_repository();
+	int determine_worker_name(int start=1);
+	int determine_file_name(std::string tmpfilename, int dest);
+	int refresh_file_list();
+	int file_read(const char* filename);
+	void readfiles();
+	void run_read();
+	void run_write();
+        int create_tmp_file(int& fd, int dest, std::string &tmpfilename);
+};
