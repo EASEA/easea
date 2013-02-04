@@ -48,12 +48,8 @@ CComGridFileServer::CComGridFileServer(char* path, char* expname, std::queue< st
     if(result<0 && errno!= EEXIST)
     {
         printf("Cannot create experiment folder %s; check user permissions or disk space", fullpath.c_str());
-	exit(1);
-    }
-    else if(debug)
-    {
         printf("Result of gfal_mkdir = %d %d\n" ,result,errno);   
-	printf("Experiment folder %s, the path is %s\n", (result==0 ? "created" : "exits already"), fullpath.c_str());
+	exit(1);
     }
     
     result = gfal_chmod(fullpath.c_str(), 0777);
@@ -72,12 +68,17 @@ CComGridFileServer::CComGridFileServer(char* path, char* expname, std::queue< st
     
     //gfal_pthr_init(Cglobals_get);
     // now create thread to listen for incoming files
-    if( thread_read = Cthread_create(&CComGridFileServer::file_read_thread, (void *)this) < 0) {
+    
+     if( thread_read = Cthread_create(&CComGridFileServer::file_readwrite_thread, (void *)this) < 0) {
+        printf("pthread create failed. exiting\n"); exit(1);
+    }
+    
+/*    if( thread_read = Cthread_create(&CComGridFileServer::file_read_thread, (void *)this) < 0) {
         printf("pthread create failed. exiting\n"); exit(1);
     }
     if( thread_write = Cthread_create(&CComGridFileServer::file_write_thread, (void *)this) < 0) {
         printf("pthread create failed. exiting\n"); exit(1);
-    }
+    }*/
 
 }
 
@@ -230,8 +231,8 @@ int CComGridFileServer::determine_worker_name(int start)
   // refresh nfs file list
   
   
-      dp = gfal_opendir (fullpath.c_str());
-      (void)gfal_closedir(dp);
+      //dp = gfal_opendir (fullpath.c_str());
+      //(void)gfal_closedir(dp);
 
       dp = gfal_opendir( s.str().c_str() );
       // verify if directory exist
@@ -239,26 +240,31 @@ int CComGridFileServer::determine_worker_name(int start)
       {
 		(void)gfal_closedir(dp);  
 		start++;
-	  }
-	  else if(errno == ENOENT)
-	  {
-	  	int result = gfal_mkdir(s.str().c_str(), 0777);
-    
-    // check error condition
-    
-		  if(result == 0)
-		  {
-			  if(debug)printf("Experiment worker folder sucessfuly created, the path is %s\n", s.str().c_str());
-			  result = gfal_chmod( s.str().c_str(), 0777 );
-			  workername = t.str();
-			  break;
-		  }	
-		  else
-		  {
-			  printf("Cannot create worker experiment folder %s; error reported is %d\n", s.str().c_str(), errno);
-			  return -1;
-		  }
-	 }  
+      }
+      else if(errno == ENOENT)
+      {
+	    int result = gfal_mkdir(s.str().c_str(), 0777);
+
+// check error condition
+
+	      if(result == 0)
+	      {
+		      if(debug)printf("Experiment worker folder sucessfuly created, the path is %s\n", s.str().c_str());
+		      result = gfal_chmod( s.str().c_str(), 0777 );
+		      workername = t.str();
+		      break;
+	      }	
+	      else
+	      {
+		      printf("Cannot create worker experiment folder %s; error reported is %d\n", s.str().c_str(), errno);
+		      return -1;
+	      }
+      }  
+      else
+      {
+	      printf("Cannot create worker experiment folder %s; error reported is %d\n", s.str().c_str(), errno);
+	      return -1;
+      }
   }
   return 0;
 }
@@ -556,6 +562,27 @@ void CComGridFileServer::run_write()
 		sleep(4);
 	}
 }
+
+void CComGridFileServer::run_readwrite()
+{
+      while(!cancel) {/*forever loop*/
+	  
+	  send_individuals();
+	  readfiles();
+	  refresh_worker_list();
+		// check for new files
+	sleep(4);
+	}
+
+}
+
+
+void * CComGridFileServer::file_readwrite_thread(void *parm) {
+	CComGridFileServer *server = (CComGridFileServer*)parm;
+
+	server->run_readwrite();
+	return NULL;
+}	
 
 
 void * CComGridFileServer::file_read_thread(void *parm) {

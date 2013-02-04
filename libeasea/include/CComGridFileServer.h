@@ -44,6 +44,7 @@ class CComGridFileServer{
 	std::list<std::pair<std::string,std::string> > writedata;
 	static void * file_read_thread(void *parm);
 	static void * file_write_thread(void *parm);
+	static void * file_readwrite_thread(void *parm);
 	CComGridFileServer(char *path, char *expname, std::queue<std::string> *_data, int dbg);
 	std::string workername;
 	std::string fullpath;
@@ -57,6 +58,7 @@ class CComGridFileServer{
 	void read_data_lock();
 	void read_data_unlock();
 	~CComGridFileServer();
+	void run_readwrite();
 
   private:
         
