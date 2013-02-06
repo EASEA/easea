@@ -26,8 +26,6 @@
 #include <queue>
 #include <utility>
 #include "gfal_api.h"
-#include "Cglobals.h"
-#include "Cthread_api.h"
 
 
 #define _MULTI_THREADED
@@ -62,7 +60,7 @@ class CComGridFileServer{
 
   private:
         
-	int thread_read, thread_write;
+	pthread_t thread_read, thread_write;
 	int cancel;
 	long wait_time;
 	int create_ind_repository();

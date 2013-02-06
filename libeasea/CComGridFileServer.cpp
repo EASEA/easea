@@ -68,8 +68,8 @@ CComGridFileServer::CComGridFileServer(char* path, char* expname, std::queue< st
     
     //gfal_pthr_init(Cglobals_get);
     // now create thread to listen for incoming files
-    
-     if( thread_read = Cthread_create(&CComGridFileServer::file_readwrite_thread, (void *)this) < 0) {
+     //if(pthread_create(&thread, NULL, &CComUDPServer::UDP_server_thread, (void *)this) != 0) {
+     if( pthread_create(&thread_read,NULL,&CComGridFileServer::file_readwrite_thread, (void *)this) < 0) {
         printf("pthread create failed. exiting\n"); exit(1);
     }
     
@@ -219,7 +219,8 @@ int CComGridFileServer::determine_worker_name(int start)
 {
   
   // scan experiment directory to find a suitable worker name
-  while(1)
+  int tries = 0;
+  while(tries < 5)
   {
       std::stringstream s,t;
       s << fullpath << "/worker_" << start;
@@ -252,21 +253,21 @@ int CComGridFileServer::determine_worker_name(int start)
 		      if(debug)printf("Experiment worker folder sucessfuly created, the path is %s\n", s.str().c_str());
 		      result = gfal_chmod( s.str().c_str(), 0777 );
 		      workername = t.str();
-		      break;
+		      return 0;
 	      }	
 	      else
 	      {
 		      printf("Cannot create worker experiment folder %s; error reported is %d\n", s.str().c_str(), errno);
-		      return -1;
+		      tries++;
 	      }
       }  
       else
       {
+	      tries++;
 	      printf("Cannot create worker experiment folder %s; error reported is %d\n", s.str().c_str(), errno);
-	      return -1;
       }
   }
-  return 0;
+  return -1;
 }
 
 
@@ -275,8 +276,9 @@ int CComGridFileServer::determine_worker_name(int start)
 int CComGridFileServer::determine_file_name(std::string fulltmpfilename, std::string workerdestname)
 {
 	
+   int tries = 0;
    time_t tstamp = time(NULL);
-    while(1)
+    while(tries<3)
     {
  	std::stringstream s;
 	s << fullpath << '/' << workerdestname << "/individual_" << tstamp << ".txt";
@@ -296,6 +298,8 @@ int CComGridFileServer::determine_file_name(std::string fulltmpfilename, std::st
 	    }
 	    else
 	    {
+	        tries++;
+	        printf("unable to rename tmp file to %s, error code %d,  trying another name\n", fullfilename.c_str(), errno);
 		DIR *dp;
 		std::string workerpath = fullpath + '/' + workerdestname;
 		dp = gfal_opendir (workerpath.c_str());
@@ -308,16 +312,17 @@ int CComGridFileServer::determine_file_name(std::string fulltmpfilename, std::st
 
 	    }
 	}
-	if(debug)printf("unable to rename tmp file to %s,  trying another name\n", fullfilename.c_str());
         tstamp++;
     }	
+    return -1;
 }  
 
 
 int CComGridFileServer::create_tmp_file(int &fd, std::string workerdestname, std::string &fullfilename)
 {
    time_t tstamp = time(NULL);
-    while(1)
+   unsigned tries = 0;
+    while(tries<3)
     {
         
 	std::stringstream s;
@@ -337,28 +342,27 @@ int CComGridFileServer::create_tmp_file(int &fd, std::string workerdestname, std
 	 	   if(debug)
 		     printf("Create file for sending individual %s \n :", fullfilename.c_str());
 		   break;
+		   return 0;
 	}
 	else
 	{
 	    // error ocurred, so two alternatives
 	    // the path does not exit anymore (race condition)
+	  tries++;
+	  printf("Failed to create filename %s, error code %d\n", fullfilename.c_str(), errno);
 	  DIR *dp;
 	  std::string workerpath = fullpath + '/' + workerdestname;
 	  dp = gfal_opendir (workerpath.c_str());
 	  if( dp == NULL)
 	  {  
 	     printf("The worker path is not accesible %s, maybe worker finishes\n", workerpath.c_str());
-	     return -1;
+	     break;
 	  }
 	  (void)gfal_closedir(dp);
-	  if(debug)
-	      printf("Failed to create filename %s failed, trying another name \n :", fullfilename.c_str());
-	    
-	    tstamp++;
-	    continue;
-	  }  
+	  tstamp++;
+	}  
     }
-    return 0;
+    return -1;
 }
 
 
@@ -567,12 +571,13 @@ void CComGridFileServer::run_readwrite()
 {
       while(!cancel) {/*forever loop*/
 	  
-	  send_individuals();
+	  
 	  readfiles();
+	  send_individuals();
 	  refresh_worker_list();
 		// check for new files
-	sleep(4);
-	}
+	  sleep(4);
+      }
 
 }
 
@@ -616,8 +621,7 @@ CComGridFileServer::~CComGridFileServer()
 {
     printf("Calling the destructor ....\n");
     this->cancel =1;
-    Cthread_join(thread_read, NULL);
-    Cthread_join(thread_write, NULL);
+    pthread_join(thread_read, NULL);
     // erase working path
     printf("Filserver thread cancelled ....\n");
     int tries=0;
