@@ -7,8 +7,9 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <map>
 
-extern pthread_t gfal_mutex;
+extern pthread_mutex_t gfal_mutex;
 
 
 
@@ -27,13 +28,16 @@ int CComWorkerListManager::refresh_worker_list()
   struct dirent *ep;
   
   // information concerning a worker
-  CommWorker workerinfo;
+  CommWorker *workerinfo;
      
   // refresh nfs file list
   
   //std::string command = "ls -a "+fullpath;
   //system(command.c_str());
+  
+  std::map<std::string, unsigned> active_workers_names;
 
+  for(int i=0; i< activeworkers.size(); i++) active_workers_names[ activeworkers[i].get_name()] = i;
 
   dp = gfal_opendir (workers_path.c_str());
   
@@ -53,9 +57,18 @@ int CComWorkerListManager::refresh_worker_list()
 			 {  
 				  
 				  
-				  if( s.substr(0,6) == "worker" && read_worker_info_file( fullpathworker, workerinfo ) == 0 )
+				  if( s.substr(0,6) == "worker")
+				      
 				  {
-				      activeworkers.push_back(s);
+				      // check if we have already information concerning this worker
+				      if( active_workers_names.find( s.substr(7) ) != active_workers_names.end() )
+				      {	
+					  if(read_worker_info_file( fullpathworker, workerinfo ) == 0 )					
+					      activeworkers.push_back( *workerinfo );
+					  
+				      }	  
+				      else
+					  active_workers_names.erase(s.substr(7) );
 				      if(debug)
 					    printf("Worker %s added to the list\n",s.c_str());
 				  }	  
@@ -71,6 +84,14 @@ int CComWorkerListManager::refresh_worker_list()
 	if(cancel) printf("Stop finding workers\n");
         pthread_mutex_unlock(&gfal_mutex); 		
         (void)gfal_closedir (dp);
+	// updating the active workers_path
+	// delete inactive workers
+	std::map<std::string, unsigned>::reverse_iterator it = active_workers_names.rbegin();
+	while( it != active_workers_names.rend() )
+	{  
+	     activeworkers.erase( activeworkers.begin() + (*it).second );
+	     ++it;
+	}
   }      
   else
   {  
@@ -82,7 +103,7 @@ int CComWorkerListManager::refresh_worker_list()
   return 0;
 }
 
-inline void CComWorkerListManager::cancel() const 
+inline void CComWorkerListManager::terminate()
 {
     cancel = true;
 }
@@ -93,7 +114,7 @@ inline CommWorker CComWorkerListManager::get_worker_nr(int wn)
 }
 
 
-int CComWorkerListManager::read_worker_info_file( std::string workerpath, CommWorker &workerinfo)
+int CComWorkerListManager::read_worker_info_file( std::string workerpath, CommWorker *&workerinfo)
 {
       char buffer[256];
       std::string fullfilename = workerpath + '/' + "worker_info.txt";
@@ -117,101 +138,96 @@ int CComWorkerListManager::read_worker_info_file( std::string workerpath, CommWo
 	  return -1;
 }
 
-int CComWorkerListManager::parse_worker_info_file(char *buffer, CommWorker &workerinfo)
+int CComWorkerListManager::parse_worker_info_file(char *buffer, CommWorker *&workerinfo) const
 {
  
-    if( checkValidLine(buffer) )
-    {
-	std::string hostname = strtok(buffer, ":");
-	char* address = strtok(NULL, ":");
-	std::string hostaddress = address;
-	int port = atoi ( strtok(NULL,":") );
-	 
-	CommWorker tmp(hostname, hostaddress, port);
-	workerinfo = tmp;    
-
+    char* holder = (char*)malloc(strlen(buffer)+1);
+    strcpy(holder,buffer);
+    char *hostname = strtok(holder, ":");
+    char *mode = strtok(NULL, ":");
+    
+    
+    
+    // check first valid hostanme and protocol
+    if(hostname == NULL || mode ==NULL)
+    {  
+        printf("*** WARNING ***\nThere is a problem with the following IP line %s: ===> IGNORING IT\n",buffer);
+        return -1;
     }
-    else return -1;
-      
+    
+    
+    // protocol = file so no IP, NO port, may be an external node
+    if( strcmp(mode,"FILE") == 0 )
+    {
+        std::string hn = hostname;
+	workerinfo = new CommWorker(hn);
+        return 0;
+    }
+    else if( strcmp(mode,"SOCKET") == 0 || strcmp(mode,"SOCKET") ) 
+    {  
+        // now check for ip and port/rank
+	char* address = strtok(NULL, ":");
+	char* port = strtok(NULL,":");
+	
+	if(check_ipaddress(address) == 0 && check_port(port) == 0) 
+	{  
+	  std::string hn = hostname;
+	  std::string addr = address;
+	  workerinfo = new CommWorker(hn,addr, atoi(port) );	  
+	  return 0;
+	}  
+        else return -1;
+    }
+
+    free(holder);
+    return 0;
 } 
 
 
-/**
- * Check the validity of an IP line. This line should have the form like : hostname:1.2.3.4:5 (ip:port).
- *
- * @ARG line : the line containing the ip and port description.
- * @ @RETURN : boolean containing the result of the regex match.
- *
- */
-//www.dreamincode.net/forums/topic/168930-valid-or-not-for-a-ip-address/
-int CComWorkerListManager::checkValidLine(char *line){
-    char* holder = (char*)malloc(strlen(line)+1);
-    strcpy(holder,line);
-    char *hostname = strtok(holder, ":");
-    char* address = strtok(NULL, ":");
-    char* port = strtok(NULL,":");
-    
-
-    //printf("IP %s\n",address);
-    //printf("port %s\n",port);
-
-    //Check if there is an IP and a port
-    if(hostname==NULL || address==NULL || port==NULL){
-        printf("*** WARNING ***\nThere is a problem with the following IP line: " << line << "\t===> IGNORING IT\n";
-        return -1;
+int CComWorkerListManager::check_port(char *port) const
+{
+    int nibble = atoi(port);
+    if(nibble<0){
+	  return -1;
     }
+    std::string s = port;
+    for(unsigned int i=0; i<s.length(); i++){
+        if(!isdigit(s[i])){
+	      return -1;
+        }
+    }
+    return 0;
+ }  
 
-    //Check if it is a valid ip
-    char* byte = strtok(address,".");
+
+int CComWorkerListManager::check_ipaddress(char *ipaddress) const
+{
+   char* byte = strtok(ipaddress,".");
     int nibble = 0, octets = 0, flag = 0;
     while(byte != NULL){
         octets++;
         if(octets>4){
-            printf("*** WARNING ***\nThere is a problem with the following IP line: " << line << "\t===> IGNORING IT\n";
             return -1;
         }
         nibble = atoi(byte);
         if((nibble<0)||(nibble>255)){
-            printf("*** WARNING ***\nThere is a problem with the following IP line: " << line << "\t===> IGNORING IT\n";
             return -1;
         }
         std::string s = byte;
         for(unsigned int i=0; i<s.length(); i++){
             if(!isdigit(s[i])){
-	      printf("*** WARNING ***\nThere is a problem with the following IP line: " << line << "\t===> IGNORING IT\n";
 	      return -1;
             }
         }
         byte = strtok(NULL,".");
     }
     if(flag || octets<4){
-            printf("*** WARNING ***\nThere is a problem with the following IP line: " << line << "\t===> IGNORING IT\n";
             return -1;
     }
-
-    //Check if it is a valid port
-    nibble = atoi(port);
-    if(nibble<0){
-	  printf("*** WARNING ***\nThere is a problem with the following IP line: " << line << "\t===> IGNORING IT\n";
-	  return -1;
-    }
-    std::string s = port;
-    for(unsigned int i=0; i<s.length(); i++){
-        if(!isdigit(s[i])){
-	      printf("*** WARNING ***\nThere is a problem with the following IP line: " << line << "\t===> IGNORING IT\n";
-	      return -1;
-        }
-    }
-    
-    free(holder);
     return 0;
 }
 
 
-inline void CComWorkerListManager::cancel()
-{
-    cancel = true;
-}
 
 
 inline int CComWorkerListManager::get_nr_workers() const
