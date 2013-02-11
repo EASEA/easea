@@ -10,7 +10,66 @@
 #include <stdio.h>     
 #include <stdlib.h>    
 #include <string.h>    
+#include <sstream>
 #include "gfal_api.h"
+#include <fcntl.h>
+
+#define MAXINDSIZE 50000
+
+
+CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, int dbg) {
+  
+    data = _data;
+    std::string exp(expname);
+    std::string pathname(path);
+    fullpath = pathname + expname;
+
+    //cancel = 0;
+    debug = dbg;
+ 
+    // create the main directory
+    
+    int result = gfal_mkdir(fullpath.c_str(),0777);
+    
+    // check error condition
+    printf("Trying to determine or create directory experiment\n");
+    if(result<0 && errno!= EEXIST)
+    {
+        printf("Cannot create experiment folder %s; check user permissions or disk space", fullpath.c_str());
+        printf("Result of gfal_mkdir = %d %d\n" ,result,errno);   
+	exit(1);
+    }
+    
+    result = gfal_chmod(fullpath.c_str(), 0777);
+    
+    // now determine the worker name, that is, the directory where where
+    // the server will "listen" to new files
+    
+    
+    
+    if(determine_worker_name() != 0)
+    {
+        printf("Cannot create experiment worker folder; check user permissions or disk space");
+	exit(1);
+    }
+    
+    
+    //gfal_pthr_init(Cglobals_get);
+    // now create thread to listen for incoming files
+     //if(pthread_create(&thread, NULL, &CComUDPServer::UDP_server_thread, (void *)this) != 0) {
+     if( pthread_create(&thread_read,NULL,&CComGridFileServer::file_readwrite_thread, (void *)this) < 0) {
+        printf("pthread create failed. exiting\n"); exit(1);
+    }
+    
+/*    if( thread_read = Cthread_create(&CComGridFileServer::file_read_thread, (void *)this) < 0) {
+        printf("pthread create failed. exiting\n"); exit(1);
+    }
+    if( thread_write = Cthread_create(&CComGridFileServer::file_write_thread, (void *)this) < 0) {
+        printf("pthread create failed. exiting\n"); exit(1);
+    }*/
+
+}
+
 
 int CComGridUDPServer::get_ipaddress(std::string &ip)
 {
@@ -148,18 +207,19 @@ int CComGridUDPServer::determine_worker_name(std::string &workername)
 }
 
 // create and register worker
-int CComGridUDPServer::register()
+int CComGridUDPServer::register_worker()
 {
     
-    std::string fullfilename = fullname + '/' + myself->getname() + '/' + "worker_info.txt";
+  
+    std::string fullfilename = fullpath + '/' + myself->get_name() + '/' + "worker_info.txt";
     
     int	fd = gfal_open( fullfilename.c_str(), O_CREAT | O_WRONLY, 0777);
     if (fd != -1) 
     {
 	 std::stringstream s;
-	 s << myself->getname() + ':';
+	 s << myself->get_name() + ':';
 	 if(myself->get_ip() == "NOIP")s << "FILE::";
-	 else s << "SOCKET:" + myself->get_ip() + ':' + myself->get_port();
+	 else s << "SOCKET:" << myself->get_ip() << ':' << myself->get_port();
 	 
 	 // now write file
 	 
@@ -176,3 +236,85 @@ int CComGridUDPServer::register()
     return -1;
 }  
 
+
+
+
+
+int CComGridUDPServer::send(char *individual, CommWorker destination) {
+   int sendSocket;
+	#ifdef WIN32
+	WSADATA wsadata;
+	if (WSAStartup(MAKEWORD(1,1), &wsadata) == SOCKET_ERROR) {
+		printf("Error creating socket.");
+ 		exit(1);
+	}
+	#endif
+    if ((sendSocket = socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+        printf("Socket create problem."); exit(1);
+    }
+    
+    
+    int sendbuff=35000;
+#ifdef WIN32
+    setsockopt(sendSocket, SOL_SOCKET, SO_SNDBUF, (char*)&sendbuff, sizeof(sendbuff));
+#else
+    setsockopt(sendSocket, SOL_SOCKET, SO_SNDBUF, &sendbuff, sizeof(sendbuff));
+#endif
+
+	if(strlen(individual) < (unsigned)sendbuff ) { 
+		sockaddr_in destaddr;
+	        destaddr.sin_family = AF_INET;
+		destaddr.sin_addr.s_addr = inet_addr(destination.get_ip().c_str());
+		destaddr.sin_port = htons(destination.get_port());
+		int n_sent = sendto(sendSocket,individual,strlen(individual),0,(struct sockaddr *)&destaddr,sizeof(destaddr));
+		
+		//int n_sent = sendto(this->Socket,t,strlen(individual),0,(struct sockaddr *)&this->ServAddr,sizeof(this->ServAddr));
+		if( n_sent < 0){
+			printf("Size of the individual %d\n", (int)strlen(individual));
+			perror("! Error while sending the message !");
+		}
+	}
+	else {fprintf(stderr,"Not sending individual with strlen(): %i, MAX msg size %i\n",(int)strlen(individual), sendbuff);}
+#ifndef WIN32
+	close(sendSocket);
+#else
+	closesocket(sendSocket);
+ 	WSACleanup();
+#endif
+}
+
+void CComGridUDPServer::read_thread()
+{
+        struct sockaddr_in cliaddr; /* Client address */
+        socklen_t len = sizeof(cliaddr);
+        char buffer[MAXINDSIZE];
+        unsigned int recvMsgSize;
+        while(!cancel) {/*forever loop*/
+                /*receive UDP datagrams from client*/
+                if ((recvMsgSize = recvfrom(ServerSocket,buffer,MAXINDSIZE,0,(struct sockaddr *)&cliaddr,&len)) < 0) {
+                        printf("\nError recvfrom()\n"); exit(1);
+                }
+		if(debug) {
+                	buffer[recvMsgSize] = 0;
+			printf("\nData entry[%i]\n", data->size());
+                	printf("Received the following:\n");
+                	printf("%s\n",buffer);
+			printf("%d\n",(int)strlen(buffer));
+		}
+		printf("    Received individual from %s:%d\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+		pthread_mutex_lock(&server_mutex);
+		/*process received data */
+		//memmove(p->data[(*p->nb_data)].data,buffer,sizeof(char)*MAXINDSIZE);
+		//(*p->nb_data)++;
+	//	printf("address %p\n",(p->data));
+		//p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
+		buffer[recvMsgSize] = 0;
+		std::string bufferstream(buffer);
+		data->push(bufferstream);
+	//	printf("address %p\n",(p->data));
+		pthread_mutex_unlock(&server_mutex);
+		/*reset receiving buffer*/
+		memset(buffer,0,MAXINDSIZE);
+     }
+     if(debug)printf("Finishing thread... bye\n");
+}

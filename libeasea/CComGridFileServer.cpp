@@ -341,7 +341,6 @@ int CComGridFileServer::create_tmp_file(int &fd, std::string workerdestname, std
 	        
 	 	   if(debug)
 		     printf("Create file for sending individual %s \n :", fullfilename.c_str());
-		   break;
 		   return 0;
 	}
 	else
@@ -368,11 +367,12 @@ int CComGridFileServer::create_tmp_file(int &fd, std::string workerdestname, std
 
 void CComGridFileServer::send_individuals()
 {
-    std::list<std::pair<std::string,std::string> >::iterator it = writedata.begin();
-    std::list<std::pair<std::string,std::string> >::iterator it2 = it;
-    std::pair<std::string,std::string> item;
-    while( it != writedata.end() && !cancel )
-    {
+    //std::list<std::pair<std::string,std::string> >::iterator it = writedata.begin();
+    //std::list<std::pair<std::string,std::string> >::iterator it_e = writedata.end();
+    //std::list<std::pair<std::string,std::string> >::iterator it2 = it;
+    std::pair<std::string,std::string> item = writedata.back();
+    /*while( it != it_e && !cancel )
+    //{
         if(send_file_worker( (*it).first, (*it).second ) ==0 )
 	{  
 	     pthread_mutex_lock(&sending_mutex);
@@ -383,9 +383,12 @@ void CComGridFileServer::send_individuals()
 	} 
 	else ++it;
       
-    }  
-    if(cancel)printf("Stop sending individuals, thread canceled\n");
-    
+    } */
+    if(cancel)printf("Stop sending individuals, thread canceled, remaining to send %d\n",writedata.size());
+    send_file_worker( item.first, item.second );
+    pthread_mutex_lock(&sending_mutex);
+    writedata.pop_back();
+    pthread_mutex_unlock(&sending_mutex);
 }  
 
 int CComGridFileServer::send_file_worker(std::string buffer, std::string workerdestname)
@@ -413,7 +416,7 @@ int CComGridFileServer::send_file_worker(std::string buffer, std::string workerd
      }
      else
      {
-        printf("Cannot write individual to file in path %s/%s", fullpath.c_str(), workername.c_str() ); 
+        printf("Cannot write individual to file in path %s/%s", fullpath.c_str(), workerdestname.c_str() ); 
 	return -1;
      }
      return 0;
@@ -569,12 +572,13 @@ void CComGridFileServer::run_write()
 
 void CComGridFileServer::run_readwrite()
 {
+      int counter = 0;
       while(!cancel) {/*forever loop*/
 	  
-	  
+	  if(counter%5==0)refresh_worker_list();
 	  readfiles();
 	  send_individuals();
-	  refresh_worker_list();
+	  counter++;
 		// check for new files
 	  sleep(4);
       }

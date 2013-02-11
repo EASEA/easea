@@ -18,6 +18,11 @@ inline std::string CommWorker::get_ip() const
      return ip;
 }  
 
+inline int CommWorker::get_port() const
+{
+    return port;
+}
+
 inline bool CommWorker::isactive() const
 {
      return active;

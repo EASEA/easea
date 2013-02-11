@@ -17,6 +17,7 @@ class CommWorker
     CommWorker(std::string wname);
     std::string get_name() const;
     std::string get_ip() const;
+    int get_port() const;
     bool isactive() const;
     void desactivate();
     void activate();
