@@ -14,9 +14,9 @@
 #include "CSelectionOperator.h"
 #include "CPopulation.h"
 #include "CStoppingCriterion.h"
-#include "CComUDPLayer.h"
+//#include "CComUDPLayer.h"
 #include "CStats.h"
-#include "CComGridFileServer.h"
+#include "CComGridUdpServer.h"
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -54,12 +54,12 @@ public:
   unsigned treatedIndividuals;
   unsigned numberOfClients;
   unsigned myClientNumber;
-  CComUDPServer *server;
-  CComUDPClient **Clients;
+  //CComUDPServer *server;
+  //CComUDPClient **Clients;
   std::queue<std::string> receivedIndividuals;
   
   //file server
-  CComGridFileServer *fileserver;
+  CComGridUDPServer *fileserver;
   
   void initializeClients();
   void receiveIndividuals();

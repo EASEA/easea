@@ -35,7 +35,7 @@
 class CComGridFileServer{
   public:
 	int debug;
-	//int cancel;
+	//int cancel;git 
 	//RECV_DATA *data;
 	//int nb_data;
 	std::queue<std::string> *data;

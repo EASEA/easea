@@ -21,7 +21,7 @@ class CComWorkerListManager
       bool cancel;
       int debug;
   public:
-      CComWorkerListManager(int _debug=0):debug(_debug) {};
+      CComWorkerListManager(std::string path,int _debug=1):workers_path(path),debug(_debug),cancel(false) {};
       CommWorker get_worker_nr(int wn);
       int refresh_worker_list();
       int get_nr_workers() const;

@@ -24,8 +24,8 @@
 #include "include/Parameters.h"
 #include "include/CGrapher.h"
 #include "include/global.h"
-#include "include/CComUDPLayer.h"
-#include "include/CComGridFileServer.h"
+//#include "include/CComUDPLayer.h"
+#include "include/CComGridUdpServer.h"
 #include "include/CRandomGenerator.h"
 #include <stdio.h>
 #include <sstream>
@@ -144,10 +144,10 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		this->treatedFileIndividuals = 0;
 		this->numberOfClients = 0;
 		this->myClientNumber=0;	
-		fileserver = new CComGridFileServer(params->working_path,params->expId, &receivedIndividuals,  1);
+		fileserver = new CComGridUDPServer(params->working_path,params->expId, &receivedIndividuals, params->serverPort, 1);
 		this->initializeClients();
 		//if(params->remoteIslandModel)
-		server = new CComUDPServer(params->serverPort,&receivedIndividuals,0); //1 if debug
+		//server = new CComUDPServer(params->serverPort,&receivedIndividuals,0); //1 if debug
 		
 	}
 }
@@ -157,13 +157,13 @@ CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
 	delete population;
 	
         if(this->params->remoteIslandModel){
-                delete this->server;
+                //delete this->server;
 		delete this->fileserver;
-                if(this->numberOfClients>0){
+                /*if(this->numberOfClients>0){
                         for(int i=0; (unsigned)i<this->numberOfClients; i++)
                                 delete this->Clients[i];
                         delete [] this->Clients;
-                }
+                }*/
         }
         delete cstats;
         
@@ -515,11 +515,11 @@ void CEvolutionaryAlgorithm::initializeClients(){
 }
 
 void CEvolutionaryAlgorithm::refreshClient(){
-    unsigned no_client;
-    this->Clients = parse_file(this->params->ipFile,&no_client, this->params->serverPort);
+    //unsigned no_client;
+    //this->Clients = parse_file(this->params->ipFile,&no_client, this->params->serverPort);
 
-    cout << "ip file : " << this->params->ipFile << " contains " << no_client << " client ip(s)" << endl;
-    this->numberOfClients = no_client;
+    //cout << "ip file : " << this->params->ipFile << " contains " << no_client << " client ip(s)" << endl;
+    this->numberOfClients = fileserver->number_of_clients();
     //fileserver->refresh_worker_list();
 }
 
@@ -533,18 +533,18 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 		//unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
 	
 		//selecting a client randomly
-		int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients + fileserver->number_of_workers());
+		int client = globalRandomGenerator->getRandomIntMax(fileserver->number_of_clients());
 		//for(int client=0; client<this->numberOfClients; client++){
 		cout << "    Going to send an individual to client " << client << endl;
 		//cout << "Sending individual " << index << " to client " << client << " now" << endl;
 		//cout << this->population->parents[index]->serialize() << endl;
-		if(client < this->numberOfClients)
+		/*if(client < this->numberOfClients)
 		{
 		    cout << "    His IP is " << this->Clients[client]->getIP() << " and his port is " << this->Clients[client]->getPort() <<endl;
 		    this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
 		}    
-		else
-		    fileserver->send_file((char*)bBest->serialize().c_str(), client -this->numberOfClients);
+		else*/
+		    fileserver->send((char*)bBest->serialize().c_str(), client);
 	}
 }
 
@@ -558,10 +558,10 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 	  {
     		antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
 		unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
-		this->server->read_data_lock();
+		this->fileserver->read_data_lock();
 		this->population->parents[index]->deserialize(receivedIndividuals.front());
 		this->population->parents[index]->isImmigrant = true;
-		this->server->read_data_unlock();
+		this->fileserver->read_data_unlock();
 		receivedIndividuals.pop();
 			//cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
 		this->treatedIndividuals++;

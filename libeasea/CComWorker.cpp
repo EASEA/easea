@@ -8,32 +8,32 @@ CommWorker::CommWorker(std::string wname):workername(wname),ip("noip"),port(-1),
 {
 }  
 
-inline std::string CommWorker::get_name() const 
+std::string CommWorker::get_name() const 
 {
     return workername;
 }
 
-inline std::string CommWorker::get_ip() const
+std::string CommWorker::get_ip() const
 {
      return ip;
 }  
 
-inline int CommWorker::get_port() const
+int CommWorker::get_port() const
 {
     return port;
 }
 
-inline bool CommWorker::isactive() const
+bool CommWorker::isactive() const
 {
      return active;
 }
 
-inline void CommWorker::desactivate()
+void CommWorker::desactivate()
 {
    active =false;
 }   
 
-inline void CommWorker::activate()
+void CommWorker::activate()
 {
    active = true; 
 }
