@@ -20,7 +20,7 @@ int CComWorkerListManager::refresh_worker_list()
   // read the directory list, each folder is a worker
   
   pthread_mutex_lock(&gfal_mutex);
-  pthread_mutex_lock(&worker_list_mutex);
+  //pthread_mutex_lock(&worker_list_mutex);
   
   // taken from GNU C manual, adapted to gfal api
   
@@ -185,7 +185,7 @@ int CComWorkerListManager::parse_worker_info_file(char *buffer, CommWorker *&wor
 	workerinfo = new CommWorker(hn);
         return 0;
     }
-    else if( strcmp(mode,"SOCKET") == 0 || strcmp(mode,"SOCKET") ) 
+    else if( strcmp(mode,"SOCKET") == 0 || strcmp(mode,"MPI" ==0) ) 
     {  
         // now check for ip and port/rank
 	char* address = strtok(NULL, ":");
@@ -224,28 +224,36 @@ int CComWorkerListManager::check_port(char *port) const
 
 int CComWorkerListManager::check_ipaddress(char *ipaddress) const
 {
-   char* byte = strtok(ipaddress,".");
+    char* holder = (char*)malloc(strlen(ipaddress)+1);
+    strcpy(holder,ipaddress);
+
+   char* byte = strtok(holder,".");
     int nibble = 0, octets = 0, flag = 0;
     while(byte != NULL){
         octets++;
         if(octets>4){
+	    free(holder);
             return -1;
         }
         nibble = atoi(byte);
         if((nibble<0)||(nibble>255)){
+	    free(holder);
             return -1;
         }
         std::string s = byte;
         for(unsigned int i=0; i<s.length(); i++){
             if(!isdigit(s[i])){
+	      free(holder);
 	      return -1;
             }
         }
         byte = strtok(NULL,".");
     }
     if(flag || octets<4){
+            free(holder);
             return -1;
     }
+    free(holder);
     return 0;
 }
 

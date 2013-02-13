@@ -2,6 +2,8 @@
 #define CCOMGRIDUDPSERVER
 #include <queue>
 #include <string>
+#include <list>
+#include <set>
 #include "CComWorker.h"
 #include <net/if.h>
 #include <sys/socket.h> /* for socket(), bind(), and connect() */
@@ -35,10 +37,23 @@ public:
 	static void* refresh_thread_f(void *parm);
 	int init_network(int &port);
 	int number_of_clients();
+        int create_tmp_file(int& fd, std::string workerdestname, std::string &tmpfilename);
+	int send_file_worker(std::string buffer, std::string workerdestname);
+	void send_individuals();
+	int refresh_file_list();
+	int file_read(const char* filename, char *buffer);
+	void readfiles();
+	int determine_file_name(std::string tmpfilename, std::string workerdestname);
+	int send_file(char *buffer, CommWorker destination);
+
 	
 private:
   	std::string workername;
 	std::string fullpath;
+	std::list<std::pair<std::string,std::string> > writedata;
+	std::set<std::string> processed_files;
+	std::list<std::string> new_files;
+
 	CComWorkerListManager *refresh_workers;
         CommWorker *myself;
 	void run();
@@ -46,7 +61,6 @@ private:
 	pthread_t read_t,refresh_t;
 	int Socket;
 	struct sockaddr_in ServAddr;
-	int dbg;
 	bool cancel;
 };
 #endif

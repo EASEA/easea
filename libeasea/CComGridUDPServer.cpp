@@ -15,12 +15,14 @@
 #include "gfal_api.h"
 #include "include/CComGridUdpServer.h"
 #include <fcntl.h>
+#include <time.h>
 
 #define MAXINDSIZE 50000
 
 pthread_mutex_t server_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t gfal_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t worker_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t sending_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, int port, int dbg) {
   
@@ -47,7 +49,11 @@ CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std:
 	  if( this->register_worker() == 0 )
 	  {
 	      // create the
-	      refresh_workers = new CComWorkerListManager(fullpath, dbg);
+	      if(debug)printf("Worker Created --> hostname %s  ip %s  port %d\n", myself->get_name().c_str(), myself->get_ip().c_str(), myself->get_port());
+	      refresh_workers = new CComWorkerListManager(fullpath, debug);
+	      
+	      
+	      
 	      // create threads
               if(  pthread_create(&refresh_t,NULL,&CComGridUDPServer::refresh_thread_f, (void *)this) < 0 ||
 	       ( myself->get_ip() == "noip" ? 1 : pthread_create(&read_t,NULL,&CComGridUDPServer::read_thread_f, (void *)this)) < 0 ) 
@@ -81,7 +87,7 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
     perror("No network interface, communication impossible, finishing ...");
     exit(1);
   }
-
+  int maxlen = 0;
   for (ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next)
   {
       if (NULL == ifa->ifa_addr)continue;
@@ -98,17 +104,18 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
 	    printf("%s: inet_ntop failed!\n", ifa->ifa_name);
 	  else {
 	    // external ip address
-	    if(strlen(buf)>=13)
+	    if(strlen(buf)> maxlen)
 	    {  
 	      ip = buf;
-		freeifaddrs(myaddrs);
-	      return 0;
+	      maxlen=strlen(buf);
+	      //freeifaddrs(myaddrs);
+	      //return 0;
 	    }   
 	  }
 	}
   }
   freeifaddrs(myaddrs);
-  return -1;
+  return 0;
 }  
   
 
@@ -121,7 +128,6 @@ int CComGridUDPServer::create_exp_path(char *path, char *expname)
     fullpath = pathname + expname;
     
     //cancel = 0;
-    debug = dbg;
  
     // create the main directory
     
@@ -210,7 +216,6 @@ int CComGridUDPServer::determine_worker_name(std::string &workername)
 
 int CComGridUDPServer::init_network(int &port) {
     struct sockaddr_in ServAddr; /* Local address */
-    debug = dbg;
 
     #ifdef WIN32
     WSADATA wsadata;
@@ -295,18 +300,23 @@ int CComGridUDPServer::send(char *individual, int dest)
        else
        {	 
 	     printf("No destination workers available \n");
+	     pthread_mutex_unlock(&worker_list_mutex);
 	     return 0;
        }     
      }     
+     else  workdest = new CommWorker( refresh_workers->get_worker_nr( dest ) );     
+     
      if(workdest->get_name() == myself->get_name())
      {
         if(debug)
 	    printf("I will not send the individual to myself, it is not a fatal error, so continue\n");
+	pthread_mutex_unlock(&worker_list_mutex);
         return 0;
      }
-     workdest = new CommWorker( refresh_workers->get_worker_nr( dest ) );     
+     
      pthread_mutex_unlock(&worker_list_mutex);
-     send( individual, *workdest);
+     if(workdest->get_ip() == "noip")send_file(individual,*workdest);
+     else send( individual, *workdest);
      delete workdest;
      return 0;
   
@@ -347,6 +357,9 @@ int CComGridUDPServer::send(char *individual, CommWorker destination) {
 			printf("Size of the individual %d\n", (int)strlen(individual));
 			perror("! Error while sending the message !");
 		}
+		else if(debug)
+		    printf("Individual sent to hostname: %s  ip: %s  port: %d\n", destination.get_name().c_str(),
+			   destination.get_ip().c_str(),destination.get_port());
 	}
 	else {fprintf(stderr,"Not sending individual with strlen(): %i, MAX msg size %i\n",(int)strlen(individual), sendbuff);}
 #ifndef WIN32
@@ -410,11 +423,16 @@ void* CComGridUDPServer::refresh_thread_f( void *parm)
 
 void CComGridUDPServer::refresh_thread()
 {
-    while(!cancel)
-    {  
-      refresh_workers->refresh_worker_list();
-      sleep(4);
-    }
+     int counter = 0;
+     while(!cancel) {/*forever loop*/
+	  
+	  if(counter%5==0)refresh_workers->refresh_worker_list();
+	  readfiles();
+	  send_individuals();
+	  counter++;
+		// check for new files
+	  sleep(4);
+      }
 }  
 
 void CComGridUDPServer::read_data_lock() {
@@ -445,7 +463,7 @@ CComGridUDPServer::~CComGridUDPServer()
     // erase working path
     printf("Filserver thread cancelled ....\n");
     int tries=0;
-    std::string workerpath = fullpath + '/' + workername;
+    std::string workerpath = fullpath + '/' + myself->get_name();
     while(tries < 10)
     {
 	DIR *dp;
@@ -496,4 +514,322 @@ CComGridUDPServer::~CComGridUDPServer()
         tries++;
     }
     if(tries == 10) printf("Cannot remove the worker path %s, worker not properly finished\n", workerpath.c_str());
+    delete myself;
+    delete this->refresh_workers;
 }    
+
+
+int CComGridUDPServer::determine_file_name(std::string fulltmpfilename, std::string workerdestname)
+{
+	
+   int tries = 0;
+   time_t tstamp = time(NULL);
+    while(tries<3)
+    {
+ 	std::stringstream s;
+	s << fullpath << '/' << workerdestname << "/individual_" << tstamp << ".txt";
+	std::string fullfilename = s.str();
+        int fd = gfal_open( fullfilename.c_str(), O_RDONLY, 0777);
+	// the file does not exit, so we can create the individual
+	if(fd ==-1 && errno == ENOENT)
+	{
+	   int result = gfal_rename(fulltmpfilename.c_str(), fullfilename.c_str());
+	   
+	    if(result==0)
+	    {
+	      result=gfal_chmod(fullfilename.c_str(), 0777);
+	      if(debug)
+		printf("Individual file %s created sucessfully\n", fullfilename.c_str());
+	      return 0;
+	    }
+	    else
+	    {
+	        tries++;
+	        printf("unable to rename tmp file to %s, error code %d,  trying another name\n", fullfilename.c_str(), errno);
+		DIR *dp;
+		std::string workerpath = fullpath + '/' + workerdestname;
+		dp = gfal_opendir (workerpath.c_str());
+		if( dp == NULL)
+		{  
+		  printf("The worker path is not accesible %s, maybe worker finishes\n", workerpath.c_str());
+		  return -1;
+		}
+		(void)gfal_closedir(dp);
+
+	    }
+	}
+        tstamp++;
+    }	
+    return -1;
+}  
+
+
+int CComGridUDPServer::create_tmp_file(int &fd, std::string workerdestname, std::string &fullfilename)
+{
+   time_t tstamp = time(NULL);
+   unsigned tries = 0;
+    while(tries<3)
+    {
+        
+	std::stringstream s;
+	s << fullpath << '/' << workerdestname << "/temp_" << tstamp << ".txt";
+	fullfilename = s.str();
+	
+	
+	 
+	/* initialize file_name and new_file_mode */
+	
+	
+	// try to open the file in exclusive mode
+	fd = gfal_open( fullfilename.c_str(), O_CREAT | O_WRONLY, 0777);
+	if (fd != -1) {
+	        //associate with file
+	        
+	 	   if(debug)
+		     printf("Create file for sending individual %s \n :", fullfilename.c_str());
+		   return 0;
+	}
+	else
+	{
+	    // error ocurred, so two alternatives
+	    // the path does not exit anymore (race condition)
+	  tries++;
+	  printf("Failed to create filename %s, error code %d\n", fullfilename.c_str(), errno);
+	  DIR *dp;
+	  std::string workerpath = fullpath + '/' + workerdestname;
+	  dp = gfal_opendir (workerpath.c_str());
+	  if( dp == NULL)
+	  {  
+	     printf("The worker path is not accesible %s, maybe worker finishes\n", workerpath.c_str());
+	     break;
+	  }
+	  (void)gfal_closedir(dp);
+	  tstamp++;
+	}  
+    }
+    return -1;
+}
+
+
+void CComGridUDPServer::send_individuals()
+{
+    //std::list<std::pair<std::string,std::string> >::iterator it = writedata.begin();
+    //std::list<std::pair<std::string,std::string> >::iterator it_e = writedata.end();
+    //std::list<std::pair<std::string,std::string> >::iterator it2 = it;
+    if(writedata.size()==0)return;
+    std::pair<std::string,std::string> item = writedata.back();
+    /*while( it != it_e && !cancel )
+    //{
+        if(send_file_worker( (*it).first, (*it).second ) ==0 )
+	{  
+	     pthread_mutex_lock(&sending_mutex);
+     	     it2 = it;
+	     ++it;
+	     writedata.erase(it2);
+	     pthread_mutex_unlock(&sending_mutex);
+	} 
+	else ++it;
+      
+    } */
+    if(cancel)printf("Stop sending individuals, thread canceled, remaining to send %d\n",writedata.size());
+    send_file_worker( item.first, item.second );
+    pthread_mutex_lock(&sending_mutex);
+    writedata.pop_back();
+    pthread_mutex_unlock(&sending_mutex);
+}  
+
+
+int CComGridUDPServer::send_file_worker(std::string buffer, std::string workerdestname)
+{
+    int fd;
+    std::string tmpfilename;
+    if( create_tmp_file(fd, workerdestname, tmpfilename) == 0)
+     {
+	  int result = gfal_write( fd, buffer.c_str(), buffer.size() );
+	  if(result >0)
+	  {
+		printf("gfal_write returns %d for written %d bytes \n", result, buffer.size() );
+		(void)gfal_close(fd);
+		if( determine_file_name(tmpfilename, workerdestname) == 0) return 0;
+		else return -1;
+	  }
+	  else
+	  {
+	    (void)gfal_close(fd);
+	    return -1;
+	    
+	  }  
+	  // now rename 
+	  
+     }
+     else
+     {
+        printf("Cannot write individual to file in path %s/%s", fullpath.c_str(), workerdestname.c_str() ); 
+	return -1;
+     }
+     return 0;
+}
+  
+  
+
+int CComGridUDPServer::send_file(char *buffer, CommWorker destination)
+{
+     //first thing, prevent send to myself
+
+     std::string buffer_str(buffer);
+     std::pair<std::string,std::string> item(buffer_str,destination.get_name());
+
+     pthread_mutex_lock(&sending_mutex);
+     if(debug)
+       printf("Individual to be quicked to be sent to %s by file\n",destination.get_name().c_str());
+     writedata.push_back(item);
+     pthread_mutex_unlock(&sending_mutex);
+     return 0;
+}     
+     
+     
+     
+     
+     // determine the name to send a file
+     
+ 
+
+
+int CComGridUDPServer::file_read(const char *filename, char *buffer)
+{
+    std::string workerfile(filename);
+    std::string fullfilename = fullpath + '/' + myself->get_name() + '/' + workerfile;
+    int fd = gfal_open( fullfilename.c_str(), O_RDONLY, 0777);;
+    
+    
+    if( fd != -1)
+    {
+        // get individual
+        int result = gfal_read(fd, buffer, MAXINDSIZE );
+        if( result < 0)
+	{  
+	  (void)gfal_close(fd);
+	  return -1;
+	}    
+	
+	(void)gfal_close(fd);
+	// fail some read operation
+    }
+     else 
+	return -1;
+     processed_files.insert(workerfile);
+	
+    return 0;
+}
+
+
+void CComGridUDPServer::readfiles()
+{
+      char buffer[MAXINDSIZE];
+      if(refresh_file_list() == 0)
+      {
+	  std::list<std::string>::iterator it;
+	  for(it= new_files.begin(); it != new_files.end() && !cancel; it++)
+	  {
+	    if(file_read((*it).c_str(),buffer) == 0)
+	    {
+		if(debug) {
+		    printf("Reading file %s sucescully\n", (*it).c_str());
+		    printf("\nData entry[%i]\n",data->size());
+		    printf("Received the following:\n");
+		    printf("%s\n",buffer);
+		    printf("%d\n",(int)strlen(buffer));
+		}
+		  
+	      // blocking call
+	      pthread_mutex_lock(&server_mutex);
+	      std::string bufferstream(buffer);
+	      data->push(buffer);
+	      /*process received data */
+	      //memmove(data[nb_data].data,buffer,sizeof(char)*MAXINDSIZE);
+	      //nb_data++;
+      //	printf("address %p\n",(p->data));
+	      //data = (RECV_DATA*)realloc(data,sizeof(RECV_DATA)*(nb_data+1));
+      //	printf("address %p\n",(p->data));
+	      pthread_mutex_unlock(&server_mutex);
+	      /*reset receiving buffer*/
+	      memset(buffer,0,MAXINDSIZE);
+	    }
+	    else
+	    {
+		printf("Error reading file %s , we will ignore it \n", (*it).c_str()); 
+	    }	
+	  }
+	  if(cancel) printf("Stop reading individuals, thread canceled\n");
+      }
+      else
+      {
+	    printf("Cannot get the list of files for this worker, we will try later again ...\n");
+      }  
+}  
+
+int CComGridUDPServer::refresh_file_list()
+{
+  // clear the file to process
+  new_files.clear();
+  
+  // taken from GNU C manual
+  
+  DIR *dp;
+  struct dirent *ep;
+  
+  std::string workerpath = fullpath + '/' + myself->get_name();
+  std::set<std::string>::iterator it;   
+
+  //std::string command = "ls -a "+workerpath;
+  //system(command.c_str());
+
+
+  dp = gfal_opendir (workerpath.c_str());
+  if (dp != NULL)
+  {
+       printf("Refreshing filelist (new individuals) in %s\n",workerpath.c_str());
+       while ((ep = gfal_readdir (dp)) && !cancel)
+       {
+		 //only take into account folders
+		 std::string s(ep->d_name);
+		 std::string fullfilename = workerpath + '/' + s;
+		 struct stat statusfile;
+		 int status = gfal_stat(fullfilename.c_str(), &statusfile);
+		 
+		 if( status!= -1 && S_ISREG(statusfile.st_mode) )
+		 {  
+			  
+			  if(s.substr(0,10) == "individual")
+			  {
+				it = processed_files.find(s);
+				// new file to be processed
+				if(it == processed_files.end() )
+				{
+				  if(debug)printf("New file found in path %s : %s\n", workerpath.c_str(), s.c_str());
+				  new_files.push_back(s);
+				}
+			  }
+		 }
+		 else if(status==-1) 
+		 {
+			(void)gfal_closedir (dp);
+		    return 0;
+		 }   
+	        
+      }
+      if(cancel) printf("Stop scanning incoming files, thread canceled\n");
+      (void)gfal_closedir (dp);
+  }      
+  else
+  {  
+       printf ("Cannot scan the experiment directory for find workers %s \n", workerpath.c_str() );
+       return -1;
+  }      
+  return 0;
+}
+
+
+
+
+

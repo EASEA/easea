@@ -294,6 +294,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     if(params->remoteIslandModel){
 	
 	//fileserver->refresh_worker_list();
+	this->refreshClient();
 	this->receiveIndividuals();
     }
     
