@@ -18,7 +18,7 @@ std::string CommWorker::get_ip() const
      return ip;
 }  
 
-int CommWorker::get_port() const
+unsigned short int CommWorker::get_port() const
 {
     return port;
 }

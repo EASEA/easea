@@ -144,7 +144,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		this->treatedFileIndividuals = 0;
 		this->numberOfClients = 0;
 		this->myClientNumber=0;	
-		fileserver = new CComGridUDPServer(params->working_path,params->expId, &receivedIndividuals, params->serverPort, 1);
+		fileserver = new CComGridUDPServer(params->working_path,params->expId, &receivedIndividuals, (unsigned short int) params->serverPort, 1);
 		this->initializeClients();
 		//if(params->remoteIslandModel)
 		//server = new CComUDPServer(params->serverPort,&receivedIndividuals,0); //1 if debug

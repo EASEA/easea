@@ -8,7 +8,7 @@ class CommWorker
   private:
     std::string workername;
     std::string ip;
-    unsigned int port;
+    unsigned short int port;
     bool active;
     unsigned int nfails;
   public:
@@ -17,7 +17,7 @@ class CommWorker
     CommWorker(std::string wname);
     std::string get_name() const;
     std::string get_ip() const;
-    int get_port() const;
+    unsigned short int get_port() const;
     bool isactive() const;
     void desactivate();
     void activate();

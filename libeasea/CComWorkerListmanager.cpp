@@ -101,7 +101,7 @@ int CComWorkerListManager::refresh_worker_list()
 	std::map<std::string, unsigned>::reverse_iterator it = active_workers_names.rbegin();
 	while( it != active_workers_names.rend() )
 	{  
-	     activeworkers.erase( activeworkers.begin() + (*it).second );
+	     //activeworkers.erase( activeworkers.begin() + (*it).second );
 	     ++it;
 	}
 	pthread_mutex_unlock(&worker_list_mutex); 		
@@ -132,10 +132,12 @@ int CComWorkerListManager::read_worker_info_file( std::string workerpath, CommWo
 {
       char buffer[256];
       std::string fullfilename = workerpath + '/' + "worker_info.txt";
+      memset(buffer,0,256);
       int fd = gfal_open( fullfilename.c_str(), O_RDONLY, 0777);;
       if( fd != -1)
       {
 	  // get individual
+	  
 	  int result = gfal_read(fd, buffer, 256 );
 	  if( result < 0)
 	  {  
@@ -145,6 +147,7 @@ int CComWorkerListManager::read_worker_info_file( std::string workerpath, CommWo
 	  if( parse_worker_info_file(buffer, workerinfo) == -1)
 	  {  
 	    printf("Problem parsing worker path file %s\n",fullfilename.c_str());
+	    printf("Problematic line : %s\n",buffer);
 	    (void)gfal_close(fd);
 	    return -1;
 	  }  
