@@ -24,7 +24,7 @@ pthread_mutex_t gfal_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t worker_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t sending_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, int port, int dbg) {
+CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, short unsigned int port, int dbg) {
   
     data = _data;
     std::string exp(expname);
@@ -214,7 +214,7 @@ int CComGridUDPServer::determine_worker_name(std::string &workername)
 
 
 
-int CComGridUDPServer::init_network(int &port) {
+int CComGridUDPServer::init_network(short unsigned int &port) {
     struct sockaddr_in ServAddr; /* Local address */
 
     #ifdef WIN32
@@ -240,11 +240,12 @@ int CComGridUDPServer::init_network(int &port) {
 	memset(&ServAddr, 0, sizeof(ServAddr));   /* Zero out structure */
 	ServAddr.sin_family = AF_INET;                /* Internet address family */
 	ServAddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-	ServAddr.sin_port = htons(port++);              /* Local port */
+	ServAddr.sin_port = htons(port);              /* Local port */
 	
 	/* Bind to the local address */
 	if (bind(ServerSocket, (struct sockaddr *) &ServAddr, sizeof(ServAddr)) < 0) {
 	    printf("Can't bind to given port number. Trying a different one.\n"); 
+	    port++;
 	    continue;
 	}
 	else return 0;
@@ -311,6 +312,7 @@ int CComGridUDPServer::send(char *individual, int dest)
         if(debug)
 	    printf("I will not send the individual to myself, it is not a fatal error, so continue\n");
 	pthread_mutex_unlock(&worker_list_mutex);
+	delete workdest;
         return 0;
      }
      
