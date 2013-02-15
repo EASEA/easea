@@ -4,6 +4,8 @@ Executable = "easea_test.sh";
 Parameters = 5;
 ParameterStart = 1;
 ParameterStep = 1;
+StdOutput = "std_PARAM_.out";
+StdError = "std_PARAM_.err";
 InputSandbox = {"easea_test.sh","regression","regression.prm","ip.txt"};  
-OutputSandbox = {"output_PARAM_.txt", "error_PARAM_.txt"};
+OutputSandbox = {"std_PARAM_.out", "std_PARAM_.err"};
 ]

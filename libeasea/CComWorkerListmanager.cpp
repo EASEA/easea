@@ -132,8 +132,8 @@ int CComWorkerListManager::read_worker_info_file( std::string workerpath, CommWo
 {
       char buffer[256];
       std::string fullfilename = workerpath + '/' + "worker_info.txt";
+      int fd = gfal_open( fullfilename.c_str(), O_RDONLY, 0777);
       memset(buffer,0,256);
-      int fd = gfal_open( fullfilename.c_str(), O_RDONLY, 0777);;
       if( fd != -1)
       {
 	  // get individual
