@@ -24,6 +24,7 @@ pthread_mutex_t gfal_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t worker_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t sending_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+
 CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, short unsigned int port, int dbg) {
   
     data = _data;
@@ -130,7 +131,7 @@ int CComGridUDPServer::create_exp_path(char *path, char *expname)
     //cancel = 0;
  
     // create the main directory
-    
+    gfal_set_verbose(2);
     int result = gfal_mkdir(fullpath.c_str(),0777);
     
     // check error condition
@@ -260,7 +261,7 @@ int CComGridUDPServer::register_worker()
   
     std::string fullfilename = fullpath + '/' + myself->get_name() + '/' + "worker_info.txt";
     
-    int	fd = gfal_open( fullfilename.c_str(), O_CREAT | O_WRONLY, 0777);
+    int	fd = gfal_open( fullfilename.c_str(), O_WRONLY|O_CREAT, 0644 );
     if (fd != -1) 
     {
 	 std::stringstream s;
@@ -280,7 +281,12 @@ int CComGridUDPServer::register_worker()
 	     
 	 }
     }
-    return -1;
+    else
+    {  
+          printf("failed to create worker file %s error reported is %d\n", fullfilename.c_str(),errno);
+          exit(1);
+          return -1;
+    }  
 }  
 
 
@@ -306,17 +312,16 @@ int CComGridUDPServer::send(char *individual, int dest)
        }     
      }     
      else  workdest = new CommWorker( refresh_workers->get_worker_nr( dest ) );     
-     
+     pthread_mutex_unlock(&worker_list_mutex);
      if(workdest->get_name() == myself->get_name())
      {
         if(debug)
 	    printf("I will not send the individual to myself, it is not a fatal error, so continue\n");
-	pthread_mutex_unlock(&worker_list_mutex);
 	delete workdest;
+	
         return 0;
      }
      
-     pthread_mutex_unlock(&worker_list_mutex);
      if(workdest->get_ip() == "noip")send_file(individual,*workdest);
      else send( individual, *workdest);
      delete workdest;
@@ -328,6 +333,7 @@ int CComGridUDPServer::send(char *individual, int dest)
 
 int CComGridUDPServer::send(char *individual, CommWorker destination) {
    int sendSocket;
+   sockaddr_in destaddr;
 	#ifdef WIN32
 	WSADATA wsadata;
 	if (WSAStartup(MAKEWORD(1,1), &wsadata) == SOCKET_ERROR) {
@@ -348,7 +354,7 @@ int CComGridUDPServer::send(char *individual, CommWorker destination) {
 #endif
 
 	if(strlen(individual) < (unsigned)sendbuff ) { 
-		sockaddr_in destaddr;
+		
 	        destaddr.sin_family = AF_INET;
 		destaddr.sin_addr.s_addr = inet_addr(destination.get_ip().c_str());
 		destaddr.sin_port = htons(destination.get_port());
@@ -428,7 +434,7 @@ void CComGridUDPServer::refresh_thread()
      int counter = 0;
      while(!cancel) {/*forever loop*/
 	  
-	  if(counter%5==0)refresh_workers->refresh_worker_list();
+ 	  if(counter%5==0)refresh_workers->refresh_worker_list();
 	  readfiles();
 	  send_individuals();
 	  counter++;

@@ -1,7 +1,7 @@
 [
 JobType = "Parametric";
 Executable = "easea_test.sh";  
-Parameters = 5;
+Parameters = 20;
 ParameterStart = 1;
 ParameterStep = 1;
 StdOutput = "std_PARAM_.out";
