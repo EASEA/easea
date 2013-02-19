@@ -91,20 +91,24 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
   int maxlen = 0;
   for (ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next)
   {
-      if (NULL == ifa->ifa_addr)continue;
-      if ((ifa->ifa_flags & IFF_UP) == 0)continue;
+      //if (NULL == ifa->ifa_addr)continue;
+      //if ((ifa->ifa_flags & IFF_UP) == 0)continue;
 
-      struct sockaddr_in *s4;                     
+      void *s4=NULL;                     
       /* ipv6 addresses have to fit in this buffer */
       char buf[64];                                  
-
+      memset(buf,0,64);
+      
+      
+      
       if (AF_INET == ifa->ifa_addr->sa_family)
       {
-	  s4 = (struct sockaddr_in *)(ifa->ifa_addr);
-	  if (NULL == inet_ntop(ifa->ifa_addr->sa_family, (void *)&(s4->sin_addr), buf, sizeof(buf)))
+	  s4 = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+	  if (NULL == inet_ntop(AF_INET, s4, buf, sizeof(buf)))
 	    printf("%s: inet_ntop failed!\n", ifa->ifa_name);
 	  else {
 	    // external ip address
+	    if(debug)printf("Testing IP %s\n",buf);
 	    if(strlen(buf)> maxlen)
 	    {  
 	      ip = buf;
@@ -115,7 +119,7 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
 	  }
 	}
   }
-  freeifaddrs(myaddrs);
+  if(myaddrs!=NULL)freeifaddrs(myaddrs);
   return 0;
 }  
   
