@@ -288,6 +288,10 @@ int CComGridUDPServer::register_worker()
     else
     {  
           printf("failed to create worker file %s error reported is %d\n", fullfilename.c_str(),errno);
+	  std::string workerdir = fullpath + '/' + myself->get_name();
+	  printf("Deleting worker directory %s\n", workerdir.c_str());
+	  int result = gfal_rmdir(workerdir.c_str());
+	  if(result==-1)printf("Cannot delete worker directory, error reported is %d\n", errno);
           exit(1);
           return -1;
     }  
