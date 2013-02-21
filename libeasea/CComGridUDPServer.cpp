@@ -94,9 +94,14 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
   {
     //read the data
     fgets(external_ip,128,file_ip);
+    if(debug)printf("external ip is: %s we will now check network interfaces\n",external_ip);
     fclose(file_ip);
   }
-  else strcpy(external_ip,"no_ip");
+  else
+  {
+    if(debug)printf("cannot open external ip file ...\n");
+    strcpy(external_ip,"no_ip");
+  }  
   
   
   
