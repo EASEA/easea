@@ -11,6 +11,7 @@ class CommWorker
     short unsigned int port;
     bool active;
     unsigned int nfails;
+    bool internal_ip;
   public:
     
     CommWorker(std::string wname, std::string wip, short unsigned int wport);
@@ -21,5 +22,7 @@ class CommWorker
     bool isactive() const;
     void desactivate();
     void activate();
+    void set_internal_ip(bool value);
+    bool is_internal_ip();
 };
 #endif

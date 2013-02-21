@@ -37,3 +37,13 @@ void CommWorker::activate()
 {
    active = true; 
 }
+
+void CommWorker::set_internal_ip(bool value)
+{
+   internal_ip = value;
+}
+
+bool CommWorker::is_internal_ip()
+{
+  return internal_ip;
+}

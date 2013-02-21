@@ -42,6 +42,7 @@ CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std:
     {
           // second, check worker connectivity, if external IP use sockert
 	  // if no external ip, use files to receive data
+	  
           if(get_ipaddress(ip) == 0 && this->init_network(port) == 0)
 	      this->myself = new CommWorker(hostname, ip, port);
 	  else this->myself = new CommWorker(hostname);
@@ -80,9 +81,26 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
 {
   
   struct ifaddrs *myaddrs, *ifa;
- int status;
-
+  int status;
+  
   status = getifaddrs(&myaddrs);
+  
+  // read external ip obtained by running a script
+  char external_ip[128];
+  
+  FILE *file_ip = fopen("external_ip.txt","r");
+  
+  if(file_ip!=NULL)
+  {
+    //read the data
+    fgets(external_ip,128,file_ip);
+    fclose(file_ip);
+  }
+  else strcpy(external_ip,"no_ip");
+  
+  
+  
+  
 
   if (status != 0){
     perror("No network interface, communication impossible, finishing ...");
@@ -107,9 +125,14 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
 	  if (NULL == inet_ntop(AF_INET, s4, buf, sizeof(buf)))
 	    printf("%s: inet_ntop failed!\n", ifa->ifa_name);
 	  else {
-	    // external ip address
-	    if(debug)printf("Testing IP %s\n",buf);
-	    if(strlen(buf)> maxlen)
+	    // external ip address is in the network interface
+	    if( strcmp(buf,external_ip) == 0) 
+	    {  
+		ip = buf;
+		return 0;
+	    }
+	    // get an ip adress internal
+	    else if(strlen(buf)> maxlen)
 	    {  
 	      ip = buf;
 	      maxlen=strlen(buf);
@@ -120,7 +143,7 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
 	}
   }
   if(myaddrs!=NULL)freeifaddrs(myaddrs);
-  return 0;
+  return -1;
 }  
   
 
