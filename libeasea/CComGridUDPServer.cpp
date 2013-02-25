@@ -86,14 +86,15 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
   status = getifaddrs(&myaddrs);
   
   // read external ip obtained by running a script
-  char external_ip[128];
+  char external_ip[64];
   
   FILE *file_ip = fopen("external_ip.txt","r");
   
   if(file_ip!=NULL)
   {
     //read the data
-    fgets(external_ip,128,file_ip);
+    fgets(external_ip,64,file_ip);
+    external_ip[strlen(external_ip)-1] = 0;
     if(debug)printf("external ip is: %s we will now check network interfaces\n",external_ip);
     fclose(file_ip);
   }
@@ -131,6 +132,9 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
 	    printf("%s: inet_ntop failed!\n", ifa->ifa_name);
 	  else {
 	    // external ip address is in the network interface
+	    printf("comparing %s (%d) and %s (%d) = %d\n", buf, 
+		   strlen(buf),external_ip,strlen(external_ip), strcmp(buf,external_ip));
+	    
 	    if( strcmp(buf,external_ip) == 0) 
 	    {  
 		ip = buf;
