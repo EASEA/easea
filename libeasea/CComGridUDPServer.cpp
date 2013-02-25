@@ -12,8 +12,13 @@
 #include <string.h>    
 #include <sstream>
 #include <queue>
+extern "C"
+{
 #include "gfal_api.h"
+#include <lcg_util.h>
+}
 #include "include/CComGridUdpServer.h"
+
 #include <fcntl.h>
 #include <time.h>
 
@@ -340,7 +345,7 @@ int CComGridUDPServer::send(char *individual, int dest)
        
        if(refresh_workers->get_nr_workers()>0)
        {	 
-          workdest = new CommWorker(refresh_workers->get_worker_nr(refresh_workers->get_nr_workers()));
+          workdest = new CommWorker(refresh_workers->get_worker_nr(refresh_workers->get_nr_workers()-1));
           if(debug)
              printf("Invalid destination worker, send to another worker : %s\n", workdest->get_name().c_str());
        }	  
@@ -533,7 +538,7 @@ CComGridUDPServer::~CComGridUDPServer()
 
 	      if( result != -1 && S_ISREG(statusfile.st_mode))
 	      {  
-		    if( gfal_unlink(fullfilename.c_str()) != 0)
+		    if( lcg_del((char *)fullfilename.c_str(), 5, NULL,NULL,NULL,0,0) != 0)
 		    {
 		      if(debug)printf("Finish worker : Cannot erase  the file %s\n", fullfilename.c_str());
 		      break;
@@ -665,6 +670,7 @@ void CComGridUDPServer::send_individuals()
     //std::list<std::pair<std::string,std::string> >::iterator it_e = writedata.end();
     //std::list<std::pair<std::string,std::string> >::iterator it2 = it;
     if(writedata.size()==0)return;
+
     std::pair<std::string,std::string> item = writedata.back();
     /*while( it != it_e && !cancel )
     //{

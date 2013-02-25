@@ -1,6 +1,9 @@
 #include "include/CComWorkerListManager.h"
 #include "stdio.h"
+extern "C"
+{
 #include "gfal_api.h"
+}
 #include "pthread.h"
 #include <string>
 #include <errno.h>
