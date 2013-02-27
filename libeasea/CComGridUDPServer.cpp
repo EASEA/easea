@@ -190,7 +190,6 @@ int CComGridUDPServer::create_exp_path(char *path, char *expname)
 
 int CComGridUDPServer::determine_worker_name(std::string &workername)
 {
-  
   // scan experiment directory to find a suitable worker name
   int tries = 0;
   char hostname[256];
@@ -299,7 +298,6 @@ int CComGridUDPServer::init_network(short unsigned int &port) {
 int CComGridUDPServer::register_worker()
 {
     
-  
     std::string fullfilename = fullpath + '/' + myself->get_name() + '/' + "worker_info.txt";
     
     int	fd = gfal_open( fullfilename.c_str(), O_WRONLY|O_CREAT, 0644 );
@@ -550,9 +548,9 @@ CComGridUDPServer::~CComGridUDPServer()
 			  	sleep(4);
 				tries++;
 				continue;
-		  }		
+	      }		
 	    }
-	        (void)gfal_closedir (dp);
+	    (void)gfal_closedir (dp);
             if( gfal_rmdir(workerpath.c_str()) == 0 )
 	    {
 		if(debug)
@@ -670,8 +668,12 @@ void CComGridUDPServer::send_individuals()
     //std::list<std::pair<std::string,std::string> >::iterator it_e = writedata.end();
     //std::list<std::pair<std::string,std::string> >::iterator it2 = it;
     if(writedata.size()==0)return;
-
+    pthread_mutex_lock(&sending_mutex);
     std::pair<std::string,std::string> item = writedata.back();
+    writedata.pop_back();
+    pthread_mutex_unlock(&sending_mutex);
+
+
     /*while( it != it_e && !cancel )
     //{
         if(send_file_worker( (*it).first, (*it).second ) ==0 )
@@ -687,9 +689,6 @@ void CComGridUDPServer::send_individuals()
     } */
     if(cancel)printf("Stop sending individuals, thread canceled, remaining to send %d\n",writedata.size());
     send_file_worker( item.first, item.second );
-    pthread_mutex_lock(&sending_mutex);
-    writedata.pop_back();
-    pthread_mutex_unlock(&sending_mutex);
 }  
 
 

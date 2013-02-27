@@ -69,6 +69,7 @@ int CComWorkerListManager::refresh_worker_list()
  					  printf("Testing reading worker info:%s\n", s.c_str());
 					  if(read_worker_info_file( fullpathworker, workerinfo ) == 0 )					
 					  {  
+					      pthread_mutex_lock(&worker_list_mutex);
 					      activeworkers.push_back( *workerinfo );
 	      				      if(debug)
 					      {
@@ -77,6 +78,7 @@ int CComWorkerListManager::refresh_worker_list()
 							  workerinfo->get_ip().c_str(),
 							  workerinfo->get_port());
 					      }
+					      pthread_mutex_unlock(&worker_list_mutex); 		
 					  }    
 
 				      }	  
