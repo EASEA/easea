@@ -302,7 +302,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
 	this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
-	this->expId = (char*)setVariable("expId","sample_experiment").c_str();
+	this->expId = (char*)setVariable("expId","EASEA").c_str();
 	this->working_path = (char*)setVariable("working_path","lfn:/grid/vo.complex-systems.eu/easea/experiments/").c_str();
 	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
         this->serverPort = setVariable("serverPort",\SERVER_PORT);
@@ -535,4 +535,9 @@ endif
 --ipFile=\IP_FILE
 --migrationProbability=\MIGRATION_PROBABILITY #Probability to send an individual every generation
 --serverPort=\SERVER_PORT
+
+#### GridRemote Island Model ####
+--expId=EASEA #Name of the experiment
+--working_path=lfn:/grid/eu.complex-systems.eu/easea/experiments # LFN path of the experiments
+
 \TEMPLATE_END
