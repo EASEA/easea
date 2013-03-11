@@ -41,6 +41,15 @@ CComGridFileServer::CComGridFileServer(char* path, char* expname, std::queue< st
  
     // create the main directory
     
+    if(debug)
+    {
+      
+      char *version = gfal_version();      
+      printf("Version of gfal is %s\n", version);
+      
+    }  
+
+    
     int result = gfal_mkdir(fullpath.c_str(),0777);
     
     // check error condition

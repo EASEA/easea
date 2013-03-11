@@ -158,6 +158,8 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 	("startFromFile",po::value<int>(),"Loads the population from a .pop file (default : 0")
 	("fstgpu",po::value<int>(),"The number of the first GPU used for computation")
 	("lstgpu",po::value<int>(),"The number of the fisrt GPU NOT used for computation")
+	("expId",po::value<string>(),"The Id of the experiment")
+	("working_path",po::value<string>(),"The Grid path of the experiments (lfn)")
 	("u1",po::value<string>(),"User defined parameter 1")
 	("u2",po::value<string>(),"User defined parameter 2")
 	("u3",po::value<int>(),"User defined parameter 3")

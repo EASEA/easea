@@ -302,8 +302,10 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
 	this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
+	this->expId = (char*)setVariable("expId","sample_experiment").c_str();
+	this->working_path = (char*)setVariable("working_path","lfn:/grid/vo.complex-systems.eu/easea/experiments/").c_str();
 	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
-    this->serverPort = setVariable("serverPort",\SERVER_PORT);
+        this->serverPort = setVariable("serverPort",\SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
