@@ -1284,6 +1284,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {fprintf(fpOutputFile,"%d",bREMOTE_ISLAND_MODEL);}
 <TEMPLATE_ANALYSIS>"\\IP_FILE" {if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
+<TEMPLATE_ANALYSIS>"\\EXPID" {if(strlen(sEXPID)>0)fprintf(fpOutputFile,"%s",sEXPID); else fprintf(fpOutputFile,"NULL");}
+<TEMPLATE_ANALYSIS>"\\WORKING_PATH" {if(strlen(sWORKING_PATH)>0)fprintf(fpOutputFile,"%s",sWORKING_PATH); else fprintf(fpOutputFile,"NULL");}
 <TEMPLATE_ANALYSIS>"\\MIGRATION_PROBABILITY" {fprintf(fpOutputFile,"%f",fMIGRATION_PROBABILITY);}
 <TEMPLATE_ANALYSIS>"\\SERVER_PORT" {fprintf(fpOutputFile,"%d",nSERVER_PORT);}
 
@@ -2311,6 +2313,8 @@ if(OPERATING_SYSTEM=WINDOWS)
  
 <GET_PARAMETERS>"Remote"[ \t\n]+"island"[ \t\n]+"model"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf ("\tRemote Island Model...\n"); return REMOTE_ISLAND_MODEL;}
 <GET_PARAMETERS>"IP"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tIP File...\n"); return IP_FILE;}
+<GET_PARAMETERS>"Experiment"[ \t\n]+"ID"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tExperiment Id...\n"); return EXPID;}
+<GET_PARAMETERS>"Grid"[ \t\n]+"Working"[ \t\n]+"Path"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tGrid Working Path...\n"); return WORKING_PATH;}
 <GET_PARAMETERS>"Migration"[ \t\n]+"probability"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tMigration Probability...\n"); return MIGRATION_PROBABILITY;}
 <GET_PARAMETERS>"Server"[ \t\n]+"port"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tServer port...\n"); return SERVER_PORT;}
 
@@ -2324,6 +2328,11 @@ if(OPERATING_SYSTEM=WINDOWS)
 // identifier
 <GET_PARAMETERS>[a-zA-Z_][a-zA-Z0-9_]*    { yylval.pSymbol = new CSymbol(yytext);
   return IDENTIFIER2; }
+// path filename
+<GET_PARAMETERS>"lfn:/"+[a-zA-Z_\.][a-zA-Z0-9_/\.\-]*    { yylval.pSymbol = new CSymbol(yytext);
+  return PATH_IDENTIFIER; }
+
+
 // end of .ez file : resume tpl analysis
 <GET_PARAMETERS>"\\end" {rewind(fpGenomeFile); yyin = fpTemplateFile; BEGIN TEMPLATE_ANALYSIS;}  // switch back to .tpl file and analyser
 

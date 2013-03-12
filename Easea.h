@@ -43,7 +43,7 @@ extern   FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile, *fpExplodedGenomeFi
 extern char sRAW_PROJECT_NAME[], sPROJECT_NAME[], sEO_DIR[], sEZ_PATH[1000],  sTPL_DIR[1000], sEZ_FILE_NAME[];
 extern char sLOWER_CASE_PROJECT_NAME[];
 extern char  sSELECTOR[], sSELECTOR_OPERATOR[], sRED_PAR[], sRED_PAR_OPERATOR[], sRED_FINAL[], sRED_FINAL_OPERATOR[], sRED_OFF[], sRED_OFF_OPERATOR[];
-extern char sIP_FILE[];
+extern char sIP_FILE[],sEXPID[],sWORKING_PATH[];
 extern bool bELITISM, bVERBOSE;
 extern bool bBALDWINISM;
 extern bool bPRINT_STATS, bPLOT_STATS, bGENERATE_CSV_FILE, bGENERATE_GNUPLOT_SCRIPT, bGENERATE_R_SCRIPT;

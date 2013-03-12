@@ -3,7 +3,7 @@
 
 #include <cyacc.h>
 
-#line 70 "EaseaParse.y"
+#line 72 "EaseaParse.y"
 
 // forward references
 class CSymbol;
@@ -11,7 +11,7 @@ class CSymbol;
 #line 12 "EaseaParse.h"
 #ifndef YYSTYPE
 union tagYYSTYPE {
-#line 76 "EaseaParse.y"
+#line 78 "EaseaParse.y"
 
   CSymbol* pSymbol;
   double dValue;
@@ -38,59 +38,62 @@ union tagYYSTYPE {
 #define END_METHODS 267
 #define IDENTIFIER 268
 #define IDENTIFIER2 269
-#define BOOL 270
-#define INT 271
-#define DOUBLE 272
-#define FLOAT 273
-#define GPNODE 274
-#define CHAR 275
-#define POINTER 276
-#define NUMBER 277
-#define NUMBER2 278
-#define METHODS 279
-#define STATIC 280
-#define NB_GEN 281
-#define NB_OPT_IT 282
-#define BALDWINISM 283
-#define MUT_PROB 284
-#define XOVER_PROB 285
-#define POP_SIZE 286
-#define SELECTOR 287
-#define RED_PAR 288
-#define RED_OFF 289
-#define RED_FINAL 290
-#define OFFSPRING 291
-#define SURVPAR 292
-#define SURVOFF 293
-#define MINIMAXI 294
-#define ELITISM 295
-#define ELITE 296
-#define REMOTE_ISLAND_MODEL 297
-#define IP_FILE 298
-#define MIGRATION_PROBABILITY 299
-#define SERVER_PORT 300
-#define PRINT_STATS 301
-#define PLOT_STATS 302
-#define GENERATE_CSV_FILE 303
-#define GENERATE_GNUPLOT_SCRIPT 304
-#define GENERATE_R_SCRIPT 305
-#define SAVE_POPULATION 306
-#define START_FROM_FILE 307
-#define TIME_LIMIT 308
-#define MAX_INIT_TREE_D 309
-#define MIN_INIT_TREE_D 310
-#define MAX_XOVER_DEPTH 311
-#define MAX_MUTAT_DEPTH 312
-#define MAX_TREE_D 313
-#define NB_GPU 314
-#define PRG_BUF_SIZE 315
-#define NO_FITNESS_CASES 316
-#line 161 "EaseaParse.y"
+#define PATH_IDENTIFIER 270
+#define BOOL 271
+#define INT 272
+#define DOUBLE 273
+#define FLOAT 274
+#define GPNODE 275
+#define CHAR 276
+#define POINTER 277
+#define NUMBER 278
+#define NUMBER2 279
+#define METHODS 280
+#define STATIC 281
+#define NB_GEN 282
+#define NB_OPT_IT 283
+#define BALDWINISM 284
+#define MUT_PROB 285
+#define XOVER_PROB 286
+#define POP_SIZE 287
+#define SELECTOR 288
+#define RED_PAR 289
+#define RED_OFF 290
+#define RED_FINAL 291
+#define OFFSPRING 292
+#define SURVPAR 293
+#define SURVOFF 294
+#define MINIMAXI 295
+#define ELITISM 296
+#define ELITE 297
+#define REMOTE_ISLAND_MODEL 298
+#define IP_FILE 299
+#define EXPID 300
+#define WORKING_PATH 301
+#define MIGRATION_PROBABILITY 302
+#define SERVER_PORT 303
+#define PRINT_STATS 304
+#define PLOT_STATS 305
+#define GENERATE_CSV_FILE 306
+#define GENERATE_GNUPLOT_SCRIPT 307
+#define GENERATE_R_SCRIPT 308
+#define SAVE_POPULATION 309
+#define START_FROM_FILE 310
+#define TIME_LIMIT 311
+#define MAX_INIT_TREE_D 312
+#define MIN_INIT_TREE_D 313
+#define MAX_XOVER_DEPTH 314
+#define MAX_MUTAT_DEPTH 315
+#define MAX_TREE_D 316
+#define NB_GPU 317
+#define PRG_BUF_SIZE 318
+#define NO_FITNESS_CASES 319
+#line 166 "EaseaParse.y"
 
 #include "EaseaSym.h"
 #include "EaseaLex.h"
 
-#line 94 "EaseaParse.h"
+#line 97 "EaseaParse.h"
 /////////////////////////////////////////////////////////////////////////////
 // CEASEAParser
 
@@ -111,7 +114,7 @@ protected:
 #endif
 
 public:
-#line 168 "EaseaParse.y"
+#line 173 "EaseaParse.y"
 
 protected:
   CEASEALexer EASEALexer;       // the lexical analyser
@@ -127,7 +130,7 @@ public:
 
   virtual void yysyntaxerror();
 
-#line 131 "EaseaParse.h"
+#line 134 "EaseaParse.h"
 };
 
 #ifndef YYPARSENAME

@@ -51,6 +51,8 @@ bool bBALDWINISM=0; //memetic
 bool bREMOTE_ISLAND_MODEL=0; //remote island model
 float fMIGRATION_PROBABILITY=0.0;
 char sIP_FILE[128]; //remote island model
+char sEXPID[128]; //experiment ID
+char sWORKING_PATH[512];  // working path
 int nPOP_SIZE, nOFF_SIZE;
 float fSURV_PAR_SIZE=-1.0, fSURV_OFF_SIZE=-1.0;
 char *nGENOME_NAME;
@@ -110,6 +112,7 @@ class CSymbol;
 %token <szString> END_METHODS
 %token <pSymbol> IDENTIFIER
 %token <pSymbol> IDENTIFIER2
+%token <pSymbol> PATH_IDENTIFIER
 %token <pSymbol> BOOL
 %token <pSymbol> INT
 %token <pSymbol> DOUBLE
@@ -139,6 +142,8 @@ class CSymbol;
 %token ELITE
 %token REMOTE_ISLAND_MODEL //island model
 %token IP_FILE  //island model
+%token EXPID //grid model
+%token WORKING_PATH //grid model
 %token MIGRATION_PROBABILITY //island model
 %token SERVER_PORT //server port
 %token PRINT_STATS
@@ -636,6 +641,19 @@ Parameter
 	strcat(sIP_FILE,".");
 	strcat(sIP_FILE,$4->sName);
 	}
+  | EXPID IDENTIFIER2{
+        sprintf(sEXPID, $2->sName);
+	}
+  | WORKING_PATH PATH_IDENTIFIER{
+        sprintf(sWORKING_PATH, $2->sName);
+	}
+
+  | IP_FILE IDENTIFIER2'.'IDENTIFIER2{
+        sprintf(sIP_FILE, $2->sName);
+	strcat(sIP_FILE,".");
+	strcat(sIP_FILE,$4->sName);
+	}
+
   | MIGRATION_PROBABILITY NUMBER2{
 	fMIGRATION_PROBABILITY=(float)$2;
 	}
