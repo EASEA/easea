@@ -1,4 +1,3 @@
-
 #include <sys/types.h>                                                                                           
 #include <sys/socket.h>                                                                                          
 #include <arpa/inet.h>                                                                                           
@@ -9,7 +8,7 @@
 #include <netinet/in.h>
 #include <stdio.h>     
 #include <stdlib.h>    
-#include <string.h>    
+#include <string.h> 
 #include <sstream>
 #include <queue>
 extern "C"
@@ -40,6 +39,7 @@ CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std:
     //cancel = 0;
     debug = dbg;
     std::string hostname,ip;
+    unsigned long int netmask;
     
     if(debug)printf("Creating experiment and worker folders...\n");
     // first create experiment path and worker directory
@@ -48,8 +48,11 @@ CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std:
           // second, check worker connectivity, if external IP use sockert
 	  // if no external ip, use files to receive data
 	  
-          if(get_ipaddress(ip) == 0 && this->init_network(port) == 0)
+          if(get_ipaddress(ip,netmask) == 0 && this->init_network(port) == 0)
+	  {  
 	      this->myself = new CommWorker(hostname, ip, port);
+	      this->myself->set_netmask(netmask);
+	  }    
 	  else this->myself = new CommWorker(hostname);
 	  
 	  // now register worker
@@ -82,7 +85,7 @@ CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std:
 }
 
 
-int CComGridUDPServer::get_ipaddress(std::string &ip)
+int CComGridUDPServer::get_ipaddress(std::string &ip, unsigned long int &nm)
 {
   
   struct ifaddrs *myaddrs, *ifa;
@@ -143,6 +146,7 @@ int CComGridUDPServer::get_ipaddress(std::string &ip)
 	    if( strcmp(buf,external_ip) == 0) 
 	    {  
 		ip = buf;
+		nm = ntohl(((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr.s_addr);
 		return 0;
 	    }
 	    // get an ip adress internal
@@ -365,7 +369,8 @@ int CComGridUDPServer::send(char *individual, int dest)
         return 0;
      }
      
-     if(workdest->get_ip() == "noip")send_file(individual,*workdest);
+     if(workdest->get_ip() == "noip" 
+       || !in_same_network(myself->get_ip().c_str(),workdest->get_ip().c_str()))send_file(individual,*workdest);
      else send( individual, *workdest);
      delete workdest;
      return 0;
@@ -882,6 +887,21 @@ int CComGridUDPServer::refresh_file_list()
   return 0;
 }
 
+
+int CComGridUDPServer::in_same_network(const char *addr1, const char *addr2)
+{
+      struct sockaddr_in ip1,ip2;
+      inet_aton(addr1, &ip1.sin_addr);
+      inet_aton(addr2, &ip2.sin_addr);
+      unsigned long int n_ip1, n_ip2;
+      n_ip1 = ntohl(ip1.sin_addr.s_addr);
+      n_ip2 = ntohl(ip2.sin_addr.s_addr);
+      
+      return ((n_ip1 & myself->get_netmask()) == (n_ip2 & myself->get_netmask()));
+      
+      //return ( (ip1.sin_addr.s_addr & netmask1.sin_addr.s_addr) == (ip2.sin_addr.s_addr & netmask2.sin_addr.s_addr) );
+      
+}
 
 
 

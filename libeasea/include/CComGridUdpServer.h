@@ -26,7 +26,7 @@ public:
 	void read_data_lock();
 	void read_data_unlock();
 	int register_worker();
-	int get_ipaddress(std::string &ip);
+	int get_ipaddress(std::string& ip, long unsigned int& nm);
 	int create_exp_path(char *path, char *expname);
 	int determine_worker_name(std::string &workername);
 	int send(char *individual, int dest);
@@ -45,7 +45,7 @@ public:
 	void readfiles();
 	int determine_file_name(std::string tmpfilename, std::string workerdestname);
 	int send_file(char *buffer, CommWorker destination);
-
+	int in_same_network(const char* addr1, const char* addr2);
 	
 private:
   	std::string workername;

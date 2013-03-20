@@ -47,3 +47,13 @@ bool CommWorker::is_internal_ip()
 {
   return internal_ip;
 }
+
+unsigned long int CommWorker::get_netmask() const
+{
+  return mynetmask;
+}
+
+void CommWorker::set_netmask(unsigned long int nm)
+{
+   mynetmask = nm;
+}  
