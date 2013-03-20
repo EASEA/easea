@@ -166,6 +166,8 @@ return NbMut;
 \end
 
 \User Makefile options: 
+CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/ -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include
+LDFLAGS+=-lgfal_pthr -llcg_util
 \end
 
 \Default run parameters :        // Please let the parameters appear in this order
@@ -177,7 +179,7 @@ return NbMut;
   Crossover probability : 1      // XOVER_PROB
   Evaluator goal : minimise      // Maximise
   Selection operator: Tournament 2.0
-  Surviving parents: 100%//percentage or absolute  
+  Surviving parents: 100%//perceor absolute  
   Surviving offspring: 100%
   Reduce parents operator: Tournament 2
   Reduce offspring operator: Tournament 2
@@ -193,6 +195,8 @@ return NbMut;
 
   Remote island model: true
   IP file: ip.txt 			//File containing all the remote island's IP
+  Experiment ID: weierstrass
+  Grid Working Path: lfn:/grid/vo.complex-systems.eu/easea/experiments/
   Server port : 2929
   Migration probability: 0.33
 

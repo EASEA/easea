@@ -156,8 +156,8 @@ return sqrtf(ERROR);
 
 \User Makefile options: 
 
-CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/
-LDFLAGS+=
+CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/ -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include
+LDFLAGS+=-lgfal_pthr -llcg_util
 \end
 
 \Default run parameters :         // Please let the parameters appear in this order
@@ -185,6 +185,9 @@ LDFLAGS+=
 
   Remote island model: true
   IP	  file: ip.txt 			//File containing all the remote island's IP
+  Experiment ID: regression
+  Grid Working Path: lfn:/grid/vo.complex-systems.eu/easea/experiments/
+
   Server port : 2929
   Migration probability: 1
 
