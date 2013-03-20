@@ -6,7 +6,9 @@ Selection operator: Tournament
 __________________________________________________________*/
 
 \User declarations :
-#define SIZE 100
+#define SIZE 2
+#define BBOB_FUNCTION_ID 1
+#define BBOB_INSTANCE_ID 1
 #define X_MIN -5.
 #define X_MAX 5.
 #define ITER 120      
@@ -18,10 +20,10 @@ __________________________________________________________*/
 
  
 float pMutPerGene=0.1;
-int DIM = 2;
-int trialid = 1;
-int funcId = 2; //passed by parameter
-int instanceId = 1;
+int DIM = SIZE;
+int trialid = BBOB_INSTANCE_ID;
+int funcId = BBOB_FUNCTION_ID; //passed by parameter
+int instanceId = BBOB_INSTANCE_ID;;
 
 double * peaks;
 double * Xopt; /*Initialized in benchmarkhelper.c*/
@@ -74,12 +76,13 @@ float gauss()
 \end
 
 \Before everything else function:
+  int a = setVariable("POP_SIZE",10);
+  printf("population size %d\n", a);
   fgeneric_initialize();
 \end
 
 \After everything else function:
   //cout << "After everything else function called" << endl;
-  fgeneric_finalize();
 \end
 
 \At the beginning of each generation function:
@@ -96,8 +99,8 @@ float gauss()
 \User classes :
 
 GenomeClass { 
-  double *x;
-  double *sigma; // auto-adaptative mutation parameter
+  double x[SIZE];
+  double sigma[SIZE]; // auto-adaptative mutation parameter
 }
 \end
 
@@ -109,8 +112,6 @@ GenomeClass {
 \end
 
 \GenomeClass::initialiser : // "initializer" is also accepted
-  Genome.x = (double *) malloc( DIM * sizeof(double) );
-  Genome.sigma = (double *) malloc( DIM * sizeof(double) );
   for(int i=0; i<DIM; i++ ) {
      	Genome.x[i] = (double)random(X_MIN,X_MAX);
 	Genome.sigma[i]=(double)random(0.,0.5);
@@ -152,6 +153,7 @@ return NbMut;
 \User Makefile options: 
 CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/ -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include
 LDFLAGS+=-lgfal_pthr -llcg_util
+OBJS+= benchmarks.o benchmarksnoisy.o fgeneric.o benchmarkshelper.o
 \end
 
 \Default run parameters :        // Please let the parameters appear in this order
