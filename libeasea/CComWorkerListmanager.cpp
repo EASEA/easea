@@ -262,7 +262,7 @@ int CComWorkerListManager::check_ipaddress(char *ipaddress) const
             free(holder);
             return -1;
     }
-    free(holder);
+    //free(holder);
     return 0;
 }
 
