@@ -33,8 +33,13 @@ public:
 	int send(char* individual, CommWorker dest);
 	void read_thread();
 	void refresh_thread();
+	void readfiles_thread();
+	void writefiles_thread();
 	static void* read_thread_f(void *parm);
 	static void* refresh_thread_f(void *parm);
+	static void* write_thread_files_f(void *parm);
+	static void* read_thread_files_f(void *parm);
+	
 	int init_network(short unsigned int& port);
 	int number_of_clients();
         int create_tmp_file(int& fd, std::string workerdestname, std::string &tmpfilename);
@@ -58,7 +63,7 @@ private:
         CommWorker *myself;
 	void run();
 	int ServerSocket;
-	pthread_t read_t,refresh_t;
+	pthread_t read_t,refresh_t, readf_t, writef_t;
 	int Socket;
 	struct sockaddr_in ServAddr;
 	bool cancel;

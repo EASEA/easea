@@ -2,7 +2,7 @@
 #include "stdio.h"
 extern "C"
 {
-#include "gfal_api.h"
+#include <gfal_api.h>
 }
 #include "pthread.h"
 #include <string>
@@ -11,6 +11,7 @@ extern "C"
 #include <stdlib.h>
 #include <string.h>
 #include <map>
+#include <set>
 
 extern pthread_mutex_t gfal_mutex;
 extern pthread_mutex_t worker_list_mutex;
@@ -22,7 +23,7 @@ int CComWorkerListManager::refresh_worker_list()
   
   // read the directory list, each folder is a worker
   
-  pthread_mutex_lock(&gfal_mutex);
+  //pthread_mutex_lock(&gfal_mutex);
   //pthread_mutex_lock(&worker_list_mutex);
   
   // taken from GNU C manual, adapted to gfal api
@@ -38,10 +39,22 @@ int CComWorkerListManager::refresh_worker_list()
   //std::string command = "ls -a "+fullpath;
   //system(command.c_str());
   
-  std::map<std::string, unsigned> active_workers_names;
+  std::set<std::string> active_workers_names;
 
-  for(int i=0; i< activeworkers.size(); i++) active_workers_names[ activeworkers[i].get_name()] = i;
-  if(debug)printf("Refreshing workers list ...\n");
+  // create a list 
+  for(unsigned int i=0; i< activeworkers.size(); i++) active_workers_names.insert(activeworkers[i].get_name());
+  //  active_workers_names[ activeworkers[i].get_name()] = 0;
+  if(debug)
+  {  
+    printf("Refreshing workers list (already in list)...\n");
+    std::set<std::string>::iterator it = active_workers_names.begin();
+    std::set<std::string>::iterator ite = active_workers_names.end();
+    while(it!=ite)
+    {
+      printf("%s\n", (*it).c_str() );
+      ++it;
+    }  
+  }  
   dp = gfal_opendir (workers_path.c_str());
   
   if (dp != NULL)
@@ -49,13 +62,14 @@ int CComWorkerListManager::refresh_worker_list()
        while ( (ep = gfal_readdir (dp)) && !cancel)
        {
 			 //only take into account folders
+			 pthread_mutex_lock(&gfal_mutex);
 			 std::string s(ep->d_name);
 			 std::string fullpathworker = workers_path + '/' + s;
 		
 			 // query if the entry if a directory
 			 struct stat statusfile;
 			 int status = gfal_stat(fullpathworker.c_str(), &statusfile);
-
+			
 			 if( status!=-1 && S_ISDIR(statusfile.st_mode))
 			 {  
 				  
@@ -64,26 +78,28 @@ int CComWorkerListManager::refresh_worker_list()
 				      
 				  {
 				      // check if we have already information concerning this worker
-				      if( active_workers_names.find( s.substr(7) ) == active_workers_names.end() )
+				      if( active_workers_names.find( s ) == active_workers_names.end() )
 				      {	
- 					  printf("Testing reading worker info:%s\n", s.c_str());
+					  printf("Testing reading worker info:%s\n", s.c_str());
 					  if(read_worker_info_file( fullpathworker, workerinfo ) == 0 )					
 					  {  
 					      pthread_mutex_lock(&worker_list_mutex);
 					      activeworkers.push_back( *workerinfo );
 	      				      if(debug)
 					      {
-						  printf("Worker added to the list, hostname:%s ip:%s port/%d\n",
+						  printf("Worker %d added to the list, hostname:%s ip:%s port/%d\n",
+							 activeworkers.size(),
 							  workerinfo->get_name().c_str(),
 							  workerinfo->get_ip().c_str(),
 							  workerinfo->get_port());
 					      }
-					      pthread_mutex_unlock(&worker_list_mutex); 		
+					      pthread_mutex_unlock(&worker_list_mutex);
+					   
 					  }    
 
-				      }	  
-				      else
-					  active_workers_names.erase(s.substr(7) );
+				      }	
+				      else    active_workers_names.erase(s);
+				      
 				  }	  
 			 }
 			 else if(status==-1)
@@ -94,23 +110,29 @@ int CComWorkerListManager::refresh_worker_list()
 			    
 			    return -1;
 			 } 
+			 pthread_mutex_unlock(&gfal_mutex);
 	}
-	if(cancel) printf("Stop finding workers\n");
-	
-        
-        (void)gfal_closedir (dp);
-	pthread_mutex_unlock(&gfal_mutex); 
+	if(cancel){
+	  printf("Stop finding workers\n");
+	  (void)gfal_closedir (dp);
+	}
+	else
+	{  
+
 	// updating the active workers_path
 	// delete inactive workers
-	pthread_mutex_lock(&worker_list_mutex);
-	std::map<std::string, unsigned>::reverse_iterator it = active_workers_names.rbegin();
-	while( it != active_workers_names.rend() )
-	{  
-	     //activeworkers.erase( activeworkers.begin() + (*it).second );
-	     ++it;
+	    pthread_mutex_lock(&worker_list_mutex);
+	    
+	    for(int i = activeworkers.size()-1; i>=0; i--)
+	    {  
+		if( active_workers_names.find( activeworkers[i].get_name() ) != active_workers_names.end() )
+		{  
+		  if(debug) printf("Delete worker %s is, no more active\n", activeworkers[i].get_name().c_str() );
+		  activeworkers.erase(activeworkers.begin() + i);
+		}  
+	    }
+	    pthread_mutex_unlock(&worker_list_mutex); 		
 	}
-	pthread_mutex_unlock(&worker_list_mutex); 		
-	
   }      
   else
   {  
@@ -194,7 +216,7 @@ int CComWorkerListManager::parse_worker_info_file(char *buffer, CommWorker *&wor
 	workerinfo = new CommWorker(hn);
         return 0;
     }
-    else if( strcmp(mode,"SOCKET") == 0 || strcmp(mode,"MPI" ==0) ) 
+    else if( strcmp(mode,"SOCKET") == 0 || strcmp(mode,"MPI") ==0) 
     {  
         // now check for ip and port/rank
 	char* address = strtok(NULL, ":");
