@@ -18,8 +18,8 @@ class CComWorkerListManager
       int checkValidLine(char* line) const;
       int check_ipaddress(char* arg1) const;
       int check_port(char* arg1) const;
-      bool cancel;
       int debug;
+      bool cancel;
   public:
       CComWorkerListManager(std::string path,int _debug=1):workers_path(path),debug(_debug),cancel(false) {};
       CommWorker get_worker_nr(int wn);
