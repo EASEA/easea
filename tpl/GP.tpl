@@ -44,7 +44,7 @@ int main(int argc, char** argv){
 
 	EASEAFinal(pop);
 
-	delete ea;
+	delete pop;
 
 
 	return 0;

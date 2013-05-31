@@ -11,7 +11,6 @@
 #include <arpa/inet.h>  /* for sockaddr_in and inet_ntoa() */
 #include <netinet/in.h> /* for IP Socket data types */
 #include <unistd.h>     /* for close() */
-#include <stdio.h>
 #include "CComWorkerListManager.h"
 
 class CComGridUDPServer {
@@ -52,7 +51,6 @@ public:
 	int determine_file_name(std::string tmpfilename, std::string workerdestname);
 	int send_file(char *buffer, CommWorker destination);
 	int in_same_network(const char* addr1, const char* addr2);
-	int log_connection(std::string source, std::string destination);
 	
 private:
   	std::string workername;
@@ -69,6 +67,5 @@ private:
 	int Socket;
 	struct sockaddr_in ServAddr;
 	bool cancel;
-	FILE *logfile;
 };
 #endif

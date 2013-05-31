@@ -10,7 +10,6 @@
 #include <stdlib.h>    
 #include <string.h> 
 #include <sstream>
-#include <time.h>
 #include <queue>
 extern "C"
 {
@@ -28,7 +27,7 @@ pthread_mutex_t server_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t gfal_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t worker_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t sending_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, short unsigned int port, int dbg) {
   
@@ -96,9 +95,6 @@ CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std:
         printf("Error reported is = %d\n" , errno);   
 	exit(1);
     }
-    
-    // finally create the log file_ip
-    logfile = fopen("connections.txt","w");
 }
 
 
@@ -385,13 +381,10 @@ int CComGridUDPServer::send(char *individual, int dest)
 	
         return 0;
      }
-     // compose individual
-     
      
      if(workdest->get_ip() == "noip" 
        || !in_same_network(myself->get_ip().c_str(),workdest->get_ip().c_str()))send_file(individual,*workdest);
      else send( individual, *workdest);
-     
      delete workdest;
      return 0;
   
@@ -421,26 +414,21 @@ int CComGridUDPServer::send(char *individual, CommWorker destination) {
     setsockopt(sendSocket, SOL_SOCKET, SO_SNDBUF, &sendbuff, sizeof(sendbuff));
 #endif
 
-	std::string complete_ind = myself->get_name() + "::" + individual;
-	if( complete_ind.length() < (unsigned)sendbuff ) { 
+	if(strlen(individual) < (unsigned)sendbuff ) { 
 		
 	        destaddr.sin_family = AF_INET;
 		destaddr.sin_addr.s_addr = inet_addr(destination.get_ip().c_str());
 		destaddr.sin_port = htons(destination.get_port());
-		int n_sent = sendto(sendSocket,complete_ind.c_str(),complete_ind.length(),0,(struct sockaddr *)&destaddr,sizeof(destaddr));
+		int n_sent = sendto(sendSocket,individual,strlen(individual),0,(struct sockaddr *)&destaddr,sizeof(destaddr));
 		
 		//int n_sent = sendto(this->Socket,t,strlen(individual),0,(struct sockaddr *)&this->ServAddr,sizeof(this->ServAddr));
 		if( n_sent < 0){
 			printf("Size of the individual %d\n", (int)strlen(individual));
 			perror("! Error while sending the message !");
 		}
-		else
-		{  
-		  if(debug)
+		else if(debug)
 		    printf("Individual sent to hostname: %s  ip: %s  port: %d\n", destination.get_name().c_str(),
 			   destination.get_ip().c_str(),destination.get_port());
-		  log_connection(myself->get_name(), destination.get_name());	   
-		}	   
 	}
 	else {fprintf(stderr,"Not sending individual with strlen(): %i, MAX msg size %i\n",(int)strlen(individual), sendbuff);}
 #ifndef WIN32
@@ -478,9 +466,6 @@ void CComGridUDPServer::read_thread()
 		//p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
 		buffer[recvMsgSize] = 0;
 		std::string bufferstream(buffer);
-		int pos = bufferstream.find("::");
-		log_connection(bufferstream.substr(0,pos),myself->get_name());
-		bufferstream = bufferstream.substr(pos+2);
 		data->push(bufferstream);
 	//	printf("address %p\n",(p->data));
 		pthread_mutex_unlock(&server_mutex);
@@ -581,7 +566,6 @@ CComGridUDPServer::~CComGridUDPServer()
     pthread_join(readf_t,NULL);
     pthread_join(writef_t,NULL);
     // erase working path
-    if(logfile!=NULL)fclose(logfile);
     printf("Filserver thread cancelled ....\n");
     int tries=0;
     std::string workerpath = fullpath + '/' + myself->get_name();
@@ -758,7 +742,7 @@ void CComGridUDPServer::send_individuals()
       
     } */
     if(cancel)printf("Stop sending individuals, thread canceled, remaining to send %d\n",writedata.size());
-    send_file_worker(item.first,item.second);
+    send_file_worker( item.first, item.second );
 }  
 
 
@@ -767,10 +751,9 @@ int CComGridUDPServer::send_file_worker(std::string buffer, std::string workerde
     int fd;
     std::string tmpfilename;
     pthread_mutex_lock(&gfal_mutex);
-    std::string complete_ind = myself->get_name() + "::" + buffer;
     if( create_tmp_file(fd, workerdestname, tmpfilename) == 0)
      {
-	  int result = gfal_write( fd, complete_ind.c_str(), complete_ind.size() );
+	  int result = gfal_write( fd, buffer.c_str(), buffer.size() );
 	  if(result >0)
 	  {
 		printf("gfal_write returns %d for written %d bytes \n", result, buffer.size() );
@@ -778,7 +761,6 @@ int CComGridUDPServer::send_file_worker(std::string buffer, std::string workerde
 		if( determine_file_name(tmpfilename, workerdestname) == 0)
 		{
 		  pthread_mutex_unlock(&gfal_mutex);
-		  log_connection(myself->get_name(), workerdestname);
 		  return 0;
 		}  
 		else
@@ -882,10 +864,7 @@ void CComGridUDPServer::readfiles()
 	      // blocking call
 	      pthread_mutex_lock(&server_mutex);
 	      std::string bufferstream(buffer);
-     	      int pos = bufferstream.find("::");
-	      log_connection(bufferstream.substr(0,pos),myself->get_name());
-	      bufferstream = bufferstream.substr(pos+2);
-	      data->push(bufferstream);
+	      data->push(buffer);
 	      /*process received data */
 	      //memmove(data[nb_data].data,buffer,sizeof(char)*MAXINDSIZE);
 	      //nb_data++;
@@ -992,14 +971,5 @@ int CComGridUDPServer::in_same_network(const char *addr1, const char *addr2)
 }
 
 
-int CComGridUDPServer::log_connection(std::string source, std::string destination)
-{
-      
-      time_t t;
-      time(&t);
-      pthread_mutex_lock(&log_mutex);
-      if(logfile!=NULL);
-       	fprintf(logfile,"%ld,%s,%s\n", t,source.c_str(), destination.c_str());
-      pthread_mutex_unlock(&log_mutex);
-}
+
 
