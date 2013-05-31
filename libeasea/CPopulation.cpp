@@ -36,8 +36,6 @@ extern CIndividual* bBest;
 CPopulation::CPopulation(){
 }
 
-
-/*CONSTRUCTEUR DE BASE, ON PASSE LES ATTRIBUTS EN ARGUMENT */
 CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
 		       float pCrossover, float pMutation, float pMutationPerGene,
 		       CRandomGenerator* rg, Parameters* params, CStats* cstats){
@@ -66,20 +64,14 @@ CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopula
   this->cstats = cstats;
 }
 
-
-
-
-/* Met les éléments du pop vect dans la pop parent */
 void CPopulation::syncInVector(){
   for( unsigned i = 0 ; i<actualParentPopulationSize ; i++ ){
     parents[i] = pop_vect.at(i);
   }
 }
 
-
-/* Vide pop_vect et met les éléments de la pop parent dedans */
 void CPopulation::syncOutVector(){
-   pop_vect.clear();
+  pop_vect.clear();
   for( unsigned i = 0 ; i<actualParentPopulationSize ; i++ ){
     pop_vect.push_back(parents[i]);
   }
@@ -88,8 +80,6 @@ void CPopulation::syncOutVector(){
 #endif
 }
 
-
-/*   Destructeur   */
 CPopulation::~CPopulation(){
   for( unsigned i=0 ; i<actualOffspringPopulationSize ; i++ ) delete(offsprings[i]);
   for( unsigned i=0 ; i<actualParentPopulationSize ; i++ )    delete(parents[i]);
@@ -98,8 +88,6 @@ CPopulation::~CPopulation(){
   delete[](this->offsprings);
 }
 
-
-/* Initialise les opérateurs et certains paramètres de l'EA */
 void CPopulation::initPopulation(CSelectionOperator* selectionOperator,
 				CSelectionOperator* replacementOperator,
 				CSelectionOperator* parentReductionOperator,
@@ -120,12 +108,11 @@ void CPopulation::initPopulation(CSelectionOperator* selectionOperator,
 
 
 
-/* évalue une population */
+
 void CPopulation::evaluatePopulation(CIndividual** population, unsigned populationSize){
   for( unsigned i=0 ; i < populationSize ; i++ )
     population[i]->evaluate();
 }
-
 
 void CPopulation::optimisePopulation(CIndividual** population, unsigned populationSize){
 }
@@ -355,32 +342,12 @@ void CPopulation::produceOffspringPopulation(){
         }
       }
       child = p1->crossover(ps);
-      /*-------------------*/
-     child->origine = 'C';
-     child->parent1 = (p1->ident);
-     child->parent2 = (ps[0]->ident);
-     child->survival = 0;
-     child->gainFitness= -((p1->fitness) + (ps[0]->fitness))/(float)2;
-      /*------------------*/
     }
-    else  {child = parents[index]->clone();//new CIndividual(*parents[index]);
-      /*-------------------*/
-      child->parent1 = (parents[index]->ident);
-      child->survival=0;
-      child->gainFitness= -(p1->fitness);
-      /*-------------------*/
-    }
+    else child = parents[index]->clone();//new CIndividual(*parents[index]);
 
     if( rg->tossCoin(pMutation) ){
       child->mutate(pMutationPerGene);
-       /*-------------------*/
-      if(child->origine == 'C')child->origine = 'B'; 
-      else child->origine = 'M';
-      /*------------------*/
     }
-    /*-------------------*/
-    if (((child->origine) != 'C')&&((child->origine) != 'B')&&((child->origine) != 'M')){child->origine = 'N'; }
-    /*------------------*/
 
     child->boundChecking();
 
