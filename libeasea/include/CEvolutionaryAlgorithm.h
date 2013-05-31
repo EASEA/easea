@@ -73,7 +73,9 @@ public:
 #endif
   void generatePlotScript();
   void generateRScript();
-
+  /****/
+  void writeVizuStats();
+  /***/
   void outputGraph();
   Parameters* params;
 

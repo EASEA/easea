@@ -60,6 +60,10 @@ public:
 	//Miscalleous parameters
 	int printStats;
 	int generateCSVFile;
+	/*----------------------*/
+	int IndgenerateCSVFile;
+	int generateTXTFileGen;
+	/*---------------------*/
 	int generatePlotScript;
 	int generateRScript;	
 	int plotStats;
