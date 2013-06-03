@@ -149,8 +149,6 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 	("printStats",po::value<int>(),"Print the Stats (default : 1)")
 	("plotStats",po::value<int>(),"Plot the Stats (default : 0)")
 	("generateCSVFile",po::value<int>(),"Print the Stats to a CSV File (Filename: ProjectName.dat) (default : 0)")
-    ("IndgenerateCSVFile",po::value<int>(),"Print the Ind Stats to a CSV File (Filename: ProjectNameInd.csv) (default : 0)")
-    ("generateTXTFileGen",po::value<int>(),"Print the Gen to a TXT File (Filename: ProjectNameGen.txt) (default : 0)")
 	("generatePlotScript",po::value<int>(),"Generates a Gnuplot script to plat the Stats (Filename: ProjectName.plot) (default : 0)")
 	("generateRScript",po::value<int>(),"Generates a R script to plat the Stats (Filename: ProjectName.r) (default : 0)")
 //	("printStatsFile",po::value<int>(),"Print the Stats to a File (Filename: ProjectName.dat) (default : 0)")

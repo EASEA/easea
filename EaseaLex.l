@@ -1292,10 +1292,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\PRINT_STATS" {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
 <TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CSV_FILE);}
-
-<TEMPLATE_ANALYSIS>"\\GENERATE_CSV_IND_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CSV_IND_FILE);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_TXT_GEN_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_TXT_GEN_FILE);}
-
 <TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_GNUPLOT_SCRIPT);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_R_SCRIPT);}
 
@@ -2288,11 +2284,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Print"[ \t\n]+"stats"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats...\n");return PRINT_STATS;}
 <GET_PARAMETERS>"Plot"[ \t\n]+"stats"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPlot Stats with gnuplot...\n");return PLOT_STATS;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"csv"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to csv File...\n");return GENERATE_CSV_FILE;}
-
-<GET_PARAMETERS>"Generate"[ \t\n]+"Ind.csv"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to Ind.csv File...\n");return GENERATE_CSV_IND_FILE;}
-
-<GET_PARAMETERS>"Generate"[ \t\n]+"Gen.txt"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Gen to Gen.txt File...\n");return GENERATE_TXT_GEN_FILE;}
-
 <GET_PARAMETERS>"Generate"[ \t\n]+"gnuplot"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate Gnuplot Script...\n");return GENERATE_GNUPLOT_SCRIPT;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"R"[ \t\n]+"script"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tGenerate R Script...\n");return GENERATE_R_SCRIPT;}
 
