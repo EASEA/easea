@@ -181,8 +181,6 @@ OBJS+= benchmarks.o benchmarksnoisy.o fgeneric.o benchmarkshelper.o
 
   Remote island model: false
   IP file: ip.txt 			//File containing all the remote island's IP
-  Experiment ID: weierstrass
-  Grid Working Path: lfn:/grid/vo.complex-systems.eu/easea/experiments/
   Server port : 2929
   Migration probability: 0.33
 
