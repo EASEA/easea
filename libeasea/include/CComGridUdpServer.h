@@ -69,6 +69,6 @@ private:
 	int Socket;
 	struct sockaddr_in ServAddr;
 	bool cancel;
-	FILE *logfile;
+	FILE *logfile_input, *logfile_output;
 };
 #endif

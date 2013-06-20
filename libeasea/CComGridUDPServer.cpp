@@ -98,7 +98,8 @@ CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std:
     }
     
     // finally create the log file_ip
-    logfile = fopen("connections.txt","w");
+    logfile_input = fopen("connections_receive.txt","w");
+    logfile_output = fopen("connections_send.txt","w");
 }
 
 
@@ -581,7 +582,8 @@ CComGridUDPServer::~CComGridUDPServer()
     pthread_join(readf_t,NULL);
     pthread_join(writef_t,NULL);
     // erase working path
-    if(logfile!=NULL)fclose(logfile);
+    if(logfile_input!=NULL)fclose(logfile_input);
+    if(logfile_output!=NULL)fclose(logfile_output);
     printf("Filserver thread cancelled ....\n");
     int tries=0;
     std::string workerpath = fullpath + '/' + myself->get_name();
@@ -998,8 +1000,13 @@ int CComGridUDPServer::log_connection(std::string source, std::string destinatio
       time_t t;
       time(&t);
       pthread_mutex_lock(&log_mutex);
-      if(logfile!=NULL);
-       	fprintf(logfile,"%ld,%s,%s\n", t,source.c_str(), destination.c_str());
+      if(logfile_input!=NULL && logfile_output!=NULL)
+      {	
+	if(source == this->myself->get_name() )
+       	    fprintf(logfile_output,"%ld,%s,%s\n", t,source.c_str(), destination.c_str());
+	else
+	    fprintf(logfile_input,"%ld,%s,%s\n", t,source.c_str(), destination.c_str());
+      }
       pthread_mutex_unlock(&log_mutex);
 }
 
