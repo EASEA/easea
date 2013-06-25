@@ -48,7 +48,7 @@ int main(int argc, char** argv){
 
 	EASEAFinal(pop);
 
-	delete pop;
+	delete ea;
 
 #ifdef WIN32
 	system("pause");
