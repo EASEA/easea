@@ -143,6 +143,11 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     fichier.append("Gen.txt");
     remove(fichier.c_str());
   }
+ if(params->generateGenomeFile){
+ string fichier = params->outputFilename;
+ fichier.append("Genome.txt");
+ remove(fichier.c_str());
+}
 
 #ifndef WIN32 
   if(params->plotStats){
@@ -523,7 +528,7 @@ void CEvolutionaryAlgorithm::writeVizuStats()
 		  float fitness = this->population->offsprings[i]->fitness;
 		  int id = (this->population->offsprings[i])->ident;
 		  
-		  float gfitness = (this->population->offspringss[i])->gainFitness;
+		  float gfitness = (this->population->offsprings[i])->gainFitness;
 		  fprintf(f,"Individu : NoGen %lu -- id %lu -- fitness %2.6f -- gainFitness %2.6f\n",currentGeneration,id,fitness,gfitness);
 		 
 		}
@@ -600,6 +605,45 @@ void CEvolutionaryAlgorithm::writeVizuStats()
 	  }
 	      }
  /*----------------------------------------------------------------------------*/
+
+  /*---------------------------------------------------------------------------*/
+  if(this->params->generateGenomeFile)
+    {
+ FILE *f;
+ string fichier = params->outputFilename;
+  
+        fichier.append("Genome.txt");
+	//std::ostream dest_file(fichier.c_str(),std::ioss::out|std::ios::trunc);
+	f = fopen(fichier.c_str(),"a"); //ajouter .csv
+	if(f!=NULL){
+#ifdef WIN32
+	  fprintf(f,"Generation %lu\n",currentGeneration);
+	  for(int i=0 ; i< this->population->parentPopulationSize ; i++)
+	    {
+	      std::string genome = this->population->parents[i]->serialize();
+	      
+	      fprintf(f,"%s\n",genome.c_str());      
+	    }
+	  
+#else
+	  fprintf(f,"Generation %d\n",currentGeneration);
+	  for(int i=0 ; i< this->population->parentPopulationSize ; i++)
+	    {
+	      std::string genome = this->population->parents[i]->serialize();
+	      fprintf(f,"%s\n",genome.c_str());      
+	    }
+	  
+#endif
+	  fclose(f);
+	     
+	  }
+  
+    }
+/*---------------------------------------------------------------------------*/
+
+
+
+
 }
 
 

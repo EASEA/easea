@@ -44,7 +44,7 @@ int main(int argc, char** argv){
 
 	EASEAFinal(pop);
 
-	delete pop;
+	delete ea;
 
 
 	return 0;
@@ -289,7 +289,8 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->printStats = setVariable("printStats",\PRINT_STATS);
 	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
-	/**********************************/	
+	/**********************************/
+	this->generateGenomeFile = setVariable("generateGenomeFile",\GENERATE_GENOME_FILE);	
         this->IndgenerateCSVFile = setVariable("IndgenerateCSVFile",\GENERATE_CSV_IND_FILE);
 	this->generateTXTFileGen = setVariable("generateTXTFileGen",\GENERATE_TXT_GEN_FILE);
 	/***************************************/
@@ -485,9 +486,9 @@ else
 endif
 easeaclean:
 ifneq ("$(OS)","")
-	-del $(TARGET).exe *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEAInd.csv EASEAGen.txt EASEA.r EASEA.plot EASEA.pop
+	-del $(TARGET).exe *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEAGenome.txt EASEAInd.csv EASEAGen.txt EASEA.r EASEA.plot EASEA.pop
 else
-	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEAInd.csv EASEAGen.txt EASEA.r EASEA.plot EASEA.pop
+	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEAGenome.txt EASEAInd.csv EASEAGen.txt EASEA.r EASEA.plot EASEA.pop
 endif
 
 \START_EO_PARAM_TPL#****************************************
@@ -528,6 +529,7 @@ endif
 --printFinalPopulation=0 #Print final population
 --generateCSV=\GENERATE_CSV_FILE
 
+--generateGenomeFile=\GENERATE_GENOME_FILE
 --IndgenerateCSVFile=\GENERATE_CSV_IND_FILE
 --generateTXTFileGen=\GENERATE_TXT_GEN_FILE
 

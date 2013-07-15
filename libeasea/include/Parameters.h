@@ -63,6 +63,7 @@ public:
 	/*----------------------*/
 	int IndgenerateCSVFile;
 	int generateTXTFileGen;
+	int generateGenomeFile;
 	/*---------------------*/
 	int generatePlotScript;
 	int generateRScript;	

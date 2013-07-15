@@ -1293,6 +1293,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CSV_FILE);}
 
+<TEMPLATE_ANALYSIS>"\\GENERATE_GENOME_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_GENOME_FILE);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_CSV_IND_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CSV_IND_FILE);}
 <TEMPLATE_ANALYSIS>"\\GENERATE_TXT_GEN_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_TXT_GEN_FILE);}
 
@@ -2288,6 +2289,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Print"[ \t\n]+"stats"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats...\n");return PRINT_STATS;}
 <GET_PARAMETERS>"Plot"[ \t\n]+"stats"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPlot Stats with gnuplot...\n");return PLOT_STATS;}
 <GET_PARAMETERS>"Generate"[ \t\n]+"csv"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to csv File...\n");return GENERATE_CSV_FILE;}
+
+<GET_PARAMETERS>"Generate"[ \t\n]+"Genome.txt"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Genome File...\n");return GENERATE_GENOME_FILE;}
 
 <GET_PARAMETERS>"Generate"[ \t\n]+"Ind.csv"[ \t\n]+"stats"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf("\tPrint Stats to Ind.csv File...\n");return GENERATE_CSV_IND_FILE;}
 

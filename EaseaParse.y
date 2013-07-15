@@ -45,7 +45,7 @@ bool bVERBOSE=0;
 bool bLINE_NUM_EZ_FILE=1;
 bool bPRINT_STATS=1;
 bool bPLOT_STATS=0;
- bool bGENERATE_CSV_FILE=0, bGENERATE_R_SCRIPT=0, bGENERATE_GNUPLOT_SCRIPT=0, bGENERATE_CSV_IND_FILE=0, bGENERATE_TXT_GEN_FILE=0;
+ bool bGENERATE_CSV_FILE=0, bGENERATE_R_SCRIPT=0, bGENERATE_GNUPLOT_SCRIPT=0, bGENERATE_CSV_IND_FILE=0, bGENERATE_TXT_GEN_FILE=0, bGENERATE_GENOME_FILE=0;
 bool bSAVE_POPULATION=0, bSTART_FROM_FILE=0;
 bool bBALDWINISM=0; //memetic
 bool bREMOTE_ISLAND_MODEL=0; //remote island model
@@ -151,6 +151,7 @@ class CSymbol;
    /*---------------------*/
 %token GENERATE_CSV_IND_FILE
 %token GENERATE_TXT_GEN_FILE
+%token GENERATE_GENOME_FILE
    /*--------------------*/
 %token GENERATE_CSV_FILE
 %token GENERATE_GNUPLOT_SCRIPT
@@ -694,6 +695,14 @@ Parameter
       else {
          fprintf(stderr,"\n%s - Warning line %d: Generate txtGen file must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
          bGENERATE_TXT_GEN_FILE=0;
+       }}
+
+| GENERATE_GENOME_FILE IDENTIFIER2{
+      if (!mystricmp($2->sName,"False")) bGENERATE_GENOME_FILE=0;
+      else if (!mystricmp($2->sName,"True")) bGENERATE_GENOME_FILE=1;
+      else {
+         fprintf(stderr,"\n%s - Warning line %d: Generate Genome file must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         bGENERATE_GENOME_FILE=0;
        }}
 /*----------------------------------------*/
 

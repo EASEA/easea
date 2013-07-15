@@ -6,7 +6,7 @@ Selection operator: Tournament
 __________________________________________________________*/
 
 \User declarations :
-#define SIZE 100
+#define SIZE 10
 #define X_MIN -1.
 #define X_MAX 1.
 #define ITER 120      
@@ -173,8 +173,8 @@ LDFLAGS+=-lgfal_pthr -llcg_util
 \Default run parameters :        // Please let the parameters appear in this order
   Number of generations : 100   	// NB_GEN
   Time limit: 0 			// In seconds, 0 to deactivate
-  Population size : 2048			//POP_SIZE
-  Offspring size : 2048 // 40% 
+  Population size :2048			//POP_SIZE
+  Offspring size :2048 
   Mutation probability : 1       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
   Evaluator goal : minimise      // Maximise
@@ -187,11 +187,12 @@ LDFLAGS+=-lgfal_pthr -llcg_util
 
   Elitism: Strong			//Weak or Strong
   Elite: 1
-  Print stats: true				//Default: 1
-  Generate csv stats file:false			
+  Print stats: false				//Default: 1
+  Generate csv stats file:false
+  Generate Ind.csv stats file:false			
   Generate gnuplot script:false
   Generate R script:false
-  Plot stats:true				//Default: 0
+  Plot stats:false				//Default: 0
 
   Remote island model: true
   IP file: ip.txt 			//File containing all the remote island's IP

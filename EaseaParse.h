@@ -76,26 +76,27 @@ union tagYYSTYPE {
 #define PLOT_STATS 305
 #define GENERATE_CSV_IND_FILE 306
 #define GENERATE_TXT_GEN_FILE 307
-#define GENERATE_CSV_FILE 308
-#define GENERATE_GNUPLOT_SCRIPT 309
-#define GENERATE_R_SCRIPT 310
-#define SAVE_POPULATION 311
-#define START_FROM_FILE 312
-#define TIME_LIMIT 313
-#define MAX_INIT_TREE_D 314
-#define MIN_INIT_TREE_D 315
-#define MAX_XOVER_DEPTH 316
-#define MAX_MUTAT_DEPTH 317
-#define MAX_TREE_D 318
-#define NB_GPU 319
-#define PRG_BUF_SIZE 320
-#define NO_FITNESS_CASES 321
-#line 170 "EaseaParse.y"
+#define GENERATE_GENOME_FILE 308
+#define GENERATE_CSV_FILE 309
+#define GENERATE_GNUPLOT_SCRIPT 310
+#define GENERATE_R_SCRIPT 311
+#define SAVE_POPULATION 312
+#define START_FROM_FILE 313
+#define TIME_LIMIT 314
+#define MAX_INIT_TREE_D 315
+#define MIN_INIT_TREE_D 316
+#define MAX_XOVER_DEPTH 317
+#define MAX_MUTAT_DEPTH 318
+#define MAX_TREE_D 319
+#define NB_GPU 320
+#define PRG_BUF_SIZE 321
+#define NO_FITNESS_CASES 322
+#line 171 "EaseaParse.y"
 
 #include "EaseaSym.h"
 #include "EaseaLex.h"
 
-#line 99 "EaseaParse.h"
+#line 100 "EaseaParse.h"
 /////////////////////////////////////////////////////////////////////////////
 // CEASEAParser
 
@@ -116,7 +117,7 @@ protected:
 #endif
 
 public:
-#line 177 "EaseaParse.y"
+#line 178 "EaseaParse.y"
 
 protected:
   CEASEALexer EASEALexer;       // the lexical analyser
@@ -132,7 +133,7 @@ public:
 
   virtual void yysyntaxerror();
 
-#line 136 "EaseaParse.h"
+#line 137 "EaseaParse.h"
 };
 
 #ifndef YYPARSENAME
