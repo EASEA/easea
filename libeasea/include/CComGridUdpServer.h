@@ -52,7 +52,7 @@ public:
 	int determine_file_name(std::string tmpfilename, std::string workerdestname);
 	int send_file(char *buffer, CommWorker destination);
 	int in_same_network(const char* addr1, const char* addr2);
-	int log_connection(std::string source, std::string destination);
+	int log_connection(std::string source, std::string destination, std::string buffer);
 	
 private:
   	std::string workername;
@@ -60,6 +60,7 @@ private:
 	std::list<std::pair<std::string,std::string> > writedata;
 	std::set<std::string> processed_files;
 	std::list<std::string> new_files;
+	std::string extract_fitness( std::string buffer );
 
 	CComWorkerListManager *refresh_workers;
         CommWorker *myself;

@@ -440,7 +440,7 @@ int CComGridUDPServer::send(char *individual, CommWorker destination) {
 		  if(debug)
 		    printf("Individual sent to hostname: %s  ip: %s  port: %d\n", destination.get_name().c_str(),
 			   destination.get_ip().c_str(),destination.get_port());
-		  log_connection(myself->get_name(), destination.get_name());	   
+		  log_connection(myself->get_name(), destination.get_name(), complete_ind);	   
 		}	   
 	}
 	else {fprintf(stderr,"Not sending individual with strlen(): %i, MAX msg size %i\n",(int)strlen(individual), sendbuff);}
@@ -480,7 +480,7 @@ void CComGridUDPServer::read_thread()
 		buffer[recvMsgSize] = 0;
 		std::string bufferstream(buffer);
 		int pos = bufferstream.find("::");
-		log_connection(bufferstream.substr(0,pos),myself->get_name());
+		log_connection(bufferstream.substr(0,pos),myself->get_name(), bufferstream);
 		bufferstream = bufferstream.substr(pos+2);
 		data->push(bufferstream);
 	//	printf("address %p\n",(p->data));
@@ -780,7 +780,7 @@ int CComGridUDPServer::send_file_worker(std::string buffer, std::string workerde
 		if( determine_file_name(tmpfilename, workerdestname) == 0)
 		{
 		  pthread_mutex_unlock(&gfal_mutex);
-		  log_connection(myself->get_name(), workerdestname);
+		  log_connection(myself->get_name(), workerdestname, complete_ind);
 		  return 0;
 		}  
 		else
@@ -885,7 +885,7 @@ void CComGridUDPServer::readfiles()
 	      pthread_mutex_lock(&server_mutex);
 	      std::string bufferstream(buffer);
      	      int pos = bufferstream.find("::");
-	      log_connection(bufferstream.substr(0,pos),myself->get_name());
+	      log_connection(bufferstream.substr(0,pos),myself->get_name(), bufferstream);
 	      bufferstream = bufferstream.substr(pos+2);
 	      data->push(bufferstream);
 	      /*process received data */
@@ -994,7 +994,7 @@ int CComGridUDPServer::in_same_network(const char *addr1, const char *addr2)
 }
 
 
-int CComGridUDPServer::log_connection(std::string source, std::string destination)
+int CComGridUDPServer::log_connection(std::string source, std::string destination, std::string buffer)
 {
       
       time_t t;
@@ -1003,10 +1003,19 @@ int CComGridUDPServer::log_connection(std::string source, std::string destinatio
       if(logfile_input!=NULL && logfile_output!=NULL)
       {	
 	if(source == this->myself->get_name() )
-       	    fprintf(logfile_output,"%ld,%s,%s\n", t,source.c_str(), destination.c_str());
+       	    fprintf(logfile_output,"%ld,%s,%s,%s\n", t,source.c_str(), destination.c_str(), extract_fitness(buffer).c_str());
 	else
-	    fprintf(logfile_input,"%ld,%s,%s\n", t,source.c_str(), destination.c_str());
+	    fprintf(logfile_input,"%ld,%s,%s,%s\n", t,source.c_str(), destination.c_str(), extract_fitness(buffer).c_str());
       }
       pthread_mutex_unlock(&log_mutex);
+      return 0;
+}
+
+
+std::string CComGridUDPServer::extract_fitness( std::string buffer )
+{
+    int pos =  buffer.rfind(" ");
+    std::string fitness = buffer.substr(pos+1,buffer.length()-1);
+    return fitness;
 }
 
