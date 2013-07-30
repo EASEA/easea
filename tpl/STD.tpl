@@ -311,6 +311,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->working_path = (char*)setVariable("working_path","\WORKING_PATH").c_str();
 	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
         this->serverPort = setVariable("serverPort",\SERVER_PORT);
+        this->worker_number = setVariable("worker_number",0);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){

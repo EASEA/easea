@@ -21,7 +21,7 @@ public:
 	//RECV_DATA *data;
 	//int nb_data;
 	std::queue<std::string> *data;
-	CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, short unsigned int port, int dbg);
+	CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, short unsigned int port, int wn, int dbg);
 	static void * UDP_server_thread(void *parm);
 	~CComGridUDPServer();
 	void read_data_lock();
@@ -68,6 +68,7 @@ private:
 	int ServerSocket;
 	pthread_t read_t,refresh_t, readf_t, writef_t;
 	int Socket;
+        int worker_number;
 	struct sockaddr_in ServAddr;
 	bool cancel;
 	FILE *logfile_input, *logfile_output;

@@ -30,7 +30,7 @@ pthread_mutex_t worker_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t sending_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, short unsigned int port, int dbg) {
+CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std::string >* _data, short unsigned int port, int wn, int dbg) {
   
     data = _data;
     std::string exp(expname);
@@ -39,28 +39,36 @@ CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std:
 
     cancel = false;
     debug = dbg;
+    std::string worker_id;
     std::string hostname,ip;
     unsigned long int netmask;
+    worker_number = wn;
+    char hn[256];
+  
+    gethostname(hn, 256);
+
+    hostname = hn;
+
     
     if(debug)printf("Creating experiment and worker folders...\n");
     // first create experiment path and worker directory
-    if(create_exp_path(path,expname) == 0 && determine_worker_name(hostname) == 0)
+    if(create_exp_path(path,expname) == 0 && determine_worker_name(worker_id) == 0)
     {
           // second, check worker connectivity, if external IP use sockert
 	  // if no external ip, use files to receive data
 	  
           if(get_ipaddress(ip,netmask) == 0 && this->init_network(port) == 0)
 	  {  
-	      this->myself = new CommWorker(hostname, ip, port);
+	      this->myself = new CommWorker(worker_id,hostname, ip, port);
 	      this->myself->set_netmask(netmask);
 	  }    
-	  else this->myself = new CommWorker(hostname);
+	  else this->myself = new CommWorker(worker_id,hostname);
 	  
 	  // now register worker
 	  if( this->register_worker() == 0 )
 	  {
 	      // create the
-	      if(debug)printf("Worker Created --> hostname %s  ip %s  port %d\n", myself->get_name().c_str(), myself->get_ip().c_str(), myself->get_port());
+	      if(debug)printf("Worker Created --> folder %s hostname %s  ip %s  port %d\n", myself->get_name().c_str(), myself->get_hostname().c_str(), myself->get_ip().c_str(), myself->get_port());
 	      refresh_workers = new CComWorkerListManager(fullpath, debug);
 	      
  	      
@@ -214,11 +222,11 @@ int CComGridUDPServer::determine_worker_name(std::string &workername)
 {
   // scan experiment directory to find a suitable worker name
   int tries = 0;
-  char hostname[256];
+  //char hostname[256];
   
-  gethostname(hostname, 256);
+  //gethostname(hostname, 256);
   
-  workername = hostname;
+  //workername = hostname;
   
   
   int start = 0;  
@@ -227,13 +235,13 @@ int CComGridUDPServer::determine_worker_name(std::string &workername)
       std::stringstream s,t;
       if(start > 0)
       {	
-	s << fullpath << "/worker_" << workername << '_' << start;
-        t << "worker_" << workername << '_' << start;
+	s << fullpath << "/worker_" << worker_number << '_' << start;
+        t << "worker_" << worker_number << '_' << start;
       }
       else
       {
-	s << fullpath << "/worker_" << workername;
-        t << "worker_" << workername;
+	s << fullpath << "/worker_" << worker_number;
+        t << "worker_" << worker_number;
       }	
       DIR *dp;
   
@@ -326,7 +334,7 @@ int CComGridUDPServer::register_worker()
     if (fd != -1) 
     {
 	 std::stringstream s;
-	 s << myself->get_name() + ':';
+	 s << myself->get_name() << ':' << myself->get_hostname() << ':';
 	 if(myself->get_ip() == "noip")s << "FILE::";
 	 else s << "SOCKET:" << myself->get_ip() << ':' << myself->get_port();
 	 
@@ -623,6 +631,7 @@ CComGridUDPServer::~CComGridUDPServer()
 	      }		
 	    }
 	    (void)gfal_closedir (dp);
+            
             if( gfal_rmdir(workerpath.c_str()) == 0 )
 	    {
 		if(debug)

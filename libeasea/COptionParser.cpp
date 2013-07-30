@@ -163,6 +163,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
 	("lstgpu",po::value<int>(),"The number of the fisrt GPU NOT used for computation")
 	("expId",po::value<string>(),"The Id of the experiment")
 	("working_path",po::value<string>(),"The Grid path of the experiments (lfn)")
+        ("worker_number", po::value<int>(),"Worker number (only Grid experiments")
 	("u1",po::value<string>(),"User defined parameter 1")
 	("u2",po::value<string>(),"User defined parameter 2")
 	("u3",po::value<int>(),"User defined parameter 3")

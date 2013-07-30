@@ -81,6 +81,7 @@ public:
 	char* ipFile;
 	float migrationProbability;
 	int serverPort;
+        int worker_number;
 
 	// fileserver model
 	char *expId;

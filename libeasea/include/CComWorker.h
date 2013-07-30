@@ -7,6 +7,7 @@ class CommWorker
 {
   private:
     std::string workername;
+    std::string hostname;
     std::string ip;
     short unsigned int port;
     bool active;
@@ -15,9 +16,10 @@ class CommWorker
     unsigned long int mynetmask;
   public:
     
-    CommWorker(std::string wname, std::string wip, short unsigned int wport);
-    CommWorker(std::string wname);
+    CommWorker(std::string wname, std::string hn, std::string wip, short unsigned int wport);
+    CommWorker(std::string wname, std::string hn);
     std::string get_name() const;
+    std::string get_hostname() const;
     std::string get_ip() const;
     short unsigned int get_port() const;
     unsigned long int get_netmask() const;

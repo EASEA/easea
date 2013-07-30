@@ -1,16 +1,21 @@
 #include "include/CComWorker.h"
 
-CommWorker::CommWorker(std::string wname, std::string wip, short unsigned int wport):workername(wname),ip(wip),port(wport),active(true),nfails(0)
+CommWorker::CommWorker(std::string wname, std::string hn,std::string wip, short unsigned int wport):workername(wname),hostname(hn),ip(wip),port(wport),active(true),nfails(0)
 {
 }  
 
-CommWorker::CommWorker(std::string wname):workername(wname),ip("noip"),port(-1),active(true),nfails(0)
+CommWorker::CommWorker(std::string wname, std::string hn):workername(wname),hostname(hn),ip("noip"),port(-1),active(true),nfails(0)
 {
 }  
 
 std::string CommWorker::get_name() const 
 {
     return workername;
+}
+
+std::string CommWorker::get_hostname() const
+{
+    return hostname;
 }
 
 std::string CommWorker::get_ip() const

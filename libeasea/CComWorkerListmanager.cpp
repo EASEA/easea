@@ -87,9 +87,10 @@ int CComWorkerListManager::refresh_worker_list()
 					      activeworkers.push_back( *workerinfo );
 	      				      if(debug)
 					      {
-						  printf("Worker %d added to the list, hostname:%s ip:%s port/%d\n",
+						  printf("Worker %d added to the list, foldername %s hostname:%s ip:%s port/%d\n",
 							 activeworkers.size(),
-							  workerinfo->get_name().c_str(),
+                                                          workerinfo->get_name().c_str(),
+                                                          workerinfo->get_hostname().c_str(),
 							  workerinfo->get_ip().c_str(),
 							  workerinfo->get_port());
 					      }
@@ -196,13 +197,14 @@ int CComWorkerListManager::parse_worker_info_file(char *buffer, CommWorker *&wor
  
     char* holder = (char*)malloc(strlen(buffer)+1);
     strcpy(holder,buffer);
-    char *hostname = strtok(holder, ":");
+    char *foldername = strtok(holder, ":");
+    char *hostname = strtok(NULL, ":");
     char *mode = strtok(NULL, ":");
     
     
     
     // check first valid hostanme and protocol
-    if(hostname == NULL || mode ==NULL)
+    if(foldername == NULL || hostname == NULL || mode ==NULL)
     {  
         printf("*** WARNING ***\nThere is a problem with the following IP line %s: ===> IGNORING IT\n",buffer);
         return -1;
@@ -212,8 +214,9 @@ int CComWorkerListManager::parse_worker_info_file(char *buffer, CommWorker *&wor
     // protocol = file so no IP, NO port, may be an external node
     if( strcmp(mode,"FILE") == 0 )
     {
+        std::string fn = foldername;
         std::string hn = hostname;
-	workerinfo = new CommWorker(hn);
+	workerinfo = new CommWorker(fn,hn);
         return 0;
     }
     else if( strcmp(mode,"SOCKET") == 0 || strcmp(mode,"MPI") ==0) 
@@ -224,9 +227,10 @@ int CComWorkerListManager::parse_worker_info_file(char *buffer, CommWorker *&wor
 	
 	if(check_ipaddress(address) == 0 && check_port(port) == 0) 
 	{  
+          std::string fn = foldername;
 	  std::string hn = hostname;
 	  std::string addr = address;
-	  workerinfo = new CommWorker(hn,addr, atoi(port) );	  
+	  workerinfo = new CommWorker(fn, hn,addr, atoi(port) );	  
 	  return 0;
 	}  
         else return -1;
