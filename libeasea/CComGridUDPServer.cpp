@@ -600,16 +600,27 @@ CComGridUDPServer::~CComGridUDPServer()
 	DIR *dp;
 	struct dirent *ep;
 	
+	// Delete node information file_ip
+	std::string fullfilename = workerpath + "/worker_info.txt";
+	if( lcg_del((char *)fullfilename.c_str(), 5, NULL,NULL,NULL,0,0) != 0)
+	  {
+	      if(debug)printf("Finish worker : Cannot erase  the file %s\n", fullfilename.c_str());
+	      sleep(4);
+	      tries++;
+	      continue;
+	   }  
 	
 	dp = gfal_opendir (workerpath.c_str());
 	if (dp != NULL)
 	{
 	    int countfiles=0;
+	    
+	    
 	    while ((ep = gfal_readdir (dp)))
 	    {
 	      //only take into account folders
 	      std::string s(ep->d_name);
-	      std::string fullfilename = workerpath + '/' + s;
+	      fullfilename = workerpath + '/' + s;
 
 	      struct stat statusfile;
 	      int result = gfal_stat(fullfilename.c_str(), &statusfile);

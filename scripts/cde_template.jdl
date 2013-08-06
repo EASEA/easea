@@ -1,0 +1,16 @@
+[
+JobType = "Parametric";
+Executable = "execute-cde.sh";  
+MyProxyServer = "myproxy.cern.ch";
+Parameters = NUMBEROFMACHINES;
+ParameterStart = 0;
+ParameterStep = 1;
+Arguments = "_PARAM_";
+StdOutput = "std_PARAM_.out";
+StdError = "std_PARAM_.err";
+InputSandbox = {"execute-cde.sh","application.tar.gz"};  
+OutputSandbox = {"std_PARAM_.out", "std_PARAM_.err","cde-package/cde-root/home/ge-user/connections_receive.txt","cde-package/cde-root/home/ge-user/connections_send.txt"};
+Requirements = Member("UMD-1_1_0",other.GlueHostApplicationSoftwareRunTimeEnvironment) ||
+               Member("UMD-2_2_0",other.GlueHostApplicationSoftwareRunTimeEnvironment);
+]
+
