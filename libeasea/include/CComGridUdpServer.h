@@ -12,7 +12,7 @@
 #include <netinet/in.h> /* for IP Socket data types */
 #include <unistd.h>     /* for close() */
 #include <stdio.h>
-#include "CComWorkerListManager.h"
+#include "CComWorkerListManager_2.h"
 
 class CComGridUDPServer {
 
@@ -62,7 +62,7 @@ private:
 	std::list<std::string> new_files;
 	std::string extract_fitness( std::string buffer );
 
-	CComWorkerListManager *refresh_workers;
+	CComWorkerListManager_2 *refresh_workers;
         CommWorker *myself;
 	void run();
 	int ServerSocket;

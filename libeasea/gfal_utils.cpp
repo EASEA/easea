@@ -112,7 +112,7 @@ const std::vector<string>& GFAL_Utils::get_deletedfiles() const
 void GFAL_Utils::list_update()
 {
    new_files.clear();
-   delete_files.clear();
+   //delete_files.clear();
    set<string> newindex;
    for(unsigned int i=0; i<current_files.size(); i++)
    {

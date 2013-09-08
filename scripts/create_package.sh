@@ -72,16 +72,30 @@ if  [ ! -f "${EZ_PATH}/scripts/cde_template.jdl"  ] ||  [ ! -f "${EZ_PATH}/scrip
   exit 1
 fi
 
-
+cp "${EZ_PATH}/monitor/monitor" "${TMPDIR}/."
 cp $EXECUTABLE_FULLNAME "${TMPDIR}/."
 cp $EXECUTABLE_FULLPARMFILENAME "${TMPDIR}/."
 cp $CERTIFICATE_FILE "${TMPDIR}/certificate"
+
+EXP_PATH=$(cat "${TMPDIR}/${EXECUTABLE_PARAMFILENAME}" |  sed -n 's/--working_path=*\([^\ ]*\).*/\1/p')
+EXP_NAME=$(cat "${TMPDIR}/${EXECUTABLE_PARAMFILENAME}" |  sed -n 's/--expId=*\([^\ ]*\).*/\1/p')
+EXP_PATHREG=$(echo $EXP_PATH |  sed 's/\//\\\//g')
+
+if  [ -z "$EXP_PATH" ] || [ -z "$EXP_NAME" ]; then
+  echo "Experiment name and path should be specified in parameters file"
+  exit 1
+fi
+
+echo "Experiment name: $EXP_NAME"
+echo "Destination path: $EXP_PATH"
+
 
 PACKAGE_FILENAME="${PACKAGE_DESTINATION}/application.tar.gz"
 
 echo "Creating file $PACKAGE_FILENAME"
 
 tar -C $TMPDIR -cvzf $PACKAGE_FILENAME $EXECUTABLE_NAME $EXECUTABLE_PARAMFILENAME certificate  >& /dev/null
+tar -C $TMPDIR -cvzf "$PACKAGE_DESTINATION/monitor.tar.gz" monitor certificate  >& /dev/null
 
 status=$?
 if (( status==0 )); then
@@ -92,13 +106,19 @@ else
 fi
 
 cp "${EZ_PATH}/scripts/cde_template.jdl" "${PACKAGE_DESTINATION}/application.jdl" >& /dev/null
+cp "${EZ_PATH}/scripts/monitor_template.jdl" "${PACKAGE_DESTINATION}/monitor.jdl" >& /dev/null
 cp "${EZ_PATH}/scripts/execute-cde_template.sh" "${PACKAGE_DESTINATION}/execute-cde.sh" >& /dev/null
+cp "${EZ_PATH}/scripts/execute-monitor_template.sh" "${PACKAGE_DESTINATION}/execute-monitor.sh" >& /dev/null
+
 
 if [ -z "$4" ]; then
    NUM_MACHINES="50";
    echo "Number of machines not specified, default to $NUM_MACHINES"
 fi
 
+sed -i "s/EXP_PATH/${EXP_PATHREG}/g" "${PACKAGE_DESTINATION}/monitor.jdl" >& /dev/null 
+sed -i "s/EXP_NAME/${EXP_NAME}/g" "${PACKAGE_DESTINATION}/monitor.jdl" >& /dev/null
+sed -i "s/NUMBER_WORKERS/${NUM_MACHINES}/g" "${PACKAGE_DESTINATION}/monitor.jdl" >& /dev/null
 sed -i "s/APPLICATIONNAME/${EXECUTABLE_NAME}/g" "${PACKAGE_DESTINATION}/execute-cde.sh" >& /dev/null
 sed -i "s/NUMBEROFMACHINES/${NUM_MACHINES}/g" "${PACKAGE_DESTINATION}/application.jdl" >& /dev/null
 

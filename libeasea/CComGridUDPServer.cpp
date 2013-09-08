@@ -69,7 +69,7 @@ CComGridUDPServer::CComGridUDPServer(char* path, char* expname, std::queue< std:
 	  {
 	      // create the
 	      if(debug)printf("Worker Created --> folder %s hostname %s  ip %s  port %d\n", myself->get_name().c_str(), myself->get_hostname().c_str(), myself->get_ip().c_str(), myself->get_port());
-	      refresh_workers = new CComWorkerListManager(fullpath, debug);
+	      refresh_workers = new CComWorkerListManager_2(fullpath, debug);
 	      
  	      
 	      
@@ -328,7 +328,7 @@ int CComGridUDPServer::init_network(short unsigned int &port) {
 int CComGridUDPServer::register_worker()
 {
     
-    std::string fullfilename = fullpath + '/' + myself->get_name() + '/' + "worker_info.txt";
+    std::string fullfilename = fullpath + "/workers_info/" + myself->get_name() + ".txt";
     
     int	fd = gfal_open( fullfilename.c_str(), O_WRONLY|O_CREAT, 0644 );
     if (fd != -1) 
@@ -519,12 +519,13 @@ void CComGridUDPServer::refresh_thread()
      int counter = 0;
      while(!cancel) {/*forever loop*/
 	  
- 	  if(counter%5==0)refresh_workers->refresh_worker_list();
+ 	  //if(counter%5==0)
+	  refresh_workers->refresh_worker_list();
 	  //readfiles();
 	  //send_individuals();
 	  counter++;
 		// check for new files
-	  sleep(4);
+	  sleep(30);
       }
 }  
 
@@ -549,7 +550,7 @@ void CComGridUDPServer::readfiles_thread()
 {
      while(!cancel) {/*forever loop*/
 	  readfiles();
-	  sleep(4);
+	  sleep(30);
       }
 }  
 
@@ -557,7 +558,7 @@ void CComGridUDPServer::writefiles_thread()
 {
      while(!cancel) {/*forever loop*/
 	  send_individuals();
-	  sleep(4);
+	  sleep(30);
       }
 }  
 
@@ -601,7 +602,7 @@ CComGridUDPServer::~CComGridUDPServer()
 	struct dirent *ep;
 	
 	// Delete node information file_ip
-	std::string fullfilename = workerpath + "/worker_info.txt";
+	std::string fullfilename = fullpath + "/workers_info/" + myself->get_name() + ".txt";
 	if( lcg_del((char *)fullfilename.c_str(), 5, NULL,NULL,NULL,0,0) != 0)
 	  {
 	      if(debug)printf("Finish worker : Cannot erase  the file %s\n", fullfilename.c_str());
@@ -959,30 +960,30 @@ int CComGridUDPServer::refresh_file_list()
 		 //only take into account folders
 		 std::string s(ep->d_name);
 		 std::string fullfilename = workerpath + '/' + s;
-		 struct stat statusfile;
-		 int status = gfal_stat(fullfilename.c_str(), &statusfile);
+		 //struct stat statusfile;
+		 //int status = gfal_stat(fullfilename.c_str(), &statusfile);
 		 
-		 if( status!= -1 && S_ISREG(statusfile.st_mode) )
-		 {  
+		 //if( status!= -1 && S_ISREG(statusfile.st_mode) )
+		 //{  
 			  
-			  if(s.substr(0,10) == "individual")
-			  {
-				it = processed_files.find(s);
+		  if(s.substr(0,10) == "individual")
+		  {
+			it = processed_files.find(s);
 				// new file to be processed
-				if(it == processed_files.end() )
-				{
-				  if(debug)printf("New file found in path %s : %s\n", workerpath.c_str(), s.c_str());
-				  new_files.push_back(s);
-				}
-			  }
-		 }
-		 else if(status==-1) 
-		 {
+			if(it == processed_files.end() )
+			{
+			  if(debug)printf("New file found in path %s : %s\n", workerpath.c_str(), s.c_str());
+			  new_files.push_back(s);
+			}
+		  }
+		 //}
+		// else if(status==-1) 
+		// {
 		   
-			(void)gfal_closedir (dp);
-			pthread_mutex_unlock(&gfal_mutex);
-		    return 0;
-		 }   
+		//	(void)gfal_closedir (dp);
+		//	pthread_mutex_unlock(&gfal_mutex);
+		//    return 0;
+		 //}   
 		  pthread_mutex_unlock(&gfal_mutex);
 	        
       }
