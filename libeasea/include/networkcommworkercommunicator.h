@@ -29,9 +29,10 @@ class NetworkCommWorkerCommunicator : public CommWorkerCommunicator
 {
   private:
     int ServerSocket;
+    int determine_ipaddress();
 public:
   int init();
-  NetworkCommWorkerCommunicator(CommWorker &w, std::queue<std::string> &d, int db = 1):CommWorkerCommunicator(w,d,db) {};
+  NetworkCommWorkerCommunicator(CommWorker *w, std::queue<std::string> *d, int db = 1):CommWorkerCommunicator(w,d,db) {};
   int receive();
   int send(char* individual, CommWorker& destination);
 };

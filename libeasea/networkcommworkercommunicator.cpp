@@ -25,7 +25,8 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <unistd.h>
+#include <ifaddrs.h>
 
 #define MAXINDSIZE 50000
 
@@ -33,40 +34,43 @@ extern pthread_mutex_t server_mutex;
 
 int NetworkCommWorkerCommunicator::init()
 {
-    struct sockaddr_in ServAddr; /* Local address */
-
   
-        /* Create socket for incoming connections */
-    if ((ServerSocket =  socket(AF_INET,SOCK_DGRAM,0)) < 0) {
-		printf("%d\n",socket(AF_INET,SOCK_DGRAM,0));
-        printf("Socket create problem.\n"); exit(1);
-    }
-
-        /* Construct local address structure */
-    
-    int tries = 0;
-    int port = myself.get_port();
-    
-    while(tries<5)
+    if(determine_ipaddress() == 0 )
     {  
-	memset(&ServAddr, 0, sizeof(ServAddr));   /* Zero out structure */
-	ServAddr.sin_family = AF_INET;                /* Internet address family */
-	ServAddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-	ServAddr.sin_port = htons(port);              /* Local port */
-	
-	/* Bind to the local address */
-	if (bind(ServerSocket, (struct sockaddr *) &ServAddr, sizeof(ServAddr)) < 0) {
-	    printf("Can't bind to given port number. Trying a different one.\n"); 
-	    port++;
+	struct sockaddr_in ServAddr; /* Local address */
+
+      
+	    /* Create socket for incoming connections */
+	if ((ServerSocket =  socket(AF_INET,SOCK_DGRAM,0)) < 0) {
+		    printf("%d\n",socket(AF_INET,SOCK_DGRAM,0));
+	    printf("Socket create problem.\n"); exit(1);
 	}
-	else
-	{ 
-	  myself.change_port(port);
-	  return 0;
-	}  
-	tries++;
+
+	    /* Construct local address structure */
+	
+	int tries = 0;
+	int port = myself->get_port();
+	
+	while(tries<5)
+	{  
+	    memset(&ServAddr, 0, sizeof(ServAddr));   /* Zero out structure */
+	    ServAddr.sin_family = AF_INET;                /* Internet address family */
+	    ServAddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
+	    ServAddr.sin_port = htons(port);              /* Local port */
+	    
+	    /* Bind to the local address */
+	    if (bind(ServerSocket, (struct sockaddr *) &ServAddr, sizeof(ServAddr)) < 0) {
+		printf("Can't bind to given port number. Trying a different one.\n"); 
+		port++;
+	    }
+	    else
+	    { 
+	      myself->change_port(port);
+	      return 0;
+	    }  
+	    tries++;
+	}
     }
-    
     return -1;
 }
 
@@ -88,7 +92,7 @@ int NetworkCommWorkerCommunicator::receive()
 	    tmpbuffer[recvMsgSize] = 0;
 	    std::string buffer(tmpbuffer);
 	    pthread_mutex_lock(&server_mutex);
-	    data.push(buffer);
+	    data->push(buffer);
 	    pthread_mutex_unlock(&server_mutex);
 	}
 	return 0;
@@ -108,7 +112,8 @@ int NetworkCommWorkerCommunicator::send(char* individual, CommWorker& destinatio
 
     setsockopt(sendSocket, SOL_SOCKET, SO_SNDBUF, &sendbuff, sizeof(sendbuff));
 
-    std::string complete_ind = myself.get_name() + "::" + individual;
+    //std::string complete_ind = myself->get_name() + "::" + individual;
+    std::string complete_ind = individual;
 	if( complete_ind.length() < (unsigned)sendbuff ) { 
 		
 	        destaddr.sin_family = AF_INET;
@@ -134,3 +139,82 @@ int NetworkCommWorkerCommunicator::send(char* individual, CommWorker& destinatio
 	return 0;
 }
 
+int NetworkCommWorkerCommunicator::determine_ipaddress()
+{
+  
+  struct ifaddrs *myaddrs, *ifa;
+  int status;
+  
+  status = getifaddrs(&myaddrs);
+  
+  // read external ip obtained by running a script
+  char external_ip[64];
+  
+  FILE *file_ip = fopen("external_ip.txt","r");
+  
+  if(file_ip!=NULL)
+  {
+    //read the data
+    fgets(external_ip,64,file_ip);
+    external_ip[strlen(external_ip)-1] = 0;
+    if(debug)printf("external ip is: %s we will now check network interfaces\n",external_ip);
+    fclose(file_ip);
+  }
+  else
+  {
+    if(debug)printf("cannot open external ip file ...\n");
+    strcpy(external_ip,"noip");
+  }  
+  
+  
+  
+  
+
+  if (status != 0){
+    perror("No network interface, communication impossible, finishing ...");
+    exit(1);
+  }
+  unsigned int maxlen = 0;
+  for (ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next)
+  {
+      //if (NULL == ifa->ifa_addr)continue;
+      //if ((ifa->ifa_flags & IFF_UP) == 0)continue;
+
+      void *s4=NULL;                     
+      /* ipv6 addresses have to fit in this buffer */
+      char buf[64];                                  
+      memset(buf,0,64);
+      
+      
+      
+      if (AF_INET == ifa->ifa_addr->sa_family)
+      {
+	  s4 = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+	  if (NULL == inet_ntop(AF_INET, s4, buf, sizeof(buf)))
+	    printf("%s: inet_ntop failed!\n", ifa->ifa_name);
+	  else {
+	    // external ip address is in the network interface
+	    printf("comparing %s (%d) and %s (%d) = %d\n", buf, 
+		   strlen(buf),external_ip,strlen(external_ip), strcmp(buf,external_ip));
+	    
+	    if( strcmp(buf,external_ip) == 0) 
+	    {  
+	        myself->set_netmask( ntohl(((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr.s_addr) );
+		myself->set_ip( buf );
+		return 0;
+	    }
+	    // get an ip adress internal
+	    else if(strlen(buf)> maxlen)
+	    {  
+	      //myself.set_ip( buf );
+	      maxlen=strlen(buf);
+	      //freeifaddrs(myaddrs);
+	      //return 0;
+	    }   
+	  }
+	}
+  }
+  if(myaddrs!=NULL)freeifaddrs(myaddrs);
+  myself->set_ip( external_ip );
+  return -1;
+}  

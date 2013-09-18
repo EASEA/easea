@@ -26,13 +26,14 @@
 class CommWorkerCommunicator
 {
   protected:
-     CommWorker &myself;
-     std::queue<std::string> &data;
+     CommWorker *myself;
+     std::queue<std::string> *data;
      static int debug;
      static bool cancel;
   public:
-     CommWorkerCommunicator(CommWorker &w, std::queue<std::string> &d, int db=1):myself(w),data(d) { debug = db; cancel=false;  };
+     CommWorkerCommunicator(CommWorker *w, std::queue<std::string> *d, int db=1):myself(w),data(d) { debug = db; cancel=false;  };
      static void terminate() { cancel = true; };
+     virtual ~CommWorkerCommunicator() {};
      virtual int init() = 0;
      virtual int send(char *individual, CommWorker &destination) = 0;
      virtual int receive() = 0;

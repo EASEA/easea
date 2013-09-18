@@ -15,7 +15,7 @@ endif
 
 #USER MAKEFILE OPTIONS :
  
-CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/ -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include
+CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/ -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
 LDFLAGS+=-lgfal_pthr -llcg_util
 
 #END OF USER MAKEFILE OPTIONS

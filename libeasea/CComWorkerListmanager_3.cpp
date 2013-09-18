@@ -16,6 +16,7 @@ extern "C"
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unistd.h>
 
 extern pthread_mutex_t gfal_mutex;
 extern pthread_mutex_t worker_list_mutex;
@@ -167,7 +168,7 @@ int CComWorkerListManager_3::read_worker_info_file( std::string remote_worker_in
 	  if( (workerinfo = CommWorker::parse_worker_string(line)) != NULL)
 	  {  
 	    printf("Problem parsing worker path file %s\n",remote_worker_info_filename.c_str());
-	    printf("Problematic line : %s\n",line);
+	    printf("Problematic line : %s\n",line.c_str());
 	    return -1;
 	  }  
 	  // fail some read operation

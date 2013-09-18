@@ -20,4 +20,6 @@
 
 #include "include/commworkercomunitaror.h"
 
+int CommWorkerCommunicator::debug = 1;
+bool CommWorkerCommunicator::cancel = false;
 

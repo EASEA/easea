@@ -34,6 +34,7 @@ class AbstractWorkerListManager
       static int debug;
     public:
       AbstractWorkerListManager(int _debug) { debug = _debug; }
+      virtual ~AbstractWorkerListManager() { }
       virtual int refresh_worker_list() = 0;
       inline int get_nr_workers() const {  return activeworkers.size(); } ;
       inline int get_nr_inactive_workers() const {  return inactiveworkers.size(); } ;

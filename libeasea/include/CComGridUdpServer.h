@@ -13,6 +13,10 @@
 #include <unistd.h>     /* for close() */
 #include <stdio.h>
 #include "CComWorkerListManager_2.h"
+#include "worker_workerlistmanager.h"
+#include "filecommworkercommunicator.h"
+#include "networkcommworkercommunicator.h"
+
 
 class CComGridUDPServer {
 
@@ -62,7 +66,9 @@ private:
 	std::list<std::string> new_files;
 	std::string extract_fitness( std::string buffer );
 
-	CComWorkerListManager_2 *refresh_workers;
+	FileCommWorkerCommunicator *filecomm;
+	NetworkCommWorkerCommunicator *networkcomm;
+	Worker_WorkerListManager *refresh_workers;
         CommWorker *myself;
 	void run();
 	int ServerSocket;

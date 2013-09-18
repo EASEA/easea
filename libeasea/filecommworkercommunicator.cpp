@@ -27,11 +27,11 @@
 #include <fstream>
 #include <sstream>
 #include <pthread.h>
-
+#include <unistd.h>
 using namespace std;
 extern pthread_mutex_t server_mutex;
-pthread_mutex_t sending_mutex;
-
+extern pthread_mutex_t sending_mutex;
+extern pthread_mutex_t gfal_mutex;
 
 int FileCommWorkerCommunicator::write_file()
 {
@@ -42,7 +42,6 @@ int FileCommWorkerCommunicator::write_file()
     
     time_t tstamp = time(NULL);
     
-    string remote_filename = exp_path + '/' + current_item.first + '/' + current_filename;
     
     ofstream outputfile("/home/ge-user/individual_write_tmp.txt");
     if(outputfile.fail())return -1;
@@ -53,8 +52,13 @@ int FileCommWorkerCommunicator::write_file()
     while( tries < 3)
     {
         stringstream remote_filename;
+	
 	remote_filename << exp_path << '/' << current_item.first << "/individual_" << tstamp+tries << ".txt";
-	if( GFAL_Utils::upload(local_filename, remote_filename.str()) == 0)break;
+	cout << "Trying to write remote file:" << remote_filename.str() << endl;
+	pthread_mutex_lock(&gfal_mutex);
+	int result = GFAL_Utils::upload(local_filename, remote_filename.str(),true);
+	pthread_mutex_unlock(&gfal_mutex);
+	if( result == 0)break;
 	else if(errno==0)tries++;
         else return -1; 
     }
@@ -65,15 +69,19 @@ int FileCommWorkerCommunicator::write_file()
 int FileCommWorkerCommunicator::read_file(std::string &buffer)
 {
     string local_filename = "file:/home/ge-user/individual_tmp.txt";
-    string remote_filename = exp_path + '/' + myself.get_name() + '/' + current_filename;
+    string remote_filename = exp_path + '/' + myself->get_name() + '/' + current_filename;
+    pthread_mutex_lock(&gfal_mutex);
+    int result = GFAL_Utils::download(remote_filename,local_filename);
+    pthread_mutex_unlock(&gfal_mutex);
     
-    if( GFAL_Utils::download(remote_filename,local_filename) != 0 )return -1;
+    if(  result != 0 )return -1;
     ifstream inputfile("/home/ge-user/individual_tmp.txt");
     if(inputfile.fail())return -1;
-    inputfile >> buffer;
+    getline(inputfile,buffer);
     inputfile.close();
     return 0;
 }
+
 
 
 int FileCommWorkerCommunicator::receive()
@@ -81,7 +89,11 @@ int FileCommWorkerCommunicator::receive()
     std::string buffer;
     while(!cancel)
     {  
-	if( directory_scanner->dirscan("individual") == 0 )
+        pthread_mutex_lock(&gfal_mutex);
+        int result = directory_scanner->dirscan("individual");
+        pthread_mutex_unlock(&gfal_mutex);
+	
+	if( result == 0 )
 	{  
 	    vector<string> newfiles = directory_scanner->get_newfiles();
 	    for(unsigned int i=0; i<newfiles.size(); i++)files_to_read.push(newfiles[i]);
@@ -94,12 +106,22 @@ int FileCommWorkerCommunicator::receive()
 	    if( read_file(buffer) == 0)
 	    {
 	        pthread_mutex_lock(&server_mutex);
-		data.push(buffer);
+		data->push(buffer);
+		if(debug) {
+		    printf("Reading file %s sucescully\n", current_filename.c_str());
+		    printf("\nData entry[%i]\n",data->size());
+		    printf("Received the following:\n");
+		    printf("%s\n",buffer.c_str());
+		    printf("%d\n",(int)buffer.size());
+		}
+
+		
 		pthread_mutex_unlock(&server_mutex);
 	    }  
 	      
 	    else files_to_read.push(current_filename);
 	}
+	sleep(5);
     }
     return 0;
 }
@@ -108,17 +130,21 @@ int FileCommWorkerCommunicator::send()
 {
     while(!cancel)
     {
+       //cout << "size of the send queue = " << individualt_to_send.size();
        if(!individualt_to_send.empty())
        {
 	 pthread_mutex_lock(&sending_mutex);
+	 cout << "size of the send queue = " << individualt_to_send.size() << endl;
 	 current_item = individualt_to_send.top();
 	 pthread_mutex_unlock(&sending_mutex);
-	 if(write_file() ==0){
+	 
+	 if( write_file() ==0){
 	   pthread_mutex_lock(&sending_mutex);
 	   individualt_to_send.pop();
 	   pthread_mutex_unlock(&sending_mutex);
 	 }  
        } 
+       sleep(5);
     }
     return 0;
 }  
@@ -175,7 +201,7 @@ int FileCommWorkerCommunicator::init()
 	      {
 		      if(debug)printf("Experiment worker folder sucessfuly created, the path is %s\n", s.str().c_str());
 		      result = gfal_chmod( s.str().c_str(), 0777 );
-		      myself.set_name(t.str());
+		      myself->set_name(t.str());
 		      directory_scanner = new GFAL_Utils(s.str());
 		      return 0;
 	      }	

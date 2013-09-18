@@ -133,6 +133,8 @@ void MonitorWorkerListManager::process_worker_files()
 
 int MonitorWorkerListManager::save_worker_file_info()
 {
+  
+      if(activeworkers.size()==0)return 0;
       std::ofstream outputfile("/home/ge-user/allworkers_info.txt");
 
       save_failed=true;
@@ -154,7 +156,7 @@ int MonitorWorkerListManager::save_worker_file_info()
       cout << "Saving " << activeworkers.size() << "  workers" << endl;
       printf("Copying new  remote worker list file ....\n");
       
-      if( GFAL_Utils::upload("file:/home/ge-user/all_workers_info.txt",remote_workerlist_filename) !=0)
+      if( GFAL_Utils::upload("file:/home/ge-user/allworkers_info.txt",remote_workerlist_filename) !=0)
       {
 	  cout << "failed to upload file to " << remote_workerlist_filename << " error code is:" << errno <<endl;
 	  return -1;

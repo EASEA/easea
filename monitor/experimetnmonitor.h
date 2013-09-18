@@ -20,7 +20,7 @@
 #ifndef EXPERIMETNMONITOR_H
 #define EXPERIMETNMONITOR_H
 #include <string>
-#include "../libeasea/include/monitorworkerlistmanager_2.h"
+#include "../libeasea/include/monitorworkerlistmanager.h"
 
 class ExperimentMonitor
 {

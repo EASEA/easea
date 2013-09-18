@@ -20,6 +20,8 @@
 #include "experimetnmonitor.h"
 #include <stdio.h>
 #include <errno.h>
+#include <unistd.h>
+
 extern "C"
 {
     #include "gfal_api.h"

@@ -39,7 +39,7 @@ int Worker_WorkerListManager::refresh_worker_list()
   
   workernames_idx.clear();  
   // create a list 
-  for(unsigned int i=0; i< workernames_idx.size(); i++) workernames_idx.insert(activeworkers[i].get_name());
+  for(unsigned int i=0; i< activeworkers.size(); i++) workernames_idx.insert(activeworkers[i].get_name());
   
   pthread_mutex_lock(&gfal_mutex);
   int result =  GFAL_Utils::download(workerlist_remote_filename, workerlist_local_filename, workerfile_timestamp);
@@ -51,7 +51,7 @@ int Worker_WorkerListManager::refresh_worker_list()
 	 return -1;
 
   }  
-  
+  process_workerlist_file();
   update_lists();
   return 0;
 }

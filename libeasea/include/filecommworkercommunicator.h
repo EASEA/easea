@@ -39,8 +39,10 @@ class FileCommWorkerCommunicator : public CommWorkerCommunicator
   int read_file(std::string &buffer);
   int write_file();
 public:
-  FileCommWorkerCommunicator(CommWorker &w, std::queue<std::string> &d, std::string path, int wn, int db=1):
-      CommWorkerCommunicator(w,data,db),exp_path(path),worker_number(wn) {};
+ 
+  FileCommWorkerCommunicator(CommWorker *w, std::queue<std::string> *d, std::string path, int wn, int db=1):
+      CommWorkerCommunicator(w,data,db),exp_path(path),worker_number(wn) { };
+  ~FileCommWorkerCommunicator()  { delete directory_scanner; }  
   int receive();
   int send(char* individual, CommWorker& destination);
   int send();
