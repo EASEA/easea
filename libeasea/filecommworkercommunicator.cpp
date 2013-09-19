@@ -45,7 +45,7 @@ int FileCommWorkerCommunicator::write_file()
     
     ofstream outputfile("/home/ge-user/individual_write_tmp.txt");
     if(outputfile.fail())return -1;
-    outputfile << current_item.second;
+    outputfile << current_item.second << endl;
     outputfile.close();
     int tries = 0;
     
@@ -96,14 +96,20 @@ int FileCommWorkerCommunicator::receive()
 	if( result == 0 )
 	{  
 	    vector<string> newfiles = directory_scanner->get_newfiles();
-	    for(unsigned int i=0; i<newfiles.size(); i++)files_to_read.push(newfiles[i]);
+	    for(unsigned int i=0; i<newfiles.size(); i++){
+		  files_to_read.push(newfiles[i]);
+		  cout << "New File found : " << newfiles[i];
+	    }  	    
 	}
 	
 	while( !files_to_read.empty() && !cancel )
 	{  
 	    current_filename = files_to_read.front();
+	    cout << "Reading file ..." << current_filename << " Size of queue " << files_to_read.size() << endl;
+	    cout << "adresses ... " << &(files_to_read.front()) << "   " << &current_filename << endl;
 	    files_to_read.pop();
-	    if( read_file(buffer) == 0)
+	    cout << " Size of queue " << files_to_read.size() << endl;
+	    if( read_file( buffer ) == 0)
 	    {
 	        pthread_mutex_lock(&server_mutex);
 		data->push(buffer);
@@ -113,13 +119,14 @@ int FileCommWorkerCommunicator::receive()
 		    printf("Received the following:\n");
 		    printf("%s\n",buffer.c_str());
 		    printf("%d\n",(int)buffer.size());
+		    cout << " Size of queue " << files_to_read.size() << endl;
 		}
 
 		
 		pthread_mutex_unlock(&server_mutex);
 	    }  
 	      
-	    else files_to_read.push(current_filename);
+	    //else files_to_read.push(current_filename);
 	}
 	sleep(5);
     }

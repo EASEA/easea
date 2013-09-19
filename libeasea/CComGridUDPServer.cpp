@@ -596,7 +596,7 @@ CComGridUDPServer::~CComGridUDPServer()
     //this->refresh_workers->terminate();
     if( myself->get_ip() != "noip" )
     {  
-      pthread_cancel(read_t);
+      //pthread_cancel(read_t);
       pthread_join(read_t, NULL);
     }  
     pthread_join(refresh_t,NULL);

@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ifaddrs.h>
-
+#include <errno.h>
 #define MAXINDSIZE 50000
 
 extern pthread_mutex_t server_mutex;
@@ -79,21 +79,35 @@ int NetworkCommWorkerCommunicator::receive()
 	struct sockaddr_in cliaddr; /* Client address */
         socklen_t len = sizeof(cliaddr);
         char tmpbuffer[MAXINDSIZE];
-        unsigned int recvMsgSize;
+        int recvMsgSize;
                 /*receive UDP datagrams from client*/
 	while(!cancel)
 	{  
-	    if ((recvMsgSize = recvfrom(ServerSocket,tmpbuffer,MAXINDSIZE,0,(struct sockaddr *)&cliaddr,&len)) < 0) {
-		    printf("\nError recvfrom()\n");
-		    return -1;
+	    recvMsgSize = recvfrom(ServerSocket,tmpbuffer,MAXINDSIZE,MSG_DONTWAIT,(struct sockaddr *)&cliaddr,&len);
+	    if ( recvMsgSize == -1){
+		 if(errno == EAGAIN || errno == EWOULDBLOCK)continue;
+		 else
+		    {
+		      printf("\nError recvfrom()\n");
+		      return -1;
+		    }  
 	    }
-      
-	    printf("    Received individual from %s:%d\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
-	    tmpbuffer[recvMsgSize] = 0;
-	    std::string buffer(tmpbuffer);
-	    pthread_mutex_lock(&server_mutex);
-	    data->push(buffer);
-	    pthread_mutex_unlock(&server_mutex);
+	    else
+	    {  
+		printf("    Received individual from %s:%d\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+		tmpbuffer[recvMsgSize] = 0;
+		std::string buffer(tmpbuffer);
+		pthread_mutex_lock(&server_mutex);
+		data->push(buffer);
+		/*if(debug)
+		{
+		    printf("\nData entry[%i]\n",data->size());
+		    printf("Received the following:\n");
+		    printf("%s\n",buffer.c_str());
+		    printf("%d\n",(int)buffer.size());
+		} */ 
+		pthread_mutex_unlock(&server_mutex);
+	    }
 	}
 	return 0;
 }

@@ -178,7 +178,7 @@ void MonitorWorkerListManager::update_lists()
    for( unsigned i=0; i<deleted_files.size(); i++)deleted_workernames_idx.insert(  extract_worker_name( deleted_files[i] ) );
    
    
-   for(int i=activeworkers.size()-1; i>0; i--)
+   for(int i=activeworkers.size()-1; i>=0; i--)
    {
         current_workername = activeworkers[i].get_name();
 	

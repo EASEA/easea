@@ -29,7 +29,7 @@ extern "C"
 
 int ExperimentMonitor::init()
 {
-    if(debug)printf("Creating experiment and worker folders...\n");
+    if(debug)printf("Creating experiment and worker folders...%s %s\n", exppath.c_str(),expname.c_str());
     std::string fullpath = exppath+expname;
     int result = gfal_mkdir(fullpath.c_str(),0777);
     
