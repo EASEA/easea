@@ -41,7 +41,7 @@ class FileCommWorkerCommunicator : public CommWorkerCommunicator
 public:
  
   FileCommWorkerCommunicator(CommWorker *w, std::queue<std::string> *d, std::string path, int wn, int db=1):
-      CommWorkerCommunicator(w,data,db),exp_path(path),worker_number(wn) { };
+      CommWorkerCommunicator(w,d,db),exp_path(path),worker_number(wn) { };
   ~FileCommWorkerCommunicator()  { delete directory_scanner; }  
   int receive();
   int send(char* individual, CommWorker& destination);

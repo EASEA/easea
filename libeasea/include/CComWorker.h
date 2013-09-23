@@ -46,6 +46,7 @@ class CommWorker
     static int check_ipaddress(char *ipaddress);
     static int check_port(char *port);
     int register_worker(std::string);
+    int unregister_worker(std::string filename, int ntries=3);
     friend std::ostream & operator<<(std::ostream &os, const CommWorker& myself);
 };
 #endif

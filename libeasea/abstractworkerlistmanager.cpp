@@ -21,3 +21,4 @@
 #include "include/abstractworkerlistmanager.h"
 
 int  AbstractWorkerListManager::debug = 0;
+int  AbstractWorkerListManager::cancel = 0;

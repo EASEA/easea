@@ -32,6 +32,7 @@ class AbstractWorkerListManager
       std::vector<CommWorker> inactiveworkers;
       std::set<std::string> workernames_idx;
       static int debug;
+      static int cancel;
     public:
       AbstractWorkerListManager(int _debug) { debug = _debug; }
       virtual ~AbstractWorkerListManager() { }
@@ -39,6 +40,7 @@ class AbstractWorkerListManager
       inline int get_nr_workers() const {  return activeworkers.size(); } ;
       inline int get_nr_inactive_workers() const {  return inactiveworkers.size(); } ;
       CommWorker get_worker_nr(int wn);
+      static void terminate() { cancel = true; };
 };
 
 

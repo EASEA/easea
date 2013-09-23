@@ -25,6 +25,9 @@ extern "C" {
 #include <list>
 #include <cstdlib>
 #include <iostream>
+#include <stdio.h>
+#include <unistd.h>
+
 using namespace std;
 
 int GFAL_Utils::debug=0;
@@ -165,3 +168,64 @@ int GFAL_Utils::delete_file(string remote_filename)
 {
       return lcg_del((char*)remote_filename.c_str(), 5, NULL,NULL,NULL,0,0); 
 }  
+
+int GFAL_Utils::rm_dir(string remote_dir_path, int ntries)
+{
+    string fullfilename;
+    int tries;
+    while(tries < ntries)
+    {
+	DIR *dp;
+	struct dirent *ep;
+	
+	dp = gfal_opendir (remote_dir_path.c_str());
+	if (dp != NULL)
+	{
+	    int countfiles=0;
+	    
+	    
+	    while ((ep = gfal_readdir (dp)))
+	    {
+	      //only take into account folders
+	      std::string s(ep->d_name);
+	      fullfilename = remote_dir_path + '/' + s;
+
+	      struct stat statusfile;
+	      int result = gfal_stat(fullfilename.c_str(), &statusfile);
+
+	      if( result != -1 && S_ISREG(statusfile.st_mode))
+	      {  
+		    if( delete_file( fullfilename ) != 0)
+		    {
+		      if(debug)printf("Finish worker : Cannot erase  the file %s\n", fullfilename.c_str());
+		      break;
+		    }  
+	      }      
+	      else if(result == -1)
+	      {
+			(void)gfal_closedir (dp);
+			  sleep(4);
+			tries++;
+			continue;
+	      }		
+	    }
+	    (void)gfal_closedir (dp);
+            
+            if( gfal_rmdir(remote_dir_path.c_str()) == 0 )
+	    {
+		if(debug)
+		    printf("Worker removed sucessfully, removing the path %s\n", remote_dir_path.c_str());
+	        return 0;
+		break;
+		
+	    }	
+	    else if(debug)
+		      printf("Worker pâth %s be removed sucessfully, trying again\n", remote_dir_path.c_str());
+              		 
+	}
+	sleep(4);
+        tries++;
+    }
+    return -1;
+}
+

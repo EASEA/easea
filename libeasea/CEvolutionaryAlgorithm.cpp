@@ -377,6 +377,10 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   //}
 //#endif
 
+  // here send the last individual
+  
+  this->fileserver->terminate(bBest->serialize());
+
   if(this->params->printFinalPopulation){
   	population->sortParentPopulation();
   	std::cout << *population << std::endl;

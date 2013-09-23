@@ -134,7 +134,7 @@ void MonitorWorkerListManager::process_worker_files()
 int MonitorWorkerListManager::save_worker_file_info()
 {
   
-      if(activeworkers.size()==0)return 0;
+      //if(activeworkers.size()==0)return 0;
       std::ofstream outputfile("/home/ge-user/allworkers_info.txt");
 
       save_failed=true;

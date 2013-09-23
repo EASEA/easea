@@ -36,12 +36,8 @@ public:
 	int determine_worker_name(std::string &workername);
 	int send(char *individual, int dest);
 	int send(char* individual, CommWorker dest);
-	void read_thread();
-	void refresh_thread();
-	void readfiles_thread();
-	void writefiles_thread();
 	static void* read_thread_f(void *parm);
-	static void* refresh_thread_f(void *parm);
+	static void* refresh_thread(void *parm);
 	static void* write_thread_files_f(void *parm);
 	static void* read_thread_files_f(void *parm);
 	
@@ -57,6 +53,7 @@ public:
 	int send_file(char *buffer, CommWorker destination);
 	int in_same_network(const char* addr1, const char* addr2);
 	int log_connection(std::string source, std::string destination, std::string buffer);
+	void terminate( std::string );
 	
 private:
   	std::string workername;
@@ -65,7 +62,7 @@ private:
 	std::set<std::string> processed_files;
 	std::list<std::string> new_files;
 	std::string extract_fitness( std::string buffer );
-
+	static int cancel;
 	FileCommWorkerCommunicator *filecomm;
 	NetworkCommWorkerCommunicator *networkcomm;
 	Worker_WorkerListManager *refresh_workers;
@@ -76,7 +73,6 @@ private:
 	int Socket;
         int worker_number;
 	struct sockaddr_in ServAddr;
-	bool cancel;
 	FILE *logfile_input, *logfile_output;
 };
 #endif

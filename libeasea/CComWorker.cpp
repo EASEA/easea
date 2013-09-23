@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <fcntl.h>
+#include "include/gfal_utils.h"
 extern "C"
 {
 #include "gfal_api.h"
@@ -330,6 +331,16 @@ int CommWorker::determine_worker_name(std::string fullpath, std::string &workern
   
   return -1;
 }
+
+
+int CommWorker::unregister_worker( std::string fullpath, int ntries)
+{
+    std::string fullfilename = fullpath + "/workers_info/" + get_name() + ".txt";
+    for(int i=0; i< ntries; i++)
+      if( GFAL_Utils::delete_file(fullfilename) == 0 )
+	  return 0;
+    return -1;
+}  
 
 
 int CommWorker::register_worker(std::string fullpath)

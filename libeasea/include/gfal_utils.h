@@ -50,6 +50,7 @@ class GFAL_Utils
     static int upload(std::string local_filename, std::string remote_filename, bool verbose=false);
     static int get_timestamp(std::string filename, time_t &t);
     static int delete_file(std::string filename);
+    static int rm_dir(std::string remote_dir_path, int ntries=3);
   
 };
 

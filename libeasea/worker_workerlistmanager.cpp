@@ -22,6 +22,7 @@
 #include "include/gfal_utils.h"
 #include "stdio.h"
 #include <fstream>
+#include <unistd.h>
 
 extern pthread_mutex_t gfal_mutex;
 extern pthread_mutex_t worker_list_mutex;
@@ -36,23 +37,26 @@ Worker_WorkerListManager::Worker_WorkerListManager(string exp_path, int debug):A
 
 int Worker_WorkerListManager::refresh_worker_list()
 {
-  
-  workernames_idx.clear();  
-  // create a list 
-  for(unsigned int i=0; i< activeworkers.size(); i++) workernames_idx.insert(activeworkers[i].get_name());
-  
-  pthread_mutex_lock(&gfal_mutex);
-  int result =  GFAL_Utils::download(workerlist_remote_filename, workerlist_local_filename, workerfile_timestamp);
-  pthread_mutex_unlock(&gfal_mutex);
+  while(!cancel)
+  {  
+	workernames_idx.clear();  
+	// create a list 
+	for(unsigned int i=0; i< activeworkers.size(); i++) workernames_idx.insert(activeworkers[i].get_name());
+	
+	pthread_mutex_lock(&gfal_mutex);
+	int result =  GFAL_Utils::download(workerlist_remote_filename, workerlist_local_filename, workerfile_timestamp);
+	pthread_mutex_unlock(&gfal_mutex);
 
-  if(result != 0)
-  {
-         printf ("Cannot open worker information file %s\n", workerlist_remote_filename.c_str());
-	 return -1;
+	if(result != 0)
+	{
+	      printf ("Cannot open worker information file %s\n", workerlist_remote_filename.c_str());
+	      return -1;
 
-  }  
-  process_workerlist_file();
-  update_lists();
+	}  
+	process_workerlist_file();
+	update_lists();
+	sleep(30);
+  }
   return 0;
 }
 

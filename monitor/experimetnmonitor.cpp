@@ -34,7 +34,7 @@ int ExperimentMonitor::init()
     int result = gfal_mkdir(fullpath.c_str(),0777);
     
     // check error condition
-    printf("Trying to determine or create directory experiment\n");
+    printf("Trying create directory experiment\n");
     if(result<0 && errno!=EEXIST)
     {
         printf("Cannot create experiment folder %s; check user permissions or disk space", fullpath.c_str());
@@ -48,10 +48,22 @@ int ExperimentMonitor::init()
     result = gfal_mkdir(workers_info_path.c_str(),0777);
     
     // check error condition
-    printf("Trying to determine or create directory experiment\n");
+    printf("Trying create workers info directory experiment\n");
     if(result<0 && errno!=EEXIST)
     {
         printf("Cannot create experiment folder %s; check user permissions or disk space", workers_info_path.c_str());
+        printf("Result of gfal_mkdir = %d %d\n" ,result,errno);   
+	return -1;
+    }
+
+    std::string results_path=fullpath + "/results";
+    result = gfal_mkdir(results_path.c_str(),0777);
+    
+    // check error condition
+    printf("Trying to create results directory experiment\n");
+    if(result<0 && errno!=EEXIST)
+    {
+        printf("Cannot create experiment folder %s; check user permissions or disk space", results_path.c_str());
         printf("Result of gfal_mkdir = %d %d\n" ,result,errno);   
 	return -1;
     }
