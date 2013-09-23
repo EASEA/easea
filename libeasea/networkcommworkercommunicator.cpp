@@ -81,7 +81,8 @@ int NetworkCommWorkerCommunicator::receive()
         char tmpbuffer[MAXINDSIZE];
         int recvMsgSize;
                 /*receive UDP datagrams from client*/
-	recvMsgSize = recvfrom(ServerSocket,tmpbuffer,MAXINDSIZE,MSG_DONTWAIT,(struct sockaddr *)&cliaddr,&len);
+	recvMsgSize = recvfrom(ServerSocket,tmpbuffer,MAXINDSIZE,0,(struct sockaddr *)&cliaddr,&len);
+	std::cout << "message received" << std::endl;
 	if ( recvMsgSize == -1){
 	      if(errno != EAGAIN && errno != EWOULDBLOCK)
 	      {
@@ -196,7 +197,7 @@ int NetworkCommWorkerCommunicator::determine_ipaddress()
       memset(buf,0,64);
       
       
-      
+      if(ifa->ifa_addr==NULL)continue;
       if (AF_INET == ifa->ifa_addr->sa_family)
       {
 	  s4 = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;

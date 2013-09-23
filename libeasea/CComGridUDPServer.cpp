@@ -262,13 +262,20 @@ int CComGridUDPServer::number_of_clients()
 void CComGridUDPServer::terminate( std::string bestindividual)
 {
     std::cout << "Finishing threads ..." << std::endl;
+    char *dummy_message="finish";
     cancel = 1;
-    AbstractWorkerListManager::terminate();
-    CommWorkerCommunicator::terminate();
+    //AbstractWorkerListManager::terminate();
+    //CommWorkerCommunicator::terminate();
     //this->refresh_workers->terminate();
+    
+    // trick to finish networking communicator, send a dummy message
+    
+    
+    
     if( myself->get_ip() != "noip" )
     {  
       //pthread_cancel(read_t);
+      networkcomm->send(dummy_message,*myself);
       pthread_join(read_t, NULL);
     }  
     pthread_join(refresh_t,NULL);
