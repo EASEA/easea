@@ -12,6 +12,7 @@
 #include <sstream>
 #include <fcntl.h>
 #include "include/gfal_utils.h"
+#include <errno.h>
 extern "C"
 {
 #include "gfal_api.h"
