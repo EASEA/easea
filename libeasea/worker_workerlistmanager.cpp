@@ -22,13 +22,15 @@
 #include <fstream>
 #include <unistd.h>
 
-extern pthread_mutex_t gfal_mutex;
-extern pthread_mutex_t worker_list_mutex;
+extern pthread_mutex_t gfal_mutex; // gridfilesystem mutex, limitation of GFAL v1, 
+extern pthread_mutex_t worker_list_mutex; // for update the worker list
 using namespace std;
 
 Worker_WorkerListManager::Worker_WorkerListManager(string exp_path, int debug):AbstractWorkerListManager(debug),workerfile_timestamp(0)
 {
+  // remote filename
   workerlist_remote_filename = exp_path+"/workers_info/allworkers_info.txt";
+  // local filename
   workerlist_local_filename = "file:/home/ge-user/allworkers_info.txt";
 }  
 
@@ -38,9 +40,10 @@ int Worker_WorkerListManager::refresh_worker_list()
   while(!cancel)
   {  
 	workernames_idx.clear();  
-	// create a list 
+	// create a index for active worker names at each iteration
 	for(unsigned int i=0; i< activeworkers.size(); i++) workernames_idx.insert(activeworkers[i].get_name());
 	
+	// get the remote worker list from the grid filesystem
 	pthread_mutex_lock(&gfal_mutex);
 	int result =  GFAL_Utils::download(workerlist_remote_filename, workerlist_local_filename, workerfile_timestamp);
 	pthread_mutex_unlock(&gfal_mutex);
@@ -51,8 +54,12 @@ int Worker_WorkerListManager::refresh_worker_list()
 	      return -1;
 
 	}  
+	
+	// process the downloaded file
 	process_workerlist_file();
+	// update the internal lists
 	update_lists();
+	// sleep
 	sleep(30);
   }
   return 0;
@@ -64,7 +71,7 @@ void Worker_WorkerListManager::update_lists()
   pthread_mutex_lock(&worker_list_mutex);
   for(int i = activeworkers.size()-1; i>=0; i--)
   {  
-		
+	// check for worker not more active and delete from the active workers list	
 	if( workernames_idx.find( activeworkers[i].get_name() ) != workernames_idx.end() )
 	{  
 	  if(debug) printf("Delete worker %s is, no more active\n", activeworkers[i].get_name().c_str() );
@@ -79,7 +86,9 @@ void Worker_WorkerListManager::update_lists()
 int Worker_WorkerListManager::process_workerlist_file()
 {
     
+    // get the local file
     std::ifstream inputfile("/home/ge-user/allworkers_info.txt");
+    
     
     if(inputfile.fail() )return -1;
     
@@ -93,14 +102,19 @@ int Worker_WorkerListManager::process_workerlist_file()
     std::string line;
     
     pthread_mutex_lock(&worker_list_mutex);
+    
+    //     In this loop, the active worker list is populated with new workers
+    //     the worker index will contain the workers not active anymore, for further deletion
+    
     for(int i=0; i< nworkers; i++)
     {
         inputfile >> line;
 	if( (workerinfo = CommWorker::parse_worker_string( line )) != NULL )
 	{
+	     // a new worker is found
 	     if( workernames_idx.find( workerinfo->get_name() ) == workernames_idx.end() )
 	     {  
-		 
+		 // add to the list 
 		 activeworkers.push_back( *workerinfo );
 		 if(debug)
 		 {
@@ -112,6 +126,7 @@ int Worker_WorkerListManager::process_workerlist_file()
 					workerinfo->get_port());
 		  }
 	     }
+	     // a worker is found and active, so delete it from the index
 	     else    workernames_idx.erase(workerinfo->get_name());
 	     delete workerinfo;
 	}    

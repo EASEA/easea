@@ -21,19 +21,49 @@
 #include "CComWorker.h"
 #include <queue>
 
+/**
+ * @brief Base class for the worker file and network communication
+ * 
+ */
 class CommWorkerCommunicator
 {
   protected:
-     CommWorker *myself;
-     std::queue<std::string> *data;
-     static int debug;
-     static bool cancel;
+     CommWorker *myself; // worker
+     std::queue<std::string> *data; // data queue received
+     static int debug; // debug flag
+     static bool cancel; // cancel communication flag
   public:
-     CommWorkerCommunicator(CommWorker *w, std::queue<std::string> *d, int db=1):myself(w),data(d) { debug = db; cancel=false;  };
-     static void terminate() { cancel = true; };
+    /**
+     * @brief Constructor
+     * 
+     * @param w the worker
+     * @param d the data queue to receive individuals
+     * @param db debugger flags
+     * 
+     */
+    CommWorkerCommunicator(CommWorker *w, std::queue<std::string> *d, int db=1):myself(w),data(d) { debug = db; cancel=false;  };
+    /**
+     * @brief Terminato communications
+     */
+    static void terminate() { cancel = true; };
      virtual ~CommWorkerCommunicator() {};
+     /**
+      * @brief Init the communicator
+      */
      virtual int init() = 0;
+     /**
+      * @brief Send an individual to a worker
+      * 
+      * @param individual individual string
+      * @param destination destination worker
+      * @return 0 succces -1 error
+      */
      virtual int send(char *individual, CommWorker &destination) = 0;
+     /**
+      * @brief Receive and store an individual
+      * 
+      * @return 0 succces -1 error
+      */
      virtual int receive() = 0;
 };
 

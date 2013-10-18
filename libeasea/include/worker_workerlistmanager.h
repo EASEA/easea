@@ -23,17 +23,48 @@
 #include "time.h"
 
 
+/**
+ * @brief Worker list manager for worker objects
+ * 
+ */
 class Worker_WorkerListManager : public AbstractWorkerListManager
 {
     private:
-      std::string workerlist_remote_filename, workerlist_local_filename;
-      time_t workerfile_timestamp;
+      std::string workerlist_remote_filename, workerlist_local_filename; 
+      time_t workerfile_timestamp; // timestamp of worker filename
+      /**
+       * @brief update the active and inactive worker lists
+       * 
+       * @return void
+       */
       void update_lists();
+      /**
+       * @brief process the worker list file
+       * 
+       * @return 0 success -1 error
+       */
       int process_workerlist_file();
       
     public:
+      /**
+       * @brief Constructor
+       * 
+       * @param exp_path Experiment path in the grid filesystem
+       * @param _debug debug flag
+       */
       Worker_WorkerListManager(std::string exp_path,int _debug=1);
+      /**
+       * @brief Refresh worker list from the gridfilesystem
+       * 
+       * @return 0 succces -1 error
+       */
       virtual int refresh_worker_list();
+      /**
+       * @brief Get a worker object from the active worker list
+       * 
+       * @param idx ...
+       * @return CommWorker
+       */
       CommWorker get_worker_nr(int idx) const;
 };
 

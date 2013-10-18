@@ -24,7 +24,7 @@
 #include "gfal_utils.h"
 #include <semaphore.h>
 
-class MonitorWorkerListManager : public AbstractWorkerListManager
+class MonitorWorkerListManager_2 : public AbstractWorkerListManager
 {
   private:
       std::string workerinfo_path;
@@ -42,7 +42,7 @@ class MonitorWorkerListManager : public AbstractWorkerListManager
       sem_t empty,full;
       pthread_t threads[4];
   public:
-      MonitorWorkerListManager(std::string exp_path,int num_workers,int _debug);
+      MonitorWorkerListManager_2(std::string exp_path,int num_workers,int _debug);
       virtual int refresh_worker_list();
       void  process_worker_files(int);
       int upload_workers_info();

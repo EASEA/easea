@@ -26,6 +26,15 @@ extern "C"
     #include "gfal_api.h"
 }
 
+/**
+ * 
+ * @detailed Create the experiment path in the grid filesystem as follows:
+ * path/expname/  the experiment main folder
+ * path/expname/workers_info  individual worker information files are stored here as well as the global worker information files
+ * path/expname/results best individual for each worker are stored here at the end of execution
+ * 
+ * @return int
+ */
 int ExperimentMonitor::init()
 {
     if(debug)printf("Creating experiment and worker folders...%s %s\n", exppath.c_str(),expname.c_str());
@@ -75,6 +84,7 @@ int ExperimentMonitor::init()
 
 int ExperimentMonitor::run()
 {
+  // loop for scanning working directory
   do
   {
       ListWorkersMonitor->refresh_worker_list();

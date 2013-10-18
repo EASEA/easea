@@ -31,18 +31,24 @@ using namespace std;
 
 int GFAL_Utils::debug=0;
 
+/**
+ * @detailed Scan the directory finding files starting by start_with string
+ * 
+ */
 int GFAL_Utils::dirscan(string start_with="")
 {
   DIR *dp;
   struct dirent *ep;
   vector<string> dirfiles;
-  
+ 
+  // check if the directory has changed
   if( refresh_timestamp()==0 && !is_updated() )
   {
  
       if(debug) cout << "Reading directory ..." << remote_dir_path << endl;
       dp = gfal_opendir ( remote_dir_path.c_str() );
     
+     // reading dir
     if (dp != NULL)
     {
 	while ( (ep = gfal_readdir (dp)) )
@@ -51,7 +57,7 @@ int GFAL_Utils::dirscan(string start_with="")
 		string filename(ep->d_name);
 
 		unsigned int pos=filename.find(start_with);
-		
+		// add file if meet the requeriments
 		if((pos!=string::npos))
 		    dirfiles.push_back(filename);
 		
@@ -116,9 +122,12 @@ void GFAL_Utils::list_update()
    new_files.clear();
    //delete_files.clear();
    set<string> newindex;
+   
+   // check for new files
    for(unsigned int i=0; i<current_files.size(); i++)
    {
       newindex.insert(current_files[i]);
+      // new files are not present in the last list
       if( lastfiles_idx.find( current_files[i] ) == lastfiles_idx.end() )
 	 new_files.push_back( current_files[i] );
       else
@@ -126,7 +135,7 @@ void GFAL_Utils::list_update()
    }  
    
    set<string>::iterator it, it_e;
-   
+   // check for deleted files
    for( it = lastfiles_idx.begin(); it!= lastfiles_idx.end(); ++it) 
          delete_files.push_back( *it );
    
@@ -192,6 +201,7 @@ int GFAL_Utils::rm_dir(string remote_dir_path, int ntries)
 	      struct stat statusfile;
 	      int result = gfal_stat(fullfilename.c_str(), &statusfile);
 
+	      // delete a regular file
 	      if( result != -1 && S_ISREG(statusfile.st_mode))
 	      {  
 		    if( delete_file( fullfilename ) != 0)
@@ -200,6 +210,7 @@ int GFAL_Utils::rm_dir(string remote_dir_path, int ntries)
 		      break;
 		    }  
 	      }      
+	      // error; try again
 	      else if(result == -1)
 	      {
 			(void)gfal_closedir (dp);
@@ -210,6 +221,7 @@ int GFAL_Utils::rm_dir(string remote_dir_path, int ntries)
 	    }
 	    (void)gfal_closedir (dp);
             
+	    // remove directory
             if( gfal_rmdir(remote_dir_path.c_str()) == 0 )
 	    {
 		if(debug)

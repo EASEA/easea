@@ -31,6 +31,13 @@ extern pthread_mutex_t server_mutex;
 extern pthread_mutex_t sending_mutex;
 extern pthread_mutex_t gfal_mutex;
 
+/**
+ * @detailed write the file named individual_write_tmp to the grid filesystem
+ * This filed is written to:
+ * exp_path/expname/worker_name/  if the individual is for transmision,
+ * exp_path/expname/results/ at the end of execution
+ * @return int
+ */
 int FileCommWorkerCommunicator::write_file()
 {
     string local_filename = "file:/home/ge-user/individual_write_tmp.txt";
@@ -56,6 +63,7 @@ int FileCommWorkerCommunicator::write_file()
 	else
 	    remote_filename << exp_path << '/' << current_item.first << "/individual_" << tstamp+tries << ".txt";
 	cout << "Trying to write remote file:" << remote_filename.str() << endl;
+	// upload the file to the worker path in the grid filesystem
 	pthread_mutex_lock(&gfal_mutex);
 	int result = GFAL_Utils::upload(local_filename, remote_filename.str(),true);
 	pthread_mutex_unlock(&gfal_mutex);
@@ -67,17 +75,24 @@ int FileCommWorkerCommunicator::write_file()
 }
 
 
+/**
+ * @detailed Read an individual from the gridfilesystem from
+ * exp_path/expname/worker_name/ folder and store into
+ * the local folder
+ */
 int FileCommWorkerCommunicator::read_file(std::string &buffer)
 {
     buffer.clear();
+    
     string local_filename = "file:/home/ge-user/individual_tmp.txt";
     string remote_filename = exp_path + '/' + myself->get_name() + '/' + current_filename;
     pthread_mutex_lock(&gfal_mutex);
+    // download the remote file
     int result = GFAL_Utils::download(remote_filename,local_filename);
     pthread_mutex_unlock(&gfal_mutex);
-    
     if(  result != 0 )return -1;
     ifstream inputfile("/home/ge-user/individual_tmp.txt");
+    // read the local file
     if(inputfile.fail())return -1;
     //inputfile.getline(buffer);
     getline(inputfile,buffer);
@@ -90,13 +105,16 @@ int FileCommWorkerCommunicator::read_file(std::string &buffer)
 int FileCommWorkerCommunicator::receive()
 {
     std::string buffer;
+    // lock for the new files in the gridfilesystem worker path
     pthread_mutex_lock(&gfal_mutex);
     int result = directory_scanner->dirscan("individual");
     pthread_mutex_unlock(&gfal_mutex);
     
     if( result == 0 )
     {  
+        // get the new files
 	vector<string> newfiles = directory_scanner->get_newfiles();
+	// push file in the queue for further processing
 	for(unsigned int i=0; i<newfiles.size(); i++){
 	      files_to_read.push(newfiles[i]);
 	      cout << "New File found : " << newfiles[i];
@@ -104,6 +122,7 @@ int FileCommWorkerCommunicator::receive()
     }
 	
     if( files_to_read.empty() ) return 0;
+    // now read a file in the front of the queue
     current_filename = files_to_read.front();
     //cout << "Reading file ..." << current_filename << " Size of reading queue " << files_to_read.size() << endl;
     //cout << "adresses ... " << &(files_to_read.front()) << "   " << &current_filename << endl;
@@ -111,6 +130,7 @@ int FileCommWorkerCommunicator::receive()
     //cout << " Size of reading queue " << files_to_read.size() << endl;
     if( read_file( buffer ) == 0)
     {
+	// put the individual in the data queue
 	pthread_mutex_lock(&server_mutex);
 	data->push(buffer);
 	if(debug) {
@@ -127,7 +147,8 @@ int FileCommWorkerCommunicator::receive()
     }  
     else 
     {
-        files_to_read.push(current_filename);
+        // if read files, put the file in the end of the queue for further tries
+	files_to_read.push(current_filename);
 	return -1;
     }
     return 0;
@@ -142,7 +163,7 @@ int FileCommWorkerCommunicator::send()
       //cout << "size of the send queue = " << individualt_to_send.size() << endl;
       current_item = individualt_to_send.top();
       pthread_mutex_unlock(&sending_mutex);
-      
+      // write the file
       if( write_file() ==0){
 	pthread_mutex_lock(&sending_mutex);
 	individualt_to_send.pop();
@@ -160,19 +181,26 @@ int FileCommWorkerCommunicator::send(char* individual, CommWorker& destination)
 {
      string buffer(individual);
      pair<string,string> item(destination.get_name(),buffer);
-  
+     // push the individual in the sending queue for further processing
      pthread_mutex_lock(&sending_mutex);
      individualt_to_send.push(item);
      pthread_mutex_unlock(&sending_mutex);
      return 0;
 }
 
+/**
+ * @detailed Create a worker folder for receiving individuals
+ * exp_path/exp_name/worker_name
+ * verifies if the worker_name folder is already taken and use another name instead
+ * 
+ */
 int FileCommWorkerCommunicator::init()
 {
   // scan experiment directory to find a suitable worker name
   int tries = 0;
   int start = 0;  
   
+  // determine the worker path 
   while(tries < 5)
   {
       std::stringstream s,t;

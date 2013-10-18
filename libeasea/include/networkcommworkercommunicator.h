@@ -23,10 +23,17 @@
 #include "commworkercomunitaror.h"
 
 
+/**
+ * @brief Manages the network communications for a worker
+ * 
+ */
 class NetworkCommWorkerCommunicator : public CommWorkerCommunicator
 {
   private:
-    int ServerSocket;
+    int ServerSocket; // listen socket
+    /**
+     * @brief determine ip address from a worker
+     */
     int determine_ipaddress();
 public:
   int init();

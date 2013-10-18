@@ -26,7 +26,7 @@
 using namespace std;
 pthread_mutex_t worker_list_mutex;
 
-MonitorWorkerListManager::MonitorWorkerListManager(string exp_path,int nw,int _debug=1):AbstractWorkerListManager(_debug),num_workers(nw),saved_once(false),save_failed(true),modified(false)
+MonitorWorkerListManager_2::MonitorWorkerListManager_2(string exp_path,int nw,int _debug=1):AbstractWorkerListManager(_debug),num_workers(nw),saved_once(false),save_failed(true),modified(false)
 {
     workerinfo_path=exp_path+"/workers_info";
     this->directory_scanner = new GFAL_Utils(workerinfo_path);  
@@ -37,11 +37,11 @@ MonitorWorkerListManager::MonitorWorkerListManager(string exp_path,int nw,int _d
     sem_init(&empty,0,chunk_size);
     processed=0;
     for(int i=0; i<4; i++)
-      pthread_create(&threads[i],NULL,&MonitorWorkerListManager::run, (void *)this);
+      pthread_create(&threads[i],NULL,&MonitorWorkerListManager_2::run, (void *)this);
 }  
 
 
-int MonitorWorkerListManager::refresh_worker_list()
+int MonitorWorkerListManager_2::refresh_worker_list()
 {
     modified=false;
     enqueue_files();
@@ -54,12 +54,12 @@ int MonitorWorkerListManager::refresh_worker_list()
 }
 
 
-bool MonitorWorkerListManager::terminated()
+bool MonitorWorkerListManager_2::terminated()
 {
     return cancel;
 }
 
-void MonitorWorkerListManager::enqueue_files()
+void MonitorWorkerListManager_2::enqueue_files()
 {
    if( directory_scanner->dirscan("worker_") ==0)
    {  
@@ -78,7 +78,7 @@ void MonitorWorkerListManager::enqueue_files()
    }
 }
 
-int MonitorWorkerListManager::read_worker_file(std::string filename, std::string &buffer) const
+int MonitorWorkerListManager_2::read_worker_file(std::string filename, std::string &buffer) const
 {
      ifstream localfile(filename.c_str());
      if (localfile.fail())return -1;
@@ -88,7 +88,7 @@ int MonitorWorkerListManager::read_worker_file(std::string filename, std::string
 }  
 
 
-string MonitorWorkerListManager::extract_worker_name(const string &filename) const
+string MonitorWorkerListManager_2::extract_worker_name(const string &filename) const
 {
     string workername;
     unsigned pos = filename.find('.');
@@ -96,15 +96,15 @@ string MonitorWorkerListManager::extract_worker_name(const string &filename) con
     return workername;
 }  
 
-void *MonitorWorkerListManager::run(void *param)
+void *MonitorWorkerListManager_2::run(void *param)
 {
     
-    MonitorWorkerListManager *monitor = (MonitorWorkerListManager *)param;
+    MonitorWorkerListManager_2 *monitor = (MonitorWorkerListManager_2 *)param;
     monitor->process_worker_files(monitor->processed++);
     return NULL;
 }  
 
-void MonitorWorkerListManager::process_worker_files(int nthread)
+void MonitorWorkerListManager_2::process_worker_files(int nthread)
 {
    string current_filename,remote_filename;
    stringstream local_filename;
@@ -154,7 +154,7 @@ void MonitorWorkerListManager::process_worker_files(int nthread)
 }   
 
 
-int MonitorWorkerListManager::save_worker_file_info()
+int MonitorWorkerListManager_2::save_worker_file_info()
 {
       std::ofstream outputfile("/home/ge-user/allworkers_info.txt");
 
@@ -188,7 +188,7 @@ int MonitorWorkerListManager::save_worker_file_info()
 }  
 
    
-void MonitorWorkerListManager::update_lists()   
+void MonitorWorkerListManager_2::update_lists()   
 {
    // take care of deleted workers_info
    string current_workername;

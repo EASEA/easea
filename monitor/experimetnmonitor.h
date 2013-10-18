@@ -21,17 +21,35 @@
 #include <string>
 #include "../libeasea/include/monitorworkerlistmanager.h"
 
+/**
+ * @brief This class initializes the experiment remote paths and
+ * initialize the worker list scanner for monitoring workers
+ * 
+ */
 class ExperimentMonitor
 {
   private:
-      std::string expname,exppath;
-      int nworkers;
-      MonitorWorkerListManager *ListWorkersMonitor;
-      int debug;
+      std::string expname,exppath; // experiment name and path
+      int nworkers; // number of workers
+      MonitorWorkerListManager *ListWorkersMonitor; // worker scanner
+      int debug; // debug flag
   public:
-      ExperimentMonitor(  std::string _exppath, std::string _expname, int nw, int db=1):expname(_expname),exppath(_exppath),nworkers(nw),debug(db) {};
-      int init();
-      int run();
+    /**
+     * @brief Constructor
+     * @param _exppath  experiment path in grid filesystem
+     * @param _expname  experiment name
+     * @param nw number of workers
+     * @param db debugger flag
+     */
+    ExperimentMonitor(  std::string _exppath, std::string _expname, int nw, int db=1):expname(_expname),exppath(_exppath),nworkers(nw),debug(db) {};
+    /**
+     * @brief Init the experiment paths and prepare the worker scanner
+     */
+    int init();
+    /**
+     * @brief Run the experimet monitor
+     */
+    int run();
       
 };
 

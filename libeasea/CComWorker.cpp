@@ -291,11 +291,6 @@ int CommWorker::determine_worker_name(std::string fullpath, std::string &workern
 {
   // scan experiment directory to find a suitable worker name
   int tries = 0;
-  //char hostname[256];
-  
-  //gethostname(hostname, 256);
-  
-  //workername = hostname;
   
   
   int start = 0;  
@@ -327,11 +322,12 @@ int CommWorker::determine_worker_name(std::string fullpath, std::string &workern
       {
 	    int result = gfal_mkdir(s.str().c_str(), 0777);
 
-// check error condition
-
+	      // check error condition
+    
 	      if(result == 0)
 	      {
 		      //if(debug)printf("Experiment worker folder sucessfuly created, the path is %s\n", s.str().c_str());
+		      // sucessfuly worker register,
 		      result = gfal_chmod( s.str().c_str(), 0777 );
 		      workername = t.str();
 		      return 0;
@@ -355,6 +351,7 @@ int CommWorker::determine_worker_name(std::string fullpath, std::string &workern
 
 int CommWorker::unregister_worker( std::string fullpath, int ntries)
 {
+    // delete the worker filename in the workers_info folder in the grid filesystem
     std::string fullfilename = fullpath + "/workers_info/" + get_name() + ".txt";
     for(int i=0; i< ntries; i++)
       if( GFAL_Utils::delete_file(fullfilename) == 0 )
@@ -368,16 +365,17 @@ int CommWorker::register_worker(std::string fullpath)
     
     std::string fullfilename = fullpath + "/workers_info/" + get_name() + ".txt";
     
+    // create the worker filename in the workers_info folder in the grid filesystem
     int	fd = gfal_open( fullfilename.c_str(), O_WRONLY|O_CREAT, 0644 );
     if (fd != -1) 
     {
+	 // form the worker stream 
 	 std::stringstream s;
 	 s << get_name() << ':' << get_hostname() << ':';
 	 if( get_ip() == "noip")s << "FILE::";
 	 else s << "SOCKET:" << get_ip() << ':' << get_port();
 	 
-	 // now write file
-	 
+	 // now write stream to  file
 	 int result = gfal_write( fd, s.str().c_str(), s.str().size() );
 	 
 	 if(result > 0)
@@ -388,6 +386,7 @@ int CommWorker::register_worker(std::string fullpath)
     }
     else
     {  
+          // failed to register worker, delete the files
           printf("failed to create worker file %s error reported is %d\n", fullfilename.c_str(),errno);
 	  std::string workerdir = fullpath + '/' + get_name();
 	  printf("Deleting worker directory %s\n", workerdir.c_str());

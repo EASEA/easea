@@ -25,19 +25,42 @@
 #include "gfal_utils.h"
 
 
+/**
+ * @brief Manages the grid filesystem worker communications
+ * 
+ */
 class FileCommWorkerCommunicator : public CommWorkerCommunicator
 {
   private:
-  std::queue<std::string> files_to_read;
-  std::string exp_path, current_filename;
-  std::stack<std::pair<std::string,std::string> > individualt_to_send;
-  std::pair<std::string,std::string> current_item;
-  int worker_number;
-  GFAL_Utils *directory_scanner;
-  int read_file(std::string &buffer);
-  int write_file();
+  std::queue<std::string> files_to_read; // queue files received to be processed
+  std::string exp_path, current_filename; // experiment path
+  std::stack<std::pair<std::string,std::string> > individualt_to_send; // queue of individuals to send
+  std::pair<std::string,std::string> current_item; 
+  int worker_number; // worker number 
+  GFAL_Utils *directory_scanner; // for find new files containing individuals
+  /**
+   * @brief Read  a individual from a stream
+   * 
+   * @param buffer stream
+   * @return 0 succces -1 error
+   */
+  int read_file(std::string &buffer); 
+  /**
+   * @brief Write an invididual to the grid filesystem
+   * 
+   * @return 0 succces -1 error
+   */
+  int write_file(); 
 public:
  
+  /**
+   * @brief Constructor
+     * @param w the worker
+     * @param d the data queue to receive individuals
+     * @param path the worker path in the experiment grid filesystem
+     * @param wn the worker number
+     * @param db debugger flags
+   */
   FileCommWorkerCommunicator(CommWorker *w, std::queue<std::string> *d, std::string path, int wn, int db=1):
       CommWorkerCommunicator(w,d,db),exp_path(path),worker_number(wn) { };
   ~FileCommWorkerCommunicator()  { delete directory_scanner; }  
