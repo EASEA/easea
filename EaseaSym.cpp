@@ -1,18 +1,25 @@
+/*
+ *    Copyright (C) 2001-2013  Pierre Collet, Alberto Tonda, Waldo Cancino
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
+
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #endif
-/****************************************************************************
-  EaseaSym.cpp
-  Symbol table and other functions for the EASEA language (EAsy Specification for Evolutionary Algorithms)
-
-  Pierre COLLET (Pierre.Collet@inria.fr)
-  Copyright EVOlutionary LABoratory
-  INRIA Rocquencourt, Projet FRACTALES
-  Domaine de Voluceau
-  Rocquencourt BP 105
-  78153 Le Chesnay CEDEX
- ****************************************************************************/
-
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
