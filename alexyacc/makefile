@@ -7,7 +7,6 @@ yycsssiz.o yycstsiz.o yycsusiz.o yycsyner.o yyctoflw.o yycuncin.o \
 yycunput.o yycuoflw.o yycwipe.o yycwork.o yycwrap.o
 
 
-CPPC = g++
 CPPFLAGS = -Iinclude/
 LIB_NAME=libalex.so
 STATIC_LIB_NAME = libalex.a
@@ -17,10 +16,10 @@ $(STATIC_LIB_NAME): $(OBJS)
 
 
 $(LIB_NAME): $(OBJS)
-	$(CPPC) -shared -o $@ $^
+	$(CXX) -shared -o $@ $^
 
 %.o:%.cpp
-	$(CPPC) $(CPPFLAGS) -fpic -c $<
+	$(CXX) $(CPPFLAGS) -fpic -c $<
 
 clean:
 	rm -f *.o $(LIB_NAME) $(STATIC_LIB_NAME)

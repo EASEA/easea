@@ -4,14 +4,13 @@ ifeq ($(shell uname -o 2>/dev/null),Msys)
 endif
 EXEC = bin/easea
 CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated -DDEBUG -DLINE_NUM_EZ_FILE
-CPPC = g++ 
 LDFLAGS = 
 
 OBJ= build/EaseaSym.o build/EaseaParse.o build/EaseaLex.o alexyacc/libalex.a build/EaseaYTools.o boost/program_options.a libeasea/libeasea.a
 
 #ifeq ($(UNAME),Darwin)
 $(EXEC):build bin $(OBJ)
-	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $(OBJ) -o $@ 
+	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJ) -o $@ 
 ifneq ("$(OS)","")
 	@echo #
 	@echo # Congratulations !  It looks like you compiled EASEA successfully.
@@ -65,11 +64,11 @@ endif
 endif
 
 # $(EXEC):EaseaSym.o EaseaParse.o EaseaLex.o alexyacc/libalex.so
-# 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
+# 	$(CXX) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
 
 
 # $(EXEC)_bin:EaseaSym.o EaseaParse.o EaseaLex.o 
-# 	$(CPPC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@ -lalex
+# 	$(CXX) $(CPPFLAGS) $(LDFLAGS) $^ -o $@ -lalex
 
 
 install:vars
@@ -112,13 +111,13 @@ endif
 
 
 build/EaseaParse.o: EaseaParse.cpp EaseaLex.cpp
-	$(CPPC) $(CPPFLAGS) $< -o $@ -c -w
+	$(CXX) $(CPPFLAGS) $< -o $@ -c -w
 build/EaseaLex.o:  EaseaLex.cpp
-	$(CPPC) $(CPPFLAGS) $< -o $@ -c -w
+	$(CXX) $(CPPFLAGS) $< -o $@ -c -w
 
 
 build/%.o:%.cpp
-	$(CPPC) $(CPPFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
 #compile library for alex and ayacc unix version
 alexyacc/libalex.so:alexyacc/*.cpp
