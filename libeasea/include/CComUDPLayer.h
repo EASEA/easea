@@ -22,7 +22,7 @@
 #include <typeinfo>
 #include <float.h>
 #include <limits.h>
-#if not defined(__APPLE__) 
+#ifndef __clang__
 #include <omp.h>
 #endif
 #include <string>
