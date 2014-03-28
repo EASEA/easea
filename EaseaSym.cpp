@@ -110,10 +110,10 @@ void CSymbol::print(FILE *fp)
 			// here we we are generating function to copy objects from host memory to gpu's.
 			bool isFlatClass = true;
 			pSymbolList->reset();
-			while (pSym=pSymbolList->walkToNextItem())
+			while ((pSym=pSymbolList->walkToNextItem()))
 			{
 				//DEBUG_PRT("analyse flat %s",pSym->Object->pType->sName);
-				if( (pSym->Object->ObjectType == oPointer) ) //|| (pSym->Object->pType->ObjectType == oObject) )
+				if( pSym->Object->ObjectType == oPointer ) //|| (pSym->Object->pType->ObjectType == oObject) )
 				{  
 					isFlatClass = false;
 					break;
@@ -136,9 +136,9 @@ void CSymbol::print(FILE *fp)
 				fprintf(fp,"    %s tmp;\n",sName);
 				fprintf(fp,"    memcpy(&tmp,this,sizeof(%s));\n",sName);
 
-				while (pSym=pSymbolList->walkToNextItem())
+				while ((pSym=pSymbolList->walkToNextItem()))
 				{
-					if( (pSym->Object->ObjectType == oPointer) )  //|| (pSym->Object->pType->ObjectType == oObject) )
+					if( pSym->Object->ObjectType == oPointer )  //|| (pSym->Object->pType->ObjectType == oObject) )
 					{
 						fprintf(fp,"    tmp.%s=this->%s->cudaSendToGpu%s();\n",
 								pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName);
@@ -169,7 +169,7 @@ void CSymbol::print(FILE *fp)
 		fprintf(fp,"  %s(){  // Constructor\n",sName); // constructor
 		pSymbolList->reset(); // in which we initialise all pointers to NULL
 
-		while (pSym=pSymbolList->walkToNextItem())
+		while ((pSym=pSymbolList->walkToNextItem()))
 		{
 			if (pSym->Object->ObjectType==oPointer)
 				fprintf(fp,"    %s=NULL;\n",pSym->Object->sName);
@@ -186,7 +186,7 @@ void CSymbol::print(FILE *fp)
 		fprintf(fp,"  %s(const %s &EASEA_Var) {  // Copy constructor\n",sName,sName); // copy constructor
 		pSymbolList->reset();
 
-		while (pSym=pSymbolList->walkToNextItem())
+		while ((pSym=pSymbolList->walkToNextItem()))
 		{
 			if (pSym->Object->ObjectType==oObject)
 				fprintf(fp,"    %s=EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
@@ -217,7 +217,7 @@ void CSymbol::print(FILE *fp)
 		// creation of destructor
 		fprintf(fp,"  virtual ~%s() {  // Destructor\n",sName); // destructor
 		pSymbolList->reset();
-		while (pSym=pSymbolList->walkToNextItem())
+		while ((pSym=pSymbolList->walkToNextItem()))
 		{
 			if (pSym->Object->ObjectType==oPointer)
 				fprintf(fp,"    if (%s) delete %s;\n    %s=NULL;\n",
@@ -237,10 +237,10 @@ void CSymbol::print(FILE *fp)
 		fprintf(fp,"  string serializer() {  // serialize\n"); // serializer
 		fprintf(fp,"  \tostringstream EASEA_Line(ios_base::app);\n");
 		pSymbolList->reset();
-		while (pSym=pSymbolList->walkToNextItem())
+		while ((pSym=pSymbolList->walkToNextItem()))
 		{
 			// check: is it a user-defined class?
-			if((pSym->Object->pType->ObjectType==oUserClass))
+			if(pSym->Object->pType->ObjectType==oUserClass)
 			{
 				if (pSym->Object->ObjectType==oArrayPointer)
 				{
@@ -292,9 +292,9 @@ void CSymbol::print(FILE *fp)
 		fprintf(fp,"  void deserializer(istringstream* EASEA_Line) {  // deserialize\n"); // deserializer
 		fprintf(fp,"  \tstring line;\n");
 		pSymbolList->reset();
-		while (pSym=pSymbolList->walkToNextItem())
+		while ((pSym=pSymbolList->walkToNextItem()))
 		{
-			if((pSym->Object->pType->ObjectType==oUserClass))
+			if(pSym->Object->pType->ObjectType==oUserClass)
 			{
 				if (pSym->Object->ObjectType==oArrayPointer)
 				{
@@ -344,7 +344,7 @@ void CSymbol::print(FILE *fp)
 		fprintf(fp,"    if (&EASEA_Var == this) return *this;\n");
 		pSymbolList->reset();
 
-		while (pSym=pSymbolList->walkToNextItem())
+		while ((pSym=pSymbolList->walkToNextItem()))
 		{
 			if (pSym->Object->ObjectType==oObject)
 				fprintf(fp,"    %s = EASEA_Var.%s;\n",pSym->Object->sName,pSym->Object->sName);
@@ -377,7 +377,7 @@ void CSymbol::print(FILE *fp)
 		// creation of operator ==
 		fprintf(fp,"  bool operator==(%s &EASEA_Var) const {  // Operator==\n",sName); // operator==
 		pSymbolList->reset();
-		while (pSym=pSymbolList->walkToNextItem())
+		while ((pSym=pSymbolList->walkToNextItem()))
 		{
 			if (TARGET==CUDA || TARGET==STD)
 			{
@@ -401,10 +401,9 @@ void CSymbol::print(FILE *fp)
 				{
 					fprintf(fp,"    if (((%s) && (!EASEA_Var.%s)) || ((!%s) && (EASEA_Var.%s))) return false;\n",
 						pSym->Object->sName,pSym->Object->sName, pSym->Object->sName,
-						pSym->Object->sName,pSym->Object->sName);
+						pSym->Object->sName);
 					fprintf(fp,"    if ((%s)&&(%s!=EASEA_Var.%s)) return false;\n",
-						pSym->Object->sName,pSym->Object->sName,pSym->Object->sName, 
-						pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->sName);
+						pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
 				}                                               
 			}
 		}
@@ -417,7 +416,7 @@ void CSymbol::print(FILE *fp)
 		// creation of output stream insertion operator
 		fprintf(fp,"  friend ostream& operator<< (ostream& os, const %s& EASEA_Var) { // Output stream insertion operator\n",sName); 
 		pSymbolList->reset();
-		while (pSym=pSymbolList->walkToNextItem())
+		while ((pSym=pSymbolList->walkToNextItem()))
 		{
 			if (pSym->Object->ObjectType==oObject)
 				fprintf(fp,"    os <<  \"%s:\" << EASEA_Var.%s << \"\\n\";\n",pSym->Object->sName,pSym->Object->sName);
@@ -466,23 +465,23 @@ void CSymbol::print(FILE *fp)
 
 	fprintf(fp,"// Class members \n"); // Now, we must print the class members
 	pSymbolList->reset();
-	while (pSym=pSymbolList->walkToNextItem())
+	while ((pSym=pSymbolList->walkToNextItem()))
 	{
 		if (pSym->Object->ObjectQualifier==1) // 1=Static
 			fprintf(fp,"  static");
 		if (pSym->Object->ObjectType==oObject)
 			fprintf(fp,"  %s %s;\n",pSym->Object->pType->sName,pSym->Object->sName);
-		if ((pSym->Object->ObjectType==oPointer))
+		if (pSym->Object->ObjectType==oPointer)
 			fprintf(fp,"  %s *%s;\n",pSym->Object->pType->sName,pSym->Object->sName);
-		if ((pSym->Object->ObjectType==oArray))
+		if (pSym->Object->ObjectType==oArray)
 			fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName,pSym->Object->sName,pSym->Object->nSize/pSym->Object->pType->nSize);
-		if ((pSym->Object->ObjectType==oArrayPointer))
+		if (pSym->Object->ObjectType==oArrayPointer)
 			fprintf(fp,"  %s* %s[%d];\n",
 			pSym->Object->pType->sName,pSym->Object->sName,(int)(pSym->Object->nSize/sizeof(char*)));
 	}
 
 	if (strcmp(sName,"Genome"))
-		fprintf(fp,"};\n",sName);
+		fprintf(fp,"};\n");
 	
 	return;
 }
@@ -494,7 +493,7 @@ void CSymbol::printClasses(FILE *fp)
 	if (bAlreadyPrinted) return;
 	bAlreadyPrinted=true;
 	pSymbolList->reset();
-	while (pSym=pSymbolList->walkToNextItem())
+	while ((pSym=pSymbolList->walkToNextItem()))
 		if ((pSym->Object->pType->ObjectType==oUserClass)&&(!pSym->Object->pType->bAlreadyPrinted))
 			pSym->Object->pType->printClasses(fp);
 	print(fp);
@@ -522,9 +521,9 @@ void CSymbol::printUserClasses(FILE *fp)
 	if (bAlreadyPrinted) return;
 
 	bAlreadyPrinted=true;  
-	while (pSym=pSymbolList->walkToNextItem())
+	while ((pSym=pSymbolList->walkToNextItem()))
 	{
-		if ((pSym->Object->pType->ObjectType==oUserClass))
+		if (pSym->Object->pType->ObjectType==oUserClass)
 			pSym->Object->pType->printUC(fp);
 	}
 
@@ -541,10 +540,10 @@ void CSymbol::serializeIndividual(FILE *fp, char* sCompleteName)
 	char sNewCompleteName[1000];
 	strcpy(sNewCompleteName, sCompleteName);
 
-	while(pSym=pSymbolList->walkToNextItem())
+	while((pSym=pSymbolList->walkToNextItem()))
 	{
 		// check the type of object 
-		if((pSym->Object->pType->ObjectType==oUserClass))
+		if(pSym->Object->pType->ObjectType==oUserClass)
 		{
 			// if it's an user-defined class
 			if (pSym->Object->ObjectType==oArrayPointer)
@@ -660,8 +659,8 @@ void CSymbol::serializeIndividual(FILE *fp, char* sCompleteName)
 void CSymbol::deserializeIndividual(FILE *fp, char* sCompleteName){
 	CListItem<CSymbol*> *pSym;
 	pSymbolList->reset();
-	while (pSym=pSymbolList->walkToNextItem()){
-		if((pSym->Object->pType->ObjectType==oUserClass)){
+	while ((pSym=pSymbolList->walkToNextItem())){
+		if(pSym->Object->pType->ObjectType==oUserClass){
 			if (pSym->Object->ObjectType==oArrayPointer){
 				fprintf(fpOutputFile,"\tEASEA_Line >> line;\n");
 				fprintf(fp,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",(int)(pSym->Object->nSize/sizeof(char*)));
@@ -804,7 +803,7 @@ void CSymbol::printAllSymbols(FILE *fp, char *sCompleteName, EObjectType FatherT
 			fprintf(fp,"%s\n",sNewCompleteName);
 			strcpy(sNewCompleteName, sCompleteName);
 		}
-	} while (pSym=pSym->pNext);
+	} while ((pSym=pSym->pNext));
 }
 
 
