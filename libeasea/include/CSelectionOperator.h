@@ -81,7 +81,7 @@ class MaxRandom : public CSelectionOperator{
   virtual size_t selectNext(size_t populationSize);
   float getExtremum();
  private:
-  size_t populationSize;
+  //size_t populationSize;
   CRandomGenerator* rg;
 
 };
@@ -93,7 +93,7 @@ class MinRandom : public CSelectionOperator{
   virtual size_t selectNext(size_t populationSize);
   float getExtremum();
  private:
-  size_t populationSize;
+  //size_t populationSize;
   CRandomGenerator* rg;
 };
 

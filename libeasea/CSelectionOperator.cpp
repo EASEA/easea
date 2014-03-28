@@ -69,7 +69,7 @@ size_t CSelectionOperator::selectNext(size_t populationSize){ return 0; }
 void MaxDeterministic::initialize(CIndividual** population, float selectionPressure,size_t populationSize){
   CSelectionOperator::initialize(population,selectionPressure,populationSize);
   CPopulation::sortPopulation(population,populationSize);
-  populationSize = populationSize;
+  this->populationSize = populationSize;
 }
 
 size_t MaxDeterministic::selectNext(size_t populationSize){
@@ -86,7 +86,7 @@ float MaxDeterministic::getExtremum(){
 void MinDeterministic::initialize(CIndividual** population, float selectionPressure,size_t populationSize){
   CSelectionOperator::initialize(population,selectionPressure,populationSize);
   CPopulation::sortRPopulation(population,populationSize);
-  populationSize = populationSize;
+  this->populationSize = populationSize;
 }
 
 size_t MinDeterministic::selectNext(size_t populationSize){
@@ -249,7 +249,7 @@ size_t MaxTournament::selectNext(size_t populationSize){
 void MaxRoulette::initialize(CIndividual** population, float selectionPressure, size_t populationSize) {
   CSelectionOperator::initialize(population,selectionPressure,populationSize);
   CPopulation::sortRPopulation(population,populationSize);
-  populationSize = populationSize;
+  this->populationSize = populationSize;
 }
 
 size_t MaxRoulette::selectNext(size_t populationSize){
