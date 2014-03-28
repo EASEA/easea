@@ -6,6 +6,7 @@
 #ifndef CCOMUDPLAYER_H_
 #define CCOMUDPLAYER_H_
 
+
 #ifdef WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -29,6 +30,7 @@
 
 #define _MULTI_THREADED
 #define MAXINDSIZE 50000 /*maximum size of an individual in number of characters*/
+
 
 typedef struct {
         char data[MAXINDSIZE];
@@ -57,7 +59,6 @@ public:
 private:
 	int ServerSocket;
 	pthread_t thread;
-	int Socket;
 };
 
 class CComUDPClient {
@@ -66,7 +67,7 @@ public:
 	int debug;
 	void CComUDP_client_send(char *individual);
 	CComUDPClient(unsigned short port, const char *ip,int dg);
-    CComUDPClient(struct sockaddr_in* addr, int dg);
+  CComUDPClient(struct sockaddr_in* addr, int dg);
 	~CComUDPClient();
 	std::string getIP();
     int getPort();
