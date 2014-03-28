@@ -794,7 +794,7 @@ void CSymbol::printAllSymbols(FILE *fp, char *sCompleteName, EObjectType FatherT
 				strcat(sNewCompleteName,"->");
 			else strcat(sNewCompleteName,".");
 			strcat(sNewCompleteName,pSym->Object->sName);
-			if (sNewCompleteName,pSym->Object->ObjectType==oArray) {
+			if (pSym->Object->ObjectType==oArray) {
 				strcat(sNewCompleteName,"[");
 				sprintf(s,"%d",pSym->Object->nSize/pSym->Object->pType->nSize);
 				strcat(sNewCompleteName,s);
