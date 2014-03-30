@@ -301,7 +301,10 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
+	std::string* ipFilename=new std::string();
+	*ipFilename=setVariable("ipFile","\IP_FILE");
+
+	this->ipFile =(char*)ipFilename->c_str();
 	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
     this->serverPort = setVariable("serverPort",\SERVER_PORT);
 }
@@ -310,7 +313,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
+	//EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
