@@ -80,18 +80,23 @@ install:vars
 	cp boost/program_options.a /usr/local/easea/boost
 	cp -r boost/boost/ /usr/local/easea/boost/boost/
 	cp easeagrapher/EaseaGrapher.jar /usr/local/easea/easeagrapher/
-vars:
+vars:profile_
 ifeq ($(UNAME), Darwin)
-	@sed '/EZ_PATH/d' $(HOME)/.bash_profile>$(HOME)/.bash_profile_save
-	@mv $(HOME)/.bash_profile_save $(HOME)/.bash_profile
-	@echo "export EZ_PATH=/usr/local/easea/">>$(HOME)/.bash_profile
-	@echo "export PATH=\$$PATH:/usr/local/easea/bin:" >>$(HOME)/.bash_profile
+	@echo "export EZ_PATH=/usr/local/easea/">>$PROFILE
+	@echo "export PATH=\$$PATH:/usr/local/easea/bin:" >>$PROFILE
 else
 	@echo "\nexport EZ_PATH=/usr/local/easea/">>$(HOME)/.bashrc
 	@echo "export PATH=\$$PATH:/usr/local/easea/bin:" >>$(HOME)/.bashrc
 	@echo "PATH and EZ_PATH variables have been set"
 endif
 
+profile_:
+ifeq ($(wildcard "$(HOME)/.profile"),)
+	PROFILE="$(HOME)/.bash_profile"
+else
+	PROFILE="$(HOME)/.profile"
+endif
+	 
 build:
 	@test -d build || mkdir build || echo "Cannot make dir build"
 bin:

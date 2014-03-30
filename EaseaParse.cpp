@@ -1628,6 +1628,7 @@ int main(int argc, char *argv[]){
   char *sTemp;
   int i=0;
   
+  printf("Easea v1.0.3 compiler \n"); 
   TARGET=STD;
   bVERBOSE=0;
   sRAW_PROJECT_NAME[0]=0; // used to ask for a filename if no filename is found on the command line.

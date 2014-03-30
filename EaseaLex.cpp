@@ -1518,7 +1518,6 @@ if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;
 		{
 #line 1109 "EaseaLex.l"
 
-  printf("evaluator insert\n");
   yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   lineCounter=1;
