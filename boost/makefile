@@ -24,8 +24,4 @@ $(TARGET): $(OBJS)
 
 all: $(TARGET)
 clean:
-ifneq ("$(OS)","")
-	-del $(OBJS) $(TARGET)
-else
 	rm -f $(OBJS) $(TARGET)
-endif
