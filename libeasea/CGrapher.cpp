@@ -4,6 +4,12 @@
 #include <string.h>
 
 CGrapher::CGrapher(Parameters* param, char* title){
+this->valid=0;
+#ifdef WIN32
+//TODO: Create a child process and and pipe some line from the father to the child
+//(http://msdn.microsoft.com/en-us/library/windows/desktop/ms682499%28v=vs.85%29.aspx)
+#endif
+
 #ifndef WIN32
 	int toFils[2];
         int toPere[2];

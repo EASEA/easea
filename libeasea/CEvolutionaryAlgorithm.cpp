@@ -13,7 +13,9 @@
 #include <sys/time.h>
 #endif
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <mmsystem.h>
 #endif
 
 #include <stdio.h>
@@ -126,7 +128,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		fichier.append(".r");
 		remove(fichier.c_str());
 	}
-	#ifndef WIN32 
+	//#ifndef WIN32 
 	if(params->plotStats){
         string str = "Plotting of the evolution of ";;
         string str2 = this->params->outputFilename;
@@ -134,7 +136,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 		//this->grapher = new CGrapher((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize, (char*)str.c_str());
 		this->grapher = new CGrapher(this->params, (char*)str.c_str());
 	}
-	#endif
+	//#endif
 
 
 	// INITIALIZE SERVER OBJECT ISLAND MODEL
