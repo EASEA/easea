@@ -12,16 +12,16 @@ OBJ= build/EaseaSym.o build/EaseaParse.o build/EaseaLex.o alexyacc/libalex.a bui
 $(EXEC):build bin $(OBJ)
 	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJ) -o $@ 
 ifneq ("$(OS)","")
-	@echo #
-	@echo # Congratulations !  It looks like you compiled EASEA successfully.
-	@echo # 
-	@echo # You can use easea from this directory by typing :
-	@echo #       For example : 
-	@echo #      easea.exe examples\weierstrass_std\weierstrass.ez
-	@echo # Go to the target directory and type make -f weierstrass.mak
-	@echo #
-	@echo # Thanks for using EASEA.
-	@echo #
+	#
+	# Congratulations !  It looks like you compiled EASEA successfully.
+	# 
+	# You can use easea from this directory by typing :
+	#       For example : 
+	#      easea.exe examples\weierstrass_std\weierstrass.ez
+	# Go to the target directory and type make -f weierstrass.mak
+	#
+	# Thanks for using EASEA.
+	#
 else
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
@@ -136,17 +136,10 @@ libeasea/libeasea.a:libeasea/*.cpp
 	cd libeasea && make libeasea.a
 
 clean:
-ifneq ("$(OS)","")
-	-del *.o $(EXEC).exe $(EXEC)_bin
-	cd alexyacc && make clean
-	cd libeasea && make clean
-	cd boost && make clean
-else
 	rm -f build/*.o $(EXEC) $(EXEC)_bin
 	cd alexyacc && make clean
 	cd libeasea && make clean
 	cd boost && make clean
-endif
 #ifeq ($(UNAME),Darwin)
 	cd boost && make clean
 #endif
