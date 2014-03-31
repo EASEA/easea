@@ -11,6 +11,7 @@ CPPFLAGS = -Iinclude/
 LIB_NAME=libalex.so
 STATIC_LIB_NAME = libalex.a
 
+#all:$(STATIC_LIB_NAME) $(LIB_NAME)
 $(STATIC_LIB_NAME): $(OBJS)
 	ar -r $@ $(OBJS) && ranlib $@
 
@@ -19,7 +20,7 @@ $(LIB_NAME): $(OBJS)
 	$(CXX) -shared -o $@ $^
 
 %.o:%.cpp
-	$(CXX) $(CPPFLAGS) -fpic -c $<
+	$(CXX) $(CPPFLAGS) -c $<
 
 clean:
 	rm -f *.o $(LIB_NAME) $(STATIC_LIB_NAME)
