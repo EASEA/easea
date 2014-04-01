@@ -11,7 +11,7 @@ OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	CComUDPLayer.o CStats.o CGPNode.o
 
 ifneq ("$(OS)","")
-OBJS += inet_pton.o
+OBJS += win32/inet_pton.o
 endif
 
 #ifeq ($(EZ_CUDA),1)
