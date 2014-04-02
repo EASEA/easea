@@ -82,7 +82,7 @@ int main(int argc, char** argv){
 
 
 using namespace std;
-
+extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses);
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
@@ -154,7 +154,7 @@ void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populati
   //  here we will compute how to spread the population to evaluate on GPGPU cores
 
   struct cudaFuncAttributes attr;
-  CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr,"cudaEvaluatePopulation"));
+  CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr,cudaEvaluatePopulation));
 
   int thLimit = attr.maxThreadsPerBlock;
   int N = localGpuData->sh_pop_size;
