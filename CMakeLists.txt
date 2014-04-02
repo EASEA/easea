@@ -40,17 +40,14 @@ ADD_EXECUTABLE(easea ${easea_src})
 SET_TARGET_PROPERTIES(easea PROPERTIES COMPILE_FLAGS "")
 TARGET_LINK_LIBRARIES(easea libeasea libalex program_options)
 ADD_CUSTOM_COMMAND(TARGET easea POST_BUILD 
-                    COMMAND $(CMAKE_COMMAND) -E copy libeasea.a libeasea/
+                    COMMAND $(CMAKE_COMMAND) -E copy libeasea.a libeasea/ 
                     COMMAND $(CMAKE_COMMAND) -E copy program_options.a boost/
                    )
 
-INSTALL(TARGETS easea DESTINATION bin/ CONFIGURATIONS local)
-INSTALL(TARGETS libeasea DESTINATION libeasea/ CONFIGURATIONS local)
-INSTALL(TARGETS program_options DESTINATION boost/ CONFIGURATIONS local)
-INSTALL(TARGETS easea DESTINATION /usr/local/easea/bin CONFIGURATIONS global)
-INSTALL(TARGETS libeasea DESTINATION /usr/local/easea/libeasea CONFIGURATIONS global)
-INSTALL(TARGETS program_options DESTINATION /usr/local/easea/boost CONFIGURATIONS global)
-INSTALL(DIRECTORY tpl DESTINATION /usr/local/easea/ CONFIGURATIONS global)
-INSTALL(DIRECTORY "libeasea/include" DESTINATION "/usr/local/easea/libeasea/" CONFIGURATIONS global)
-INSTALL(DIRECTORY boost/boost DESTINATION /usr/local/easea/boost/ CONFIGURATIONS global)
-INSTALL(FILES easeagrapher/EaseaGrapher.jar DESTINATION /usr/local/easea/easeagrapher CONFIGURATIONS global)
+INSTALL(TARGETS easea DESTINATION /usr/local/easea/bin )
+INSTALL(TARGETS libeasea DESTINATION /usr/local/easea/libeasea )
+INSTALL(TARGETS program_options DESTINATION /usr/local/easea/boost )
+INSTALL(DIRECTORY tpl DESTINATION /usr/local/easea )
+INSTALL(DIRECTORY "libeasea/include" DESTINATION "/usr/local/easea/libeasea")
+INSTALL(DIRECTORY boost/boost DESTINATION /usr/local/easea/boost)
+INSTALL(FILES easeagrapher/EaseaGrapher.jar DESTINATION /usr/local/easea/easeagrapher )
