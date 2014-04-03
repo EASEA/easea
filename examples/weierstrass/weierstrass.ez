@@ -169,7 +169,7 @@ return NbMut;
 \end
 
 \Default run parameters :        // Please let the parameters appear in this order
-  Number of generations : 100   	// NB_GEN
+  Number of generations : 35   	// NB_GEN
   Time limit: 0 			// In seconds, 0 to deactivate
   Population size : 2048			//POP_SIZE
   Offspring size : 2048 // 40% 
@@ -191,7 +191,7 @@ return NbMut;
   Generate R script:false
   Plot stats:true				//Default: 0
 
-  Remote island model: true
+  Remote island model: false
   IP file: ip.txt 			//File containing all the remote island's IP
   Server port : 2929
   Migration probability: 0.33

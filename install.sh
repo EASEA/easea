@@ -26,6 +26,8 @@ if [ "$1" = "local" ]; then
   echo "Exporting and setting environment variables"
   export EZ_PATH="$PWD/"
   export PATH="$PATH:$PWD/bin"
+  echo >> $PROFILE
+  echo "# EASEA paths for compiler and library">> $PROFILE
   echo "export EZ_PATH=$EZ_PATH">>$PROFILE
   echo "export PATH=\$PATH:$PWD/bin" >>$PROFILE
 
@@ -36,6 +38,8 @@ else
   echo "Exporting and setting environment variables"
   export EZ_PATH="/usr/local/easea/"
   export PATH="$PATH:/usr/local/easea/bin"
+  echo >> $PROFILE
+  echo "# EASEA paths for compiler and library">> $PROFILE
   echo "export EZ_PATH=$EZ_PATH">>$PROFILE
   echo "export PATH=\$PATH:/usr/local/easea/bin" >>$PROFILE
 
