@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Easea by EASEA</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Easea</h1>
+          <h2>EASEA (EAsy Specification of Evolutionary Algorithms) is an Artificial Evolution platform developped  by the SONIC (Stochastic Optimisation and Nature Inspired Computing) group of the BFO team at Université de Strasbourg.</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/EASEA/easea/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/EASEA/easea/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/EASEA/easea" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a name="the-easea-cloud-platform" class="anchor" href="#the-easea-cloud-platform"><span class="octicon octicon-link"></span></a>The EASEA-CLOUD platform</h1>
+
+<h2>
+<a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>EASEA and EASEA-CLOUD are Free Open Source Software (under GNU Affero v3 General Public License) developed by the SONIC (Stochastic Optimisation and Nature Inspired Computing) group of the BFO team at Université de Strasbourg. Through the Strasbourg Complex Systems Digital Campus, the platforms are shared with the UNESCO CS-DC UniTwin and E-laboratory on Complex Computational Ecosystems (ECCE).</p>
+
+<p>EASEA (EAsy Specification of Evolutionary Algorithms) is an Artificial Evolution platform that allows scientists with only basic skills in computer science to implement evolutionary algorithms and to exploit the massive parallelism of many-core architectures in order to optimize virtually any real-world problems (continous, discrete, combinatorial, mixed and more (with Genetic Programming)), typically allowing for speedups up to x500 on a $3,000 machine, depending on the complexity of the evaluation function of the inverse problem to be solved.</p>
+
+<p>Then, for very large problems, EASEA can also exploit computational ecosystems as it can parallelize (using an embedded island model) over loosely coupled heterogenous machines (Windows, Linux or Macintosh, with or without GPGPU cards, provided that they have internet access) a grid of computers or a Cloud.</p>
+
+<h2>
+<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>Runs can be distributed over cluster of homogeneous AND heterogeneous machines.</li>
+<li>Distribution can be done locally on the same machine or over the internet (using a embedded island model).</li>
+<li>Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).</li>
+<li>C++ description language.</li>
+</ul><h2>
+<a name="building-easea" class="anchor" href="#building-easea"><span class="octicon octicon-link"></span></a>Building easea</h2>
+
+<p>Easea can be build using two method.</p>
+
+<p>1) By GNU Makefile:</p>
+
+<pre><code>  $ make
+  $ . install.sh [local]  
+</code></pre>
+
+<p>2) By CMake:</p>
+
+<pre><code>  $ cmake .
+  $ make
+  $ . install.sh [local] 
+</code></pre>
+
+<p>"." is equivalent to "source".</p>
+
+<p>Easea can either be installed locally without special permission or in 
+/usr/local/ with root permissions.</p>
+
+<p>Once installed, one can test its installation by compiling easea test programs
+in example/ :</p>
+
+<pre><code>$ cd example/weierstrass
+$ easea weierstrass.ez
+$ make 
+$ ./weierstrass
+</code></pre>
+
+<p>To print all options available type:</p>
+
+<pre><code>$ ./weierstrass --help
+</code></pre>
+
+<p>To test the CUDA version (Need the CUDA developper kit found at
+<a href="https://developer.nvidia.com/cuda-downloads">https://developer.nvidia.com/cuda-downloads</a> ):</p>
+
+<pre><code>$ easea -cuda weierstrass.ez
+</code></pre>
+
+<h2>
+<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h2>
+
+<p>For additional help and documentation about the EASEA platform, please refers 
+to the main wiki <a href="http://easea.unistra.fr/">http://easea.unistra.fr/</a></p>
+
+<p>To get the latest version of EASEA, git clone this repository or the sourceforge one: <br>
+git clone git://git.code.sf.net/p/easea/code easea-code</p>
+
+<p>That's all !</p>
+        </section>
+
+        <footer>
+          Easea is maintained by <a href="https://github.com/EASEA">EASEA</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
