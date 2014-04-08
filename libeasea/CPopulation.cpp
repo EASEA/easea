@@ -145,10 +145,10 @@ void CPopulation::optimiseOffspringPopulation(){
  */
 void CPopulation::reducePopulation(CIndividual** population, unsigned populationSize,
 					  CIndividual** reducedPopulation, unsigned obSize,
-					  CSelectionOperator* replacementOperator){
+					  CSelectionOperator* replacementOperator,int pressure){
 
 
-  replacementOperator->initialize(population,replacementPressure,populationSize);
+  replacementOperator->initialize(population,pressure,populationSize);
 
   for( unsigned i=0 ; i<obSize ; i++ ){
 
@@ -177,7 +177,7 @@ CIndividual** CPopulation::reduceParentPopulation(unsigned obSize){
   	nextGeneration = new CIndividual*[obSize];
 
   reducePopulation(parents,actualParentPopulationSize,nextGeneration,obSize,
-		   CPopulation::parentReductionOperator);
+		   CPopulation::parentReductionOperator,parentReductionPressure);
 
   // free no longer needed CIndividuals
   for( unsigned i=0 ; i<actualParentPopulationSize-obSize ; i++ )
@@ -199,7 +199,7 @@ CIndividual** CPopulation::reduceOffspringPopulation(unsigned obSize){
   CIndividual** nextGeneration = new CIndividual*[offspringPopulationSize];
 
   reducePopulation(offsprings,actualOffspringPopulationSize,nextGeneration,obSize,
-		   CPopulation::offspringReductionOperator);
+		   CPopulation::offspringReductionOperator,offspringReductionPressure);
 
   //printf("POPULATION SIZE %d\n",actualOffspringPopulationSize-obSize);
   // free no longer needed CIndividuals
@@ -296,7 +296,7 @@ void CPopulation::reduceTotalPopulation(CIndividual** elitPop){
   replacementOperator->initialize(globalPopulation, replacementPressure,actualGlobalSize);
 
   CPopulation::reducePopulation(globalPopulation,actualGlobalSize,params->elitSize+nextGeneration,
-			       parentPopulationSize-params->elitSize,replacementOperator);
+			       parentPopulationSize-params->elitSize,replacementOperator,replacementPressure);
 
 
   for( unsigned int i=0 ; i<((int)actualGlobalSize+params->elitSize)-(int)parentPopulationSize ; i++ )
