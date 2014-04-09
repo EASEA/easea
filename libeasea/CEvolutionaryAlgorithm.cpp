@@ -168,7 +168,7 @@ void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
 
 /* MAIN FUNCTION TO RUN THE EVOLUTIONARY LOOP */
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
-  CIndividual** elitistPopulation;
+  CIndividual** elitistPopulation = NULL;
 
 #ifdef WIN32
    clock_t begin(clock());
