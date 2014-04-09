@@ -1,0 +1,73 @@
+/*_____________________________________________________________
+
+Template for an EASEA evolutionary algorithm for easea v1.0.3
+_______________________________________________________________*/
+
+\User declarations : // This section is copied on top of the output file
+\end
+
+\User functions:
+\end
+
+\User classes :
+GenomeClass { 
+  // need to declare the genome here
+}
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser : // "initializer" is also accepted
+  // the genome to initialise is known as "Genome"
+\end
+
+\GenomeClass::crossover : 
+  // must create "child" out of "parent1" and "parent2"
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+  // must mutate "Genome"
+  return 0;
+\end
+
+\GenomeClass::evaluator : // Returns the score as a real value
+  // uses Genome to evaluate the quality of the individual
+  return 0.0;
+\end
+
+\User Makefile options: 
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 100    // NB_GEN
+  Time limit: 0 			           // In seconds, 0 to deactivate
+  Population size : 1024			   //POP_SIZE
+  Offspring size : 1024 // or a xx%
+  Mutation probability : 1       // MUT_PROB
+  Crossover probability : 1      // XOVER_PROB
+  Evaluator goal : maximize      // maximise
+  Selection operator: Tournament 2.0
+  Surviving parents: 100%        // Percentage or absolute  
+  Surviving offspring: 100%      // Percentage or absolute  
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+  Final reduce operator: Tournament 2
+
+  Elitism: Strong			           // Weak or Strong
+  Elite: 1
+  Print stats: true				       // Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats:true				         // Default: 0
+
+  Remote island model: false
+  IP file: ip.txt 			         // List of IP:PORT of islands to send individuals to
+  Server port : 2929
+  Migration probability: 0.33    // Probability of sending an individual per generation
+
+  Save population: false
+  Start from file:false
+\end
+
