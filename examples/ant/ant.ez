@@ -1,6 +1,7 @@
 /* ANTPROJECT */
  
   \User declarations:
+  #include <cstring>
   int nbEvalTotal = 0; //Le nombre d'evaluations
   short nbPasMax = 600; //Le nombre max de mouvements autorises
   double pMutPerGene=0.05; // La probabilité de muter un gene
@@ -454,7 +455,7 @@
   \end
   
   \Before everything else function:
-  if ((argc>1)&&(!strcmp(argv[1],"size"))) SIZE=atoi(argv[2]);
+  if ((argc>1)&&(!std::strcmp(argv[1],"size"))) SIZE=atoi(argv[2]);
   \end
   
   \User classes:
@@ -496,7 +497,7 @@
   * Attention : penser à commenter dans la fonction evaluerMove
    */
   imprimerArbre(bBest->arbre);
-  printf("\nfitness = %d\n",pPopulation[0]->getFitness());
+  printf("\nfitness = %f\n",pPopulation[0]->getFitness());
   FILE *fichier;
   fichier = fopen("sortieEasea.txt","w");
   imprimerArbreDansFichier(pPopulation[0]->arbre, fichier);
