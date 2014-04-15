@@ -1,6 +1,17 @@
 # Thanks for using EASEA.
- 
-Easea can be build using two method.
+
+
+###Requirement
+In order to have a working grapher, java jre 1.6 is required. Without it, an error appears at the start of easea's compiled programs but can be safely ignored.
+
+EASEA had been compiled and tested with those following compilers:
+* Gcc 4.4 to 4.8.2
+* Clang 3.0 to 3.3
+* Mingw-gcc 4.8.2
+* CUDA SDK > 4.1
+
+
+###Easea can be build using two method.
 
 1)By GNU Makefile:
   $ make
