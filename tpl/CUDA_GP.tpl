@@ -83,6 +83,11 @@ int main(int argc, char** argv){
 
 using namespace std;
 
+extern "C"
+__global__ void 
+EvaluatePostFixIndividuals( const float * k_progs, const int maxprogssize,  const int popsize, const float * k_inputs, const float * outputs, const int trainingSetSize, float * k_results,  int* k_indexes );
+
+
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
@@ -180,7 +185,8 @@ void cudaPreliminaryProcessGP(struct gpuEvaluationData* localGpuData){
 
   //  here we will compute how to spread the population to evaluate on GPGPU cores
   struct cudaFuncAttributes attr;
-  CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr,"EvaluatePostFixIndividuals"));
+
+  CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr,EvaluatePostFixIndividuals));
 
   int thLimit = attr.maxThreadsPerBlock;
   //int N = localGpuData->sh_pop_size;
