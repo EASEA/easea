@@ -3,7 +3,7 @@
 
 class CStats{
 
-public:
+  public:
     int totalNumberOfImmigrants;
     int currentNumberOfImmigrants;
 
@@ -13,7 +13,7 @@ public:
     double currentAverageFitness;
     double currentStdDev;
 
-public:
+  public:
     CStats();
     ~CStats();
     void resetCurrentStats();

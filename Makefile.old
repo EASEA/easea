@@ -81,8 +81,10 @@ bin:
 
 
 build/EaseaParse.o: EaseaParse.cpp EaseaLex.cpp
+	cd compiler
 	$(CXX) $(CPPFLAGS) $< -o $@ -c -w
 build/EaseaLex.o:  EaseaLex.cpp
+	cd compiler
 	$(CXX) $(CPPFLAGS) $< -o $@ -c -w
 
 

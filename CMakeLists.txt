@@ -28,12 +28,12 @@ FILE(GLOB boost_src boost/*.cpp)
 ADD_LIBRARY( program_options STATIC ${boost_src} )
 SET_TARGET_PROPERTIES(program_options PROPERTIES OUTPUT_NAME "program_options" PREFIX "" COMPILE_FLAGS "-O2")
 
-
+#Easea compiler
 SET(easea_src 
-        EaseaLex.cpp
-        EaseaParse.cpp
-        EaseaSym.cpp
-        EaseaYTools.cpp)
+        compiler/EaseaLex.cpp
+        compiler/EaseaParse.cpp
+        compiler/EaseaSym.cpp
+        compiler/EaseaYTools.cpp)
 
 
 ADD_EXECUTABLE(easea ${easea_src})

@@ -2423,7 +2423,7 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
 
   if (bVERBOSE) {
 	printf("\n                                                                   ");
-  	printf("\n                                   E A S E A                   (v1.1)");
+  	printf("\n                                   E A S E A                   (v1.0.3)");
   	printf("\n                              ___________________     ");
  	printf("\n                                                                    ");
 	printf("\n		Stochastic Optimisation and Nature Inspired Computing");

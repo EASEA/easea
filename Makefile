@@ -29,27 +29,27 @@ else
 	# You can now install easea into your system or use it from 
 	# its current directory.
 	#
-	# System Installation (you need admnistration rights):
+	# Installation:
+	# To install EASEA into your system, type:
+	#	 ". install.sh ".
 	# EASEA will be installed into /usr/local/easea/ directory,
 	# including, the binary, its libraries and the templates.
-	# Finally, environment variables will be updated (EZ_PATH and PATH),
+	# Finaly, environment variables will be updated (EZ_PATH and PATH),
 ifeq ($(UNAME),Darwin)
 	# into your .bash_profile file.
 else
 	# into your .bashrc file.
 endif
-	# To install EASEA into your system, type:
-	#	 "source install.sh "
 	# 
 	# Local Usage:
 	# All EASEA elements will stay in the current directory, 
 	# but some environment variables need to be updated into your
 ifeq ($(UNAME),Darwin)
-	# .bash_profile file (EZ_PATH). To do so type:
+	# .bash_profile file (EZ_PATH and). To do so type:
 else
-	# .bashrc file (EZ_PATH). To do so type:
+	# .bashrc file (EZ_PATH and). To do so type:
 endif
-	#	 "source install.sh local" 
+	#	 ". install.sh local". 
 	#
 	# Thanks for using EASEA.
 	#
@@ -80,13 +80,13 @@ bin:
 	@test -d bin || mkdir bin || echo "Cannot make dir bin"
 
 
-build/EaseaParse.o: EaseaParse.cpp EaseaLex.cpp
+build/EaseaParse.o: compiler/EaseaParse.cpp compiler/EaseaLex.cpp
 	$(CXX) $(CPPFLAGS) $< -o $@ -c -w
-build/EaseaLex.o:  EaseaLex.cpp
+build/EaseaLex.o:  compiler/EaseaLex.cpp
 	$(CXX) $(CPPFLAGS) $< -o $@ -c -w
 
 
-build/%.o:%.cpp
+build/%.o:compiler/%.cpp
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
 #compile library for alex and ayacc unix version

@@ -23,52 +23,52 @@ class CEvolutionaryAlgorithm;
 
 /* ****************************************
    StoppingCriterion class
-****************************************/
+ ****************************************/
 class CStoppingCriterion {
 
-public:
-  virtual bool reached() = 0;
-  virtual ~CStoppingCriterion(){;}
+  public:
+    virtual bool reached() = 0;
+    virtual ~CStoppingCriterion(){;}
 };
 
 
 /* ****************************************
    GenerationalCriterion class
-****************************************/
+ ****************************************/
 class CGenerationalCriterion : public CStoppingCriterion {
- private:
-  unsigned* currentGenerationPtr;
-  unsigned generationalLimit;
- public:
-  virtual bool reached();
-  CGenerationalCriterion(unsigned generationalLimit);
-  void setCounterEa(unsigned* ea_counter);
-  unsigned *getGenerationalLimit();
+  private:
+    unsigned* currentGenerationPtr;
+    unsigned generationalLimit;
+  public:
+    virtual bool reached();
+    CGenerationalCriterion(unsigned generationalLimit);
+    void setCounterEa(unsigned* ea_counter);
+    unsigned *getGenerationalLimit();
 };
 
 /* ****************************************
    TimeCriterion class
-****************************************/
+ ****************************************/
 class CTimeCriterion : public CStoppingCriterion {
- private:
-  unsigned timeLimit;
-  double elapsedTime;
- public:
-  virtual bool reached();
-  CTimeCriterion(unsigned timeLimit);
-  void setElapsedTime(double elapsedTime);
-  double getElapsedTime();
+  private:
+    unsigned timeLimit;
+    double elapsedTime;
+  public:
+    virtual bool reached();
+    CTimeCriterion(unsigned timeLimit);
+    void setElapsedTime(double elapsedTime);
+    double getElapsedTime();
 };
 
 /* ****************************************
    ControlCStopingCriterion class
-****************************************/
+ ****************************************/
 extern void signal_handler(int sig);
 
 class CControlCStopingCriterion : public CStoppingCriterion {
- private:
- public:
-  virtual bool reached();
-  CControlCStopingCriterion();
+  private:
+  public:
+    virtual bool reached();
+    CControlCStopingCriterion();
 };
 #endif /* CSTOPPINGCRITERION_H_ */

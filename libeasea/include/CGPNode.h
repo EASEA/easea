@@ -1,3 +1,9 @@
+/**
+ * @file CGPNode.h
+ * @version 1.0
+ *
+ **/  
+
 #ifndef __C_GPNODE__
 #define __C_GPNODE__
 
@@ -7,76 +13,100 @@ using namespace std;
 
 #define MAX_ARITY 2          // maximum arrity for GP node
 
+/**
+ *  \class   GPNode 
+ *  \brief   Genetic Programming 
+ *  \details Used to modelised nodes of abstract syntax tree
+ *  
+ **/ 
 
 class GPNode {
-public:
+  public:
 
 
-  GPNode(){  // Constructor
-    for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
-         children[EASEA_Ndx]=NULL;
-  }
+    GPNode(){  // Constructor
+      for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
+        children[EASEA_Ndx]=NULL;
+    }
 
-  GPNode(int var_id, double erc_value, char opCode, GPNode** childrenToAdd) : var_id(var_id), erc_value(erc_value), opCode(opCode)// other constructor
+
+    GPNode(int var_id, double erc_value, char opCode, GPNode** childrenToAdd) : var_id(var_id), erc_value(erc_value), opCode(opCode)// other constructor
   {
     for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
-         this->children[EASEA_Ndx]=childrenToAdd[EASEA_Ndx];
+      this->children[EASEA_Ndx]=childrenToAdd[EASEA_Ndx];
   }  
 
-  GPNode(const GPNode &EASEA_Var) {  // Copy constructor
-    var_id=EASEA_Var.var_id;
-    erc_value=EASEA_Var.erc_value;
-    //arity=EASEA_Var.arity;
-    opCode=EASEA_Var.opCode;
-    for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
+
+    GPNode(const GPNode &EASEA_Var) {  // Copy constructor
+      var_id=EASEA_Var.var_id;
+      erc_value=EASEA_Var.erc_value;
+      //arity=EASEA_Var.arity;
+      opCode=EASEA_Var.opCode;
+      
+      for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
         if( EASEA_Var.children[EASEA_Ndx] ) children[EASEA_Ndx] = new GPNode(*(EASEA_Var.children[EASEA_Ndx]));
         else  children[EASEA_Ndx] = NULL;
-  }
-  virtual ~GPNode() {  // Destructor
-    for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
+    }
+
+
+    virtual ~GPNode() {  // Destructor
+      for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
         if( children[EASEA_Ndx] ) delete children[EASEA_Ndx];
-  }
-  GPNode& operator=(const GPNode &EASEA_Var) {  // Operator=
-    if (&EASEA_Var == this) return *this;
-    var_id = EASEA_Var.var_id;
-    erc_value = EASEA_Var.erc_value;
-    //arity = EASEA_Var.arity;
-    opCode = EASEA_Var.opCode;
-    for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
-      if(EASEA_Var.children[EASEA_Ndx]) children[EASEA_Ndx] = new GPNode(*(EASEA_Var.children[EASEA_Ndx]));
-    return *this;
-  }
+    }
 
-  bool operator==(GPNode &EASEA_Var) const {  // Operator==
-    if (var_id!=EASEA_Var.var_id) return false;
-    if (erc_value!=EASEA_Var.erc_value) return false;
-    //if (arity!=EASEA_Var.arity) return false;
-    if (opCode!=EASEA_Var.opCode) return false;
-    {for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
-       if (children[EASEA_Ndx]!=EASEA_Var.children[EASEA_Ndx]) return false;}
-  return true;
-  }
 
-  bool operator!=(GPNode &EASEA_Var) const {return !(*this==EASEA_Var);} // operator!=
+    GPNode& operator=(const GPNode &EASEA_Var) {  // Operator=
+      if (&EASEA_Var == this) return *this;
+      var_id = EASEA_Var.var_id;
+      erc_value = EASEA_Var.erc_value;
+      //arity = EASEA_Var.arity;
+      opCode = EASEA_Var.opCode;
+      
+      for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
+        if(EASEA_Var.children[EASEA_Ndx]) children[EASEA_Ndx] = new GPNode(*(EASEA_Var.children[EASEA_Ndx]));
+      
+      return *this;
+    }
 
-  friend ostream& operator<< (ostream& os, const GPNode& EASEA_Var) { // Output stream insertion operator
-    os <<  "var_id:" << EASEA_Var.var_id << "\n";
-    os <<  "erc_value:" << EASEA_Var.erc_value << "\n";
-    //os <<  "arity:" << EASEA_Var.arity << "\n";
-    os <<  "opCode:" << EASEA_Var.opCode << "\n";
-    {os << "Array children : ";
-     for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
-       if( EASEA_Var.children[EASEA_Ndx] ) os << "[" << EASEA_Ndx << "]:" << *(EASEA_Var.children[EASEA_Ndx]) << "\t";}
-    os << "\n";
-    return os;
-  }
 
-// Class members 
-  int var_id;
-  double erc_value;
-  // char opCode;
-  int opCode;
-  GPNode* children[2];
+    bool operator==(GPNode &EASEA_Var) const {  // Operator==
+      if (var_id!=EASEA_Var.var_id) return false;
+      if (erc_value!=EASEA_Var.erc_value) return false;
+      //if (arity!=EASEA_Var.arity) return false;
+      if (opCode!=EASEA_Var.opCode) return false;
+      
+      {for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
+        if (children[EASEA_Ndx]!=EASEA_Var.children[EASEA_Ndx]) return false;}
+
+      return true;
+    }
+
+
+    bool operator!=(GPNode &EASEA_Var) const {return !(*this==EASEA_Var);} // operator!=
+
+
+    friend ostream& operator<< (ostream& os, const GPNode& EASEA_Var) { // Output stream insertion operator
+      os <<  "var_id:" << EASEA_Var.var_id << "\n";
+      os <<  "erc_value:" << EASEA_Var.erc_value << "\n";
+      //os <<  "arity:" << EASEA_Var.arity << "\n";
+      os <<  "opCode:" << EASEA_Var.opCode << "\n";
+      
+      {os << "Array children : ";
+        for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
+          if( EASEA_Var.children[EASEA_Ndx] ) os << "[" << EASEA_Ndx << "]:" << *(EASEA_Var.children[EASEA_Ndx]) << "\t";}
+      
+      os << "\n";
+
+      return os;
+    }
+
+
+    // Class members 
+    int var_id;
+    double erc_value;
+    // char opCode;
+    int opCode;
+    GPNode* children[2];
 };
 
 /* Here are some utility functions for the template GP */

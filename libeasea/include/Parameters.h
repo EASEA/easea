@@ -14,83 +14,83 @@ class CControlCStopingCriterion;
 class CSelectionOperator;
 
 class Parameters {
-public:
-	CSelectionOperator* selectionOperator;
-	CSelectionOperator* replacementOperator;
-	CSelectionOperator* parentReductionOperator;
-	CSelectionOperator* offspringReductionOperator;
+  public:
+    CSelectionOperator* selectionOperator;
+    CSelectionOperator* replacementOperator;
+    CSelectionOperator* parentReductionOperator;
+    CSelectionOperator* offspringReductionOperator;
 
-	CGenerationalCriterion* generationalCriterion;
-	CControlCStopingCriterion* controlCStopingCriterion;
-	CTimeCriterion* timeCriterion;
+    CGenerationalCriterion* generationalCriterion;
+    CControlCStopingCriterion* controlCStopingCriterion;
+    CTimeCriterion* timeCriterion;
 
-	int nbGen;
+    int nbGen;
 
-	float selectionPressure;
-	float replacementPressure;
-	float parentReductionPressure;
-	float offspringReductionPressure;
+    float selectionPressure;
+    float replacementPressure;
+    float parentReductionPressure;
+    float offspringReductionPressure;
 
-	//Genetic operators parameters
-	float pCrossover;
-	float pMutation;
-	float pMutationPerGene;
-	CRandomGenerator* randomGenerator;
+    //Genetic operators parameters
+    float pCrossover;
+    float pMutation;
+    float pMutationPerGene;
+    CRandomGenerator* randomGenerator;
 
-	time_t seed;
+    time_t seed;
 
-	unsigned int parentPopulationSize;
-	unsigned int offspringPopulationSize;
-	bool minimizing;
+    unsigned int parentPopulationSize;
+    unsigned int offspringPopulationSize;
+    bool minimizing;
 
-	unsigned int offspringReductionSize;
-	unsigned int parentReductionSize;
-	bool offspringReduction;
-	bool parentReduction ;
+    unsigned int offspringReductionSize;
+    unsigned int parentReductionSize;
+    bool offspringReduction;
+    bool parentReduction ;
 
-	//Elitism parameters
-	bool strongElitism;
-	unsigned int elitSize;
+    //Elitism parameters
+    bool strongElitism;
+    unsigned int elitSize;
 
-	//Parameters for memetic algorithm
-	bool optimise;
-	int optimiseIterations;
-	bool baldwinism;
+    //Parameters for memetic algorithm
+    bool optimise;
+    int optimiseIterations;
+    bool baldwinism;
 
-	//Miscalleous parameters
-	int printStats;
-	int generateCSVFile;
-	int generatePlotScript;
-	int generateRScript;	
-	int plotStats;
-	int printInitialPopulation;
-	int printFinalPopulation;
+    //Miscalleous parameters
+    int printStats;
+    int generateCSVFile;
+    int generatePlotScript;
+    int generateRScript;	
+    int plotStats;
+    int printInitialPopulation;
+    int printFinalPopulation;
 
-	bool savePopulation;
-	bool startFromFile;
+    bool savePopulation;
+    bool startFromFile;
 
-	//Parameters for the Island Model
-	bool remoteIslandModel;
-	char* ipFile;
-	float migrationProbability;
+    //Parameters for the Island Model
+    bool remoteIslandModel;
+    char* ipFile;
+    float migrationProbability;
     int serverPort;
 
-	char* outputFilename;
-	char* plotOutputFilename;
+    char* outputFilename;
+    char* plotOutputFilename;
 
-	int fstGpu;
-	int lstGpu;
+    int fstGpu;
+    int lstGpu;
 
-public:
+  public:
 #ifdef WIN32
-	Parameters();
-	~Parameters();
+    Parameters();
+    ~Parameters();
 #else
-	virtual ~Parameters(){;}
+    virtual ~Parameters(){;}
 #endif
-	virtual void setDefaultParameters(int argc, char** argv) = 0;
-	virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;
-	int setReductionSizes(int popSize, float popReducSize);
+    virtual void setDefaultParameters(int argc, char** argv) = 0;
+    virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;
+    int setReductionSizes(int popSize, float popReducSize);
 };
 
 #endif /* PARAMETERS_H_ */

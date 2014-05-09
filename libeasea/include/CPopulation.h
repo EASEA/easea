@@ -27,99 +27,107 @@ class CStats;
 
 class CPopulation {
 
-public:
+  public:
 
-  float pCrossover;
-  float pMutation;
-  float pMutationPerGene;
+    float pCrossover;
+    float pMutation;
+    float pMutationPerGene;
 
-  CIndividual* Best;
-  CIndividual* Worst;
-  float currentAverageFitness;
-  float currentSTDEV;
+    CIndividual* Best;
+    CIndividual* Worst;
+    float currentAverageFitness;
+    float currentSTDEV;
 
-  CIndividual** parents;
-  CIndividual** offsprings;
+    CIndividual** parents;
+    CIndividual** offsprings;
 
-  unsigned parentPopulationSize;
-  unsigned offspringPopulationSize;
+    unsigned parentPopulationSize;
+    unsigned offspringPopulationSize;
 
-  unsigned actualParentPopulationSize;
-  unsigned actualOffspringPopulationSize;
+    unsigned actualParentPopulationSize;
+    unsigned actualOffspringPopulationSize;
 
-  static CSelectionOperator* selectionOperator;
-  static CSelectionOperator* replacementOperator;
-  static CSelectionOperator* parentReductionOperator;
-  static CSelectionOperator* offspringReductionOperator;
+    static CSelectionOperator* selectionOperator;
+    static CSelectionOperator* replacementOperator;
+    static CSelectionOperator* parentReductionOperator;
+    static CSelectionOperator* offspringReductionOperator;
 
-  unsigned currentEvaluationNb;
-  CRandomGenerator* rg;
-  std::vector<CIndividual*> pop_vect;
+    unsigned currentEvaluationNb;
+    CRandomGenerator* rg;
+    std::vector<CIndividual*> pop_vect;
 
-  Parameters* params;
-  CStats* cstats;
+    Parameters* params;
+    CStats* cstats;
 
- public:
-  CPopulation();
-  CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
-	     float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* cstats);
-  virtual ~CPopulation();
+  public:
+    CPopulation();
+    CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
+                float pCrossover, float pMutation, float pMutationPerGene, 
+                CRandomGenerator* rg, Parameters* params, CStats* cstats);
+    virtual ~CPopulation();
 
-  //virtual void initializeParentPopulation() = 0;
-  void addIndividualParentPopulation(CIndividual* indiv, unsigned id);
-  void addIndividualParentPopulation(CIndividual* indiv);
-  void evaluatePopulation(CIndividual** population, unsigned populationSize);
-  virtual void optimisePopulation(CIndividual** population, unsigned populationSize);
-  virtual void evaluateParentPopulation();
-  virtual void optimiseParentPopulation();
+    //virtual void initializeParentPopulation() = 0;
+    void addIndividualParentPopulation(CIndividual* indiv, unsigned id);
+    void addIndividualParentPopulation(CIndividual* indiv);
+    void evaluatePopulation(CIndividual** population, unsigned populationSize);
+    virtual void optimisePopulation(CIndividual** population, unsigned populationSize);
+    virtual void evaluateParentPopulation();
+    virtual void optimiseParentPopulation();
 
-  void strongElitism(unsigned elitismSize, CIndividual** population, unsigned populationSize, CIndividual** outPopulation, unsigned outPopulationSize);
-  void weakElitism(unsigned elitismSize, CIndividual** parentsPopulation, CIndividual** offspringPopulation, unsigned* parentPopSize, unsigned* offPopSize, CIndividual** outPopulation, unsigned outPopulationSize);
+    void strongElitism(unsigned elitismSize, CIndividual** population, unsigned populationSize, 
+         CIndividual** outPopulation, unsigned outPopulationSize);
 
-  virtual void evaluateOffspringPopulation();
-  virtual void optimiseOffspringPopulation();
-  CIndividual** reducePopulations(CIndividual** population, unsigned populationSize,CIndividual** reducedPopulation, unsigned obSize,int pressure);
-  CIndividual** reduceParentPopulation(unsigned obSize);
-  CIndividual** reduceOffspringPopulation(unsigned obSize);
-  void reduceTotalPopulation(CIndividual** elitPop);
-  void evolve();
+    void weakElitism(unsigned elitismSize, CIndividual** parentsPopulation,
+         CIndividual** offspringPopulation, unsigned* parentPopSize, unsigned* offPopSize, 
+         CIndividual** outPopulation, unsigned outPopulationSize);
 
-  static float selectionPressure;
-  static float replacementPressure;
-  static float parentReductionPressure;
-  static float offspringReductionPressure;
+    virtual void evaluateOffspringPopulation();
+    virtual void optimiseOffspringPopulation();
 
-  static void initPopulation(CSelectionOperator* selectionOperator,
-			     CSelectionOperator* replacementOperator,
-			     CSelectionOperator* parentReductionOperator,
-			     CSelectionOperator* offspringReductionOperator,
-			     float selectionPressure, float replacementPressure,
-			     float parentReductionPressure, float offspringReductionPressure);
+    CIndividual** reducePopulations(CIndividual** population, unsigned populationSize,
+                  CIndividual** reducedPopulation, unsigned obSize,int pressure);
+    CIndividual** reduceParentPopulation(unsigned obSize);
+    CIndividual** reduceOffspringPopulation(unsigned obSize);
+    void reduceTotalPopulation(CIndividual** elitPop);
+    void evolve();
 
-  static void sortPopulation(CIndividual** population, unsigned populationSize);
+    static float selectionPressure;
+    static float replacementPressure;
+    static float parentReductionPressure;
+    static float offspringReductionPressure;
 
-  static void sortRPopulation(CIndividual** population, unsigned populationSize);
+    static void initPopulation(CSelectionOperator* selectionOperator,
+                CSelectionOperator* replacementOperator,
+                CSelectionOperator* parentReductionOperator,
+                CSelectionOperator* offspringReductionOperator,
+                float selectionPressure, float replacementPressure,
+                float parentReductionPressure, float offspringReductionPressure);
 
-  void serializePopulation();
-  int getWorstIndividualIndex(CIndividual** population);
+    static void sortPopulation(CIndividual** population, unsigned populationSize);
 
-  void sortParentPopulation(){ CPopulation::sortPopulation(parents,actualParentPopulationSize);}
+    static void sortRPopulation(CIndividual** population, unsigned populationSize);
 
-  virtual void produceOffspringPopulation();
+    void serializePopulation();
+    int getWorstIndividualIndex(CIndividual** population);
 
-  friend std::ostream& operator << (std::ostream& O, const CPopulation& B);
+    void sortParentPopulation(){ CPopulation::sortPopulation(parents,actualParentPopulationSize);}
+
+    virtual void produceOffspringPopulation();
+
+    friend std::ostream& operator << (std::ostream& O, const CPopulation& B);
 
 
-  void setParentPopulation(CIndividual** population, unsigned actualParentPopulationSize){
-    this->parents = population;
-    this->actualParentPopulationSize = actualParentPopulationSize;
-  }
+    void setParentPopulation(CIndividual** population, unsigned actualParentPopulationSize){
+      this->parents = population;
+      this->actualParentPopulationSize = actualParentPopulationSize;
+    }
 
-  static void reducePopulation(CIndividual** population, unsigned populationSize,
-				       CIndividual** reducedPopulation, unsigned obSize,
-				       CSelectionOperator* replacementOperator,int pressure);
-  void syncOutVector();
-  void syncInVector();
+    static void reducePopulation(CIndividual** population, unsigned populationSize,
+                CIndividual** reducedPopulation, unsigned obSize,
+                CSelectionOperator* replacementOperator,int pressure);
+
+    void syncOutVector();
+    void syncInVector();
 
 };
 
