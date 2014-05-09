@@ -56,9 +56,9 @@ void * CComUDPServer::UDP_server_thread(void *parm) {
       /*process received data */
       memmove(p->data[(*p->nb_data)].data,buffer,sizeof(char)*MAXINDSIZE);
       (*p->nb_data)++;
-      //	printf("address %p\n",(p->data));
+      //  printf("address %p\n",(p->data));
       p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
-      //	printf("address %p\n",(p->data));
+      //  printf("address %p\n",(p->data));
       pthread_mutex_unlock(&server_mutex);
       /*reset receiving buffer*/
       memset(buffer,0,MAXINDSIZE);

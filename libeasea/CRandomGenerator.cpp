@@ -12,18 +12,18 @@
 #include <math.h>
 
 CRandomGenerator::CRandomGenerator(unsigned int seed){
-	this->seed = seed;
-	this->mt_rnd = new MTRand(seed);
-	//srand(seed);
+  this->seed = seed;
+  this->mt_rnd = new MTRand(seed);
+  //srand(seed);
 }
 
 CRandomGenerator::~CRandomGenerator(){
-	delete this->mt_rnd;
+  delete this->mt_rnd;
 }
 
 int CRandomGenerator::randInt(){
   //return rand();
-	return mt_rnd->randInt();
+  return mt_rnd->randInt();
 }
 
 bool CRandomGenerator::tossCoin(){
@@ -40,8 +40,8 @@ bool CRandomGenerator::tossCoin(float bias){
 }
 
 int CRandomGenerator::randInt(int min, int max){
-	max--; // exclude upper bound
-	return min+mt_rnd->randInt(max-min);
+  max--; // exclude upper bound
+  return min+mt_rnd->randInt(max-min);
 }
 
 int CRandomGenerator::random(int min, int max){
@@ -49,7 +49,7 @@ int CRandomGenerator::random(int min, int max){
 }
 
 float CRandomGenerator::randFloat(float min, float max){
-	return min+mt_rnd->randExc(max-min);
+  return min+mt_rnd->randExc(max-min);
 }
 
 float CRandomGenerator::random(float min, float max){
@@ -97,6 +97,6 @@ float CRandomGenerator::random_gauss(float mean, float std_dev){
 
 
 std::ostream & operator << (std::ostream & os, const CRandomGenerator& rg) {
-	os<< "s : " << rg.seed << std::endl;
-	return os;
+  os<< "s : " << rg.seed << std::endl;
+  return os;
 }

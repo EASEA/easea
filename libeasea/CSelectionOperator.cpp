@@ -25,30 +25,30 @@ float getSelectionPressure(std::string selectop){
 
 CSelectionOperator* getSelectionOperator(std::string selectop, int minimizing, CRandomGenerator* globalRandomGenerator){
   if(minimizing){
-	if(selectop.compare("Tournament")==0)
-		return (new MinTournament(globalRandomGenerator));
-	else if (selectop.compare("Random")==0)
-		return (new MinRandom(globalRandomGenerator));
-	else if (selectop.compare("Deterministic")==0)
-		return (new MinDeterministic());
-	else{
-		std::cout << "Operateur n\'existe pas pour minimisation, utilise Tournament par defaut" << std::endl;
-		return (new MinTournament(globalRandomGenerator));
-	}
+  if(selectop.compare("Tournament")==0)
+    return (new MinTournament(globalRandomGenerator));
+  else if (selectop.compare("Random")==0)
+    return (new MinRandom(globalRandomGenerator));
+  else if (selectop.compare("Deterministic")==0)
+    return (new MinDeterministic());
+  else{
+    std::cout << "Operateur n\'existe pas pour minimisation, utilise Tournament par defaut" << std::endl;
+    return (new MinTournament(globalRandomGenerator));
+  }
   }
   else{
-	if(selectop.compare("Tournament")==0)
-		return (new MaxTournament(globalRandomGenerator));
-	else if (selectop.compare("Random")==0)
-		return (new MaxRandom(globalRandomGenerator));
-	else if (selectop.compare("Deterministic")==0)
-		return (new MaxDeterministic());
-	else if (selectop.compare("Roulette")==0)
-		return (new MaxRoulette(globalRandomGenerator));
-	else{
-		std::cout << "Operateur n\'existe pas pour maximisation, utilise Tournament par defaut" << std::endl;
-		return (new MaxTournament(globalRandomGenerator));
-	}
+  if(selectop.compare("Tournament")==0)
+    return (new MaxTournament(globalRandomGenerator));
+  else if (selectop.compare("Random")==0)
+    return (new MaxRandom(globalRandomGenerator));
+  else if (selectop.compare("Deterministic")==0)
+    return (new MaxDeterministic());
+  else if (selectop.compare("Roulette")==0)
+    return (new MaxRoulette(globalRandomGenerator));
+  else{
+    std::cout << "Operateur n\'existe pas pour maximisation, utilise Tournament par defaut" << std::endl;
+    return (new MaxTournament(globalRandomGenerator));
+  }
   }
 }
 
@@ -159,8 +159,8 @@ size_t MinTournament::selectNext(size_t populationSize){
       float currentFitness = population[selectedIndex]->getFitness();
 
       if( bestFitness > currentFitness ){
-	bestIndex = selectedIndex;
-	bestFitness = currentFitness;
+  bestIndex = selectedIndex;
+  bestFitness = currentFitness;
       }
 
     }
@@ -171,18 +171,18 @@ size_t MinTournament::selectNext(size_t populationSize){
 
     if( rg->tossCoin(currentSelectionPressure) ){
       if( population[i1]->getFitness() < population[i2]->getFitness() ){
-	bestIndex = i1;
+  bestIndex = i1;
       }
     }
     else{
       if( population[i1]->getFitness() < population[i2]->getFitness() ){
-	bestIndex = i2;
+  bestIndex = i2;
       }
     }
   }
   else{
     std::cerr << " MinTournament selection operator doesn't handle selection pressure : "
-	      << currentSelectionPressure << std::endl;
+        << currentSelectionPressure << std::endl;
   }
 
   //std::cout << std::endl;
@@ -213,8 +213,8 @@ size_t MaxTournament::selectNext(size_t populationSize){
       float currentFitness = population[selectedIndex]->getFitness();
 
       if( bestFitness < currentFitness ){
-	bestIndex = selectedIndex;
-	bestFitness = currentFitness;
+  bestIndex = selectedIndex;
+  bestFitness = currentFitness;
       }
 
     }
@@ -225,18 +225,18 @@ size_t MaxTournament::selectNext(size_t populationSize){
 
     if( rg->tossCoin(currentSelectionPressure) ){
       if( population[i1]->getFitness() > population[i2]->getFitness() ){
-	bestIndex = i1;
+  bestIndex = i1;
       }
     }
     else{
       if( population[i1]->getFitness() > population[i2]->getFitness() ){
-	bestIndex = i2;
+  bestIndex = i2;
       }
     }
   }
   else{
     std::cerr << " MinTournament selection operator doesn't handle selection pressure : "
-	      << currentSelectionPressure << std::endl;
+        << currentSelectionPressure << std::endl;
   }
 
   //std::cout << std::endl;
@@ -274,7 +274,7 @@ size_t MaxRoulette::selectNext(size_t populationSize){
                         break;
                 }
         }
-		free(poids);
+    free(poids);
         return bestIndex;
 }
 

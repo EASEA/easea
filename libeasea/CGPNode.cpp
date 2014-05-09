@@ -151,8 +151,8 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
    @return : pointer to the root node of the resulting sub tree
 */
 GPNode* construction_method( const int constLen, const int totalLen , const int currentDepth,
-			     const int maxDepth, const bool full,
-			     const unsigned* opArity, const int OP_ERC){
+           const int maxDepth, const bool full,
+           const unsigned* opArity, const int OP_ERC){
   GPNode* node = new GPNode();
   // first select the opCode for the current Node.
   if( full ){
@@ -185,7 +185,7 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
 }
 
 GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, unsigned actualParentPopulationSize, unsigned parentPopulationSize, 
-		   float GROW_FULL_RATIO, unsigned VAR_LEN, unsigned OPCODE_SIZE, const unsigned* opArity, const int OP_ERC){
+       float GROW_FULL_RATIO, unsigned VAR_LEN, unsigned OPCODE_SIZE, const unsigned* opArity, const int OP_ERC){
   /**
      This is the standard ramped half-and-half method
      for creation of trees.
@@ -219,10 +219,10 @@ void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity ,
     }
     for (unsigned i = 0; i < opArity[(int)root->opCode]; ++i) {
       if (root->children[i]) {
-	toString_r(oss,root->children[i],opArity,opCodeName,OP_ERC);
-	if (i < opArity[(int)root->opCode] - 1) {
-	  (*oss) << ' ';
-	}
+  toString_r(oss,root->children[i],opArity,opCodeName,OP_ERC);
+  if (i < opArity[(int)root->opCode] - 1) {
+    (*oss) << ' ';
+  }
       }
     }
   }
@@ -252,7 +252,7 @@ std::string toString(GPNode* root, const unsigned* opArity , const char** opCode
 void toDotFile_r(GPNode* root, FILE* outputFile, const unsigned* opArity , const char** opCodeName, int OP_ERC){
   if( root->opCode==OP_ERC )
     fprintf(outputFile," %ld [label=\"%s : %f\"];\n", (long int)root, opCodeName[(int)root->opCode],
-	    root->erc_value);
+      root->erc_value);
  else
    fprintf(outputFile," %ld [label=\"%s\"];\n", (long int)root, opCodeName[(int)root->opCode]);
   

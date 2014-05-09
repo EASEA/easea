@@ -57,12 +57,12 @@ extern bool INSTEAD_EVAL_STEP;
  * @DEPRECATED the next contructor has to be used instead of this one.
  */
 /*CEvolutionaryAlgorithm::CEvolutionaryAlgorithm( unsigned parentPopulationSize,
-					      unsigned offspringPopulationSize,
-					      float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
-					      CSelectionOperator* selectionOperator, CSelectionOperator* replacementOperator,
-					      CSelectionOperator* parentReductionOperator, CSelectionOperator* offspringReductionOperator,
-					      float pCrossover, float pMutation,
-					      float pMutationPerGene){
+                unsigned offspringPopulationSize,
+                float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
+                CSelectionOperator* selectionOperator, CSelectionOperator* replacementOperator,
+                CSelectionOperator* parentReductionOperator, CSelectionOperator* offspringReductionOperator,
+                float pCrossover, float pMutation,
+                float pMutationPerGene){
 
   CRandomGenerator* rg = globalRandomGenerator;
 
@@ -73,7 +73,7 @@ extern bool INSTEAD_EVAL_STEP;
   CPopulation::initPopulation(so,ro,parentReductionOperator,offspringReductionOperator,selectionPressure,replacementPressure,parentReductionPressure,offspringReductionPressure);
 
   this->population = new CPopulation(parentPopulationSize,offspringPopulationSize,
-				    pCrossover,pMutation,pMutationPerGene,rg,NULL);
+            pCrossover,pMutation,pMutationPerGene,rg,NULL);
 
   this->currentGeneration = 0;
 
@@ -82,11 +82,11 @@ extern bool INSTEAD_EVAL_STEP;
   
   // INITIALIZE SERVER OBJECT ISLAND MODEL
   if(params->remoteIslandModel){
-  	this->server = new CComUDPServer(2909,0);
-	this->treatedIndividuals = 0;
-	this->numberOfClients = 0;
+    this->server = new CComUDPServer(2909,0);
+  this->treatedIndividuals = 0;
+  this->numberOfClients = 0;
 
-	this->initializeClients();
+  this->initializeClients();
   }
 }*/
 
@@ -94,65 +94,65 @@ extern bool INSTEAD_EVAL_STEP;
  * REAL CONSTRUCTOR
  */
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
-	this->params = params;
+  this->params = params;
     this->cstats = new CStats();
 
-	CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
-			params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
+  CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
+      params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
-	this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
-			params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
+  this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
+      params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
 
-	this->currentGeneration = 0;
+  this->currentGeneration = 0;
 
-	this->reduceParents = 0;
-	this->reduceOffsprings = 0;
-	this->grapher = NULL;
-	if(params->plotStats || params->generatePlotScript){
-		string fichier = params->outputFilename;
-		fichier.append(".dat");
-		remove(fichier.c_str());
-	}
-	if(params->generatePlotScript){
-		string fichier = params->outputFilename;
-		fichier.append(".plot");
-		remove(fichier.c_str());
-	}
-	if(params->generateRScript || params->generateCSVFile){
-		string fichier = params->outputFilename;
-		fichier.append(".csv");
-		remove(fichier.c_str());
-	}
-	if(params->generateRScript){
-		string fichier = params->outputFilename;
-		fichier.append(".r");
-		remove(fichier.c_str());
-	}
-	//#ifndef WIN32 
-	if(params->plotStats){
+  this->reduceParents = 0;
+  this->reduceOffsprings = 0;
+  this->grapher = NULL;
+  if(params->plotStats || params->generatePlotScript){
+    string fichier = params->outputFilename;
+    fichier.append(".dat");
+    remove(fichier.c_str());
+  }
+  if(params->generatePlotScript){
+    string fichier = params->outputFilename;
+    fichier.append(".plot");
+    remove(fichier.c_str());
+  }
+  if(params->generateRScript || params->generateCSVFile){
+    string fichier = params->outputFilename;
+    fichier.append(".csv");
+    remove(fichier.c_str());
+  }
+  if(params->generateRScript){
+    string fichier = params->outputFilename;
+    fichier.append(".r");
+    remove(fichier.c_str());
+  }
+  //#ifndef WIN32 
+  if(params->plotStats){
         string str = "Plotting of the evolution of ";;
         string str2 = this->params->outputFilename;
         str.append(str2);
-		//this->grapher = new CGrapher((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize, (char*)str.c_str());
-		this->grapher = new CGrapher(this->params, (char*)str.c_str());
-	}
-	//#endif
+    //this->grapher = new CGrapher((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize, (char*)str.c_str());
+    this->grapher = new CGrapher(this->params, (char*)str.c_str());
+  }
+  //#endif
 
 
-	// INITIALIZE SERVER OBJECT ISLAND MODEL
-	if(params->remoteIslandModel){
-		this->treatedIndividuals = 0;
-		this->numberOfClients = 0;
-		this->myClientNumber=0;	
-		this->initializeClients();
-		//if(params->remoteIslandModel)
-		server = new CComUDPServer(params->serverPort,0); //1 if debug
-	}
+  // INITIALIZE SERVER OBJECT ISLAND MODEL
+  if(params->remoteIslandModel){
+    this->treatedIndividuals = 0;
+    this->numberOfClients = 0;
+    this->myClientNumber=0; 
+    this->initializeClients();
+    //if(params->remoteIslandModel)
+    server = new CComUDPServer(params->serverPort,0); //1 if debug
+  }
 }
 
 /* DESTRUCTOR */
 CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
-	delete population;
+  delete population;
         if(this->params->remoteIslandModel){
                 delete this->server;
                 if(this->numberOfClients>1){
@@ -214,7 +214,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
   this->population->currentEvaluationNb += this->params->parentPopulationSize;
   if(this->params->printInitialPopulation){
-  	std::cout << *population << std::endl;
+    std::cout << *population << std::endl;
   }
 
   showPopulationStats(begin);
@@ -223,7 +223,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
   //Initialize elitPopulation
   if(params->elitSize)
-		elitistPopulation = (CIndividual**)malloc(params->elitSize*sizeof(CIndividual*));	
+    elitistPopulation = (CIndividual**)malloc(params->elitSize*sizeof(CIndividual*)); 
 
   // EVOLUTIONARY LOOP
   while( this->allCriteria() == false){
@@ -232,7 +232,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     // Sending individuals if remote island model
     if(params->remoteIslandModel && this->numberOfClients>0)
-	    this->sendIndividual();
+      this->sendIndividual();
     TIME_ST(breeding);
     population->produceOffspringPopulation();
     TIME_END(breeding);
@@ -255,16 +255,16 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     /* ELITISM */
     if(params->elitSize && this->params->parentPopulationSize>=params->elitSize){
-	/* STRONG ELITISM */
-	if(params->strongElitism){
-		population->strongElitism(params->elitSize, population->parents, this->params->parentPopulationSize, elitistPopulation, params->elitSize);
-		population->actualParentPopulationSize -= params->elitSize;
-	}
-	/* WEAK ELITISM */
-	else{
-		population->weakElitism(params->elitSize, population->parents, population->offsprings, &(population->actualParentPopulationSize), &(population->actualOffspringPopulationSize), elitistPopulation, params->elitSize);
-	}
-	
+  /* STRONG ELITISM */
+  if(params->strongElitism){
+    population->strongElitism(params->elitSize, population->parents, this->params->parentPopulationSize, elitistPopulation, params->elitSize);
+    population->actualParentPopulationSize -= params->elitSize;
+  }
+  /* WEAK ELITISM */
+  else{
+    population->weakElitism(params->elitSize, population->parents, population->offsprings, &(population->actualParentPopulationSize), &(population->actualOffspringPopulationSize), elitistPopulation, params->elitSize);
+  }
+  
     }
 
     TIME_ST(reduction);
@@ -286,40 +286,40 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     //Receiving individuals if cluster island model
     if(params->remoteIslandModel){
-	this->receiveIndividuals();
+  this->receiveIndividuals();
     }
 
     currentGeneration += 1;
   }
 //#ifdef __linux__
   //if(this->params->plotStats && this->grapher->valid){
-  	//outputGraph();
-  	//delete this->grapher;
+    //outputGraph();
+    //delete this->grapher;
   //}
 //#endif
 
   if(this->params->printFinalPopulation){
-  	population->sortParentPopulation();
-  	std::cout << *population << std::endl;
+    population->sortParentPopulation();
+    std::cout << *population << std::endl;
   }
 
   //IF SAVING THE POPULATION, ERASE THE OLD FILE
   if(params->savePopulation){
-	
-	string fichier = params->outputFilename;
-	fichier.append(".pop");
-	remove(fichier.c_str());
-  	population->serializePopulation();
+  
+  string fichier = params->outputFilename;
+  fichier.append(".pop");
+  remove(fichier.c_str());
+    population->serializePopulation();
   }
 
   if(this->params->generatePlotScript || !this->params->plotStats)
-	generatePlotScript();
+  generatePlotScript();
 
   if(this->params->generateRScript)
-	generateRScript();
+  generateRScript();
   
   if(params->elitSize)
-  	free(elitistPopulation);
+    free(elitistPopulation);
 
   if(this->params->plotStats){
       delete this->grapher;
@@ -328,11 +328,11 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 #ifdef INSTRUMENTED
   COMPUTE_TIME(init);
   fprintf(timing_file,"%d,%d,%ld.%06ld,%ld.%06ld,%ld.%06ld,%ld.%06ld\n",
-	  currentGeneration, population->parentPopulationSize,
-	  init_res.tv_sec,init_res.tv_usec,
-	  eval_acc.tv_sec,eval_acc.tv_usec,
-	  breeding_acc.tv_sec,breeding_acc.tv_usec,
-	  reduction_acc.tv_sec,reduction_acc.tv_usec);
+    currentGeneration, population->parentPopulationSize,
+    init_res.tv_sec,init_res.tv_usec,
+    eval_acc.tv_sec,eval_acc.tv_usec,
+    breeding_acc.tv_sec,breeding_acc.tv_usec,
+    reduction_acc.tv_sec,reduction_acc.tv_usec);
   fclose(timing_file);
 #endif
 }
@@ -386,57 +386,57 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
   //Affichage
   if(params->printStats){
-	  if(currentGeneration==0)
-	    printf("GEN\tTIME\t\tEVAL\t\tBEST      AVG       STDDEV    WORST\n\n");
+    if(currentGeneration==0)
+      printf("GEN\tTIME\t\tEVAL\t\tBEST      AVG       STDDEV    WORST\n\n");
 #ifdef WIN32
-	  printf("%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+    printf("%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
-	    //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
-	    printf("%d\t%ld.%d\t\t%d\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+      //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
+      printf("%d\t%ld.%d\t\t%d\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #endif
   }
 
   if((this->params->plotStats && this->grapher->valid) || this->params->generatePlotScript){
- 	FILE *f;
-	string fichier = params->outputFilename;
-	fichier.append(".dat");
- 	f = fopen(fichier.c_str(),"a"); //ajouter .csv
-	if(f!=NULL){
-	  if(currentGeneration==0)
-	    fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDDEV\t\tWORST\n\n");
+  FILE *f;
+  string fichier = params->outputFilename;
+  fichier.append(".dat");
+  f = fopen(fichier.c_str(),"a"); //ajouter .csv
+  if(f!=NULL){
+    if(currentGeneration==0)
+      fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDDEV\t\tWORST\n\n");
 #ifdef WIN32
-	  fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+    fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
-	    //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
-	    fprintf(f,"%d\t%ld.%d\t\t%d\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+      //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
+      fprintf(f,"%d\t%ld.%d\t\t%d\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #endif
-	  fclose(f);
+    fclose(f);
         }
   }
   if(params->generateCSVFile || params->generateRScript){ //Generation du fichier CSV;
- 	FILE *f;
-	string fichier = params->outputFilename;
-	fichier.append(".csv");
- 	f = fopen(fichier.c_str(),"a"); //ajouter .csv
-	if(f!=NULL){
-	  if(currentGeneration==0)
-		fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDDEV,WORST\n");
+  FILE *f;
+  string fichier = params->outputFilename;
+  fichier.append(".csv");
+  f = fopen(fichier.c_str(),"a"); //ajouter .csv
+  if(f!=NULL){
+    if(currentGeneration==0)
+    fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDDEV,WORST\n");
 #ifdef WIN32
-	  fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+    fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
-	    //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
-	    fprintf(f,"%d\t%ld.%d\t\t%d\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+      //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
+      fprintf(f,"%d\t%ld.%d\t\t%d\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #endif
-	  fclose(f);
+    fclose(f);
         }
   }
   //print grapher
   #ifndef WIN32
   if(this->params->plotStats && this->grapher->valid){
-	//if(currentGeneration==0)
-	//	fprintf(this->grapher->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
-	//else
-	//	fprintf(this->grapher->fWrit,"replot\n");
+  //if(currentGeneration==0)
+  //  fprintf(this->grapher->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
+  //else
+  //  fprintf(this->grapher->fWrit,"replot\n");
     fprintf(this->grapher->fWrit,"add coordinate:%d;%f;%f;%f\n",population->currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitness, this->cstats->currentStdDev);
     if(this->params->remoteIslandModel){
         if(population->Best->isImmigrant){
@@ -450,7 +450,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
     else{
         fprintf(this->grapher->fWrit,"repaint\n");
     }
-	fflush(this->grapher->fWrit);
+  fflush(this->grapher->fWrit);
  }
 #endif
  
@@ -459,7 +459,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   double micSec = res.tv_usec + 0.0;
 
   while(micSec>1){
-	micSec /= 10.;
+  micSec /= 10.;
   }
   elapsedTime += micSec + 0.0;
 
@@ -474,36 +474,36 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
 //REMOTE ISLAND MODEL FUNCTIONS
 void CEvolutionaryAlgorithm::initializeClients(){
-	/*int clientNumber=0;
-	char (*clients)[16] = (char(*)[16])calloc(1,sizeof(char)*16);
-	
-	cout << "Reading IP address file: " << this->params->ipFile << endl;
-	ifstream IP_File(this->params->ipFile);
-	string line;
-	while(getline(IP_File, line)){
-		if(!isLocalMachine(line.c_str())){
-			memmove(clients[this->numberOfClients],line.c_str(),sizeof(char)*16);
-			this->numberOfClients++;
-			clients = (char(*)[16])realloc(clients,sizeof(char)*16*(this->numberOfClients*16));
-			clientNumber++;
-		}
-		else{
-			this->myClientNumber = clientNumber;	
-		}
-	}*/
+  /*int clientNumber=0;
+  char (*clients)[16] = (char(*)[16])calloc(1,sizeof(char)*16);
+  
+  cout << "Reading IP address file: " << this->params->ipFile << endl;
+  ifstream IP_File(this->params->ipFile);
+  string line;
+  while(getline(IP_File, line)){
+    if(!isLocalMachine(line.c_str())){
+      memmove(clients[this->numberOfClients],line.c_str(),sizeof(char)*16);
+      this->numberOfClients++;
+      clients = (char(*)[16])realloc(clients,sizeof(char)*16*(this->numberOfClients*16));
+      clientNumber++;
+    }
+    else{
+      this->myClientNumber = clientNumber;  
+    }
+  }*/
     this->refreshClient();
 
-	/*if(this->numberOfClients>0){
-		this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
-		for(int i=0; i<(signed)this->numberOfClients; i++){
-			this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);
-		}
-	}
-	else{*/
+  /*if(this->numberOfClients>0){
+    this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
+    for(int i=0; i<(signed)this->numberOfClients; i++){
+      this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);
+    }
+  }
+  else{*/
     if(this->numberOfClients<=0){
-		cout << "***WARNING***\nNo islands to communicate with." << endl;
-	//	params->remoteIslandModel=0;
-	}
+    cout << "***WARNING***\nNo islands to communicate with." << endl;
+  //  params->remoteIslandModel=0;
+  }
 }
 
 void CEvolutionaryAlgorithm::refreshClient(){
@@ -515,127 +515,127 @@ void CEvolutionaryAlgorithm::refreshClient(){
 }
 
 void CEvolutionaryAlgorithm::sendIndividual(){
-	//Sending an individual every n generations	
-	if(globalRandomGenerator->random(0.0,1.0)<=params->migrationProbability){
-	//if((this->currentGeneration+this->myClientNumber)%3==0 && this->currentGeneration!=0){
-		//cout << "I'm going to send an Individual now" << endl;
-		this->population->selectionOperator->initialize(this->population->parents, params->selectionPressure, this->population->actualParentPopulationSize);
-		//unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
-	
-		//selecting a client randomly
-		int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
-		//for(int client=0; client<this->numberOfClients; client++){
-		cout << "    Going to send an individual to client " << client << endl;
-		cout << "    His IP is " << this->Clients[client]->getIP() << " and his port is " << this->Clients[client]->getPort() <<endl;
-		//cout << "Sending individual " << index << " to client " << client << " now" << endl;
-		//cout << this->population->parents[index]->serialize() << endl;
-		this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
-	}
+  //Sending an individual every n generations 
+  if(globalRandomGenerator->random(0.0,1.0)<=params->migrationProbability){
+  //if((this->currentGeneration+this->myClientNumber)%3==0 && this->currentGeneration!=0){
+    //cout << "I'm going to send an Individual now" << endl;
+    this->population->selectionOperator->initialize(this->population->parents, params->selectionPressure, this->population->actualParentPopulationSize);
+    //unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
+  
+    //selecting a client randomly
+    int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
+    //for(int client=0; client<this->numberOfClients; client++){
+    cout << "    Going to send an individual to client " << client << endl;
+    cout << "    His IP is " << this->Clients[client]->getIP() << " and his port is " << this->Clients[client]->getPort() <<endl;
+    //cout << "Sending individual " << index << " to client " << client << " now" << endl;
+    //cout << this->population->parents[index]->serialize() << endl;
+    this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
+  }
 }
 
 void CEvolutionaryAlgorithm::receiveIndividuals(){
-	//Checking every generation for received individuals
-	if(this->treatedIndividuals<(unsigned)this->server->nb_data){
-		//cout << "number of received individuals :" << this->server->nb_data << endl;
-		//cout << "number of treated individuals :" << this->treatedIndividuals << endl;
-		CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);		
+  //Checking every generation for received individuals
+  if(this->treatedIndividuals<(unsigned)this->server->nb_data){
+    //cout << "number of received individuals :" << this->server->nb_data << endl;
+    //cout << "number of treated individuals :" << this->treatedIndividuals << endl;
+    CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);   
 
-		//Treating all the individuals before continuing
-		while(this->treatedIndividuals < (unsigned)this->server->nb_data){
-			//selecting the individual to erase
-			antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
-			unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
-			
-			//We're selecting the worst element to replace
-			//size_t index = this->population->getWorstIndividualIndex(this->population->parents);
+    //Treating all the individuals before continuing
+    while(this->treatedIndividuals < (unsigned)this->server->nb_data){
+      //selecting the individual to erase
+      antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
+      unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
+      
+      //We're selecting the worst element to replace
+      //size_t index = this->population->getWorstIndividualIndex(this->population->parents);
 
-			//cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
-			//cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
-			this->server->read_data_lock();
-			string line = this->server->parm->data[this->treatedIndividuals].data;
-			this->population->parents[index]->deserialize(line);
+      //cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
+      //cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
+      this->server->read_data_lock();
+      string line = this->server->parm->data[this->treatedIndividuals].data;
+      this->population->parents[index]->deserialize(line);
             //TAG THE INDIVIDUAL AS IMMIGRANT
             this->population->parents[index]->isImmigrant = true;
 
-			this->server->read_data_unlock();
-			//cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
-			this->treatedIndividuals++;
-		}
-	}
+      this->server->read_data_unlock();
+      //cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
+      this->treatedIndividuals++;
+    }
+  }
 }
 
 void CEvolutionaryAlgorithm::outputGraph(){
-    /*  	fprintf(this->grapher->fWrit,"set term png\n");
-      	fprintf(this->grapher->fWrit,"set output \"%s\"\n",params->plotOutputFilename);
-	fprintf(this->grapher->fWrit,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
-	fprintf(this->grapher->fWrit,"set xlabel \"Number of Evaluations\"\n");
+    /*    fprintf(this->grapher->fWrit,"set term png\n");
+        fprintf(this->grapher->fWrit,"set output \"%s\"\n",params->plotOutputFilename);
+  fprintf(this->grapher->fWrit,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
+  fprintf(this->grapher->fWrit,"set xlabel \"Number of Evaluations\"\n");
         fprintf(this->grapher->fWrit,"set ylabel \"Fitness\"\n");
         fprintf(this->grapher->fWrit,"replot \n");
-	fflush(this->grapher->fWrit);*/
+  fflush(this->grapher->fWrit);*/
 }
 
 void CEvolutionaryAlgorithm::generatePlotScript(){
-	FILE* f;
-	string fichier = this->params->outputFilename;
-	fichier.append(".plot");
-	f = fopen(fichier.c_str(),"a");
-	fprintf(f,"set term png\n");
-	fprintf(f,"set output \"%s\"\n",params->plotOutputFilename);
-	fprintf(f,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
-	fprintf(f,"set xlabel \"Number of Evaluations\"\n");
+  FILE* f;
+  string fichier = this->params->outputFilename;
+  fichier.append(".plot");
+  f = fopen(fichier.c_str(),"a");
+  fprintf(f,"set term png\n");
+  fprintf(f,"set output \"%s\"\n",params->plotOutputFilename);
+  fprintf(f,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
+  fprintf(f,"set xlabel \"Number of Evaluations\"\n");
         fprintf(f,"set ylabel \"Fitness\"\n");
-	fprintf(f,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines, \'%s.dat\' using 3:5 t  \'Average\' w lines, \'%s.dat\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename,params->outputFilename,params->outputFilename);
-	fclose(f);	
+  fprintf(f,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines, \'%s.dat\' using 3:5 t  \'Average\' w lines, \'%s.dat\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename,params->outputFilename,params->outputFilename);
+  fclose(f);  
 }
 
 void CEvolutionaryAlgorithm::generateRScript(){
-	FILE* f;
-	string fichier = this->params->outputFilename;
-	fichier.append(".r");
-	f=fopen(fichier.c_str(),"a");
-	fprintf(f,"#Plotting for R\n"),
-	fprintf(f,"png(\"%s\")\n",params->plotOutputFilename);
-	fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename);
-	fprintf(f,"plot(0, type = \"n\", main = \"Plot Title\", xlab = \"Number of Evaluations\", ylab = \"Fitness\", xlim = c(0,%d) )\n",(int)population->currentEvaluationNb);
-	fprintf(f,"grid() # add grid\n");
-	fprintf(f,"lines(data[,3], data[,4], lty = 1) #draw first dataset\n");
-	fprintf(f,"lines(data[,3], data[,5], lty = 2) #draw second dataset\n");
-	fprintf(f,"lines(data[,3], data[,6], lty = 3) #draw third dataset\n");
-	fprintf(f,"legend(\"topright\", c(\"Best Fitness\", \"Average\", \"StdDev\"), lty = c(1, 2, 3) )\n");
-	fclose(f);
-	
+  FILE* f;
+  string fichier = this->params->outputFilename;
+  fichier.append(".r");
+  f=fopen(fichier.c_str(),"a");
+  fprintf(f,"#Plotting for R\n"),
+  fprintf(f,"png(\"%s\")\n",params->plotOutputFilename);
+  fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename);
+  fprintf(f,"plot(0, type = \"n\", main = \"Plot Title\", xlab = \"Number of Evaluations\", ylab = \"Fitness\", xlim = c(0,%d) )\n",(int)population->currentEvaluationNb);
+  fprintf(f,"grid() # add grid\n");
+  fprintf(f,"lines(data[,3], data[,4], lty = 1) #draw first dataset\n");
+  fprintf(f,"lines(data[,3], data[,5], lty = 2) #draw second dataset\n");
+  fprintf(f,"lines(data[,3], data[,6], lty = 3) #draw third dataset\n");
+  fprintf(f,"legend(\"topright\", c(\"Best Fitness\", \"Average\", \"StdDev\"), lty = c(1, 2, 3) )\n");
+  fclose(f);
+  
 }
 
 bool CEvolutionaryAlgorithm::allCriteria(){
 
-	for( unsigned i=0 ; i<stoppingCriteria.size(); i++ ){
-		if( stoppingCriteria.at(i)->reached() ){
-			std::cout << "Stopping criterion reached" << std::endl;
-			return true;
-		}
-	}
-	return false;
+  for( unsigned i=0 ; i<stoppingCriteria.size(); i++ ){
+    if( stoppingCriteria.at(i)->reached() ){
+      std::cout << "Stopping criterion reached" << std::endl;
+      return true;
+    }
+  }
+  return false;
 }
 
 #ifdef WIN32
 int gettimeofday
 (struct timeval* tp, void* tzp) {
-	DWORD t;
-	t = timeGetTime();
-	tp->tv_sec = t / 1000;
-	tp->tv_usec = t % 1000;
-	return 0;
+  DWORD t;
+  t = timeGetTime();
+  tp->tv_sec = t / 1000;
+  tp->tv_usec = t % 1000;
+  return 0;
 }
 
 void timersub( const timeval * tvp, const timeval * uvp, timeval* vvp )
 {
-	vvp->tv_sec = tvp->tv_sec - uvp->tv_sec;
-	vvp->tv_usec = tvp->tv_usec - uvp->tv_usec;
-	if( vvp->tv_usec < 0 )
-	{
-		--vvp->tv_sec;
-		vvp->tv_usec += 1000000;
-	}
+  vvp->tv_sec = tvp->tv_sec - uvp->tv_sec;
+  vvp->tv_usec = tvp->tv_usec - uvp->tv_usec;
+  if( vvp->tv_usec < 0 )
+  {
+    --vvp->tv_sec;
+    vvp->tv_usec += 1000000;
+  }
 } 
 #endif
 

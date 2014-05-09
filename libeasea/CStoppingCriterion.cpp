@@ -19,7 +19,7 @@ CGenerationalCriterion::CGenerationalCriterion(unsigned generationalLimit){
 }
 
 void CGenerationalCriterion::setCounterEa(unsigned* ea_counter){
-	this->currentGenerationPtr = ea_counter;
+  this->currentGenerationPtr = ea_counter;
 }
 
 bool CGenerationalCriterion::reached(){
@@ -32,7 +32,7 @@ bool CGenerationalCriterion::reached(){
 }
 
 unsigned* CGenerationalCriterion::getGenerationalLimit(){
-	return &(this->generationalLimit);
+  return &(this->generationalLimit);
 }
 
 /* ****************************************
@@ -45,25 +45,25 @@ CTimeCriterion::CTimeCriterion(unsigned timeLimit){
 
 bool CTimeCriterion::reached(){
   if(timeLimit>0){
-  	//gettimeofday(&(this->end),0);
-  	//timersub(&(this->end),&(this->begin), &(this->res));
-  	//if((unsigned)res.tv_sec>timeLimit-1){
-  	if((unsigned)elapsedTime>timeLimit-1){
-  	  std::cout << "Time Over" << std::endl;
-	  std::cout << "Time Limit was " << timeLimit << " seconds" << std::endl;
-  	  return true;
-  	}
-  	else return false;
+    //gettimeofday(&(this->end),0);
+    //timersub(&(this->end),&(this->begin), &(this->res));
+    //if((unsigned)res.tv_sec>timeLimit-1){
+    if((unsigned)elapsedTime>timeLimit-1){
+      std::cout << "Time Over" << std::endl;
+    std::cout << "Time Limit was " << timeLimit << " seconds" << std::endl;
+      return true;
+    }
+    else return false;
   }
   else return false;
 }
 
 void CTimeCriterion::setElapsedTime(double elapsedTime){
-	this->elapsedTime = elapsedTime;
+  this->elapsedTime = elapsedTime;
 }
 
 double CTimeCriterion::getElapsedTime(){
-	return this->elapsedTime;
+  return this->elapsedTime;
 }
 
 /* ****************************************
@@ -83,7 +83,7 @@ CControlCStopingCriterion::CControlCStopingCriterion(){
 
 bool CControlCStopingCriterion::reached(){
   if(ARRET_DEMANDE)
-	std::cout << "Algorithm stopped on user demand" << std::endl; 
+  std::cout << "Algorithm stopped on user demand" << std::endl; 
   return ARRET_DEMANDE;
 }
 

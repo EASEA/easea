@@ -21,8 +21,8 @@ int Parameters::setReductionSizes(int popSize, float popReducSize){
                 return (int)(popReducSize*popSize);
         if(popReducSize<0.0)
                 return 0;
-	if(popReducSize == 1.0)
-		return popSize;
+  if(popReducSize == 1.0)
+    return popSize;
         if((int)popReducSize>popSize){
                 printf("*WARNING* ReductionSize greater than PopulationSize !!!\n");
                 printf("*WARNING* ReductionSize will be PopulationSize\n");
