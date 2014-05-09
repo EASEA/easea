@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass{book}
 \usepackage{array}
 \usepackage[francais]{babel}
 \usepackage[utf8]{inputenc}
@@ -10,32 +10,41 @@
 \maketitle
 
 
+\setcounter{tocdepth}{3}
+\tableofcontents
 \section{This manual} % (fold)
 \label{sec:introduction}
   \paragraph{} % (fold)
   \label{par:}
 
-  This document is intended to programimer working on the EASEA platform and to
+  This document is intended to programmer working on the EASEA platform and to
   everyone working with it. It contain the language and idioms description, the
   concept behind it and the documentation related to the compiler and its genetic
   algorithm library.
 % paragraph  (end)
 % section introduction (end)
-
+\chapter{About EASEA}
 \section{Introduction} % (fold)
 \label{sec:Introduction}
 \paragraph{} % (fold)
 \label{par:}
 
 EASEA and EASEA-CLOUD are Free Open Source Software (under GNU Affero v3 General Public License) developed by the SONIC (Stochastic Optimisation and Nature Inspired Computing) group of the BFO team at Université de Strasbourg. Through the Strasbourg Complex Systems Digital Campus, the platforms are shared with the UNESCO CS-DC UniTwin and E-laboratory on Complex Computational Ecosystems (ECCE).
-
+% paragraph  (end)
+\paragraph{} % (fold)
+\label{par:}
+  
 EASEA (EAsy Specification of Evolutionary Algorithms) is an Artificial Evolution
 platform that allows scientists with only basic skills in computer science to
 implement evolutionary algorithms and to exploit the massive parallelism of
 many-core architectures in order to optimize virtually any real-world problems
 (continous, discrete, combinatorial, mixed and more (with Genetic Programming)),
 typically allowing for speedups up to x500 on a \$3,000 machine, depending on the complexity of the evaluation function of the inverse problem to be solved.
+% paragraph  (end)
 
+\paragraph{} % (fold)
+\label{par:}
+  
 Then, for very large problems, EASEA can also exploit computational ecosystems as it can parallelize (using an embedded island model) over loosely coupled heterogenous machines (Windows, Linux or Macintosh, with or without GPGPU cards, provided that they have internet access) a grid of computers or a Cloud.
 % paragraph  (end)
 % section Introduction (end)
@@ -52,9 +61,11 @@ Then, for very large problems, EASEA can also exploit computational ecosystems a
     Distribution can be done locally on the same machine or over the internet (using a embedded island model).
     Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
     C++-like description language.
+    \\
   EASEA use CUDA to parallelize over GPGPU card. There is, as absurd as it sound, no
   parallelization over CPU at the time of redaction, but a working openMP prototype
   enters its final testing phase.
+  \\
   EASEA offer a high level of parametrization and the possibility to include large
   chunk of C/C++ code with little to no change at all.
   % paragraph  (end)
@@ -67,12 +78,12 @@ Then, for very large problems, EASEA can also exploit computational ecosystems a
     Genetic programming
     CMA-ES (Covariance Matrix Adaptation Evolution Strategy)
     Memetic approach 
-
+\\
     EASEA also offer out-of-the-box a wide range of selector: Max/Min deterministic,
     Max/Min Random, Max/Min tournament and MaxRoulette.
     Three stopping criterion are possible : by generation, by time and by user
     defined control.
-
+\\
     The main advantage of EASEA 
     % paragraph  (end)
     % subsection current genetic algorithm implementation (end)
@@ -82,1084 +93,1030 @@ Then, for very large problems, EASEA can also exploit computational ecosystems a
 \section{Support} % (fold)
 \label{sec:Support}
 In order to have a working grapher, java jre 1.6 is required. Without it, an error appears at the start of easea's compiled programs but can be safely ignored.
-
+\\
 EASEA had been compiled and tested with those following compilers:
 
-    Gcc 4.4 to 4.8.2
-    Clang 3.0 to 3.3
-    Mingw-gcc 4.8.2
-    CUDA SDK > 4.1
+    \begin{itemize}
+      \item Gcc 4.4 to 4.8.2
+      \item Clang 3.0 to 3.3
+      \item Mingw-gcc 4.8.2
+      \item CUDA SDK > 4.1
+    \end{itemize}
 
 % section Support (end)
 \section{Workflow} % (fold)
 \label{sec:Workflow}
-easea compiler [GP,CUDA,CUDA_GP, etc ...]-> geneticAlgo.ez -> make -> geneticAlgo
+\paragraph{} % (fold)
+\label{par:}
+
+easea compiler \[GP,CUDA,CUDA_GP, etc ...\]-> geneticAlgo.ez -> make -> geneticAlgo
 (executable) 
+% paragraph  (end)
 % section Workflow (end)
 
-\section{The language} % (fold)
+\chapter{The language} % (fold)
 \label{sec:the language}
- \subsection{EASEA defined sections} % (fold)
+ \section{EASEA defined sections} % (fold)
  \label{sub:EASEA defined sections}
  
-Genome specific fields
-Genome Initialiser
-Description
+\subsection{Genome specific fields}\label{genome-specific-fields}
 
-Uses the Genome EASEA variable to access the individual's genome.
-EASEA syntax
+\subsubsection{Genome Initialiser}\label{genome-initialiser}
 
-\GenomeClass::initialiser :
-     ...
-\end
+\paragraph{Description}\label{description}
+~\\
+Uses the Genome EASEA variable
+to access the individual's genome.
 
-Example
+\paragraph{EASEA syntax}\label{easea-syntax}
+~\\
 
-\GenomeClass::initialiser :
-  for(int i=0; i<SIZE; i++ ) {
-    Genome.x[i] = (float)random(X_MIN,X_MAX);
-    Genome.sigma[i]=(float)random(0.,0.5);
-  }
-\end
+\texttt{\textbackslash{}GenomeClass::initialiser~:}\\\texttt{~~~~~...}\\\texttt{\textbackslash{}end}
 
-Genome Crossover
-Description
+\paragraph{Example}\label{example}
+~\\
 
-Binary crossover that results in the production of a single child.
+\texttt{\textbackslash{}GenomeClass::initialiser~:}\\\texttt{~~for(int~i=0;~i}\texttt{(y)?(x):(y))~~~~~//Definition~of~the~MAX~global~function}\\\texttt{~~\#define~MIN(x,y)~((x)\textless{}(y)?(x):(y))~~~~~~//Definition~of~the~MIN~global~function}\\\texttt{~~\#define~PI~3.141592654~~~~~~~~~~~~~~~~~//Definition~of~the~PI~global~variable}\\\texttt{\textbackslash{}end}
 
-The child is initialized by cloning the first parent.
+\subsubsection{User functions}\label{user-functions}
 
-Uses parent1 and parent 2 EASEA variables to access the parents genome.
+\paragraph{Description}\label{description-1}
+~\\
 
-Uses the child EASEA variable to access the child's genome.
-EASEA syntax
+This is the section where the user can declare the different functions
+he will need.
 
-\GenomeClass::crossover :
-     ...
-\end
+\paragraph{EASEA syntax}\label{easea-syntax-1}
+~\\
 
-Example
+\texttt{\textbackslash{}User~declarations~:}\\\texttt{~~~~~...}\\\texttt{\textbackslash{}end}
 
-\GenomeClass::crossover :
-  for (int i=0; i<SIZE; i++)
-  {
-    float alpha = (float)random(0.,1.); // barycentric crossover
-    child.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
-  }
-\end
+\paragraph{Example}\label{example-1}
+~\\
 
-Genome mutator
-Description
+\texttt{\textbackslash{}User~declarations~:}\\\texttt{~~float~gauss()}\\\texttt{~~/*~Generates~a~normally~distributed~random~value~with~variance~1~and~0~mean.}\\\texttt{~~~~~~Algorithm~based~on~}``\texttt{gasdev}''\texttt{~from~Numerical~recipes'~pg.~203.~*/}\\\texttt{~~\{}\\\texttt{~~~~int~iset~=~0;}\\\texttt{~~~~float~gset~=~0.0;}\\\texttt{~~~~float~v1~=~0.0,~v2~=~0.0,~r~=~0.0;}\\\texttt{~~~~float~factor~=~0.0;}\\\texttt{~~~~if~(iset)~\{}\\\texttt{~~~~~~iset~=~0;}\\\texttt{~~~~~~return~gset;}\\\texttt{~~~~\}}\\\texttt{~~~~else~\{~~~~}\\\texttt{~~~~~~do~\{}\\\texttt{~~~~~~~~~v1~=~(float)random(0.,1.)~*~2.0~-~1.0;}\\\texttt{~~~~~~~~~v2~=~(float)random(0.,1.)~*~2.0~-~1.0;}\\\texttt{~~~~~~~~~r~=~v1~*~v1~+~v2~*~v2;}\\\texttt{~~~~~~\}~}\\\texttt{~~~~~~while~(r~\textgreater{}~1.0);}\\\texttt{~~~~~~factor~=~sqrt~(-2.0~*~log~(r)~/~r);}\\\texttt{~~~~~~gset~=~v1~*~factor;}\\\texttt{~~~~~~iset~=~1;}\\\texttt{~~~~~~return~(v2~*~factor);}\\\texttt{~~~~\}}\\\texttt{~~\}}\\\texttt{\textbackslash{}end}
 
-Must return the number of mutations.
+\subsubsection{User Classes}\label{user-classes}
 
-Uses the Genome variable to access the individual's genome.
-EASEA syntax
-
-\GenomeClass::mutator :
-     ...
-\end
-
-Example
-
-\GenomeClass::mutator : // Must return the number of mutations
-  int NbMut=0; 
-  float pond = (float)random(0.,1.);
-  for (int i=0; i<SIZE; i++) {
-    if (tossCoin(pMutPerGene)){
-      NbMut++;
-      Genome[i] += pond;
-     }
-  }
-  return NbMut;
-\end
-
-Genome Evaluator
-
-The evaluation function is expected to be autonomous and independent from the rest of the code, for correct parallelization.
-Description
-
-Must return the fitness of the individual.
-
-Uses the Genome defined variable to access the individual's genome.
-EASEA syntax
-
-\GenomeClass::evaluator :
-     ...
-\end
-
-Example
-
-\GenomeClass::evaluator :
- float Score= 0.0;
- Score= Weierstrass(Genome.x, SIZE);
- return Score;
-\end
-
-Genome Display
-Description
-
-Uses the Genome variable to access the individual's genome.
-EASEA syntax
-
-\GenomeClass::display :
-     ...
-\end
-
-Example
-
-\GenomeClass::display :
-  for( size_t i=0 ; i<SIZE ; i++){
-    cout << Genome.x[i] << ":" <<  "|";
-  }
-  cout << Genome.fitness <<< "\n";
-\end
-
-
-
-User definition fields
-User Declarations
-Description
-
-This is the section where the user can declare some global variables and some global function.
-EASEA syntax
-
-\User declarations :
-     ...
-\end
-
-Example
-
-\User declarations :
-  #define SIZE 100                              //Problem size
-  #define Abs(x) ((x) < 0 ? -(x) : (x))   //Definition of the Abs global function
-  #define MAX(x,y) ((x)>(y)?(x):(y))     //Definition of the MAX global function
-  #define MIN(x,y) ((x)<(y)?(x):(y))      //Definition of the MIN global function
-  #define PI 3.141592654                 //Definition of the PI global variable
-\end
-
-User functions
-Description
-
-This is the section where the user can declare the different functions he will need.
-EASEA syntax
-
-\User declarations :
-     ...
-\end
-
-Example
-
-\User declarations :
-  float gauss()
-  /* Generates a normally distributed random value with variance 1 and 0 mean.
-      Algorithm based on "gasdev" from Numerical recipes' pg. 203. */
-  {
-    int iset = 0;
-    float gset = 0.0;
-    float v1 = 0.0, v2 = 0.0, r = 0.0;
-    float factor = 0.0;
-    if (iset) {
-      iset = 0;
-      return gset;
-    }
-    else {    
-      do {
-         v1 = (float)random(0.,1.) * 2.0 - 1.0;
-         v2 = (float)random(0.,1.) * 2.0 - 1.0;
-         r = v1 * v1 + v2 * v2;
-      } 
-      while (r > 1.0);
-      factor = sqrt (-2.0 * log (r) / r);
-      gset = v1 * factor;
-      iset = 1;
-      return (v2 * factor);
-    }
-  }
-\end
-
-User Classes
-Description
+\paragraph{Description}\label{description-2}
+~\\
 
 This is the section where the user will be able to declare:
 
-    The genome of the individuals trough the GenomeClass class
-    Different classes that will be needed.
+\begin{enumerate}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  The genome of the individuals trough the GenomeClass class
+\item
+  Different classes that will be needed.
+\end{enumerate}
 
-The GenomeClass field has to be present and ideally not empty. All the variables defined in this field (the genome) will be accessible in several other fields using the 'Genome' variable. Other "hidden" variables can be accessed such as:
+The GenomeClass field has to be present and ideally not empty. All the
+variables defined in this field (the genome) will be accessible in
+several other fields using the 'Genome' variable. Other ``hidden''
+variables can be accessed such as:
 
-        The fitness (variable: fitness. Ex: Genome.fitness)
+\begin{enumerate}
+\item
+  \begin{enumerate}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    The fitness (variable: fitness. Ex: Genome.fitness)
+  \end{enumerate}
+\end{enumerate}
 
-EASEA syntax
+\paragraph{EASEA syntax}\label{easea-syntax-2}
+~\\
 
-\User Class :
-     ...
-  GenomeClass{
-     ...
-  }
-\end
+\texttt{\textbackslash{}User~Class~:}\\\texttt{~~~~~...}\\\texttt{~~GenomeClass\{}\\\texttt{~~~~~...}\\\texttt{~~\}}\\\texttt{\textbackslash{}end}
 
-Example
+\paragraph{Example}\label{example-2}
+~\\
 
-\User classes:
-  Element     { 
-    int     Value;
-    Element *pNext; }
-  GenomeClass { 
-    Element *pList; 
-    int     Size;   }
-\end
+\texttt{\textbackslash{}User~classes:}\\\texttt{~~Element~~~~~\{~}\\\texttt{~~~~int~~~~~Value;}\\\texttt{~~~~Element~*pNext;~\}}\\\texttt{~~GenomeClass~\{~}\\\texttt{~~~~Element~*pList;~}\\\texttt{~~~~int~~~~~Size;~~~\}}\\\texttt{\textbackslash{}end}
 
-User Makefile
-Description
+\subsubsection{User Makefile}\label{user-makefile}
 
-This section allows the user to add some flags to the compiler typically to include some custom libraries.
+\paragraph{Description}\label{description-3}
+~\\
+
+This section allows the user to add some flags to the compiler typically
+to include some custom libraries.
 
 Two flags of the Makefile are accessible to the user in this section:
 
-    CPPFLAGS
-    LDFLAGS
+\begin{enumerate}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  CPPFLAGS
+\item
+  LDFLAGS
+\end{enumerate}
 
-EASEA syntax
+\paragraph{EASEA syntax}\label{easea-syntax-3}
+~\\
 
-\User Makefile options :
-     ...
-\end
+\texttt{\textbackslash{}User~Makefile~options~:}\\\texttt{~~~~~...}\\\texttt{\textbackslash{}end}
 
-Example
+\paragraph{Example}\label{example-3}
+~\\
 
-\User Makefile options :
-  CPPLAGS += -llibrary
-  LDFLAGS += -I/path/to/include
-\end
+\texttt{\textbackslash{}User~Makefile~options~:}\\\texttt{~~CPPLAGS~+=~-llibrary}\\\texttt{~~LDFLAGS~+=~-I/path/to/include}\\\texttt{\textbackslash{}end}
 
+\subsection{Miscellaneous fields}\label{miscellaneous-fields}
 
+\subsubsection{Before everything else
+function}\label{before-everything-else-function}
 
+\paragraph{Description}\label{description-4}
+~\\
 
+This function will be called at the start of the algorithm before the
+parent initialization.
 
-Miscellaneous fields
-Before everything else function
-Description
+\paragraph{EASEA syntax}\label{easea-syntax-4}
+~\\
 
-This function will be called at the start of the algorithm before the parent initialization.
-EASEA syntax
+\texttt{\textbackslash{}Before~everything~else~function~:}\\\texttt{~~~~~...}\\\texttt{\textbackslash{}end}
 
-\Before everything else function :
-     ...
-\end
+\subsubsection{After everything else
+function}\label{after-everything-else-function}
 
-After everything else function
-Description
+\paragraph{Description}\label{description-5}
+~\\
 
 This function will be called once the last generation has finished.
 
 The population can be accessed.
-EASEA syntax
 
-\After everything else function :
-     ...
-\end
+\paragraph{EASEA syntax}\label{easea-syntax-5}
+~\\
 
-At the beginning of each generation function
-Description
+\texttt{\textbackslash{}After~everything~else~function~:}\\\texttt{~~~~~...}\\\texttt{\textbackslash{}end}
 
-This function will be called every generation before the reproduction phase.
+\subsubsection{At the beginning of each generation
+function}\label{at-the-beginning-of-each-generation-function}
 
-The population can be accessed.
-EASEA syntax
+\paragraph{Description}\label{description-6}
+~\\
 
-\At the  beginning of each generation function :
-     ...
-\end
-
-At the end of each generation function
-Description
-
-This function will be called at every generation after the printing of generation statistics.
+This function will be called every generation before the reproduction
+phase.
 
 The population can be accessed.
-EASEA syntax
 
-\At the end of each generation function :
-     ...
-\end
+\paragraph{EASEA syntax}\label{easea-syntax-6}
+~\\
 
-At each generation before reduce function
-Description
+\texttt{\textbackslash{}At~the~~beginning~of~each~generation~function~:}\\\texttt{~~~~~...}\\\texttt{\textbackslash{}end}
 
-This function will be called at every generation before performing the different population reductions.
+\subsubsection{At the end of each generation
+function}\label{at-the-end-of-each-generation-function}
 
-The parent population AND the offspring population can be accessed (merged into a single population).
-EASEA syntax
+\paragraph{Description}\label{description-7}
+~\\
 
-\At every generation before reduce function :
-     ...
-\end
+This function will be called at every generation after the printing of
+generation statistics.
 
+The population can be accessed.
 
+\paragraph{EASEA syntax}\label{easea-syntax-7}
+~\\
 
+\texttt{\textbackslash{}At~the~end~of~each~generation~function~:}\\\texttt{~~~~~...}\\\texttt{\textbackslash{}end}
 
-Memetic specific field
-Genome Optimiser
-Description
+\subsubsection{At each generation before reduce
+function}\label{at-each-generation-before-reduce-function}
 
-The optimiser field is a Genome specific field. It is meant to contain the function defining the way an individual will be locally optimized n times. The function will hence be called sequentially as many times as the user desires for each individual.
+\paragraph{Description}\label{description-8}
+~\\
 
-EASEA gives the user two possibilities when designing their local optimization function :
+This function will be called at every generation before performing the
+different population reductions.
 
-    The user can choose to design the function that will enhance the genome of their individuals only in which case the rest of the local optimizer (i.e. creating the local optimizing loop, checking if an individual has improved or not, storing temporary individuals, calling of the evaluation function, etc ...) will be taken care of by the EASEA memetic algorithm. The function will have to be called as many times as specified by the Number of optimisation iterations parameter.
-    The user can choose to write the complete local optimizer. This way, he will have the complete freedom to design a more complex and specific optimizer, but he will also have to deal with the creation of the local optimization loop, the management of temporary individuals, the calling of the evaluation function etc... The Number of optimisation iterations parameter will have to be set to 1 as the function desigend by the user will contain it's own optimization loop requiring it's own specific number of optimization iterations.
+The parent population AND the offspring population can be accessed
+(merged into a single population).
 
-EASEA syntax
+\paragraph{EASEA syntax}\label{easea-syntax-8}
+~\\
 
-\GenomeClass::optimiser :
-     ...
-\end
+\texttt{\textbackslash{}At~every~generation~before~reduce~function~:}\\\texttt{~~~~~...}\\\texttt{\textbackslash{}end}
 
-Examples
+\subsection{Memetic specific field}\label{memetic-specific-field}
 
-The two following examples will expose the two different ways the optimizer field can be used. The first example will show a simple mutation function. The second example will show the design of a complete local optimizer. Both examples are GPU compatible.
+\subsubsection{Genome Optimiser}\label{genome-optimiser}
 
-Genome optimization only
+\paragraph{Description}\label{description-9}
+~\\
 
-\GenomeClass::optimiser :
- float pas = 0.001;
- Genome.x[currentIteration%SIZE]+=pas;
-\end
+The optimiser field is a Genome specific field. It is meant to contain
+the function defining the way an individual will be locally optimized
+\emph{n} times. The function will hence be called sequentially as many
+times as the user desires for each individual.
 
-This example shows a simple mutation function that will add a small variation to one of the genes of an individual. The call to this function will be followed by a call to the evaluation function, and a replacement process. If the modification of the genome has improved the individual, it will replace the original one. This is being taken care of by the EASEA memetic algorithm.
+EASEA gives the user two possibilities when designing their local
+optimization function :
 
-Complete local optimizer
+\begin{enumerate}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  The user can choose to design the function that will enhance the
+  genome of their individuals only in which case the rest of the local
+  optimizer (i.e. creating the local optimizing loop, checking if an
+  individual has improved or not, storing temporary individuals, calling
+  of the evaluation function, etc ...) will be taken care of by the
+  EASEA memetic algorithm. The function will have to be called as many
+  times as specified by the
+  Number of optimisation iterations parameter.
+\item
+  The user can choose to write the complete local optimizer. This way,
+  he will have the complete freedom to design a more complex and
+  specific optimizer, but he will also have to deal with the creation of
+  the local optimization loop, the management of temporary individuals,
+  the calling of the evaluation function etc... The
+  Number of optimisation iterations parameter will have to be set to 1 as the
+  function desigend by the user will contain it's own optimization loop
+  requiring it's own specific number of optimization iterations.
+\end{enumerate}
 
-\GenomeClass : : optimiser	:	//	Optimises	the	Genome 
- float pas=0.001;
- float fitnesstmp = Genome.fitness ; 
- float tmp[SIZE]; 
- int index = 0;
- for(int i=0; i<SIZE; i++) 
-  tmp[ i ] = Genome.x[ i ];
- for(int i=0; i<100; i++){ 
-  tmp[index] += pas;
-  fitnesstmp = Weierstrass(tmp, SIZE);
-  if(fitnesstmp < Genome.fitness){ 
-   Genome. fitness = fitnesstmp ;
-   Genome.x[ index ] = tmp[ index ];
-  }
-  else {
-   fitnesstmp = Genome.fitness;
-   tmp[ index ] = Genome.x[ index ];
-  
-   if( pas < 0 )
-    index = ( index + 1)%SIZE;
-    
-   pas *= -1;
-  }
- }
-\ end
+\paragraph{EASEA syntax}\label{easea-syntax-9}
+~\\
 
-This example shows how to design a complete local optimization function. The genome is almost being changed in the same way as in the first example.
-% subsection EASEA defined sections (end)
+\texttt{\textbackslash{}GenomeClass::optimiser~:}\\\texttt{~~~~~...}\\\texttt{\textbackslash{}end}
 
-\subsection{EASEA defined functions} % (fold)
-\label{sub:EASEA defined functions}
-Random Number Generators
-TossCoin
-Description
+\paragraph{Examples}\label{examples}
+~\\
 
-Simulates the toss of a coin. There are two different definitions of the tossCoin function:
+The two following examples will expose the two different ways the
+optimizer field can be used. The first example will show a simple
+\emph{mutation} function. The second example will show the design of a
+complete local optimizer. Both examples are GPU compatible.
 
-    A simple toss of a coin.
-    A biased toss of a coin.
+\begin{description}
+\itemsep1pt\parskip0pt\parsep0pt
+\item[Genome optimization only]
+\end{description}
 
-EASEA syntax
+\texttt{\textbackslash{}GenomeClass::optimiser~:}\\\texttt{~float~pas~=~0.001;}\\\texttt{~Genome.x{[}currentIteration\%SIZE{]}+=pas;}\\\texttt{\textbackslash{}end}
 
-bool tossCoin()                // SImple tosscoin
+This example shows a simple \emph{mutation} function that will add a
+small variation to one of the genes of an individual. The call to this
+function will be followed by a call to the evaluation function, and a
+replacement process. If the modification of the genome has improved the
+individual, it will replace the original one. This is being taken care
+of by the EASEA memetic algorithm.
 
-bool tossCoin(float bias)  // Biased tossCoin
+\begin{description}
+\itemsep1pt\parskip0pt\parsep0pt
+\item[Complete local optimizer]
+\end{description}
 
-Example
+\texttt{\textbackslash{}GenomeClass~:~:~optimiser~:~~~//~~Optimises~~~the~Genome~}\\\texttt{~float~pas=0.001;}\\\texttt{~float~fitnesstmp~=~Genome.fitness~;~}\\\texttt{~float~tmp{[}SIZE{]};~}\\\texttt{~int~index~=~0;}\\\texttt{~for(int~i=0;~i}\texttt{fitness}
 
-if( tossCoin(0.1)){
-    ...
-}
+\subsubsection{Best individual}\label{best-individual}
+
+Returns a pointer to the best individual found to this point. All the
+genome field can be accessed as well as the fitness field. All the
+genome fields can be modified.
+
+\paragraph{EASEA syntax}\label{easea-syntax-10}
+~\\
+
+\texttt{bBest~("-\textgreater{}"~operator~to~access~variables)}
+
+\subsubsection{Genome}\label{genome}
+
+Returns the genome of an individual (can only be used in genome specific
+EASEA subsections such as
+mutation,
+initialisation,
+evaluation and
+. All the fields
+can be modified.
+
+\paragraph{EASEA syntax}\label{easea-syntax-11}
+~\\
+
+\texttt{Genome~("."~operator~to~access~variables)}
+
+\subsubsection{Parent 1}\label{parent-1}
+
+Returns the genome of the first selected parent. Can only be used in the
+crossover genome
+subsection.
+
+\paragraph{EASEA syntax}\label{easea-syntax-12}
+~\\
+
+\texttt{parent1}
+
+\subsubsection{Parent 2}\label{parent-2}
+
+Returns the genome of the second selected parent. Can only be used in
+the crossover genome
+subsection.
+
+\paragraph{EASEA syntax}\label{easea-syntax-13}
+~\\
+
+\texttt{parent2}
+
+\subsubsection{Child}\label{child}
+
+Returns the genome of the newly created individual. Can only be used in
+the crossover genome
+subsection.
+
+\paragraph{EASEA syntax}\label{easea-syntax-14}
+~\\
+
+\texttt{child}
+
+Here is a quick presentation of the various parameters that can be found
+and used in a .ez file
+\section{EASEA defined parameters}
+\subsection{Basic Parameters}\label{basic-parameters}
+
+\paragraph{Number of generations}\label{number-of-generations}
+~\\
+
+\textbf{Description :}\\Gives the maximum number of generations during
+wich the evolutionary algorithm will run.
+
+\textbf{EASEA syntax :}
+
+\texttt{Number~of~generations:}
+
+\textbf{Values :} Integer strictly over 0.
+
+\textbf{Command line syntax :}
+
+\texttt{-{}-nbGen=}
+
+\textbf{Values :} Integer strictly over 0.
+
+\paragraph{Time limit}\label{time-limit}
+~\\
+
+\textbf{Description :}\\Sets the maximum amount of time in seconds
+during wich the evolutionary algorithm will be allowed to run. Setting
+this parameter to 0 deactivates the time limit.
+
+\textbf{EASEA syntax :}
+
+\texttt{Time~limit~:}
+
+\textbf{Values :} Positive Integer.
+
+\textbf{Command line syntax :}
+
+\texttt{-{}-timeLimit=}
+
+\textbf{Values :} Positive Integer.
+
+\paragraph{Population size}\label{population-size}
+~\\
+
+\textbf{Description :}\\Sets the size of the population that will be
+evolved.
+
+\textbf{EASEA syntax :}
+
+\texttt{Population~size~:}
+
+\textbf{Values :} Integer strictly over 0.\\ \textbf{Command line syntax
+:}
+
+\texttt{-{}-popSize=}
+
+\textbf{Values :} Integer strictly over 0.\\
+
+\paragraph{Offspring size}\label{offspring-size}
+~\\
+
+\textbf{Description :}\\Sets the number of individual that will be
+produced trough evolutionary crossover and/or mutation.
+
+\textbf{EASEA syntax :}
+
+\texttt{Offspring~size~:}
+
+\textbf{Values :} Integer strictly over 0.\\ \textbf{Command line syntax
+:}
+
+\texttt{-{}-nbOffspring=}
+
+\textbf{Values :} Integer strictly over 0.\\
+
+\paragraph{Mutation probability}\label{mutation-probability}
+~\\
+
+\textbf{Desciption :}\\This parameter determines the probability that an
+individual will be mutated during it's creation process.
+
+\textbf{EASEA syntax :}
+
+\texttt{Mutation~probability~:}
+
+\textbf{Values :} Real number between 0.0 and 1.0 .
+
+\textbf{Command line syntax :}\\This parameter is not avaible in command
+line yet.
+
+\paragraph{Crossover probability}\label{crossover-probability}
+~\\
+
+\textbf{Description :}\\This parameter determines the probability that
+an individual will be the result of a crossover during it's creation
+process.
+
+\textbf{EASEA syntax :}
+
+\texttt{Crossover~probability~:}
+
+\textbf{Values :} Real number between 0.0 and 1.0 .
+
+\textbf{Command line syntax :}\\This parameter is not avaible in command
+line yet.
+
+\paragraph{Evaluator goal}\label{evaluator-goal}
+~\\
+
+\textbf{Description :}\\This parameter will set the goal of the
+evolutionary algorithm.
+
+\textbf{EASEA syntax :}
+
+\texttt{Evaluator~goal~:}
+
+\textbf{Values :} \emph{minimis/ze} or \emph{maximis/ze}
+
+\textbf{Command line syntax :}\\This parameter is too fundamental to the
+behaviour of the algorithm to be changed in command line.
+
+\paragraph{Selection operator}\label{selection-operator}
+~\\
+
+\textbf{Description :}\\This parameter decides of the way individuals of
+the parent population will be selected to create the new individuals.
+Several operator are avaiable in EASEA:
+
+Tournament (need a selection pressure)
+
+Deterministic
+
+Roulette (only when Evaluator goal = maximise)
 
 Random
-Description
 
-Generates a random number. There are several definitions to the random function:
+When the selection pressure is an integer over 0, the best individual
+from the \emph{n} will be selected.\\When the selection pressure is a
+real number between 0.0 and 1.0, the best individual of 2 will be
+selection with the probability \emph{p} given by the selection pressure.
 
-    Random function with Min Max Boundary
-    Random function with Max Boundary only
+\textbf{EASEA syntax :}
 
-In the case of a Max boundary only, the Min boundary will be 0.
-EASEA syntax
+\texttt{Selection~operator:~OPERATOR~SELECTION\_PRESSURE}
 
-int random( int Min, int Max)
+\textbf{Values for operators :} Tournament Deterministic Roulette
+Random\\\textbf{Values for selection pressure :} Integer strictly over 0
+\textbf{or} Real number between 0.0 and 1.0 .
 
-int random( int Max)
+\textbf{Compile line syntax :}
 
-float random( float Min, float Max)
+\texttt{-{}-selectionOperator=}\\\texttt{-{}-selectionPressure=}
 
-double random( double Min, double Max)
+\textbf{Values for operators :} Tournament Deterministic Roulette
+Random\\\textbf{Values for selection pressure :} Integer strictly over 0
+\textbf{or} Real number between 0.0 and 1.0 .
 
+\paragraph{Surviving parents}\label{surviving-parents}
+~\\
 
-% subsection EASEA defined functions (end)
-% section the language (end)
-\subsection{EASEA defined variable} % (fold)
-\label{sub:EASEA defined variable}
-Current Generation
+\textbf{Description :}\\This parameter will determine the number of
+children that will be participating in the run for the next generation
+(IL VA FALLOIR MODIFIER CETTE DESCRITPION)
 
-Return the current generation number. This variable can be modified.
-EASEA syntax
+\textbf{EASEA syntax :}
 
-currentGeneration
+\texttt{Surviving~offspring:}
 
-Number of Generation
+\textbf{Values :} Integer strictly positive \textbf{or} Percentage
+(example: 100\%)
 
-Returns the generation limit. This variable can be modified.
-EASEA syntax
+\textbf{Command line syntax :}
 
-NB_GEN
+\texttt{-{}-survivingOffspring=}
 
-Population Size
+\textbf{Values :} Integer strictly positive \textbf{or} Real number
+value between 0.0 and 1.0
 
-Returns the size of the population. This variable cannot be modified.
-EASEA syntax
+\paragraph{Reduce parents operator}\label{reduce-parents-operator}
+~\\
 
-POP_SIZE
+\textbf{Description :}\\This parameter decides of the way individuals of
+the parent population will be selected to participate in the next
+selection process. Several operator are avaiable in EASEA:
 
-Mutation Probability
+Tournament (need a selection pressure)
 
-Returns the mutation probability. This variable can be modified.
-EASEA syntax
+Deterministic
 
-MUT_PROB
+Roulette (only when Evaluator goal = maximise)
 
-Crossover Probability
+Random
 
-Returns the crossover probability. This variable can be modified.
-EASEA syntax
+When the selection pressure is an integer over 0, the best individual
+from the \emph{n} will be selected.\\When the selection pressure is a
+real number between 0.0 and 1.0, the best individual of 2 will be
+selection with the probability \emph{p} given by the selection pressure.
 
-XOVER_PROB
+\textbf{EASEA syntax :}
 
-Minimise
+\texttt{Reduce~parents~operator:~OPERATOR~SELECTION\_PRESSURE}
 
-Returns a boolean indicating of the algorithm performs a minimization of not. Returns true if minimizing.
-EASEA syntax
+\textbf{Values for operators :} Tournament Deterministic Roulette
+Random\\\textbf{Values for selection pressure :} Integer strictly over 0
+\textbf{or} Real number between 0.0 and 1.0 .
 
-MINIMISE
+\textbf{Compile line syntax :}
 
-Population
+\texttt{-{}-reduceParentsOperator=}\\\texttt{-{}-reduceParentsPressure=}
 
-Returns a pointer to the main population. This variable cannot be used everywhere. If misused, it can provoque unexpected behaviours or compile errors.
-EASEA syntax
+\textbf{Values for operators :} Tournament Deterministic Roulette
+Random\\\textbf{Values for selection pressure :} Integer strictly over 0
+\textbf{or} Real number between 0.0 and 1.0 .
 
-pPopulation ([i] to access individuals)
+\paragraph{Reduce offspring
+operator}\label{reduce-offspring-operator}
+~\\
 
-fitness
+\textbf{Description :}\\This parameter decides of the way individuals of
+the offspring population will be selected to participate in the next
+selection process. Several operator are avaiable in EASEA:
 
-pPopulation[i]->fitness
+Tournament (need a selection pressure)
 
-Best individual
+Deterministic
 
-Returns a pointer to the best individual found to this point. All the genome field can be accessed as well as the fitness field. All the genome fields can be modified.
-EASEA syntax
+Roulette (only when Evaluator goal = maximise)
 
-bBest ("->" operator to access variables)
+Random
 
-Genome
+When the selection pressure is an integer over 0, the best individual
+from the \emph{n} will be selected.\\When the selection pressure is a
+real number between 0.0 and 1.0, the best individual of 2 will be
+selection with the probability \emph{p} given by the selection pressure.
 
-Returns the genome of an individual (can only be used in genome specific EASEA sections such as mutation, initialisation, [[EASEA defined sections#Genome Evaluation|evaluation and display). All the fields can be modified.
-EASEA syntax
+\textbf{EASEA syntax :}
 
-Genome ("." operator to access variables)
+\texttt{Reduce~offspring~operator:~OPERATOR~SELECTION\_PRESSURE}
 
-Parent 1
+\textbf{Values for operators :} Tournament Deterministic Roulette
+Random\\\textbf{Values for selection pressure :} Integer strictly over 0
+\textbf{or} Real number between 0.0 and 1.0 .
 
-Returns the genome of the first selected parent. Can only be used in the crossover genome section.
-EASEA syntax
+\textbf{Compile line syntax :}
 
-parent1
+\texttt{-{}-reduceOffspringOperator=}\\\texttt{-{}-reduceOffspringPressure=}
 
-Parent 2
+\textbf{Values for operators :} Tournament Deterministic Roulette
+Random\\\textbf{Values for selection pressure :} Integer strictly over 0
+\textbf{or} Real number between 0.0 and 1.0 .
 
-Returns the genome of the second selected parent. Can only be used in the crossover genome section.
-EASEA syntax
+\paragraph{Final reduce operator}\label{final-reduce-operator}
+~\\
 
-parent2
+\textbf{Description :}\\This parameter decides of the way individuals
+will be selected to participate in the next generation. Several operator
+are avaiable in EASEA:
 
-Child
+Tournament (need a selection pressure)
 
-Returns the genome of the newly created individual. Can only be used in the crossover genome section.
-EASEA syntax
+Deterministic
 
-child
+Roulette (only when Evaluator goal = maximise)
 
+Random
 
+When the selection pressure is an integer over 0, the best individual
+from the \emph{n} will be selected.\\When the selection pressure is a
+real number between 0.0 and 1.0, the best individual of 2 will be
+selection with the probability \emph{p} given by the selection pressure.
 
+\textbf{EASEA syntax :}
 
-Basic Parameters
-Number of generations
+\texttt{Final~reduce~operator:~OPERATOR~SELECTION\_PRESSURE}
 
-Description :
-Gives the maximum number of generations during wich the evolutionary algorithm will run.
+\textbf{Values for operators :} Tournament Deterministic Roulette
+Random\\\textbf{Values for selection pressure :} Integer strictly over 0
+\textbf{or} Real number between 0.0 and 1.0 .
 
-EASEA syntax :
+\textbf{Compile line syntax :}
 
-Number of generations:
+\texttt{-{}-reduceFinalOperator=}\\\texttt{-{}-reduceFinalPressure=}
 
-Values : Integer strictly over 0.
+\textbf{Values for operators :} Tournament Deterministic Roulette
+Random\\\textbf{Values for selection pressure :} Integer strictly over 0
+\textbf{or} Real number between 0.0 and 1.0 .
 
-Command line syntax :
+\paragraph{Elitism}\label{elitism}
+~\\
 
---nbGen=
+\textbf{Description :}\\This parameter determines the type of elitism of
+the evolutionary algorithm.
 
-Values : Integer strictly over 0.
-Time limit
+\textbf{EASEA syntax :}
 
-Description :
-Sets the maximum amount of time in seconds during wich the evolutionary algorithm will be allowed to run. Setting this parameter to 0 deactivates the time limit.
+\texttt{Elitism~:}
 
-EASEA syntax :
+\textbf{Values :} Strong \textbf{or} Weak
 
-Time limit :
+\textbf{Compile line syntax :}
 
-Values : Positive Integer.
+\texttt{-{}-{}-eliteType=}
 
-Command line syntax :
+\textbf{Values :} 1 (for Strong) \textbf{or} 0 (for Weak)
 
---timeLimit=
+\paragraph{Elite}\label{elite}
+~\\
 
-Values : Positive Integer.
-Population size
+\textbf{Description :}\\This parameter sets the number of individuals
+that are going to be ``elites''. Set this parameter to 0 to deactivate
+the elitism
 
-Description :
-Sets the size of the population that will be evolved.
+\textbf{EASEA syntax :}
 
-EASEA syntax :
+\texttt{Elite~:}
 
-Population size :
+\textbf{Values :} Positive Integer. 0 to deactive elitism.
 
-Values : Integer strictly over 0.
+\textbf{Command line syntax :}
 
-Command line syntax :
+\texttt{-{}-elite=}
 
---popSize=
+\textbf{Values :} Positive Integer. 0 to deactive elitism.
 
-Values : Integer strictly over 0.
-Offspring size
+\subsection{Remote Island Model
+Parameters}\label{remote-island-model-parameters}
 
-Description :
-Sets the number of individual that will be produced trough evolutionary crossover and/or mutation.
+\paragraph{Remote island model}\label{remote-island-model}
+~\\
 
-EASEA syntax :
+\textbf{Description :}\\Boolean that will activate the migration of
+individuals towards other EASEA instances of the same problem that are
+located on remote machines. The address of the machines has to be
+specified in the \emph{IP file} parameter.
 
-Offspring size :
+\textbf{EASEA syntax :}
 
-Values : Integer strictly over 0.
+\texttt{Remote~island~model~:}
 
-Command line syntax :
+\textbf{Values :} true \textbf{or} false.
 
---nbOffspring=
+\textbf{Command line syntax :}
 
-Values : Integer strictly over 0.
-Mutation probability
+\texttt{-{}-{}-remoteIslandModel=}
 
-Desciption :
-This parameter determines the probability that an individual will be mutated during it's creation process.
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-EASEA syntax :
+\paragraph{IP file}\label{ip-file}
+~\\
 
-Mutation probability :
+\textbf{Description :}\\This parameter contains the path to the File
+containing the IP addresses and port of all the remote machines that can
+receive individuals. This file needs to be structure as
+such:\\a1.b1.c1.d1:p1\\a2.b2.c2.d2:p2\\...\\an.bn.cn.dn:pn\\No blank
+line is allowed at the end of the file.\\An individual can be send to a
+machine that isn't active.\\The IP address and port of the local machine
+can be present in the file. EASEA will recognize and ignore it.\\If
+there are no IP addresses in the file, or if only the local machine's
+address is present in that file, the \emph{Remote island model}
+Parameter will be set to \emph{false}.
 
-Values : Real number between 0.0 and 1.0 .
+\textbf{EASEA syntax :}
 
-Command line syntax :
-This parameter is not avaible in command line yet.
-Crossover probability
+\texttt{IP~file~:}
 
-Description :
-This parameter determines the probability that an individual will be the result of a crossover during it's creation process.
+\textbf{Values :} The path to the file containing the IP addresses
+(example: ./ip.txt)
 
-EASEA syntax :
+\textbf{Command line syntax :}
 
-Crossover probability :
+\texttt{-{}-ipFile=}
 
-Values : Real number between 0.0 and 1.0 .
+\textbf{Values :} The path to the file containing the IP addresses
+(example: ./ip.txt)
 
-Command line syntax :
-This parameter is not avaible in command line yet.
-Evaluator goal
+\paragraph{Server Port}\label{server-port}
+~\\
 
-Description :
-This parameter will set the goal of the evolutionary algorithm.
+\textbf{'Description :}\\This parameter sets the port that will be used
+by the island server to listen for the arrival of newcomers.
 
-EASEA syntax :
+\textbf{EASEA syntax :}
 
-Evaluator goal :
+\texttt{Server~port~:}
 
-Values : minimis/ze or maximis/ze
+\textbf{Values :} A valid port number.
 
-Command line syntax :
-This parameter is too fundamental to the behaviour of the algorithm to be changed in command line.
-Selection operator
+\textbf{Command line syntax :}
 
-Description :
-This parameter decides of the way individuals of the parent population will be selected to create the new individuals. Several operator are avaiable in EASEA:
+\texttt{-{}-{}-serverPort=}
 
-    Tournament (need a selection pressure)
-    Deterministic
-    Roulette (only when Evaluator goal = maximise)
-    Random 
+\textbf{Values :} A valid port number.
 
-When the selection pressure is an integer over 0, the best individual from the n will be selected.
-When the selection pressure is a real number between 0.0 and 1.0, the best individual of 2 will be selection with the probability p given by the selection pressure.
+\paragraph{Migration probability}\label{migration-probability}
+~\\
 
-EASEA syntax :
+\textbf{Description :}\\This parameter sets the probability for and
+individual to migrate to a remote machine every generation.
 
-Selection operator: OPERATOR SELECTION_PRESSURE
+\textbf{EASEA syntax :}
 
-Values for operators : Tournament Deterministic Roulette Random
-Values for selection pressure : Integer strictly over 0 or Real number between 0.0 and 1.0 .
+\texttt{Migration~probability~:}
 
-Compile line syntax :
+\textbf{Values :} A real number between 0.0 and 1.0 .
 
---selectionOperator=
---selectionPressure=
+\textbf{Command line syntax :}
 
-Values for operators : Tournament Deterministic Roulette Random
-Values for selection pressure : Integer strictly over 0 or Real number between 0.0 and 1.0 .
-Surviving parents
+\texttt{-{}-migrationProbability=}
 
-Description :
-This parameter will determine the number of children that will be participating in the run for the next generation (IL VA FALLOIR MODIFIER CETTE DESCRITPION)
+\textbf{Values :} A real number between 0.0 and 1.0 .
 
-EASEA syntax :
+\subsection{Memetic Parameters}\label{memetic-parameters}
 
-Surviving offspring:
+\paragraph{Number of optimisation
+iterations}\label{number-of-optimisation-iterations}
+~\\
 
-Values : Integer strictly positive or Percentage (example: 100%)
+\textbf{Description :}\\This parameters gives the number of iterations
+the local search algorithm will perform.
 
-Command line syntax :
+\textbf{EASEA syntax :}
 
---survivingOffspring=
+\texttt{Number~of~optimisation~iterations~:}
 
-Values : Integer strictly positive or Real number value between 0.0 and 1.0
-Reduce parents operator
+\textbf{Values :} A positive integer.
 
-Description :
-This parameter decides of the way individuals of the parent population will be selected to participate in the next selection process. Several operator are avaiable in EASEA:
+\textbf{Command line syntax :}
 
-    Tournament (need a selection pressure)
-    Deterministic
-    Roulette (only when Evaluator goal = maximise)
-    Random 
+\texttt{-{}-optimiseIterations=}
 
-When the selection pressure is an integer over 0, the best individual from the n will be selected.
-When the selection pressure is a real number between 0.0 and 1.0, the best individual of 2 will be selection with the probability p given by the selection pressure.
+\textbf{Values :} A positive integer.
 
-EASEA syntax :
+\paragraph{Baldwinism}\label{baldwinism}
+~\\
 
-Reduce parents operator: OPERATOR SELECTION_PRESSURE
+\textbf{Description :}\\This parameter will set the behaviour of the
+memetic algorithm. Setting it to \emph{true} will turn the algorithm
+into a \textbf{Baldwinian} memetic algorithm. Setting it to \emph{false}
+will turn the algorithm into a \textbf{Lamarckian} memetic algorithm.
+This parameter's default value is \emph{true}.
 
-Values for operators : Tournament Deterministic Roulette Random
-Values for selection pressure : Integer strictly over 0 or Real number between 0.0 and 1.0 .
+\textbf{EASEA syntax :}
 
-Compile line syntax :
+\texttt{Baldwinism~:}
 
---reduceParentsOperator=
---reduceParentsPressure=
+\textbf{Values :} true \textbf{or} false.
 
-Values for operators : Tournament Deterministic Roulette Random
-Values for selection pressure : Integer strictly over 0 or Real number between 0.0 and 1.0 .
-Reduce offspring operator
+\textbf{Command line syntax :}
 
-Description :
-This parameter decides of the way individuals of the offspring population will be selected to participate in the next selection process. Several operator are avaiable in EASEA:
+\texttt{-{}-baldwinism=}
 
-    Tournament (need a selection pressure)
-    Deterministic
-    Roulette (only when Evaluator goal = maximise)
-    Random 
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-When the selection pressure is an integer over 0, the best individual from the n will be selected.
-When the selection pressure is a real number between 0.0 and 1.0, the best individual of 2 will be selection with the probability p given by the selection pressure.
+\subsection{Miscalleous Parameters}\label{miscalleous-parameters}
 
-EASEA syntax :
+\paragraph{Print stats}\label{print-stats}
+~\\
 
-Reduce offspring operator: OPERATOR SELECTION_PRESSURE
+\textbf{Description :}\\This parameter set to \emph{true} will show
+different stats every generations:
 
-Values for operators : Tournament Deterministic Roulette Random
-Values for selection pressure : Integer strictly over 0 or Real number between 0.0 and 1.0 .
+Generation number
 
-Compile line syntax :
+Time passed since the start of the algorithm
 
---reduceOffspringOperator=
---reduceOffspringPressure=
+Number of evaluations completed
 
-Values for operators : Tournament Deterministic Roulette Random
-Values for selection pressure : Integer strictly over 0 or Real number between 0.0 and 1.0 .
-Final reduce operator
+Fitness of the best individual found
 
-Description :
-This parameter decides of the way individuals will be selected to participate in the next generation. Several operator are avaiable in EASEA:
+Avegrage fitness
 
-    Tournament (need a selection pressure)
-    Deterministic
-    Roulette (only when Evaluator goal = maximise)
-    Random 
+Standard deviation of the fitness
 
-When the selection pressure is an integer over 0, the best individual from the n will be selected.
-When the selection pressure is a real number between 0.0 and 1.0, the best individual of 2 will be selection with the probability p given by the selection pressure.
+This parameter's default value is \emph{true}.
 
-EASEA syntax :
+\textbf{EASEA syntax :}
 
-Final reduce operator: OPERATOR SELECTION_PRESSURE
+\texttt{Print~stats~:}
 
-Values for operators : Tournament Deterministic Roulette Random
-Values for selection pressure : Integer strictly over 0 or Real number between 0.0 and 1.0 .
+\textbf{Value :} true \textbf{or} false.
 
-Compile line syntax :
+\textbf{Command line syntax :}
 
---reduceFinalOperator=
---reduceFinalPressure=
+\texttt{printStats=}
 
-Values for operators : Tournament Deterministic Roulette Random
-Values for selection pressure : Integer strictly over 0 or Real number between 0.0 and 1.0 .
-Elitism
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-Description :
-This parameter determines the type of elitism of the evolutionary algorithm.
+\paragraph{Plot stats}\label{plot-stats}
+~\\
 
-EASEA syntax :
+\textbf{Description}\\This parameter set to \emph{true} will open a
+\textbf{gnuplot} process, that will plot the curves representing the
+evolution of:
 
-Elitism :
+The best fitness
 
-Values : Strong or Weak
+The avegage fitness
 
-Compile line syntax :
+The standard deviation of the fitness
 
----eliteType=
+To be able to use this parameter, gnuplot has to be installed on the
+machine. This parameter is only avaiable for Linux users.\\The ploting
+of the curves will happen simultaniously to the evolution. At the end of
+the evolution, the resulting curves will be saved in a \textbf{.png}
+file. It's name will be the same as the project name. This parameter's
+default value is \emph{false}.
 
-Values : 1 (for Strong) or 0 (for Weak)
-Elite
+\textbf{EASEA syntax :}
 
-Description :
-This parameter sets the number of individuals that are going to be "elites". Set this parameter to 0 to deactivate the elitism
+\texttt{Plot~stats~:}
 
-EASEA syntax :
+\textbf{Value :} true \textbf{or} false.
 
-Elite :
+\textbf{Command line syntax :}
 
-Values : Positive Integer. 0 to deactive elitism.
+\texttt{plotStats=}
 
-Command line syntax :
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
---elite=
+\paragraph{Generate csv stats file}\label{generate-csv-stats-file}
+~\\
 
-Values : Positive Integer. 0 to deactive elitism.
-Remote Island Model Parameters
-Remote island model
+\textbf{Description :}\\This parameter set to \emph{true} will save the
+different stats shown with the
+Print stats parameter to a
+\textbf{.csv} file at the end of the evolution. The file name will be
+the same as the project name. This parameter's default value is
+\emph{false}.
 
-Description :
-Boolean that will activate the migration of individuals towards other EASEA instances of the same problem that are located on remote machines. The address of the machines has to be specified in the IP file parameter.
+\textbf{EASEA syntax :}
 
-EASEA syntax :
+\texttt{Generate~csv~stats~file~:}
 
-Remote island model :
+\textbf{Values :} true \textbf{or} false.
 
-Values : true or false.
+\textbf{Command line syntax :}
 
-Command line syntax :
+\texttt{-{}-generateCSV=}
 
----remoteIslandModel=
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-Values : 1 (for true) or 0 (for false).
-IP file
+\paragraph{Generate gnuplot script}\label{generate-gnuplot-script}
+~\\
 
-Description :
-This parameter contains the path to the File containing the IP addresses and port of all the remote machines that can receive individuals. This file needs to be structure as such:
-a1.b1.c1.d1:p1
-a2.b2.c2.d2:p2
-...
-an.bn.cn.dn:pn
-No blank line is allowed at the end of the file.
-An individual can be send to a machine that isn't active.
-The IP address and port of the local machine can be present in the file. EASEA will recognize and ignore it.
-If there are no IP addresses in the file, or if only the local machine's address is present in that file, the Remote island model Parameter will be set to false.
+\textbf{Description :}\\This parameter set to \emph{true} will create a
+gnuplot script that will allow to plot the evolution in a \textbf{.png}
+file which, name will be the same as the project name. To plot the
+evolution, the script will save the stats in a \textbf{.dat} file. This
+parameter's default value is \emph{false}.
 
-EASEA syntax :
+\textbf{EASEA syntax :}
 
-IP file :
+\texttt{Generate~gnuplot~script~:}
 
-Values : The path to the file containing the IP addresses (example: ./ip.txt)
+\textbf{Values :} true \textbf{or} false.
 
-Command line syntax :
+\textbf{Command line syntax :}
 
---ipFile=
+\texttt{-{}-generateGnuplotScript=}
 
-Values : The path to the file containing the IP addresses (example: ./ip.txt)
-Server Port
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-'Description :
-This parameter sets the port that will be used by the island server to listen for the arrival of newcomers.
+\subsubsection{Generate R script}\label{generate-r-script}
 
-EASEA syntax :
+\textbf{Description :}\\This parameter set to \emph{true} will create a
+R script that will allow to plot the evolution in a \textbf{.png} file,
+which name will be the same as the project name. To plot the evolution,
+the script will save the stats in a \textbf{.csv} file. This parameter's
+default value is \emph{false}.
 
-Server port :
+\textbf{EASEA syntax :}
 
-Values : A valid port number.
+\texttt{Generate~R~script~:}
 
-Command line syntax :
+\textbf{Values :} true \textbf{or} false.
 
----serverPort=
+\textbf{Command line syntax :}
 
-Values : A valid port number.
+\texttt{-{}-generateRScript=}
 
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-Migration probability
+\subsubsection{Save population}\label{save-population}
 
-Description :
-This parameter sets the probability for and individual to migrate to a remote machine every generation.
+\textbf{Description :}\\This parameter set to \emph{true} will save the
+final population in a \textbf{.pop} file, which name will be the same as
+the project name. The population will be in a EASEA serialized form.
+This parameter's default value is \emph{false}.
 
-EASEA syntax :
+\textbf{EASEA syntax :}
 
-Migration probability :
+\texttt{Save~population~:}
 
-Values : A real number between 0.0 and 1.0 .
+\textbf{Values :} true \textbf{or} false.
 
-Command line syntax :
+\textbf{Command line syntax :}
 
---migrationProbability=
+\texttt{-{}-savePopulation=}
 
-Values : A real number between 0.0 and 1.0 .
-Memetic Parameters
-Number of optimisation iterations
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-Description :
-This parameters gives the number of iterations the local search algorithm will perform.
+\subsubsection{Start from file}\label{start-from-file}
 
-EASEA syntax :
+\textbf{Description :}\\This parameter set to \emph{true} will
+initialize the population using the population saved the \textbf{.pop}
+file that is in the current folder. The file has to have the save name
+as the project. For this initialization to work, the individuals
+contained in the file has to have the exact same Genome, and the number
+of individuals has to be equal or greater to the population size.\\The
+individuals have to be in the EASEA serialization form.\\This
+parameter's default value is \emph{false}.
 
-Number of optimisation iterations :
+\textbf{EASEA syntax :}
 
-Values : A positive integer.
+\texttt{Start~from~file~:}
 
-Command line syntax :
+\textbf{Values :} true \textbf{or} false.
 
---optimiseIterations=
+\textbf{Command line syntax :}
 
-Values : A positive integer.
-Baldwinism
+\texttt{-{}-saveFromFile=}
 
-Description :
-This parameter will set the behaviour of the memetic algorithm. Setting it to true will turn the algorithm into a Baldwinian memetic algorithm. Setting it to false will turn the algorithm into a Lamarckian memetic algorithm. This parameter's default value is true.
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-EASEA syntax :
+\subsubsection{Print initial population}\label{print-initial-population}
 
-Baldwinism :
+\textbf{Description :}\\This parameter allow to print the initial
+population. This parameter's default value is 0.
 
-Values : true or false.
+\textbf{EASEA syntax :}\\This is a command line exclusive parameter.
 
-Command line syntax :
+\textbf{Command line syntax :}
 
---baldwinism=
+\texttt{-{}-printInitialPopulation=}
 
-Values : 1 (for true) or 0 (for false).
-Miscalleous Parameters
-Print stats
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-Description :
-This parameter set to true will show different stats every generations:
+\subsubsection{Print final population}\label{print-final-population}
 
-    Generation number
-    Time passed since the start of the algorithm
-    Number of evaluations completed
-    Fitness of the best individual found
-    Avegrage fitness
-    Standard deviation of the fitness 
+\textbf{Description :}\\This parameter allow to print the final
+population. This parameter's default value is 0.
 
-This parameter's default value is true.
+\textbf{EASEA syntax :}\\This is a command line exclusive parameter.
 
-EASEA syntax :
+\textbf{Command line syntax :}
 
-Print stats :
+\texttt{-{}-printFinalPopulation=}
 
-Value : true or false.
+\textbf{Values :} 1 (for true) \textbf{or} 0 (for false).
 
-Command line syntax :
+\subsection{User defined parameters}\label{user-defined-parameters}
 
-printStats=
+EASEA defines 5 parameters that are left free to be used by the ".ez"
+programmer.
 
-Values : 1 (for true) or 0 (for false).
-Plot stats
+\textbf{User parameters :}
 
-Description
-This parameter set to true will open a gnuplot process, that will plot the curves representing the evolution of:
+\texttt{~-{}-u1~arg~~~~~~~~~~~~~~~~~~~~~~User~defined~parameter~1}\\\texttt{~-{}-u2~arg~~~~~~~~~~~~~~~~~~~~~~User~defined~parameter~2}\\\texttt{~-{}-u3~arg~~~~~~~~~~~~~~~~~~~~~~User~defined~parameter~3}\\\texttt{~-{}-u4~arg~~~~~~~~~~~~~~~~~~~~~~User~defined~parameter~4}\\\texttt{~-{}-u5~arg~~~~~~~~~~~~~~~~~~~~~~User~defined~parameter~5}
 
-    The best fitness
-    The avegage fitness
-    The standard deviation of the fitness 
+\textbf{Types :} u1 and u2 are string variables, u3 to u5 are integers.
 
-To be able to use this parameter, gnuplot has to be installed on the machine. This parameter is only avaiable for Linux users.
-The ploting of the curves will happen simultaniously to the evolution. At the end of the evolution, the resulting curves will be saved in a .png file. It's name will be the same as the project name.</br> This parameter's default value is false.
+'''Usage Exemple : ''' In the .ez source code
 
-EASEA syntax :
+\texttt{~~int~a~=~setVariable(}``\texttt{u3}''\texttt{,b);}
 
-Plot stats :
+\emph{'where : \textbf{\\}``a''}' is the variable set to the argument or
+default value.\\\textbf{``u3''} is the argument name.\\\textbf{``b''} is
+the default integer value, if the u3 argument has not been set.
 
-Value : true or false.
-
-Command line syntax :
-
-plotStats=
-
-Values : 1 (for true) or 0 (for false).
-Generate csv stats file
-
-Description :
-This parameter set to true will save the different stats shown with the Print stats parameter to a .csv file at the end of the evolution. The file name will be the same as the project name. This parameter's default value is false.
-
-EASEA syntax :
-
-Generate csv stats file :
-
-Values : true or false.
-
-Command line syntax :
-
---generateCSV=
-
-Values : 1 (for true) or 0 (for false).
-Generate gnuplot script
-
-Description :
-This parameter set to true will create a gnuplot script that will allow to plot the evolution in a .png file which, name will be the same as the project name. To plot the evolution, the script will save the stats in a .dat file. This parameter's default value is false.
-
-EASEA syntax :
-
-Generate gnuplot script :
-
-Values : true or false.
-
-Command line syntax :
-
---generateGnuplotScript=
-
-Values : 1 (for true) or 0 (for false).
-Generate R script
-
-Description :
-This parameter set to true will create a R script that will allow to plot the evolution in a .png file, which name will be the same as the project name. To plot the evolution, the script will save the stats in a .csv file. This parameter's default value is false.
-
-EASEA syntax :
-
-Generate R script :
-
-Values : true or false.
-
-Command line syntax :
-
---generateRScript=
-
-Values : 1 (for true) or 0 (for false).
-Save population
-
-Description :
-This parameter set to true will save the final population in a .pop file, which name will be the same as the project name. The population will be in a EASEA serialized form. This parameter's default value is false.
-
-EASEA syntax :
-
-Save population :
-
-Values : true or false.
-
-Command line syntax :
-
---savePopulation=
-
-Values : 1 (for true) or 0 (for false).
-Start from file
-
-Description :
-This parameter set to true will initialize the population using the population saved the .pop file that is in the current folder. The file has to have the save name as the project. For this initialization to work, the individuals contained in the file has to have the exact same Genome, and the number of individuals has to be equal or greater to the population size.
-The individuals have to be in the EASEA serialization form.
-This parameter's default value is false.
-
-EASEA syntax :
-
-Start from file :
-
-Values : true or false.
-
-Command line syntax :
-
---saveFromFile=
-
-Values : 1 (for true) or 0 (for false).
-Print initial population
-
-Description :
-This parameter allow to print the initial population. This parameter's default value is 0.
-
-EASEA syntax :
-This is a command line exclusive parameter.
-
-Command line syntax :
-
---printInitialPopulation=
-
-Values : 1 (for true) or 0 (for false).
-Print final population
-
-Description :
-This parameter allow to print the final population. This parameter's default value is 0.
-
-EASEA syntax :
-This is a command line exclusive parameter.
-
-Command line syntax :
-
---printFinalPopulation=
-
-Values : 1 (for true) or 0 (for false).
-User defined parameters
-
-EASEA defines 5 parameters that are left free to be used by the ".ez" programmer.
-
-User parameters :
-
- --u1 arg                      User defined parameter 1
- --u2 arg                      User defined parameter 2
- --u3 arg                      User defined parameter 3
- --u4 arg                      User defined parameter 4
- --u5 arg                      User defined parameter 5
-
-Types : u1 and u2 are string variables, u3 to u5 are integers.
-
-Usage Exemple : In the .ez source code
-
-  int a = setVariable("u3",b);
-
-where :
-"a" is the variable set to the argument or default value.
-"u3" is the argument name.
-"b" is the default integer value, if the u3 argument has not been set. 
-
-\section{Developer documentation} % (fold)
+\chapter{Developer documentation} % (fold)
 \label{sec:Developer documentation}
-\subsection{Compiler} % (fold)
+\section{Compiler} % (fold)
 \label{sub:Compiler}
   lex yacc .... 
 % subsection Compiler (end)
-  \subsection{EASEA librairy} % (fold)
+  \section{EASEA librairy} % (fold)
   \label{sub:EASEA library}
   CEvolutionary ... uml ...
   % subsection EASEA library (end)
 % section Developer documentation (end)
 % subsection EASEA defined variable (end)
 
-\section{example} % (fold)
+\section{Example} % (fold)
 \label{sec:example}
 
 % section example (end)
@@ -1168,3 +1125,6 @@ where :
 \label{sec:Additional}
 Additional ressource can be found on the project wiki : and repository 
 % section Additional (end)
+
+\end{document}
+\end{book}
