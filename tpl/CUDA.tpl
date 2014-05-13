@@ -676,7 +676,11 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
 
   // warning cstats parameter is null
-  this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params,NULL);
+  this->population = (CPopulation*)new
+  PopulationImpl( this->params->parentPopulationSize,this->params->offspringPopulationSize,
+                  this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,
+                  this->params->randomGenerator,this->params,this->cstats);
+
   int popSize = (params->parentPopulationSize>params->offspringPopulationSize?params->parentPopulationSize:params->offspringPopulationSize);
   ((PopulationImpl*)this->population)->cudaBuffer = (void*)malloc(sizeof(IndividualImpl)*( popSize ));
   
