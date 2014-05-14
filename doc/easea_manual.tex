@@ -10,7 +10,7 @@
 \maketitle
 
 
-\setcounter{tocdepth}{3}
+\setcounter{tocdepth}{1}
 \tableofcontents
 \section{This manual} % (fold)
 \label{sec:introduction}
@@ -61,11 +61,17 @@ Then, for very large problems, EASEA can also exploit computational ecosystems a
     Distribution can be done locally on the same machine or over the internet (using a embedded island model).
     Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
     C++-like description language.
-    \\
+  % paragraph  (end)
+  \paragraph{} % (fold)
+  \label{par:}
+  
   EASEA use CUDA to parallelize over GPGPU card. There is, as absurd as it sound, no
   parallelization over CPU at the time of redaction, but a working openMP prototype
   enters its final testing phase.
-  \\
+  % paragraph  (end)
+  \paragraph{} % (fold)
+  \label{par:}
+    
   EASEA offer a high level of parametrization and the possibility to include large
   chunk of C/C++ code with little to no change at all.
   % paragraph  (end)
@@ -74,15 +80,25 @@ Then, for very large problems, EASEA can also exploit computational ecosystems a
     \label{sub:current genetic algorithm implementation}
     \paragraph{} % (fold)
     \label{par:}
-    Darwinian and baldwinian approach
-    Genetic programming
-    CMA-ES (Covariance Matrix Adaptation Evolution Strategy)
-    Memetic approach 
+    \begin{itemize}
+      \item Darwinian and baldwinian approach
+      \item Genetic programming
+      \item CMA-ES (Covariance Matrix Adaptation Evolution Strategy)
+      \item Memetic approach 
+    \end{itemize}
 \\
+    \paragraph{} % (fold)
+    \label{par:}
+    
     EASEA also offer out-of-the-box a wide range of selector: Max/Min deterministic,
     Max/Min Random, Max/Min tournament and MaxRoulette.
+    % paragraph  (end)
+    \paragraph{} % (fold)
+    \label{par:}
+    
     Three stopping criterion are possible : by generation, by time and by user
     defined control.
+    % paragraph  (end)
 \\
     The main advantage of EASEA 
     % paragraph  (end)
@@ -109,9 +125,17 @@ EASEA had been compiled and tested with those following compilers:
 \paragraph{} % (fold)
 \label{par:}
 
-easea compiler \[GP,CUDA,CUDA_GP, etc ...\]-> geneticAlgo.ez -> make -> geneticAlgo
-(executable) 
+The workflow of an easea program is the following:\\
+easea code (.ez) \rightarrow easea compile \rightarrow C++ generated
+source\rightarrow C++ compile\rightarrow executable 
 % paragraph  (end)
+\paragraph{} % (fold)
+\label{par:}
+
+The easea compiler generate high-performance C++ sources from the user's easea source
+code and predefined templates.
+% paragraph  (end)
+
 % section Workflow (end)
 
 \chapter{The language} % (fold)
@@ -435,6 +459,184 @@ subsection.
 
 Here is a quick presentation of the various parameters that can be found
 and used in a .ez file
+
+
+
+\section{EASEA defined functions}
+\subsection{Random Number Generators}\label{random-number-generators}
+
+\subsubsection{TossCoin}\label{tosscoin}
+
+\paragraph{Description}\label{description}
+
+Simulates the toss of a coin. There are two different definitions of the
+tossCoin function:
+
+\begin{enumerate}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  A simple toss of a coin.
+\item
+  A biased toss of a coin.
+\end{enumerate}
+
+\paragraph{EASEA syntax}\label{easea-syntax}
+
+\texttt{bool~tossCoin()~~~~~~~~~~~~~~~~//~SImple~tosscoin}
+
+\texttt{bool~tossCoin(float~bias)~~//~Biased~tossCoin}
+
+\paragraph{Example}\label{example}
+
+\texttt{if(~tossCoin(0.1))\{}\\\texttt{~~~~...}\\\texttt{\}}
+
+\subsubsection{Random}\label{random}
+
+\paragraph{Description}\label{description-1}
+
+Generates a random number. There are several definitions to the random
+function:
+
+\begin{enumerate}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Random function with Min Max Boundary
+\item
+  Random function with Max Boundary only
+\end{enumerate}
+
+In the case of a Max boundary only, the Min boundary will be 0.
+
+\paragraph{EASEA syntax}\label{easea-syntax-1}
+
+\texttt{int~random(~int~Min,~int~Max)}
+
+\texttt{int~random(~int~Max)}
+
+\texttt{float~random(~float~Min,~float~Max)}
+
+\texttt{double~random(~double~Min,~double~Max)}
+
+
+\section{EASEA defined variables}
+\subsection{Current Generation}\label{current-generation}
+
+Return the current generation number. This variable can be modified.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-2}
+
+\texttt{currentGeneration}
+
+\subsection{Number of Generation}\label{number-of-generation}
+
+Returns the generation limit. This variable can be modified.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-3}
+
+\texttt{NB\_GEN}
+
+\subsection{Population Size}\label{population-size}
+
+Returns the size of the population. This variable cannot be modified.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-4}
+
+\texttt{POP\_SIZE}
+
+\subsection{Mutation Probability}\label{mutation-probability}
+
+Returns the mutation probability. This variable can be modified.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-5}
+
+\texttt{MUT\_PROB}
+
+\subsection{Crossover Probability}\label{crossover-probability}
+
+Returns the crossover probability. This variable can be modified.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-6}
+
+\texttt{XOVER\_PROB}
+
+\subsection{Minimise}\label{minimise}
+
+Returns a boolean indicating of the algorithm performs a minimization of
+not. Returns true if minimizing.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-7}
+
+\texttt{MINIMISE}
+
+\subsection{Population}\label{population}
+
+Returns a pointer to the main population. This variable cannot be used
+everywhere. If misused, it can provoque unexpected behaviours or compile
+errors.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-8}
+
+\texttt{pPopulation~({[}i{]}~to~access~individuals)}
+
+\subsection{fitness}\label{fitness}
+
+\texttt{pPopulation{[}i{]}-\textgreater{}fitness}
+
+\subsection{Best individual}\label{best-individual}
+
+Returns a pointer to the best individual found to this point. All the
+genome field can be accessed as well as the fitness field. All the
+genome fields can be modified.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-9}
+
+\texttt{bBest~("-\textgreater{}"~operator~to~access~variables)}
+
+\subsection{Genome}\label{genome}
+
+Returns the genome of an individual (can only be used in genome specific
+EASEA sections such as
+\href{EASEA defined sections\#Genome_Mutation}{mutation},
+\href{EASEA defined sections\#Genome_Initialiser}{initialisation},
+{[}{[}EASEA defined sections\#Genome Evaluation\textbar{}evaluation and
+\href{EASEA defined sections\#Genome_Display}{display}). All the fields
+can be modified.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-10}
+
+\texttt{Genome~("."~operator~to~access~variables)}
+
+\subsection{Parent 1}\label{parent-1}
+
+Returns the genome of the first selected parent. Can only be used in the
+\href{EASEA defined sections\#Genome_Crossover}{crossover} genome
+section.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-11}
+
+\texttt{parent1}
+
+\subsection{Parent 2}\label{parent-2}
+
+Returns the genome of the second selected parent. Can only be used in
+the \href{EASEA defined sections\#Genome_Crossover}{crossover} genome
+section.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-12}
+
+\texttt{parent2}
+
+\subsection{Child}\label{child}
+
+Returns the genome of the newly created individual. Can only be used in
+the \href{EASEA defined sections\#Genome_Crossover}{crossover} genome
+section.
+
+\subsubsection{EASEA syntax}\label{easea-syntax-13}
+
+\texttt{child}
+
+
 \section{EASEA defined parameters}
 \subsection{Basic Parameters}\label{basic-parameters}
 
@@ -1107,11 +1309,52 @@ the default integer value, if the u3 argument has not been set.
 \label{sec:Developer documentation}
 \section{Compiler} % (fold)
 \label{sub:Compiler}
-  lex yacc .... 
+   \subsection{Parsing the language} % (fold)
+   \label{sub:subsection name}
+   \paragraph{} % (fold)
+   \label{par:}
+   The compile does its parsing using lex and YACC, and more specifically the alex
+   and AYACC implementation from bumble-bee software.\\
+   A good enhancement is to move from alex and AYACC to flex and Bison. The main
+   reason is that the ayacc/alex compilers only work on windows and there is some licenses
+   fuzziness.
+
+   The AYACC "compiler" generated the "EaseaParse.cpp" file from "EaseaParse.y" .
+   The alex "compiler" generated the "EaseaLex.cpp" file from "Easealex.l" .
+
+   Those file don't need to be re-generated at each compilation, only when changed.
+   The correct command through wine are:
+   
+   wine ~/.WINE/drive\_c/Program\\ Files/Parser\\ Generator/BIN/ayacc.exe \$< -Tcpp -d
+   wine ~/.wine/drive\_c/Program\\ Files/Parser\\ Generator/BIN/ALex.exe \$< -Tcpp -i
+   
+   \paragraph{Note} % (fold)
+   \label{par:Note}
+   When using the urrent version of ayacc or alex some problems arise. The generated
+   code classes names changed leading to multiple error such as no "class
+   YYPARSERNAME found" because the rest of the easea compiler defined this class
+   name as YYPARSENAME.\\
+   The only workaround it to vimdiff the files and relie on the compiler error to
+   manually fix the definitions problems.
+   % paragraph Note (end)
+   % paragraph  (end)
+   % subsection subsection name (end)
 % subsection Compiler (end)
-  \section{EASEA librairy} % (fold)
+  \section{EASEA library} % (fold)
+  \paragraph{} % (fold)
+  \label{par:}
+  The idea behind easea is the following: the EASEA compiler wrap predefined
+  sections in class and function, and by polyphormism and pointer manipulation, are
+  exploitable by evolutionary engine.
+
+  The evolutionary engine is implemented as the evolutianary library, the libeasea.
+
+  % paragraph  (end)
   \label{sub:EASEA library}
-  CEvolutionary ... uml ...
+   \subsection{Main evolutionary loop} % (fold)
+   \label{sub:subsection name}
+   
+   % subsection subsection name (end)
   % subsection EASEA library (end)
 % section Developer documentation (end)
 % subsection EASEA defined variable (end)
