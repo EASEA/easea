@@ -3,7 +3,7 @@ ifeq ($(shell uname -o 2>/dev/null),Msys)
 	OS := MINGW
 endif
 
-CXXFLAGS = -g -O1 -Wall -fmessage-length=0 -I/usr/local/cuda/include -I../boost/
+CXXFLAGS = -g -O1 -fopenmp -Wall -fmessage-length=0 -I/usr/local/cuda/include -I../boost/
 
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\

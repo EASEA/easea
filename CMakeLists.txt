@@ -20,7 +20,7 @@ ADD_LIBRARY( libalex STATIC ${libalex_src} )
 #Libeasea static library
 FILE(GLOB libeasea_src libeasea/*.cpp )
 ADD_LIBRARY( libeasea STATIC ${libeasea_src} ${libeasea_src_win})
-SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-O3")
+SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-O3 -fopenmp")
 
 
 #Boost program_options static library

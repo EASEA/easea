@@ -9,6 +9,9 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include "include/CRandomGenerator.h"
 #include "include/CIndividual.h"
 #include "include/Parameters.h"
@@ -110,6 +113,7 @@ void CPopulation::initPopulation(CSelectionOperator* selectionOperator,
 
 
 void CPopulation::evaluatePopulation(CIndividual** population, unsigned populationSize){
+  #pragma omp parallel for schedule(runtime)
   for( unsigned i=0 ; i < populationSize ; i++ )
     population[i]->evaluate();
 }
