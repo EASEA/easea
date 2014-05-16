@@ -619,11 +619,11 @@ endif
 
 EASEALIB_PATH=$(EZ_PATH)/libeasea/
 
-CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
+CXXFLAGS =   -fopenmp -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
 
 OBJS = EASEA.o EASEAIndividual.o 
 
-LIBS = -lpthread 
+LIBS = -lpthread -fopenmp 
 ifneq ("$(OS)","")
 	LIBS += -lws2_32 -lwinmm -L"C:\MinGW\lib"
 endif

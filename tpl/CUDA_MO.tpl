@@ -2125,10 +2125,10 @@ BIN= EASEA
 all:$(BIN)
 
 $(BIN):$(OBJ)
-	$(NVCC) $^ -o $@ $(LDFLAGS) 
+	$(NVCC) $^ -o $@ $(LDFLAGS) -Xcompiler -fopenmp
 
 %.o:%.cu
-	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -Wall
+	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -fopenmp 
 
 easeaclean: clean
 	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC)
