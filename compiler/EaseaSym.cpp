@@ -317,7 +317,7 @@ void CSymbol::print(FILE *fp)
 					fprintf(fpOutputFile,"\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
 					fprintf(fpOutputFile,"\t\tthis->%s = NULL;\n",pSym->Object->sName);
 					fprintf(fpOutputFile,"\telse{\n");
-					fprintf(fpOutputFile,"\t\tthis->%s = new %s;\n",pSym->Object->sName, sName);
+					fprintf(fpOutputFile,"\t\tthis->%s = new %s;\n", pSym->Object->sName, pSym->Object->pType->sName);
 					fprintf(fpOutputFile,"\t\tthis->%s->deserializer(EASEA_Line);\n",pSym->Object->sName);
 					fprintf(fpOutputFile,"\t}");
 				}
