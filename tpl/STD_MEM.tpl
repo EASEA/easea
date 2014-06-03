@@ -23,6 +23,9 @@ float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
 unsigned *EZ_NB_GEN;
 unsigned *EZ_current_generation;
+int EZ_POP_SIZE;
+int OFFSPRING_SIZE;
+
 CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
@@ -336,6 +339,8 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	pEZ_XOVER_PROB = &pCrossover;
 	EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
 	EZ_current_generation=0;
+	EZ_POP_SIZE = parentPopulationSize;
+	OFFSPRING_SIZE = offspringPopulationSize;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
@@ -405,6 +410,9 @@ class CGenerationalCriterion;
 class CEvolutionaryAlgorithm;
 class CPopulation;
 class Parameters;
+
+extern int EZ_POP_SIZE;
+extern int OFFSPRING_SIZE;
 
 \INSERT_USER_CLASSES_DEFINITIONS
 

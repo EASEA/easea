@@ -9,6 +9,9 @@ using namespace std;
 #include "EASEAIndividual.hpp"
 #include <time.h>
 
+int EZ_POP_SIZE;
+int OFFSPRING_SIZE;
+
 RandomGenerator* globalRandomGenerator;
 
 
@@ -217,6 +220,8 @@ EvolutionaryAlgorithm::EvolutionaryAlgorithm( size_t parentPopulationSize,
 					      SelectionOperator* selectionOperator, SelectionOperator* replacementOperator,
 					      float pCrossover, float pMutation, 
 					      float pMutationPerGene, string& outputfile, string& inputfile){
+  EZ_POP_SIZE = parentPopulationSize;
+  OFFSPRING_SIZE = offspringPopulationSize;
 
   RandomGenerator* rg = globalRandomGenerator;
 
@@ -352,6 +357,10 @@ bool EvolutionaryAlgorithm::allCriteria(){
 #include <ostream>
 #include <sstream>
 using namespace std;
+
+extern int EZ_POP_SIZE;
+extern int OFFSPRING_SIZE;
+
 \INSERT_USER_CLASSES
 
 \START_CUDA_GENOME_H_TPL
