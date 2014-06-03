@@ -79,7 +79,6 @@ main(){
   test_case rastrigin "" "" "";
   test_case sphere "" "" "";
   test_case weierstrass "" "" "1";
-  test_case cmaes_tests "" "cigtab" "";
   test_case memetic_std "" "memetic_weierstrass" "1";
   test_case memetic_std_custom "" "memetic_weierstrass" "1";
   
@@ -87,7 +86,6 @@ main(){
   echo "$(tput setaf 2)******************$(tput sgr 0)";
   echo "$(tput setaf 2)*CUDA tests case *$(tput sgr 0)"
   echo "$(tput setaf 2)******************$(tput sgr 0)";
-  test_case cmaes_cuda_test "cuda" "cigtabGPU" "";
   test_case memetic_cuda "cuda_mem" "memetic_weierstrass" "1";
   test_case memetic_cuda_custom "cuda_mem" "memetic_weierstrass" "1";
   test_case weierstrass "cuda" "" "";
@@ -114,6 +112,13 @@ main(){
   echo "$(tput setaf 2)*********************$(tput sgr 0)";
   echo "$(tput setaf 2)*CMAES tests case    *$(tput sgr 0)"
   echo "$(tput setaf 2)*********************$(tput sgr 0)";
+  test_case cmaes_tests "cmaes" "cigtab" "";
+  
+  echo ""
+  echo "$(tput setaf 2)************************$(tput sgr 0)";
+  echo "$(tput setaf 2)*CUDA CMAES tests case *$(tput sgr 0)"
+  echo "$(tput setaf 2)************************$(tput sgr 0)";
+  #test_case cmaes_cuda_test "cmaes_cuda" "cigtabGPU" "";
 }
 
 main ;
