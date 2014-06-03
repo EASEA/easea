@@ -18,4 +18,12 @@ Features
 - Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
 - C++ description language.
 
+Github mirror
+--------------
 
+To mirror this repositories on the github one, please add to .git/config:
+[remote "github"]
+	url = git@github.com:EASEA/easea.git
+	mirror = true
+
+Add after pushing, do "git push github" manually or add a hook.
