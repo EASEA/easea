@@ -525,8 +525,8 @@ void CEvolutionaryAlgorithm::sendIndividual(){
     //selecting a client randomly
     int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
     //for(int client=0; client<this->numberOfClients; client++){
-    cout << "    Going to send an individual to client " << client << endl;
-    cout << "    His IP is " << this->Clients[client]->getIP() << " and his port is " << this->Clients[client]->getPort() <<endl;
+    cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to machine " 
+    << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() <<endl;
     //cout << "Sending individual " << index << " to client " << client << " now" << endl;
     //cout << this->population->parents[index]->serialize() << endl;
     this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
