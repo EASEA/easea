@@ -1,5 +1,5 @@
 %{
-/****************************************************************************
+ /****************************************************************************
 EaseaLex.l
 Lexical analyser for the EASEA language (EAsy Specification for Evolutionary Algorithms)
 
@@ -10,31 +10,31 @@ Centre de Math�matiques Appliqu�es
   ****************************************************************************/
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
-#pragma comment(lib, "libAlexYacc.lib")
+//#pragma comment(lib, "libAlexYacc.lib")
 #endif
-#if defined __WIN32__ || defined __WIN64__
 #include "Easea.h"
-#include "EaseaParse.h"
-#else
-#include "Easea.h"
-#include "EaseaParse.h"
-#endif
+#include "EaseaParse.hpp"
+
 #if defined WIN32 || defined WIN64
 #include <direct.h>
 #else
 #include <unistd.h>
 #endif
+
 #ifndef SIZE_MAX
 # define SIZE_MAX ((size_t) -1)
 #endif
+
 #ifndef SSIZE_MAX
 # define SSIZE_MAX ((ssize_t) (SIZE_MAX / 2))
 #endif
+
 #include "debug.h"
-#include <iostream>
-#include <sstream>
+//#include <iostream>
+//#include <sstream>
+
 #if defined __WIN64__ || defined __APPLE__ || defined __WIN32__
-/* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
+ /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
 char *strndup (const char *s, size_t n){
     size_t len = strlen (s);
     char *ret;
@@ -47,6 +47,7 @@ char *strndup (const char *s, size_t n){
     ret[n] = '\0';
     return ret;
 }
+
 ssize_t getline (char **lineptr, size_t *n, FILE *fp){
     ssize_t result;
     size_t cur_len = 0;
@@ -111,7 +112,7 @@ end:
 }
 #endif
 
-/* getline implementation is copied from glibc. */
+ /* getline implementation is copied from glibc. */
 
 
   size_t genomeSize;
@@ -119,7 +120,7 @@ end:
   int lineCounter = 0;
 
   // local functions
-  char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
+char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
 
   char selectorName[50];  
   selectorName[3] = 0;
@@ -152,26 +153,30 @@ end:
 
   return ret;
 }
-  %}
 
-// include file
-%include {
+
+  // include file
   // forward references
   class CEASEAParser;
   class CSymbolTable;
   class OPCodeDesc;
- }                                                     
-                                         
-%start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
-%start COPY_USER_DECLARATIONS COPY_USER_CUDA COPY_INITIALISATION_FUNCTION ANALYSE_USER_CLASSES
-%start COPY_EO_INITIALISER COPY_GP_OPCODE
-%start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_OPTIMISER COPY_FINALIZATION_FUNCTION
-%start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
-%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL GP_RULE_ANALYSIS GP_COPY_OPCODE_CODE COPY_GP_EVAL
 
- // lexical analyser name and class definition
-%name CEASEALexer {
- protected:
+
+void yyreset()
+{
+	yyleng = 0;
+	yylineno = 1;
+    YY_FLUSH_BUFFER;
+	//yyunputindex = 0;
+	//yymoreflg = 0;
+	//yyrejectflg = 0;
+	//yyeol = 1;
+	//yyoldeol = 1;
+	//yystart = 0;
+}
+
+
+
   CSymbolTable *pSymbolTable;   // the symbol table
   bool bSymbolInserted,bWithinEvaluator, bWithinOptimiser;  // used to change evalutor type from double to float 
   bool bInitFunction,bDisplayFunction,bFunction, bNotFinishedYet, bWithinEO_Function;
@@ -181,59 +186,50 @@ end:
   bool bWithinCUDA_Initializer, bWithinMAKEFILEOPTION, bWithinCUDA_Evaluator, bBoundCheckingFunction;
   bool bIsParentReduce, bIsOffspringReduce, bEndGeneration, bBeginGeneration, bEndGenerationFunction, bBeginGenerationFunction, bGenerationFunctionBeforeReplacement;
   bool bGPOPCODE_ANALYSIS,bCOPY_GP_EVAL_GPU;
+  
   CSymbol *pASymbol;
 
   unsigned iGP_OPCODE_FIELD, accolade_counter;
   OPCodeDesc* opDesc[128];
   unsigned iNoOp;
 
-  enum COPY_GP_EVAL_STATUS {EVAL_HDR,EVAL_BDY,EVAL_FTR};
+  
   unsigned iCOPY_GP_EVAL_STATUS;
   bool bIsCopyingGPEval;
 
- public:
-  int create(CEASEAParser* pParser, CSymbolTable* pSymbolTable);
-  int yywrap();
-  double myStrtod() const;                              
- }
 
-// constructor
-{                                
-  bFunction=bWithinEvaluator=bWithinOptimiser=bDisplayFunction=bInitFunction=bNotFinishedYet=0;
-  bSymbolInserted=bDoubleQuotes=bWithinDisplayFunction=bWithinInitialiser=bWithinMutator=bWithinXover=0;
-  bWaitingForSemiColon=bFinishNB_GEN=bFinishMINIMISE=bFinishMINIMIZE=bGenerationReplacementFunction=0;
-  bCatchNextSemiColon,bWaitingToClosePopulation=bMethodsInGenome=0;
-  bBoundCheckingFunction = bWithinCUDA_Initializer=bWithinMAKEFILEOPTION =bWithinCUDA_Evaluator=0;
-  bIsParentReduce = bIsOffspringReduce = false;
-  bGPOPCODE_ANALYSIS = bGenerationFunctionBeforeReplacement = bEndGeneration = bBeginGeneration = bEndGenerationFunction = bBeginGenerationFunction = false;
-  iGP_OPCODE_FIELD = accolade_counter = 0;
-  iNoOp = 0;
-  bCOPY_GP_EVAL_GPU,bIsCopyingGPEval = false;
-}
 
-// macros
+
+  // extract yylval for use later on in actions
+  //YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
+%}                                                     
+                                         
+%start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
+%start COPY_USER_DECLARATIONS COPY_USER_CUDA COPY_INITIALISATION_FUNCTION ANALYSE_USER_CLASSES
+%start COPY_EO_INITIALISER COPY_GP_OPCODE
+%start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_OPTIMISER COPY_FINALIZATION_FUNCTION
+%start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
+%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL GP_RULE_ANALYSIS GP_COPY_OPCODE_CODE COPY_GP_EVAL
+
+%option yylineno
+%option noyywrap
+
+ /* macros */
 exponent  ([Ee][+-]?[0-9]+)
 
+%%
 
 
-%%                                              
-
-%{
-  // extract yylval for use later on in actions
-  YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
-  %}
-
-// Gobbles up ^Ms, to be compatible with unix
+ /*Gobbles up ^Ms, to be compatible with unix*/
 \r {}
 
-// switch immediately to TEMPLATE_ANALYSIS state
+ /*switch immediately to TEMPLATE_ANALYSIS state*/
 <INITIAL>.    {
   BEGIN TEMPLATE_ANALYSIS; yyless(yyleng-1);
  }
-
-//****************************************
-//  GA_GENERATION lexer (feeds on template file and occasionally on .ez file)
-//****************************************
+ /******************************************
+ *  GA_GENERATION lexer (feeds on template file and occasionally on .ez file)
+ ******************************************/
 
 <TEMPLATE_ANALYSIS>"\\TEMPLATE_START"  {             
   char sFileName[1000];
@@ -255,32 +251,32 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_DECLARATIONS"  {
   if (bVERBOSE) printf ("Inserting user declarations.\n");
-  yyreset();
   yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter=1;
   BEGIN COPY_USER_DECLARATIONS;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_CUDA"  {
   if (bVERBOSE) printf ("Inserting user cuda.\n");
-  yyreset();
   yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter=1;
   BEGIN COPY_USER_CUDA;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting initialisation function.\n");
-  yyreset();
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter = 1;
   BEGIN COPY_INITIALISATION_FUNCTION;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT"  {
   if (bVERBOSE) printf ("Inserting generation before reduce function.\n");
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bGenerationFunctionBeforeReplacement = true;
   BEGIN COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT;
  }
@@ -292,8 +288,8 @@ exponent  ([Ee][+-]?[0-9]+)
   if( bLINE_NUM_EZ_FILE )
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter+1, sRAW_PROJECT_NAME);
 
-  yyreset();
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bBeginGeneration = true;
   bEndGeneration = false;
   lineCounter = 1;
@@ -302,9 +298,9 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 
-/*
+ /*
   Here we will insert parmeters for GP template.
-*/
+ */
 <TEMPLATE_ANALYSIS>"\\INSERT_GP_PARAMETERS" {
   if( bVERBOSE )printf("inserting gp parameters\n");
   //  fprintf(fpOutputFile,"#define MAX_XOVER_DEPTH",%d
@@ -317,11 +313,11 @@ exponent  ([Ee][+-]?[0-9]+)
   /*fprintf(fpOutputFile,"#define NO_FITNESS_CASES %d\n",iNO_FITNESS_CASES);*/
 }
 
-/*
+ /*
   This part dump every declaration related to gp opcode.
   the enumeration, the array of name (to plot trees)
   and the arity of every opcode.
- */
+  */
 <TEMPLATE_ANALYSIS>"\\INSERT_GP_OPCODE_DECL" {
   
   fprintf(fpOutputFile,"enum OPCODE              {"); 
@@ -373,9 +369,9 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_GP_OPCODE"  {
-  yyreset();
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   if (bVERBOSE) printf ("Analysing GP OP code from ez file\n");
   BEGIN COPY_GP_OPCODE;
  }
@@ -391,6 +387,7 @@ exponent  ([Ee][+-]?[0-9]+)
   if( bGPOPCODE_ANALYSIS ){
     rewind(fpGenomeFile);
     yyin = fpTemplateFile;
+    yypop_buffer_state();
     bGPOPCODE_ANALYSIS = false;
     
     OPCodeDesc::sort(opDesc,iNoOp);
@@ -405,25 +402,27 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bVERBOSE) printf("*** No GP OP codes were found. ***\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
  }
-<COPY_GP_OPCODE>. {} //if( bGPOPCODE_ANALYSIS ) printf("%c",yytext[0]);}                                      
+<COPY_GP_OPCODE>. {/*if( bGPOPCODE_ANALYSIS ) printf("%c",yytext[0]);*/}
 <COPY_GP_OPCODE>\n {if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;}
 
-/*
+ /*
   This section analyse a GP rule which is written as : 
   OP_NAME, "realopname", arity (a number), { the c code for this operator};
   OP_NAME, "realopname", arity (a number), { the c code for this operator};
  */
+
 <GP_RULE_ANALYSIS>[A-Za-z_][a-zA-Z0-9_]* {
-  // this rule match the OP_NAME
-  if( iGP_OPCODE_FIELD != 0 ){
-    fprintf(stderr,"Error, OP_CODE name must be given first\n");
-    exit(-1);
+    /* this rule match the OP_NAME */
+    if( iGP_OPCODE_FIELD != 0 ) {
+      fprintf(stderr,"Error, OP_CODE name must be given first\n");
+      exit(-1);
+    }
+    opDesc[iNoOp] = new OPCodeDesc();
+    opDesc[iNoOp]->opcode = new string(yytext);
   }
-  opDesc[iNoOp] = new OPCodeDesc();
-  opDesc[iNoOp]->opcode = new string(yytext);
- }
 
 <GP_RULE_ANALYSIS>"//".*"\n" {}
 
@@ -477,7 +476,7 @@ exponent  ([Ee][+-]?[0-9]+)
   BEGIN GP_COPY_OPCODE_CODE;
  }
 
-/*
+ /*
   This section copy the code contained in the code part of the GP opcode rule
   It count the number of curly bracket, when it reaches 0, the code part is finished.
  */
@@ -527,9 +526,9 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_HDR" { 
-  yyreset();
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bIsCopyingGPEval = false;
   if( bVERBOSE ) printf("Insert GP eval header\n");
   iCOPY_GP_EVAL_STATUS = EVAL_HDR;
@@ -538,9 +537,9 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_BDY" {
-  yyreset();
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_BDY;
   if( bVERBOSE ) printf("Insert GP eval body\n");
@@ -552,9 +551,9 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_BDY_GPU" {
-  yyreset();
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_BDY;
   if( bVERBOSE ) printf("Insert GP eval body\n");
@@ -566,9 +565,9 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_FTR" {
-  yyreset();
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_FTR;
   if( bVERBOSE ) printf("Insert GP eval footer\n");
@@ -577,9 +576,9 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_FTR_GPU" {
-  yyreset();
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_FTR;
   if( bVERBOSE ) printf("Insert GP eval footer\n");
@@ -630,6 +629,7 @@ exponent  ([Ee][+-]?[0-9]+)
     bCOPY_GP_EVAL_GPU = false;
     rewind(fpGenomeFile);
     yyin = fpTemplateFile;
+    yypop_buffer_state();
     BEGIN TEMPLATE_ANALYSIS;
   }
  }
@@ -729,8 +729,8 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <TEMPLATE_ANALYSIS>"\\INSTEAD_EVAL_FUNCTION"  {
   //DEBUG_PRT_PRT("insert beg");
-  yyreset();
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   if (bVERBOSE) printf ("Evaluation population in a single function!!.\n");
   lineCounter = 1;
   BEGIN COPY_INSTEAD_EVAL;
@@ -738,8 +738,8 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <TEMPLATE_ANALYSIS>"\\INSERT_END_GENERATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting at the end of each generation function.\n");
-  yyreset();
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bEndGeneration = true;
   bBeginGeneration = false;
   BEGIN COPY_END_GENERATION_FUNCTION;
@@ -747,15 +747,15 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING"  {
   if (bVERBOSE) printf ("Inserting Bound Checking function.\n");
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   BEGIN COPY_BOUND_CHECKING_FUNCTION;
  }
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_USER_CLASSES"  {
   if (bVERBOSE) printf ("Analysing user classes.\n");
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   BEGIN ANALYSE_USER_CLASSES;
  }
 
@@ -831,26 +831,26 @@ exponent  ([Ee][+-]?[0-9]+)
   
  }
 
-/* <TEMPLATE_ANALYSIS>"\\GENOME_CUDA_MOTION" { */
-/*   if (bVERBOSE) printf ("Inserting default genome cuda motion function.\n"); */
+ /* <TEMPLATE_ANALYSIS>"\\GENOME_CUDA_MOTION" { */
+ /*   if (bVERBOSE) printf ("Inserting default genome cuda motion function.\n"); */
   
-/*   CListItem<CSymbol*> *pSym; */
-/*   if (bVERBOSE) printf ("Creating default copy constructor.\n"); */
-/*   fprintf (fpOutputFile,"// Memberwise copy\n");              */
-/*   pGENOME->pSymbolList->reset(); */
-/*   while (pSym=pGENOME->pSymbolList->walkToNextItem()){ */
-/*     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static */
-/*     if (pSym->Object->ObjectType==oObject) */
-/*       fprintf(fpOutputFile,"    %s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName); */
-/*     if (pSym->Object->ObjectType==oPointer) */
-/*       fprintf(fpOutputFile,"    %s=(genome.%s ? new %s(*(genome.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName); */
-/*     if (pSym->Object->ObjectType==oArray){ */
-/* /\*       fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize); *\/ */
-/* /\*       fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName); *\/ */
+ /*   CListItem<CSymbol*> *pSym; */
+ /*   if (bVERBOSE) printf ("Creating default copy constructor.\n"); */
+ /*   fprintf (fpOutputFile,"// Memberwise copy\n");              */
+ /*   pGENOME->pSymbolList->reset(); */
+ /*   while (pSym=pGENOME->pSymbolList->walkToNextItem()){ */
+ /*     if (pSym->Object->ObjectQualifier==1) continue; // 1=Static */
+ /*     if (pSym->Object->ObjectType==oObject) */
+ /*       fprintf(fpOutputFile,"    %s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName); */
+ /*     if (pSym->Object->ObjectType==oPointer) */
+ /*       fprintf(fpOutputFile,"    %s=(genome.%s ? new %s(*(genome.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName); */
+ /*     if (pSym->Object->ObjectType==oArray){ */
+ /* /\*       fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize); *\/ */
+ /* /\*       fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName); *\/ */
       
-/*     } */
-/*   } */
-/*  } */
+ /*     } */
+ /*   } */
+ /*  } */
 
 
 
@@ -1025,16 +1025,16 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_DISPLAY"  {        
   if (bVERBOSE) printf ("Inserting genome display function.\n");
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   BEGIN COPY_DISPLAY;   
  }
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_MAKEFILE_OPTION" {
   if( bVERBOSE ) printf("Inserting user LDFLAGS.\n");
-  yyreset();
   yyin = fpGenomeFile;
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   BEGIN COPY_MAKEFILE_OPTION;
  }
 
@@ -1065,80 +1065,80 @@ exponent  ([Ee][+-]?[0-9]+)
  }    
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_FUNCTIONS"  {
   if (bVERBOSE) printf ("Inserting user functions.\n");
-  yyreset();
   yyin = fpGenomeFile;                    
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter=2;                                 // switch to .ez file and analyser
   BEGIN COPY_USER_FUNCTIONS;
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_EO_INITIALISER"  {        
-  yyreset();
   bWithinEO_Function=1;
   lineCounter=1;
   if( TARGET==CUDA || TARGET==STD) bWithinCUDA_Initializer = 1;
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   BEGIN COPY_EO_INITIALISER;                               // not implemented as a function !
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISER"  {        
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter = 1;
   BEGIN COPY_INITIALISER;   
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_FINALIZATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting Finalization function.\n");
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter=1;
   BEGIN COPY_FINALIZATION_FUNCTION;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_CROSSOVER"  {        
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter=1;
   BEGIN COPY_CROSSOVER;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_MUTATOR"  {        
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter=1;
   BEGIN COPY_MUTATOR;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_EVALUATOR"  {
   printf("evaluator insert\n");
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter=1;
   BEGIN COPY_EVALUATOR;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_OPTIMISER"  {      
   if( bVERBOSE ) fprintf(stdout,"Inserting optimization function\n");
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter=1;
   BEGIN COPY_OPTIMISER;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_CUDA_EVALUATOR"  {        
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bWithinCUDA_Evaluator = 1;
   lineCounter=1;
   BEGIN COPY_EVALUATOR;
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_CUDA_OPTIMISOR"  { 
   if( bVERBOSE ) fprintf(stdout,"Inserting cuda optimization function\n");
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   bWithinCUDA_Evaluator = 1;
   lineCounter=1;
   BEGIN COPY_OPTIMISER;
  }
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_PARAMETERS"  {        
-  yyreset();
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   BEGIN PARAMETERS_ANALYSIS;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_GEN_FCT_CALL"  {
@@ -1408,13 +1408,14 @@ if(OPERATING_SYSTEM=WINDOWS)
   fclose(fpOutputFile);
   fclose(fpTemplateFile);
   fclose(fpGenomeFile);
+  return TEMPLATE_END;
  }
 
 <TEMPLATE_ANALYSIS>.|\n {putc(yytext[0],fpOutputFile);}                                      
 
-//****************************************
-//  use information found in .ez file
-//****************************************
+ /****************************************
+ *  use information found in .ez file
+ *****************************************/
 
 <COPY_EO_INITIALISER>"\\GenomeClass::initiali"[sz]"er"[ \t\n]*":" {
   fprintf (fpOutputFile,"// Genome Initialiser\n"); 
@@ -1426,6 +1427,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   if (bVERBOSE) printf("*** No genome initialiser was found. ***\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
@@ -1442,6 +1444,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   if (bVERBOSE) printf("*** No user declarations were found. ***\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
@@ -1461,6 +1464,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   if (bVERBOSE) printf("*** No user CUDA were found. ***\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
@@ -1481,6 +1485,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   fprintf(fpOutputFile,"\n// No user functions.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
@@ -1502,6 +1507,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   fprintf(fpOutputFile,"\n// No before everything else function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
 
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
@@ -1509,9 +1515,10 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_INITIALISATION_FUNCTION>. {}                                      
 <COPY_INITIALISATION_FUNCTION>\n {lineCounter++;} 
 
-//****************************************
-//  Easea GPGPU & EO Finalization function
-//****************************************
+ /****************************************
+ *  Easea GPGPU & EO Finalization function
+ *****************************************/
+
 <COPY_FINALIZATION_FUNCTION>"\\After"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
   fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n");
   if( bLINE_NUM_EZ_FILE )
@@ -1526,6 +1533,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   fprintf(fpOutputFile,"\n// No after eveything else function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
@@ -1551,6 +1559,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
@@ -1592,6 +1601,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
@@ -1604,23 +1614,25 @@ if(OPERATING_SYSTEM=WINDOWS)
 
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
- }
+}
+
 <COPY_BEG_GENERATION_FUNCTION>\n {lineCounter++;}
 <COPY_BEG_GENERATION_FUNCTION>. {}
 
 
-
 <COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>"\\At"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"before"[ \t\n]+"reduce"[ \t\n]+"function"[ \t\n]*":" {
-  //DEBUG_PRT_PRT("at each");
-  if((TARGET==CUDA || TARGET==STD)){// && !bBeginGeneration && !bEndGeneration ){
+//DEBUG_PRT_PRT("at each");
+  if((TARGET==CUDA || TARGET==STD) /* && !bBeginGeneration && !bEndGeneration ) */)
+  {
       fprintf (fpOutputFile,"{\n");
       bFunction=1; 
       bGenerationReplacementFunction=1;
       BEGIN COPY_USER_GENERATION;
   }
- }
+}
 
 <COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT><<EOF>> {
   bGenerationFunctionBeforeReplacement=0; // No Generation function was found in the .ez file
@@ -1628,10 +1640,13 @@ if(OPERATING_SYSTEM=WINDOWS)
   fprintf(fpOutputFile,"\n// No generation function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
- }
-<COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>.|\n {}                                      
+}
+
+<COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>\n {}
+<COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>. {}
 
 
 <COPY_BOUND_CHECKING_FUNCTION>"\\Bound"[ \t\n]+"checking"[ \t\n]*":" {
@@ -1642,14 +1657,18 @@ if(OPERATING_SYSTEM=WINDOWS)
   bFunction=1; bBoundCheckingFunction=1;
   BEGIN COPY_USER_GENERATION;
  }
+
 <COPY_BOUND_CHECKING_FUNCTION><<EOF>> {bBoundCheckingFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No bound checking function was found. ***\n");
   fprintf(fpOutputFile,"\n// No Bound checking function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
+
+
 <COPY_BOUND_CHECKING_FUNCTION>.|\n {}                                      
 
 
@@ -1658,26 +1677,21 @@ if(OPERATING_SYSTEM=WINDOWS)
   BEGIN GENOME_ANALYSIS; return CLASSES;}
 <ANALYSE_USER_CLASSES>.|\n {}                                      
 
-//****************************************
-//  Basic copy to cpp file with minor changes
-//****************************************
+ /****************************************
+  *  Basic copy to cpp file with minor changes
+  ****************************************/
 
 <COPY>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 <COPY>"\\\""  {fprintf(fpOutputFile,"\\\"");}
 
-<COPY>"currentGeneration" |
-<COPY>"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
-  else switch  (TARGET) {
-    case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
-    }} // local genome name
-<COPY>"NB_GEN" |
-<COPY>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
+<COPY>"currentGeneration"|"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
+  else if(TARGET == STD) fprintf(fpOutputFile,"(*EZ_current_generation)");
+    } // local genome name
+<COPY>"NB_GEN"|"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
-<COPY>"POP_SIZE" |
-<COPY>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
+<COPY>"POP_SIZE"|"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
-<COPY>"MUT_PROB" |
-<COPY>"MUT_PROB"/[ \t\n]*"==" {
+<COPY>"MUT_PROB"|"MUT_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"MUT_PROB");
   else
@@ -1687,32 +1701,25 @@ if(OPERATING_SYSTEM=WINDOWS)
     else fprintf(fpOutputFile,"EZ_MUT_PROB");
   
  } // local genome name
-<COPY>"XOVER_PROB" |
-<COPY>"XOVER_PROB"/[ \t\n]*"==" {
+<COPY>"XOVER_PROB"|"XOVER_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
   else if( TARGET==CUDA || TARGET==STD )
     fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
   else fprintf(fpOutputFile,"EZ_XOVER_PROB");
  } // local genome name
-<COPY>"REPL_PERC" |
-<COPY>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
+<COPY>"REPL_PERC"|"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else fprintf(fpOutputFile,"EZ_REPL_PERC");} // local genome name
-<COPY>"MINIMISE" |
-<COPY>"MINIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE");
+<COPY>"MINIMISE"|"MINIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE");
   else fprintf(fpOutputFile,"EZ_MINIMISE");} // local genome name
-<COPY>"MINIMIZE" |
-<COPY>"MINIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE");
+<COPY>"MINIMIZE"|"MINIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE");
   else fprintf(fpOutputFile,"EZ_MINIMIZE");} // local genome name
-<COPY>"MAXIMISE" |
-<COPY>"MAXIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE");
+<COPY>"MAXIMISE"|"MAXIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE");
   else fprintf(fpOutputFile,"EZ_MAXIMISE");} // local genome name
-<COPY>"MAXIMIZE" |
-<COPY>"MAXIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE");
+<COPY>"MAXIMIZE"|"MAXIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE");
   else fprintf(fpOutputFile,"EZ_MAXIMIZE");} // local genome name
 
-<COPY>"__device__" |
-<COPY>"__host__" {
+<COPY>("__device__"|"__host__") {
   if( TARGET==CUDA ){
     fprintf(fpOutputFile,"%s",yytext);
   }
@@ -1784,48 +1791,67 @@ if(OPERATING_SYSTEM=WINDOWS)
   bWithinEO_Function=0;
   rewind(fpGenomeFile); 
   yyin = fpTemplateFile; 
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;} // Back to the template file
 <COPY>.|\n {putc(yytext[0],fpOutputFile);}                                      
 
-// Looking for an identifier
-<MACRO_IDENTIFIER>[a-zA-Z0-9_]* {fprintf(fpOutputFile,"%s",yytext);
+ /* Looking for an identifier */
+<MACRO_IDENTIFIER>[a-zA-Z0-9_]* {
+  fprintf(fpOutputFile,"%s",yytext);
   pASymbol = new CSymbol(yytext); pASymbol->ObjectType=oMacro;
   BEGIN MACRO_DEFINITION; }
-<MACRO_IDENTIFIER>/.|\n {BEGIN COPY;} // If no identifier was found, we're not interested
-// Looking for the first number following the macro definition
-<MACRO_DEFINITION>[ \t]*  {fprintf(fpOutputFile,"%s",yytext);} // gobbles up spaces and tabs
-<MACRO_DEFINITION>[0-9]+"."[0-9]*{exponent}?  |
-<MACRO_DEFINITION>"."[0-9]+{exponent}?  |
-<MACRO_DEFINITION>[0-9]+{exponent} {fprintf(fpOutputFile,"%s",yytext);
+
+ /* If no identifier was found, we're not interested */
+ /* old rule : <MACRO_IDENTIFIER>\/.|\n
+  * I don't understand why there is a "\/"...
+  */
+<MACRO_IDENTIFIER>.|\n {putc(yytext[0],fpOutputFile);BEGIN COPY;}
+ 
+ /* Looking for the first number following the macro definition */
+
+ /*gobbles up spaces and tabs*/
+<MACRO_DEFINITION>[ \t]*  {fprintf(fpOutputFile,"%s",yytext);}
+<MACRO_DEFINITION>-?[0-9]+"."[0-9]*{exponent}?|-?"."[0-9]+{exponent}?|-?[0-9]+{exponent} {fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = myStrtod();
   pSymbolTable->insert(pASymbol);
   bSymbolInserted=1;
   BEGIN COPY;}
-<MACRO_DEFINITION>[0-9]+           {fprintf(fpOutputFile,"%s",yytext);
+<MACRO_DEFINITION>-?[0-9]+           {fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = atoi(yytext);
   pSymbolTable->insert(pASymbol);
   bSymbolInserted=1;
   BEGIN COPY;}
-<MACRO_DEFINITION>/.|\n {if (!bSymbolInserted) delete pASymbol;
+  /*If no number was found, we're not interested*/
+  /* old rule : <MACRO_DEFINITION>\/.|\n 
+   * I don't understand why there is a "\/"...
+   */
+<MACRO_DEFINITION>.|\n {
+  if (!bSymbolInserted) delete pASymbol;
   else bSymbolInserted=0;
-  BEGIN COPY;} // If no number was found, we're not interested
+  putc(yytext[0],fpOutputFile);
+  BEGIN COPY;}
 
-//****************************************
-//  GENOME_ANALYSIS lexer
-//****************************************
+ /****************************************
+ *  GENOME_ANALYSIS lexer
+ *****************************************/
 
-// takes care of C++-like comments
-<GENOME_ANALYSIS>\/\/[^\n]* ;         // blah blah on a line containing sth else
-<GENOME_ANALYSIS>^[ \t]*\/\/[^\n]*\n ; // blah blah on its own on a single line
-<GENOME_ANALYSIS>\/\*[^\*]*\*\/ ;  /* blah blah on a line containing sth else */
-<GENOME_ANALYSIS>^[ \t]*\/\*[^\*]*\*\/[ \t]*\n ; /* blah blah with nothing before the comment */
+ /* takes care of C++-like comments*/
 
-// gobbles up white spaces, tabs or carriage returns
+ /*blah blah on a line containing sth else*/
+<GENOME_ANALYSIS>\/\/[^\n]* ;         
+ /*blah blah on its own on a single line*/
+<GENOME_ANALYSIS>^[ \t]*\/\/[^\n]*\n ;
+ /* blah blah on a line containing sth else */
+<GENOME_ANALYSIS>\/\*[^\*]*\*\/ ;  
+ /* blah blah with nothing before the comment */
+<GENOME_ANALYSIS>^[ \t]*\/\*[^\*]*\*\/[ \t]*\n ;
+
+ /*gobbles up white spaces, tabs or carriage returns*/
 <GENOME_ANALYSIS>[ \t]             { /* do nothing */ }
 <GENOME_ANALYSIS>^[ \t]*\n      { /*return '\n';*/ }
 <GENOME_ANALYSIS>\n                 { /*return '\n';*/ }
 
-// keywords
+ /*keywords*/
 <GENOME_ANALYSIS>"bool"                  {
   yylval.pSymbol = pSymbolTable->find("bool");
   return BOOL;}
@@ -1836,7 +1862,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GENOME_ANALYSIS>"GPNode"            {
   yylval.pSymbol = new CSymbol("GPNode");
   //yylval.pSymbol->ObjectType = oPointer;
-//  printf("match gpnode\n");
+  //printf("match gpnode\n");
   return GPNODE;
  }
 
@@ -1846,8 +1872,9 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GENOME_ANALYSIS>"float"                  {yylval.pSymbol = pSymbolTable->find("float"); return FLOAT;}
 <GENOME_ANALYSIS>"char"                  {yylval.pSymbol = pSymbolTable->find("char"); return CHAR;}
 <GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}
-//<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}
-<GENOME_ANALYSIS>"\\end"   {rewind(fpGenomeFile);yyin = fpTemplateFile;BEGIN TEMPLATE_ANALYSIS;} // Back to the template file
+ /*<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}*/
+ /*Back to the template file*/
+<GENOME_ANALYSIS>"\\end"   {rewind(fpGenomeFile);yyin = fpTemplateFile;yypop_buffer_state();BEGIN TEMPLATE_ANALYSIS;}
   
 <GENOME_ANALYSIS>"GenomeClass"        {return GENOME; }                         
 
@@ -1855,35 +1882,36 @@ if(OPERATING_SYSTEM=WINDOWS)
   yylval.szString=yytext;  
   bMethodsInGenome=1;
   return METHODS;}
-// number
-<GENOME_ANALYSIS>[0-9]+"."[0-9]*{exponent}?  |
-<GENOME_ANALYSIS>"."[0-9]+{exponent}?  |
-<GENOME_ANALYSIS>[0-9]+{exponent}     { yylval.dValue = myStrtod(); return NUMBER; }
+ /*number*/
+<GENOME_ANALYSIS>[0-9]+"."[0-9]*{exponent}?|"."[0-9]+{exponent}?|[0-9]+{exponent}  { yylval.dValue = myStrtod(); return NUMBER; }
 <GENOME_ANALYSIS>[0-9]+ {yylval.dValue=atoi(yytext); return NUMBER;}
 
-// identifier
+ /*identifier*/
 <GENOME_ANALYSIS>[a-zA-Z_][a-zA-Z0-9_]*    { yylval.pSymbol = new CSymbol(yytext);
   return IDENTIFIER; }
 <GET_METHODS>[^\}]*   {BEGIN GENOME_ANALYSIS; return END_METHODS;}
 
-//****************************************
-//  Looking for a user-supplied display function.
-//****************************************
+ /*****************************************
+ *  Looking for a user-supplied display function.
+ *****************************************/
 
 <COPY_DISPLAY>"\\GenomeClass::display"[ \t\n]*":" { 
-/*   //DEBUG_PRT_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
-/*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
+ /*   //DEBUG_PRT_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
+ /*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
   bDisplayFunction=bWithinDisplayFunction=1;
   BEGIN COPY_USER_FUNCTION;
  }
-<COPY_DISPLAY><<EOF>> {bDisplayFunction=0; // No display function was found in the .ez file
+ /*No display function was found in the .ez file*/
+<COPY_DISPLAY><<EOF>> {
+  bDisplayFunction=0;
   if (bVERBOSE) printf("*** No display function was found. ***\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bNotFinishedYet=1;
  }
-<COPY_DISPLAY>.|\n {}                                      
+<COPY_DISPLAY>.|\n {/*putc(yytext[0],fpOutputFile);*/}                                      
 
 <COPY_MAKEFILE_OPTION>"\\User"[ \t\n]+[Mm]"akefile"[ \t\n]+"options"[ \t\n]*":" {
   //DEBUG_PRT_PRT("LDFLAGS is beg: %s",yytext); 
@@ -1892,14 +1920,16 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 
 
-//****************************************
-//  Looks for Makefile options (like 
-//  LDFLAGS+= or CPPFLAGS...)
-//****************************************
+ /****************************************
+  * Looks for Makefile options (like 
+  * LDFLAGS+= or CPPFLAGS...)
+  ****************************************/
+
 <COPY_MAKEFILE_OPTION>"\\end" {
   if( bWithinMAKEFILEOPTION ){
     //DEBUG_PRT_PRT("end of makefile options");
     yyin = fpTemplateFile;
+    yypop_buffer_state();
     bWithinMAKEFILEOPTION = 0;
     BEGIN TEMPLATE_ANALYSIS;
     return END_OF_FUNCTION;
@@ -1912,30 +1942,34 @@ if(OPERATING_SYSTEM=WINDOWS)
     }
  }
 
-<COPY_MAKEFILE_OPTION>\n {
-  if( bWithinMAKEFILEOPTION );
+ /*
+ This rule is matched by the previous one
+ <COPY_MAKEFILE_OPTION>\n {
+  //if( bWithinMAKEFILEOPTION );
  }
+ */
 
 <COPY_MAKEFILE_OPTION><<EOF>> { 
   //DEBUG_PRT_PRT("No makefile options defined.");
 
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   bWithinMAKEFILEOPTION = 0;
   BEGIN TEMPLATE_ANALYSIS;
 
   return MAKEFILE_OPTION;
  }
 
-//****************************************
-//  Looks for standard and user functions in the .ez file
-//****************************************
+ /****************************************
+  *  Looks for standard and user functions in the .ez file
+  ****************************************/
 <COPY_INITIALISER>"\\GenomeClass::initiali"[sz]"er"[ \t\n]*":" {
   bWithinInitialiser=1;
   BEGIN COPY_USER_FUNCTION;
   BEGIN TEMPLATE_ANALYSIS;
   return USER_CTOR;
  }
-<COPY_INITIALISER>.|\n {}                                      
+<COPY_INITIALISER>.|\n {/*putc(yytext[0],fpOutputFile);*/}                                      
 <COPY_CROSSOVER>"\\GenomeClass::crossover"[ \t\n]*":" {
   bWithinXover=1;
   if( bLINE_NUM_EZ_FILE )
@@ -1976,15 +2010,20 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_OPTIMISER>. {}
 <COPY_OPTIMISER>\n {lineCounter++;}
 
-//****************************************
-//  Basic copy to .cpp file with major changes
-//****************************************
+ /****************************************
+  *  Basic copy to .cpp file with major changes
+  ****************************************/
 
-<COPY_USER_GENERATION>\/\/[^\n]* {fprintf(fpOutputFile,yytext);}         // blah blah on a line containing sth else
-<COPY_USER_GENERATION>^[ \t]*\/\/[^\n]*\n {fprintf(fpOutputFile,yytext);} // blah blah on its own on a single line
-<COPY_USER_GENERATION>\/\*[^\*]*\*\/ {fprintf(fpOutputFile,yytext);}  /* blah blah on a line containing sth else */
-<COPY_USER_GENERATION>^[ \t]*\/\*[^\*]*\*\/[ \t]*\n {fprintf(fpOutputFile,yytext);} /* blah blah with nothing before the comment */
-<COPY_USER_GENERATION>"Genome"  {fprintf(fpOutputFile,"genome");} // local genome name
+ /*blah blah on a line containing sth else*/
+<COPY_USER_GENERATION>\/\/[^\n]* {fprintf(fpOutputFile,yytext);}
+ /*blah blah on its own on a single line*/
+<COPY_USER_GENERATION>^[ \t]*\/\/[^\n]*\n {fprintf(fpOutputFile,yytext);} 
+ /* blah blah on a line containing sth else */
+<COPY_USER_GENERATION>\/\*[^\*]*\*\/ {fprintf(fpOutputFile,yytext);}
+ /* blah blah with nothing before the comment */
+<COPY_USER_GENERATION>^[ \t]*\/\*[^\*]*\*\/[ \t]*\n {fprintf(fpOutputFile,yytext);}
+ /*local genome name*/
+<COPY_USER_GENERATION>"Genome"  {fprintf(fpOutputFile,"genome");}
 <COPY_USER_GENERATION>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 <COPY_USER_GENERATION>"\\\""  {fprintf(fpOutputFile,"\\\"");}
 
@@ -1999,45 +2038,49 @@ if(OPERATING_SYSTEM=WINDOWS)
   }
  }
 
-<COPY_USER_GENERATION>"currentGeneration" |
+<COPY_USER_GENERATION>"currentGeneration"?
 <COPY_USER_GENERATION>"currentGeneration"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else {
       fprintf(fpOutputFile,"(*EZ_current_generation)");}} // local genome name
-<COPY_USER_GENERATION>"NB_GEN" |
+<COPY_USER_GENERATION>"NB_GEN"?
 <COPY_USER_GENERATION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
-  else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }} // local genome name                           
-<COPY_USER_GENERATION>"POP_SIZE" |
+ /*local genome name*/
+  else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }} 
+<COPY_USER_GENERATION>"POP_SIZE"?
+ /*local genome name*/
 <COPY_USER_GENERATION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
-    } // local genome name
-<COPY_USER_GENERATION>"MUT_PROB" |
+    }
+<COPY_USER_GENERATION>"MUT_PROB"?
+ /* local genome name*/
 <COPY_USER_GENERATION>"MUT_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else {fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
     }
- } // local genome name
-<COPY_USER_GENERATION>"XOVER_PROB" |
+ }
+<COPY_USER_GENERATION>"XOVER_PROB"?
+ /*local genome name*/
 <COPY_USER_GENERATION>"XOVER_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
   else {
       fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");     
     }
- } // local genome name
-<COPY_USER_GENERATION>"REPL_PERC" |
-<COPY_USER_GENERATION>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
-    } // local genome name
-<COPY_USER_GENERATION>"MINIMISE" |
-<COPY_USER_GENERATION>"MINIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE");
-    } // local genome name
-<COPY_USER_GENERATION>"MINIMIZE" |
-<COPY_USER_GENERATION>"MINIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE");
-    } // local genome name
-<COPY_USER_GENERATION>"MAXIMISE" |
-<COPY_USER_GENERATION>"MAXIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE");
-    } // local genome name
-<COPY_USER_GENERATION>"MAXIMIZE" |
-<COPY_USER_GENERATION>"MAXIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE");
-    } // local genome name
+ }
+<COPY_USER_GENERATION>"REPL_PERC"?
+<COPY_USER_GENERATION>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC"); //local genome name
+    }
+<COPY_USER_GENERATION>"MINIMISE"?
+<COPY_USER_GENERATION>"MINIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE"); // local genome name
+    } 
+<COPY_USER_GENERATION>"MINIMIZE"?
+<COPY_USER_GENERATION>"MINIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE"); // local genome name
+    }
+<COPY_USER_GENERATION>"MAXIMISE"?
+<COPY_USER_GENERATION>"MAXIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE"); // local genome name
+    }
+<COPY_USER_GENERATION>"MAXIMIZE"?
+<COPY_USER_GENERATION>"MAXIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE"); // local genome name
+    }
 
 <COPY_USER_GENERATION>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n    hint -> You must have meant \"NB_GEN=...\" rather than \"currentGeneration=...\"\n",sEZ_FILE_NAME,yylineno);
   exit(1);
@@ -2088,6 +2131,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 <COPY_USER_GENERATION>"\\end" {rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   fprintf(fpOutputFile,"}");} // Back to the template file
 <COPY_USER_GENERATION>";" {if (bWaitingForSemiColon){
@@ -2101,17 +2145,17 @@ if(OPERATING_SYSTEM=WINDOWS)
     else fprintf(fpOutputFile,"));");
   }
   else fprintf(fpOutputFile,";");}
-<COPY_USER_GENERATION>"evoluationaryAlgorithm." | 
+<COPY_USER_GENERATION>"evoluationaryAlgorithm."? 
 <COPY_USER_GENERATION>"ea." {
   fprintf(fpOutputFile,"(*evoluationaryAlgorithm).");
  }
 <COPY_USER_GENERATION>.|\n {putc(yytext[0],fpOutputFile);}                                      
 
-//****************************************
-//  Basic copy to .cpp file with minor changes
-//****************************************
+ /****************************************
+  *  Basic copy to .cpp file with minor changes
+  ****************************************/
 
-// takes care of C++-like comments
+ /* takes care of C++-like comments */
 <COPY_USER_FUNCTION>\/\/[^\n]* {fprintf(fpOutputFile,yytext);}         // blah blah on a line containing sth else
 <COPY_USER_FUNCTION>^[ \t]*\/\/[^\n]*\n {fprintf(fpOutputFile,yytext);} // blah blah on its own on a single line
 <COPY_USER_FUNCTION>\/\*[^\*]*\*\/\n {fprintf(fpOutputFile,yytext);printf("%s\n",yytext);}  /* blah blah on a line containing sth else */
@@ -2161,32 +2205,32 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 <COPY_USER_FUNCTION>"\\\""  {fprintf(fpOutputFile,"\\\"");}
 
-<COPY_USER_FUNCTION>"currentGeneration" |
+<COPY_USER_FUNCTION>"currentGeneration"?
 <COPY_USER_FUNCTION>"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }} // local genome name
-<COPY_USER_FUNCTION>"NB_GEN" |
+<COPY_USER_FUNCTION>"NB_GEN"?
 <COPY_USER_FUNCTION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
-<COPY_USER_FUNCTION>"POP_SIZE" |
+<COPY_USER_FUNCTION>"POP_SIZE"?
 <COPY_USER_FUNCTION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
-<COPY_USER_FUNCTION>"MUT_PROB" |
+<COPY_USER_FUNCTION>"MUT_PROB"?
 <COPY_USER_FUNCTION>"MUT_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else if( TARGET==CUDA || TARGET==STD)
     fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
   else fprintf(fpOutputFile,"EZ_MUT_PROB");
  } // local genome name
-<COPY_USER_FUNCTION>"XOVER_PROB" |
+<COPY_USER_FUNCTION>"XOVER_PROB"?
 <COPY_USER_FUNCTION>"XOVER_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
   else if( TARGET==CUDA || TARGET==STD )
     fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
   else fprintf(fpOutputFile,"EZ_XOVER_PROB");} // local genome name
-<COPY_USER_FUNCTION>"REPL_PERC" |
+<COPY_USER_FUNCTION>"REPL_PERC"?
 <COPY_USER_FUNCTION>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else fprintf(fpOutputFile,"EZ_REPL_PERC");} // local genome name
 
@@ -2241,6 +2285,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 <COPY_USER_FUNCTION>"\\end" {rewind(fpGenomeFile);
   yyin = fpTemplateFile;
+  yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bWithinInitialiser=bWithinXover=bWithinMutator=bWithinEvaluator=bWithinOptimiser=bWithinCUDA_Evaluator=0;
   if (bWithinDisplayFunction){
@@ -2249,22 +2294,22 @@ if(OPERATING_SYSTEM=WINDOWS)
   else return END_OF_FUNCTION;} // Back to the template file
 <COPY_USER_FUNCTION>.|\n {putc(yytext[0],fpOutputFile);}                                      
 
-//****************************************
-//  Looks for run parameters in the .ez file
-//****************************************
+ /****************************************
+   Looks for run parameters in the .ez file
+  ****************************************/
 
 <PARAMETERS_ANALYSIS>"\\Default run"[ \t\n]+"parameters"[ \t\n]*":" {
   if (bVERBOSE) printf ("Analysing parameters...\n");
   BEGIN GET_PARAMETERS;
  }
-<PARAMETERS_ANALYSIS>.|\n {}                                      
+<PARAMETERS_ANALYSIS>.|\n {/*putc(yytext[0],fpOutputFile);*/}                                      
 
-// takes care of C++-like comments
+ /* takes care of C++-like comments */
 <GET_PARAMETERS>\/\/[^\n]* ;         // blah blah on a line containing sth else
 <GET_PARAMETERS>^[ \t]*\/\/[^\n]*\n ; // blah blah on its own on a single line
 <GET_PARAMETERS>\/\*[^\*]*\*\/ ;  /* blah blah on a line containing sth else */
 <GET_PARAMETERS>^[ \t]*\/\*[^\*]*\*\/[ \t]*\n ; /* blah blah with nothing before the comment */
-// gobbles up white spaces, tabs or carriage returns
+ /* gobbles up white spaces, tabs or carriage returns */
 <GET_PARAMETERS>[ \t]             { /* do nothing */ }
 <GET_PARAMETERS>^[ \t]*\n      { /*return '\n';*/ }
 <GET_PARAMETERS>\n                 { /*return '\n';*/ }
@@ -2303,33 +2348,42 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Surviving"[ \t\n]+"offspring"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tSurv Off...\n");return SURVOFF;}
 
 
-<GET_PARAMETERS>"Final"[ \t\n]+"reduce"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tFinal Reduce Operator...\n");return RED_FINAL;}// DISCARD;}
+<GET_PARAMETERS>"Final"[ \t\n]+"reduce"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tFinal Reduce Operator...\n");return RED_FINAL;/* DISCARD; */}
+
+
 <GET_PARAMETERS>"Elitism"[ \t\n]*":" {if (bVERBOSE) printf ("\tElitism...\n");return ELITISM;}
 <GET_PARAMETERS>"Evaluator"[ \t\n]+"goal"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;}
 <GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"optimisation"[ \t\n]+"iterations"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Optimisation It...\n");return NB_OPT_IT;}
 <GET_PARAMETERS>"Baldwinism"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tBaldwinism...\n");return BALDWINISM;}
- 
+
+
 <GET_PARAMETERS>"Remote"[ \t\n]+"island"[ \t\n]+"model"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf ("\tRemote Island Model...\n"); return REMOTE_ISLAND_MODEL;}
 <GET_PARAMETERS>"IP"[ \t\n]+"file"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tIP File...\n"); return IP_FILE;}
 <GET_PARAMETERS>"Migration"[ \t\n]+"probability"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tMigration Probability...\n"); return MIGRATION_PROBABILITY;}
 <GET_PARAMETERS>"Server"[ \t\n]+"port"[ \t\n]*":"[ \t\n]* {if(bVERBOSE) printf("\tServer port...\n"); return SERVER_PORT;}
 
  
-// number
-<GET_PARAMETERS>[0-9]+"."[0-9]*{exponent}?  |
-<GET_PARAMETERS>"."[0-9]+{exponent}?  |
-<GET_PARAMETERS>[0-9]+{exponent}     { yylval.dValue = myStrtod(); return NUMBER2; }
+ /* number */
+<GET_PARAMETERS>[0-9]+"."[0-9]*{exponent}?|"."[0-9]+{exponent}?|[0-9]+{exponent} { yylval.dValue = myStrtod(); return NUMBER2; }
 <GET_PARAMETERS>[0-9]+ {yylval.dValue=atof(yytext); return NUMBER2;}
 
-// identifier
-<GET_PARAMETERS>[a-zA-Z_][a-zA-Z0-9_]*    { yylval.pSymbol = new CSymbol(yytext);
-  return IDENTIFIER2; }
-// end of .ez file : resume tpl analysis
-<GET_PARAMETERS>"\\end" {rewind(fpGenomeFile); yyin = fpTemplateFile; BEGIN TEMPLATE_ANALYSIS;}  // switch back to .tpl file and analyser
+ /* identifier */
+<GET_PARAMETERS>[a-zA-Z_][a-zA-Z0-9_]*    {
+  yylval.pSymbol = new CSymbol(yytext);
+  return IDENTIFIER2;}
+ /* end of .ez file : resume tpl analysis */
+ /* switch back to .tpl file and analyser */
+<GET_PARAMETERS>"\\end" {
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  yypop_buffer_state();
+  BEGIN TEMPLATE_ANALYSIS;
+ }
 
 \n {
   lineCounter++;
-}                          
+ }
+
 <GET_PARAMETERS>[Mm]"ax"[ \t\n]+"init"[ \t\n]+"tree"[ \t\n]+"depth"[ \t\n]+":" {
   if( bVERBOSE ) printf("\tMax init tree depth...\n");
   return MAX_INIT_TREE_D;
@@ -2362,12 +2416,13 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 
 
-//****************************************
-// all other characters                      
-.                      {return  (char)yytext[0];}
+ /****************************************
+ * all other characters
+ *****************************************/
+. {return  (char)yytext[0];}
+
 
 %%
-
 		       /////////////////////////////////////////////////////////////////////////////
 
 inline char  mytolower(char c) {
@@ -2399,12 +2454,7 @@ inline int isFigure(char c){
 /////////////////////////////////////////////////////////////////////////////
 // EASEALexer commands
 
-int CEASEALexer::yywrap(){
-  if (bNotFinishedYet) {bNotFinishedYet=0; return 0;}
-  else return 1;
-}
-
-int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
+int CEASEALexer_create(CSymbolTable* pSymTable)
 { 
   int i;
   char sTemp[1000];
@@ -2415,11 +2465,11 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
 //#else
 //  OPERATING_SYSTEM=OTHER_SYSTEM;
 #endif
-  assert(pParser != NULL);
-  assert(pSymTable != NULL);
+  //assert(pParser != NULL);
+  //assert(pSymTable != NULL);
   
   pSymbolTable = pSymTable;
-  if (!yycreate(pParser)) return 0;    
+  //if (!yycreate(pParser)) return 0;    
 
   if (bVERBOSE) {
 	printf("\n                                                                   ");
@@ -2442,11 +2492,11 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
   if (bVERBOSE) printf("\n");
   
   if (TARGET==0) {
-/*     printf("\nPlease select a target library (GALib STD or CUDA): "); */
-/*     scanf("%s",sTemp); */
-/*     else if (!mystricmp(sTemp,"cuda")) TARGET=CUDA; */
-/*     else if (!mystricmp(sTemp,"std")) TARGET=STD; */
-/*     else return 0; */
+ /*     printf("\nPlease select a target library (GALib STD or CUDA): "); */
+ /*     scanf("%s",sTemp); */
+ /*     else if (!mystricmp(sTemp,"cuda")) TARGET=CUDA; */
+ /*     else if (!mystricmp(sTemp,"std")) TARGET=STD; */
+ /*     else return 0; */
     TARGET = STD;
   }
 
@@ -2539,11 +2589,12 @@ int CEASEALexer::create(CEASEAParser* pParser, CSymbolTable* pSymTable)
 /////////////////////////////////////////////////////////////////////////////
 // calc_lexer attribute commands
 
-double CEASEALexer::myStrtod() const{
+double myStrtod(){
   errno = 0;    // clear error flag
   char* endp;
   double d = strtod(yytext, &endp);
-  if ((d == +HUGE_VAL || d == -HUGE_VAL) && errno == ERANGE) {
+  if ((d == +HUGE_VAL || d == -HUGE_VAL) && errno == ERANGE)
+  {
     printf("number too large\n");
   }
   return d;
