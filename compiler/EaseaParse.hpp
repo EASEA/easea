@@ -107,6 +107,8 @@
 typedef union YYSTYPE
 {
 
+/* Line 2068 of yacc.c  */
+#line 93 "compiler/EaseaParse.y"
 
   CSymbol* pSymbol;
   double dValue;
@@ -116,6 +118,8 @@ typedef union YYSTYPE
 
 
 
+/* Line 2068 of yacc.c  */
+#line 123 "compiler/EaseaParse.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -127,11 +131,15 @@ extern YYSTYPE yylval;
 
 /* "%code provides" blocks.  */
 
+/* Line 2068 of yacc.c  */
+#line 87 "compiler/EaseaParse.y"
 
 // forward references
 class CSymbol;
 
 
+/* Line 2068 of yacc.c  */
+#line 179 "compiler/EaseaParse.y"
 
 #include "EaseaSym.h"
 #include "EaseaLex.h"
@@ -147,3 +155,5 @@ class CSymbol;
 
 
 
+/* Line 2068 of yacc.c  */
+#line 160 "compiler/EaseaParse.hpp"

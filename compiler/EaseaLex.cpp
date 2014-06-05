@@ -1,5 +1,6 @@
+#line 2 "compiler/EaseaLex.cpp"
 
-#line 3 "EaseaLex.cpp"
+#line 4 "compiler/EaseaLex.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -3133,6 +3134,8 @@ static int yy_more_len = 0;
 #define YY_MORE_ADJ (yy_more_len)
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
+#line 1 "compiler/EaseaLex.l"
+#line 2 "compiler/EaseaLex.l"
  /****************************************************************************
 EaseaLex.l
 Lexical analyser for the EASEA language (EAsy Specification for Evolutionary Algorithms)
@@ -3248,6 +3251,7 @@ end:
 
  /* getline implementation is copied from glibc. */
 
+
   size_t genomeSize;
   bool genomeSizeValidity=false;
   int lineCounter = 0;
@@ -3262,6 +3266,7 @@ char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
   else
     strcpy(selectorName,"Max");
   
+
   if( mystricmp("Tournament",sSELECTOR)==0 )
     strcat(selectorName,"Tournament(globalRandomGenerator)");
   else if( mystricmp("dettour",sSELECTOR)==0 )
@@ -3286,11 +3291,13 @@ char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
   return ret;
 }
 
+
   // include file
   // forward references
   class CEASEAParser;
   class CSymbolTable;
   class OPCodeDesc;
+
 
 void yyreset()
 {
@@ -3304,6 +3311,8 @@ void yyreset()
 	//yyoldeol = 1;
 	//yystart = 0;
 }
+
+
 
   CSymbolTable *pSymbolTable;   // the symbol table
   bool bSymbolInserted,bWithinEvaluator, bWithinOptimiser;  // used to change evalutor type from double to float 
@@ -3321,13 +3330,23 @@ void yyreset()
   OPCodeDesc* opDesc[128];
   unsigned iNoOp;
 
+  
   unsigned iCOPY_GP_EVAL_STATUS;
   bool bIsCopyingGPEval;
+
+
+
 
   // extract yylval for use later on in actions
   //YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
  
+
+
+
+ 
+
 /* macros */
+#line 3350 "compiler/EaseaLex.cpp"
 
 #define INITIAL 0
 #define GENOME_ANALYSIS 1
@@ -3550,7 +3569,12 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
+#line 220 "compiler/EaseaLex.l"
+
+
+
  /*Gobbles up ^Ms, to be compatible with unix*/
+#line 3578 "compiler/EaseaLex.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -3681,11 +3705,13 @@ do_action:	/* This label is used only to access EOF actions. */
 	{ /* beginning of action switch */
 case 1:
 YY_RULE_SETUP
+#line 224 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 /*switch immediately to TEMPLATE_ANALYSIS state*/
 case 2:
 YY_RULE_SETUP
+#line 227 "compiler/EaseaLex.l"
 {
   BEGIN TEMPLATE_ANALYSIS; yyless(yyleng-1);
  }
@@ -3695,6 +3721,7 @@ YY_RULE_SETUP
  ******************************************/
 case 3:
 YY_RULE_SETUP
+#line 234 "compiler/EaseaLex.l"
 {             
   char sFileName[1000];
   strcpy(sFileName, sRAW_PROJECT_NAME);
@@ -3704,30 +3731,37 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
+#line 240 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"EASEA");}        
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
+#line 241 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",sPROJECT_NAME);}        
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
+#line 242 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",sEZ_PATH);}        
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
+#line 243 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",sTPL_DIR);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
+#line 244 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",sEO_DIR);}        
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
+#line 245 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",sLOWER_CASE_PROJECT_NAME);}        
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
+#line 246 "compiler/EaseaLex.l"
 {switch (OPERATING_SYSTEM) {
   case UNIX : fprintf(fpOutputFile,"UNIX_OS"); break;
   case WINDOWS : fprintf(fpOutputFile,"WINDOWS_OS"); break;
@@ -3737,6 +3771,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
+#line 252 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Inserting user declarations.\n");
   yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
@@ -3747,6 +3782,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
+#line 260 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Inserting user cuda.\n");
   yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
@@ -3757,6 +3793,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
+#line 268 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Inserting initialisation function.\n");
   yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
@@ -3767,6 +3804,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
+#line 276 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Inserting generation before reduce function.\n");
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
@@ -3777,6 +3815,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
+#line 285 "compiler/EaseaLex.l"
 {
   //DEBUG_PRT_PRT("insert beg");
   if (bVERBOSE) printf ("Inserting at the begining of each generation function.\n");
@@ -3796,6 +3835,7 @@ YY_RULE_SETUP
  */
 case 16:
 YY_RULE_SETUP
+#line 304 "compiler/EaseaLex.l"
 {
   if( bVERBOSE )printf("inserting gp parameters\n");
   //  fprintf(fpOutputFile,"#define MAX_XOVER_DEPTH",%d
@@ -3815,6 +3855,7 @@ YY_RULE_SETUP
   */
 case 17:
 YY_RULE_SETUP
+#line 321 "compiler/EaseaLex.l"
 {
   
   fprintf(fpOutputFile,"enum OPCODE              {"); 
@@ -3822,6 +3863,7 @@ YY_RULE_SETUP
     fprintf(fpOutputFile,"%s,",opDesc[i]->opcode->c_str());
   }
   fprintf(fpOutputFile,"OPCODE_SIZE, OP_RETURN};\n");
+
 
   fprintf(fpOutputFile,"const char* opCodeName[]={"); 
   for( unsigned i=0 ; i<iNoOp ; i++ ){
@@ -3848,6 +3890,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
+#line 353 "compiler/EaseaLex.l"
 {
   for( unsigned i=0 ; i<iNoOp ; i++ ){
     fprintf(fpOutputFile,"    case %s :\n",opDesc[i]->opcode->c_str());
@@ -3859,6 +3902,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
+#line 362 "compiler/EaseaLex.l"
 {
   for( unsigned i=0 ; i<iNoOp ; i++ ){
     fprintf(fpOutputFile,"  case %s :\n",opDesc[i]->opcode->c_str());
@@ -3869,6 +3913,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
+#line 371 "compiler/EaseaLex.l"
 {
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
@@ -3879,6 +3924,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
+#line 380 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("found begin section\n");
   bGPOPCODE_ANALYSIS = true;
@@ -3887,6 +3933,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
+#line 386 "compiler/EaseaLex.l"
 { 
   if( bGPOPCODE_ANALYSIS ){
     rewind(fpGenomeFile);
@@ -3903,6 +3950,7 @@ YY_RULE_SETUP
  }
 	YY_BREAK
 case YY_STATE_EOF(COPY_GP_OPCODE):
+#line 401 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf("*** No GP OP codes were found. ***\n");
   rewind(fpGenomeFile);
@@ -3913,11 +3961,13 @@ case YY_STATE_EOF(COPY_GP_OPCODE):
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
+#line 408 "compiler/EaseaLex.l"
 {/*if( bGPOPCODE_ANALYSIS ) printf("%c",yytext[0]);*/}
 	YY_BREAK
 case 24:
 /* rule 24 can match eol */
 YY_RULE_SETUP
+#line 409 "compiler/EaseaLex.l"
 {if( bGPOPCODE_ANALYSIS )printf("\n");lineCounter++;}
 	YY_BREAK
 /*
@@ -3927,6 +3977,7 @@ YY_RULE_SETUP
  */
 case 25:
 YY_RULE_SETUP
+#line 417 "compiler/EaseaLex.l"
 {
     /* this rule match the OP_NAME */
     if( iGP_OPCODE_FIELD != 0 ) {
@@ -3940,10 +3991,12 @@ YY_RULE_SETUP
 case 26:
 /* rule 26 can match eol */
 YY_RULE_SETUP
+#line 427 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
+#line 429 "compiler/EaseaLex.l"
 {
   if( iGP_OPCODE_FIELD != 1 ){
     fprintf(stderr,"Error, op code real name must be given at the second place\n");
@@ -3954,6 +4007,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
+#line 438 "compiler/EaseaLex.l"
 {
   if( iGP_OPCODE_FIELD != 2 ){
     fprintf(stderr,"Error, arity must be given at the third place\n");
@@ -3971,10 +4025,12 @@ YY_RULE_SETUP
 case 29:
 /* rule 29 can match eol */
 YY_RULE_SETUP
+#line 452 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
+#line 453 "compiler/EaseaLex.l"
 {
   iGP_OPCODE_FIELD = 0;
   iNoOp++;
@@ -3982,12 +4038,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
+#line 458 "compiler/EaseaLex.l"
 {
   if( bGPOPCODE_ANALYSIS ) iGP_OPCODE_FIELD++;
  }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
+#line 463 "compiler/EaseaLex.l"
 {
   if( iGP_OPCODE_FIELD != 3 ){
     fprintf(stderr,"Error, code must be given at the forth place\n");
@@ -4010,6 +4068,7 @@ YY_RULE_SETUP
  */
 case 33:
 YY_RULE_SETUP
+#line 483 "compiler/EaseaLex.l"
 {
   accolade_counter++;
   opDesc[iNoOp]->cpuCodeStream << "{";
@@ -4018,6 +4077,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
+#line 489 "compiler/EaseaLex.l"
 {
   accolade_counter--;
   if( accolade_counter==0 ){
@@ -4033,6 +4093,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
+#line 502 "compiler/EaseaLex.l"
 {
   char* endptr;
   unsigned no_input = strtol(yytext+strlen("INPUT["),&endptr,10);
@@ -4043,6 +4104,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
+#line 510 "compiler/EaseaLex.l"
 {
   opDesc[iNoOp]->isERC = true;
   opDesc[iNoOp]->cpuCodeStream << "root->erc_value" ;
@@ -4053,6 +4115,7 @@ YY_RULE_SETUP
 case 37:
 /* rule 37 can match eol */
 YY_RULE_SETUP
+#line 517 "compiler/EaseaLex.l"
 {
   opDesc[iNoOp]->cpuCodeStream << "\n  ";
   opDesc[iNoOp]->gpuCodeStream << "\n    ";
@@ -4060,6 +4123,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
+#line 523 "compiler/EaseaLex.l"
 {
   opDesc[iNoOp]->cpuCodeStream << yytext;
   opDesc[iNoOp]->gpuCodeStream << yytext;
@@ -4067,6 +4131,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
+#line 528 "compiler/EaseaLex.l"
 { 
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
@@ -4080,6 +4145,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
+#line 539 "compiler/EaseaLex.l"
 {
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
@@ -4094,6 +4160,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
+#line 553 "compiler/EaseaLex.l"
 {
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
@@ -4108,6 +4175,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
+#line 567 "compiler/EaseaLex.l"
 {
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
@@ -4121,6 +4189,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
+#line 578 "compiler/EaseaLex.l"
 {
   rewind(fpGenomeFile);
   yyin = fpGenomeFile;
@@ -4134,6 +4203,7 @@ YY_RULE_SETUP
  }
 	YY_BREAK
 case YY_STATE_EOF(COPY_GP_EVAL):
+#line 591 "compiler/EaseaLex.l"
 {
   switch(iCOPY_GP_EVAL_STATUS){
   case EVAL_HDR:
@@ -4150,6 +4220,7 @@ case YY_STATE_EOF(COPY_GP_EVAL):
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
+#line 606 "compiler/EaseaLex.l"
 {
   if( iCOPY_GP_EVAL_STATUS==EVAL_HDR){
     bIsCopyingGPEval = true;
@@ -4158,6 +4229,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
+#line 612 "compiler/EaseaLex.l"
 {
   if( iCOPY_GP_EVAL_STATUS==EVAL_BDY){
     bIsCopyingGPEval = true;
@@ -4166,6 +4238,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
+#line 620 "compiler/EaseaLex.l"
 {
   if( iCOPY_GP_EVAL_STATUS==EVAL_FTR){
     bIsCopyingGPEval = true;
@@ -4174,6 +4247,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
+#line 626 "compiler/EaseaLex.l"
 {
   if( bIsCopyingGPEval ){
     bIsCopyingGPEval = false;
@@ -4187,12 +4261,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
+#line 637 "compiler/EaseaLex.l"
 {
   if( bIsCopyingGPEval ) fprintf(fpOutputFile,"%s",yytext);
  }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
+#line 641 "compiler/EaseaLex.l"
 {
   if( bIsCopyingGPEval) 
     //if( bCOPY_GP_EVAL_GPU )
@@ -4203,6 +4279,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
+#line 649 "compiler/EaseaLex.l"
 {
   char* endptr;
   unsigned no_output = strtol(yytext+strlen("OUTPUT["),&endptr,10);
@@ -4215,6 +4292,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
+#line 659 "compiler/EaseaLex.l"
 {
 	char *var;
 	var = strndup(yytext+strlen("OUTPUT["), strlen(yytext) - strlen("OUTPUT[") - 1);
@@ -4227,6 +4305,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
+#line 669 "compiler/EaseaLex.l"
 {
   if( bIsCopyingGPEval) 
     if( bCOPY_GP_EVAL_GPU )
@@ -4237,6 +4316,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
+#line 677 "compiler/EaseaLex.l"
 {
   char* endptr;
   unsigned no_input = strtol(yytext+strlen("INPUT["),&endptr,10);
@@ -4249,6 +4329,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
+#line 687 "compiler/EaseaLex.l"
 {
 	char *var;
 	var = strndup(yytext+strlen("INPUT["), strlen(yytext) - strlen("INPUT[") - 1);
@@ -4261,6 +4342,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
+#line 697 "compiler/EaseaLex.l"
 {
   if( bIsCopyingGPEval )
     if( iCOPY_GP_EVAL_STATUS==EVAL_FTR )
@@ -4273,6 +4355,7 @@ YY_RULE_SETUP
 case 56:
 /* rule 56 can match eol */
 YY_RULE_SETUP
+#line 709 "compiler/EaseaLex.l"
 {
   if( bIsCopyingGPEval )
     switch(iCOPY_GP_EVAL_STATUS){
@@ -4288,6 +4371,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
+#line 723 "compiler/EaseaLex.l"
 {
   if( bIsCopyingGPEval )
     fprintf(fpOutputFile,"return fitness = "); 
@@ -4295,6 +4379,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
+#line 730 "compiler/EaseaLex.l"
 {
   //DEBUG_PRT_PRT("insert beg");
   yyin = fpGenomeFile;
@@ -4306,6 +4391,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
+#line 739 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Inserting at the end of each generation function.\n");
   yyin = fpGenomeFile;
@@ -4317,6 +4403,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
+#line 748 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Inserting Bound Checking function.\n");
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
@@ -4326,6 +4413,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
+#line 755 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Analysing user classes.\n");
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
@@ -4335,6 +4423,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
+#line 762 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Inserting User classes.\n");
   fprintf (fpOutputFile,"// User classes\n");
@@ -4361,6 +4450,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
+#line 785 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome constructor.\n");
@@ -4375,6 +4465,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
+#line 797 "compiler/EaseaLex.l"
 {
   size_t size_of_genome=0;
   if (bVERBOSE) printf ("Inserting default genome size.\n");
@@ -4398,6 +4489,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
+#line 818 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome constructor.\n");
@@ -4434,6 +4526,7 @@ YY_RULE_SETUP
 /*  } */
 case 66:
 YY_RULE_SETUP
+#line 858 "compiler/EaseaLex.l"
 {        
   if (pGENOME->sString) {
     if (bVERBOSE) printf ("Inserting Methods into Genome Class.\n");
@@ -4446,6 +4539,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
+#line 867 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default assignment constructor.\n");
@@ -4466,6 +4560,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
+#line 884 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default clone method.\n");
@@ -4486,6 +4581,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
+#line 902 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default copy constructor.\n");
@@ -4515,6 +4611,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
+#line 929 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome serializer.\n");
@@ -4526,6 +4623,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
+#line 938 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome deserializer.\n");
@@ -4536,6 +4634,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
+#line 946 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default copy constructor.\n");
@@ -4554,6 +4653,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
+#line 962 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default destructor.\n");
@@ -4573,6 +4673,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
+#line 979 "compiler/EaseaLex.l"
 {       
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default diversity test.\n");
@@ -4598,6 +4699,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
+#line 1001 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default genome comparator.\n");
@@ -4617,6 +4719,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
+#line 1017 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default read command.\n");
@@ -4629,6 +4732,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
+#line 1026 "compiler/EaseaLex.l"
 {        
   if (bVERBOSE) printf ("Inserting genome display function.\n");
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
@@ -4638,6 +4742,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
+#line 1034 "compiler/EaseaLex.l"
 {
   if( bVERBOSE ) printf("Inserting user LDFLAGS.\n");
   yyin = fpGenomeFile;
@@ -4647,6 +4752,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
+#line 1041 "compiler/EaseaLex.l"
 {
   CListItem<CSymbol*> *pSym;
   if (!bDisplayFunction){
@@ -4675,6 +4781,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
+#line 1066 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Inserting user functions.\n");
   yyin = fpGenomeFile;                    
@@ -4685,6 +4792,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
+#line 1073 "compiler/EaseaLex.l"
 {        
   bWithinEO_Function=1;
   lineCounter=1;
@@ -4696,6 +4804,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
+#line 1082 "compiler/EaseaLex.l"
 {        
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   yypush_buffer_state(yy_create_buffer(yyin,YY_BUF_SIZE ));
@@ -4705,6 +4814,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
+#line 1089 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Inserting Finalization function.\n");
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
@@ -4715,6 +4825,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
+#line 1097 "compiler/EaseaLex.l"
 {        
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   yypush_buffer_state(yy_create_buffer(yyin,YY_BUF_SIZE ));
@@ -4724,6 +4835,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
+#line 1103 "compiler/EaseaLex.l"
 {        
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   yypush_buffer_state(yy_create_buffer(yyin,YY_BUF_SIZE ));
@@ -4733,6 +4845,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
+#line 1109 "compiler/EaseaLex.l"
 {
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   yypush_buffer_state(yy_create_buffer(yyin,YY_BUF_SIZE ));
@@ -4742,6 +4855,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
+#line 1115 "compiler/EaseaLex.l"
 {      
   if( bVERBOSE ) fprintf(stdout,"Inserting optimization function\n");
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
@@ -4752,6 +4866,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
+#line 1122 "compiler/EaseaLex.l"
 {        
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   yypush_buffer_state(yy_create_buffer(yyin,YY_BUF_SIZE ));
@@ -4762,6 +4877,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
+#line 1129 "compiler/EaseaLex.l"
 { 
   if( bVERBOSE ) fprintf(stdout,"Inserting cuda optimization function\n");
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
@@ -4773,6 +4889,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
+#line 1138 "compiler/EaseaLex.l"
 {        
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   yypush_buffer_state(yy_create_buffer(yyin,YY_BUF_SIZE ));
@@ -4781,6 +4898,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
+#line 1143 "compiler/EaseaLex.l"
 {
   if (bGenerationReplacementFunction) {
     if( bVERBOSE ) fprintf(stdout,"Inserting generation function call\n");
@@ -4792,6 +4910,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
+#line 1152 "compiler/EaseaLex.l"
 {
   if( bEndGenerationFunction ) {
     if( bVERBOSE ) fprintf(stdout,"Inserting end generation function call\n");
@@ -4803,6 +4922,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
+#line 1161 "compiler/EaseaLex.l"
 {
   if( bBeginGenerationFunction ) {
     if( bVERBOSE ) fprintf(stdout,"Inserting beginning generation function call\n");
@@ -4814,6 +4934,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
+#line 1171 "compiler/EaseaLex.l"
 {
   if (bBoundCheckingFunction) {
     if( TARGET==CUDA || TARGET==STD ){
@@ -4824,30 +4945,35 @@ YY_RULE_SETUP
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
+#line 1179 "compiler/EaseaLex.l"
 {
     fprintf(fpOutputFile,"%d",bIsParentReduce);
  }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
+#line 1183 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,"%d",bIsOffspringReduce);
  }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
+#line 1187 "compiler/EaseaLex.l"
 {
   if (bInitFunction) fprintf(fpOutputFile,"\n  EASEAInitFunction(argc, argv);\n");
  }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
+#line 1191 "compiler/EaseaLex.l"
 {
   if (bFinalizationFunction) fprintf(fpOutputFile,"\n  EASEAFinalization(pop);\n");
  }        
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
+#line 1195 "compiler/EaseaLex.l"
 {
   //DEBUG_PRT_PRT("Inserting user classe definitions");
   pGENOME->printUserClasses(fpOutputFile);
@@ -4855,6 +4981,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
+#line 1200 "compiler/EaseaLex.l"
 {
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Selector is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
@@ -4871,54 +4998,67 @@ YY_RULE_SETUP
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
+#line 1213 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",sSELECTOR_OPERATOR);}
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
+#line 1214 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%f",fSELECT_PRM);}
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
+#line 1215 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",sRED_PAR_OPERATOR);}
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
+#line 1216 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%f",fRED_PAR_PRM);}
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
+#line 1217 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",sRED_OFF_OPERATOR);}
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
+#line 1218 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%f",fRED_OFF_PRM);}
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
+#line 1219 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",sRED_FINAL_OPERATOR);}
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
+#line 1220 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%f",fRED_FINAL_PRM);}
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
+#line 1221 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",nPOP_SIZE);}
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
+#line 1222 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",nOFF_SIZE);}
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
+#line 1223 "compiler/EaseaLex.l"
 { fprintf(fpOutputFile,"%d",nELITE); }
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
+#line 1224 "compiler/EaseaLex.l"
 { fprintf(fpOutputFile,"%d",iNO_FITNESS_CASES); }
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
+#line 1227 "compiler/EaseaLex.l"
 {
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Parent reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
@@ -4935,6 +5075,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
+#line 1240 "compiler/EaseaLex.l"
 {
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Offspring reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
@@ -4951,6 +5092,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
+#line 1253 "compiler/EaseaLex.l"
 {
   if( TARGET==CUDA || TARGET==STD){
     //DEBUG_PRT_PRT("Replacement selector is \"%s\" | Goal is %s",sRED_FINAL,(nMINIMISE?"Minimize":"Maximize"));
@@ -4967,6 +5109,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
+#line 1266 "compiler/EaseaLex.l"
 {
 if(OPERATING_SYSTEM=WINDOWS)
 	fprintf(fpOutputFile,"%s\\",getenv("NVSDKCUDA_ROOT"));
@@ -4974,98 +5117,122 @@ if(OPERATING_SYSTEM=WINDOWS)
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
+#line 1270 "compiler/EaseaLex.l"
 {if(fSURV_PAR_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_PAR_SIZE); else fprintf(fpOutputFile,"%f",(float)nPOP_SIZE);}
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
+#line 1271 "compiler/EaseaLex.l"
 {if(fSURV_OFF_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_OFF_SIZE); else fprintf(fpOutputFile,"%f",(float)nOFF_SIZE);}
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
+#line 1272 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",nGENOME_NAME);}
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
+#line 1273 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
+#line 1274 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",nNB_GEN);}
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
+#line 1275 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",nTIME_LIMIT);}
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
+#line 1276 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%f",fMUT_PROB);}
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
+#line 1277 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%f",fXOVER_PROB);}
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
+#line 1278 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); }
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
+#line 1279 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bELITISM);}
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
+#line 1281 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",nNB_OPT_IT);}
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
+#line 1282 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bBALDWINISM);}
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
+#line 1284 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bREMOTE_ISLAND_MODEL);}
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
+#line 1285 "compiler/EaseaLex.l"
 {if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
+#line 1286 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%f",fMIGRATION_PROBABILITY);}
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
+#line 1287 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",nSERVER_PORT);}
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
+#line 1289 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
+#line 1290 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
+#line 1291 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bGENERATE_CSV_FILE);}
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
+#line 1292 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bGENERATE_GNUPLOT_SCRIPT);}
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
+#line 1293 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bGENERATE_R_SCRIPT);}
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
+#line 1295 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bSAVE_POPULATION);}
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
+#line 1296 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);}
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
+#line 1298 "compiler/EaseaLex.l"
 {
   char sFileName[1000];
   fclose(fpOutputFile);
@@ -5077,6 +5244,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
+#line 1306 "compiler/EaseaLex.l"
 {
   char sFileName[1000];
   fclose(fpOutputFile);
@@ -5091,6 +5259,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
+#line 1317 "compiler/EaseaLex.l"
 {
   char sFileName[1000];
   fclose(fpOutputFile);
@@ -5102,6 +5271,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
+#line 1325 "compiler/EaseaLex.l"
 {
   char sFileName[1000];
   fclose(fpOutputFile);
@@ -5113,6 +5283,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
+#line 1334 "compiler/EaseaLex.l"
 {
   char sFileName[1000];
  fclose(fpOutputFile);
@@ -5124,6 +5295,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
+#line 1343 "compiler/EaseaLex.l"
 {
   char sFileName[1000];
   char sPathName[1000];
@@ -5159,6 +5331,7 @@ YY_RULE_SETUP
     //DEBUG_PRT_PRT("PathName is %s",sPathName);
     //DEBUG_PRT_PRT("FullFileName is %s",sFullFileName);
     
+  
     // create a symbolic link from Makefile to EASEA.mak
 #ifndef WIN32
     symlink(sFullFileName,sPathName);
@@ -5183,6 +5356,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
+#line 1400 "compiler/EaseaLex.l"
 {
   if (nWARNINGS) printf ("\nWARNING !!!\nTarget file(s) generation went through WITH %d WARNING(S) !\n",nWARNINGS);
   else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded without warnings.\n");
@@ -5199,6 +5373,7 @@ YY_RULE_SETUP
 case 147:
 /* rule 147 can match eol */
 YY_RULE_SETUP
+#line 1413 "compiler/EaseaLex.l"
 {putc(yytext[0],fpOutputFile);}                                      
 	YY_BREAK
 /****************************************
@@ -5207,6 +5382,7 @@ YY_RULE_SETUP
 case 148:
 /* rule 148 can match eol */
 YY_RULE_SETUP
+#line 1419 "compiler/EaseaLex.l"
 {
   fprintf (fpOutputFile,"// Genome Initialiser\n"); 
   if( bLINE_NUM_EZ_FILE )
@@ -5215,6 +5391,7 @@ YY_RULE_SETUP
  }                                                               
 	YY_BREAK
 case YY_STATE_EOF(COPY_EO_INITIALISER):
+#line 1425 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf("*** No genome initialiser was found. ***\n");
   rewind(fpGenomeFile);
@@ -5226,16 +5403,19 @@ case YY_STATE_EOF(COPY_EO_INITIALISER):
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
+#line 1433 "compiler/EaseaLex.l"
 {}                                      
 	YY_BREAK
 case 150:
 /* rule 150 can match eol */
 YY_RULE_SETUP
+#line 1434 "compiler/EaseaLex.l"
 {lineCounter++;}
 	YY_BREAK
 case 151:
 /* rule 151 can match eol */
 YY_RULE_SETUP
+#line 1436 "compiler/EaseaLex.l"
 {
   fprintf (fpOutputFile,"// User declarations\n"); 
   if( bLINE_NUM_EZ_FILE )
@@ -5244,6 +5424,7 @@ YY_RULE_SETUP
  }                                                               
 	YY_BREAK
 case YY_STATE_EOF(COPY_USER_DECLARATIONS):
+#line 1442 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf("*** No user declarations were found. ***\n");
   rewind(fpGenomeFile);
@@ -5255,11 +5436,13 @@ case YY_STATE_EOF(COPY_USER_DECLARATIONS):
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
+#line 1451 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 153:
 /* rule 153 can match eol */
 YY_RULE_SETUP
+#line 1452 "compiler/EaseaLex.l"
 {
   lineCounter++;
  } 
@@ -5267,6 +5450,7 @@ YY_RULE_SETUP
 case 154:
 /* rule 154 can match eol */
 YY_RULE_SETUP
+#line 1456 "compiler/EaseaLex.l"
 {
   fprintf (fpOutputFile,"// User CUDA\n"); 
   if( bLINE_NUM_EZ_FILE )
@@ -5275,6 +5459,7 @@ YY_RULE_SETUP
  }                                                               
 	YY_BREAK
 case YY_STATE_EOF(COPY_USER_CUDA):
+#line 1462 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf("*** No user CUDA were found. ***\n");
   rewind(fpGenomeFile);
@@ -5286,11 +5471,13 @@ case YY_STATE_EOF(COPY_USER_CUDA):
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
+#line 1471 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 156:
 /* rule 156 can match eol */
 YY_RULE_SETUP
+#line 1472 "compiler/EaseaLex.l"
 {
   lineCounter++;
  }                
@@ -5298,6 +5485,7 @@ YY_RULE_SETUP
 case 157:
 /* rule 157 can match eol */
 YY_RULE_SETUP
+#line 1476 "compiler/EaseaLex.l"
 {
   fprintf (fpOutputFile,"// User functions\n\n"); 
   if( bLINE_NUM_EZ_FILE )
@@ -5306,6 +5494,7 @@ YY_RULE_SETUP
  }                                                               
 	YY_BREAK
 case YY_STATE_EOF(COPY_USER_FUNCTIONS):
+#line 1482 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf("*** No user functions were found. ***\n");
   fprintf(fpOutputFile,"\n// No user functions.\n");
@@ -5318,11 +5507,13 @@ case YY_STATE_EOF(COPY_USER_FUNCTIONS):
 	YY_BREAK
 case 158:
 YY_RULE_SETUP
+#line 1491 "compiler/EaseaLex.l"
 {}                                      
 	YY_BREAK
 case 159:
 /* rule 159 can match eol */
 YY_RULE_SETUP
+#line 1492 "compiler/EaseaLex.l"
 {
   lineCounter++;
  }
@@ -5330,6 +5521,7 @@ YY_RULE_SETUP
 case 160:
 /* rule 160 can match eol */
 YY_RULE_SETUP
+#line 1496 "compiler/EaseaLex.l"
 {
     fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){\n");
   bFunction=1; bInitFunction=1;
@@ -5340,6 +5532,7 @@ YY_RULE_SETUP
  }
 	YY_BREAK
 case YY_STATE_EOF(COPY_INITIALISATION_FUNCTION):
+#line 1504 "compiler/EaseaLex.l"
 {bInitFunction=0; // No before everything else function was found in the .ez file
   if (bVERBOSE) printf("*** No before everything else function was found. ***\n");
   fprintf(fpOutputFile,"\n// No before everything else function.\n");
@@ -5353,11 +5546,13 @@ case YY_STATE_EOF(COPY_INITIALISATION_FUNCTION):
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
+#line 1514 "compiler/EaseaLex.l"
 {}                                      
 	YY_BREAK
 case 162:
 /* rule 162 can match eol */
 YY_RULE_SETUP
+#line 1515 "compiler/EaseaLex.l"
 {lineCounter++;} 
 	YY_BREAK
 /****************************************
@@ -5366,6 +5561,7 @@ YY_RULE_SETUP
 case 163:
 /* rule 163 can match eol */
 YY_RULE_SETUP
+#line 1521 "compiler/EaseaLex.l"
 {
   fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n");
   if( bLINE_NUM_EZ_FILE )
@@ -5376,6 +5572,7 @@ YY_RULE_SETUP
  }
 	YY_BREAK
 case YY_STATE_EOF(COPY_FINALIZATION_FUNCTION):
+#line 1530 "compiler/EaseaLex.l"
 {bFinalizationFunction=0; // No after everything else function was found in the .ez file
   if (bVERBOSE) printf("*** No after everything else function was found. ***\n");
   fprintf(fpOutputFile,"\n// No after eveything else function.\n");
@@ -5388,16 +5585,19 @@ case YY_STATE_EOF(COPY_FINALIZATION_FUNCTION):
 	YY_BREAK
 case 164:
 YY_RULE_SETUP
+#line 1539 "compiler/EaseaLex.l"
 {}                                      
 	YY_BREAK
 case 165:
 /* rule 165 can match eol */
 YY_RULE_SETUP
+#line 1540 "compiler/EaseaLex.l"
 {lineCounter++;}                                      
 	YY_BREAK
 case 166:
 /* rule 166 can match eol */
 YY_RULE_SETUP
+#line 1543 "compiler/EaseaLex.l"
 {
   //DEBUG_PRT_PRT("at each end");
   if( (TARGET==CUDA || TARGET==STD)  ){
@@ -5410,6 +5610,7 @@ YY_RULE_SETUP
  }
 	YY_BREAK
 case YY_STATE_EOF(COPY_END_GENERATION_FUNCTION):
+#line 1554 "compiler/EaseaLex.l"
 {
   bEndGenerationFunction=0; // No Generation function was found in the .ez file
   if( bVERBOSE) printf("*** No end generation function was found. ***\n");
@@ -5425,11 +5626,13 @@ case YY_STATE_EOF(COPY_END_GENERATION_FUNCTION):
 case 167:
 /* rule 167 can match eol */
 YY_RULE_SETUP
+#line 1565 "compiler/EaseaLex.l"
 {}                                      
 	YY_BREAK
 case 168:
 /* rule 168 can match eol */
 YY_RULE_SETUP
+#line 1568 "compiler/EaseaLex.l"
 {
   //DEBUG_PRT_PRT("at each beg");
   if( (TARGET==CUDA || TARGET==STD)){
@@ -5446,6 +5649,7 @@ YY_RULE_SETUP
 case 169:
 /* rule 169 can match eol */
 YY_RULE_SETUP
+#line 1581 "compiler/EaseaLex.l"
 {
   //DEBUG_PRT_PRT("at each beg");
   if( (TARGET==CUDA || TARGET==STD)){
@@ -5460,14 +5664,17 @@ YY_RULE_SETUP
 	YY_BREAK
 case 170:
 YY_RULE_SETUP
+#line 1593 "compiler/EaseaLex.l"
 {}                                      
 	YY_BREAK
 case 171:
 /* rule 171 can match eol */
 YY_RULE_SETUP
+#line 1594 "compiler/EaseaLex.l"
 {lineCounter++;}                                      
 	YY_BREAK
 case YY_STATE_EOF(COPY_INSTEAD_EVAL):
+#line 1596 "compiler/EaseaLex.l"
 {
   bBeginGenerationFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No Instead evaluation step function was found. ***\n");
@@ -5481,6 +5688,7 @@ case YY_STATE_EOF(COPY_INSTEAD_EVAL):
  }
 	YY_BREAK
 case YY_STATE_EOF(COPY_BEG_GENERATION_FUNCTION):
+#line 1609 "compiler/EaseaLex.l"
 {
   bBeginGenerationFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No beginning generation function was found. ***\n");
@@ -5496,15 +5704,18 @@ case YY_STATE_EOF(COPY_BEG_GENERATION_FUNCTION):
 case 172:
 /* rule 172 can match eol */
 YY_RULE_SETUP
+#line 1621 "compiler/EaseaLex.l"
 {lineCounter++;}
 	YY_BREAK
 case 173:
 YY_RULE_SETUP
+#line 1622 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 174:
 /* rule 174 can match eol */
 YY_RULE_SETUP
+#line 1625 "compiler/EaseaLex.l"
 {
 //DEBUG_PRT_PRT("at each");
   if((TARGET==CUDA || TARGET==STD) /* && !bBeginGeneration && !bEndGeneration ) */)
@@ -5517,6 +5728,7 @@ YY_RULE_SETUP
 }
 	YY_BREAK
 case YY_STATE_EOF(COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT):
+#line 1636 "compiler/EaseaLex.l"
 {
   bGenerationFunctionBeforeReplacement=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No generation function was found. ***\n");
@@ -5531,15 +5743,18 @@ case YY_STATE_EOF(COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT):
 case 175:
 /* rule 175 can match eol */
 YY_RULE_SETUP
+#line 1647 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 176:
 YY_RULE_SETUP
+#line 1648 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 177:
 /* rule 177 can match eol */
 YY_RULE_SETUP
+#line 1651 "compiler/EaseaLex.l"
 {
   if(TARGET==CUDA || TARGET==STD){
     //fprintf (fpOutputFile,"void EASEABoundChecking(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
@@ -5550,6 +5765,7 @@ YY_RULE_SETUP
  }
 	YY_BREAK
 case YY_STATE_EOF(COPY_BOUND_CHECKING_FUNCTION):
+#line 1660 "compiler/EaseaLex.l"
 {bBoundCheckingFunction=0; // No Generation function was found in the .ez file
   if (bVERBOSE) printf("*** No bound checking function was found. ***\n");
   fprintf(fpOutputFile,"\n// No Bound checking function.\n");
@@ -5563,17 +5779,20 @@ case YY_STATE_EOF(COPY_BOUND_CHECKING_FUNCTION):
 case 178:
 /* rule 178 can match eol */
 YY_RULE_SETUP
+#line 1671 "compiler/EaseaLex.l"
 {}                                      
 	YY_BREAK
 case 179:
 /* rule 179 can match eol */
 YY_RULE_SETUP
+#line 1675 "compiler/EaseaLex.l"
 {
   BEGIN GENOME_ANALYSIS; return CLASSES;}
 	YY_BREAK
 case 180:
 /* rule 180 can match eol */
 YY_RULE_SETUP
+#line 1677 "compiler/EaseaLex.l"
 {}                                      
 	YY_BREAK
 /****************************************
@@ -5581,21 +5800,25 @@ YY_RULE_SETUP
   ****************************************/
 case 181:
 YY_RULE_SETUP
+#line 1683 "compiler/EaseaLex.l"
 {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 	YY_BREAK
 case 182:
 YY_RULE_SETUP
+#line 1684 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"\\\"");}
 	YY_BREAK
 case 183:
 /* rule 183 can match eol */
 YY_RULE_SETUP
+#line 1686 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else if(TARGET == STD) fprintf(fpOutputFile,"(*EZ_current_generation)");
     } // local genome name
 	YY_BREAK
 case 184:
 YY_RULE_SETUP
+#line 1689 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 	YY_BREAK
@@ -5605,18 +5828,21 @@ case 185:
 (yy_c_buf_p) = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 1691 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 	YY_BREAK
 case 186:
 /* rule 186 can match eol */
 YY_RULE_SETUP
+#line 1693 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 	YY_BREAK
 case 187:
 /* rule 187 can match eol */
 YY_RULE_SETUP
+#line 1695 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"MUT_PROB");
@@ -5631,6 +5857,7 @@ YY_RULE_SETUP
 case 188:
 /* rule 188 can match eol */
 YY_RULE_SETUP
+#line 1705 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
@@ -5642,35 +5869,41 @@ YY_RULE_SETUP
 case 189:
 /* rule 189 can match eol */
 YY_RULE_SETUP
+#line 1712 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else fprintf(fpOutputFile,"EZ_REPL_PERC");} // local genome name
 	YY_BREAK
 case 190:
 /* rule 190 can match eol */
 YY_RULE_SETUP
+#line 1714 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE");
   else fprintf(fpOutputFile,"EZ_MINIMISE");} // local genome name
 	YY_BREAK
 case 191:
 /* rule 191 can match eol */
 YY_RULE_SETUP
+#line 1716 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE");
   else fprintf(fpOutputFile,"EZ_MINIMIZE");} // local genome name
 	YY_BREAK
 case 192:
 /* rule 192 can match eol */
 YY_RULE_SETUP
+#line 1718 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE");
   else fprintf(fpOutputFile,"EZ_MAXIMISE");} // local genome name
 	YY_BREAK
 case 193:
 /* rule 193 can match eol */
 YY_RULE_SETUP
+#line 1720 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE");
   else fprintf(fpOutputFile,"EZ_MAXIMIZE");} // local genome name
 	YY_BREAK
 case 194:
 YY_RULE_SETUP
+#line 1723 "compiler/EaseaLex.l"
 {
   if( TARGET==CUDA ){
     fprintf(fpOutputFile,"%s",yytext);
@@ -5680,21 +5913,25 @@ YY_RULE_SETUP
 case 195:
 /* rule 195 can match eol */
 YY_RULE_SETUP
+#line 1729 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);}
 	YY_BREAK
 case 196:
 /* rule 196 can match eol */
 YY_RULE_SETUP
+#line 1730 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 197:
 /* rule 197 can match eol */
 YY_RULE_SETUP
+#line 1731 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 198:
 /* rule 198 can match eol */
 YY_RULE_SETUP
+#line 1732 "compiler/EaseaLex.l"
 {
   fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
   exit (1);
@@ -5703,59 +5940,71 @@ YY_RULE_SETUP
 case 199:
 /* rule 199 can match eol */
 YY_RULE_SETUP
+#line 1737 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The crossover proability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 200:
 /* rule 200 can match eol */
 YY_RULE_SETUP
+#line 1738 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 201:
 /* rule 201 can match eol */
 YY_RULE_SETUP
+#line 1739 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 202:
 /* rule 202 can match eol */
 YY_RULE_SETUP
+#line 1740 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 203:
 /* rule 203 can match eol */
 YY_RULE_SETUP
+#line 1741 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 204:
 /* rule 204 can match eol */
 YY_RULE_SETUP
+#line 1742 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 205:
 YY_RULE_SETUP
+#line 1743 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"false");} // local name
 	YY_BREAK
 case 206:
 YY_RULE_SETUP
+#line 1744 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"true");} // local name
 	YY_BREAK
 case 207:
 /* rule 207 can match eol */
 YY_RULE_SETUP
+#line 1745 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,yytext);}
 	YY_BREAK
 case 208:
 YY_RULE_SETUP
+#line 1747 "compiler/EaseaLex.l"
 { // local random name 
   fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 	YY_BREAK
 case 209:
 YY_RULE_SETUP
+#line 1749 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,"globalRandomGenerator->random");}
 	YY_BREAK
 case 210:
 YY_RULE_SETUP
+#line 1751 "compiler/EaseaLex.l"
 {
   if (bWithinEO_Function && TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"_genotype");
   else if(bWithinEO_Function && bWithinCUDA_Initializer )fprintf(fpOutputFile,"(*this)");
@@ -5763,14 +6012,17 @@ YY_RULE_SETUP
 	YY_BREAK
 case 211:
 YY_RULE_SETUP
+#line 1755 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"genome._evaluated");} // local name
 	YY_BREAK
 case 212:
 YY_RULE_SETUP
+#line 1756 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",yytext); BEGIN MACRO_IDENTIFIER;} 
 	YY_BREAK
 case 213:
 YY_RULE_SETUP
+#line 1757 "compiler/EaseaLex.l"
 {
   int i;
   for (i=0;(yytext[i]!=' ')&&(yytext[i]!=' ');i++);
@@ -5779,16 +6031,19 @@ YY_RULE_SETUP
 	YY_BREAK
 case 214:
 YY_RULE_SETUP
+#line 1762 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"template <class fitT> %sGenome<fitT>::",sPROJECT_NAME);}
 	YY_BREAK
 case 215:
 YY_RULE_SETUP
+#line 1763 "compiler/EaseaLex.l"
 {
   if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"IndividualImpl");
   else fprintf(fpOutputFile,"%sGenome",sPROJECT_NAME);} // local name
 	YY_BREAK
 case 216:
 YY_RULE_SETUP
+#line 1766 "compiler/EaseaLex.l"
 {
   if(bFinalizationFunction){
 	bWaitingToClosePopulation=true;
@@ -5798,12 +6053,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 217:
 YY_RULE_SETUP
+#line 1772 "compiler/EaseaLex.l"
 {
   	if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
   	else {fprintf(fpOutputFile,"])"); ;bWaitingToClosePopulation=false;}}
 	YY_BREAK
 case 218:
 YY_RULE_SETUP
+#line 1775 "compiler/EaseaLex.l"
 {
   if(bFinalizationFunction){
     fprintf(fpOutputFile,"pPopulation");
@@ -5813,6 +6070,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 219:
 YY_RULE_SETUP
+#line 1781 "compiler/EaseaLex.l"
 {
   if(bFinalizationFunction)
 	fprintf(fpOutputFile,"((IndividualImpl*)bBest)");
@@ -5821,6 +6079,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 220:
 YY_RULE_SETUP
+#line 1786 "compiler/EaseaLex.l"
 {
   if (bFunction==1 && bWithinCUDA_Initializer==0) {
     fprintf (fpOutputFile,"}\n"); 
@@ -5836,11 +6095,13 @@ YY_RULE_SETUP
 case 221:
 /* rule 221 can match eol */
 YY_RULE_SETUP
+#line 1797 "compiler/EaseaLex.l"
 {putc(yytext[0],fpOutputFile);}                                      
 	YY_BREAK
 /* Looking for an identifier */
 case 222:
 YY_RULE_SETUP
+#line 1800 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,"%s",yytext);
   pASymbol = new CSymbol(yytext); pASymbol->ObjectType=oMacro;
@@ -5853,16 +6114,19 @@ YY_RULE_SETUP
 case 223:
 /* rule 223 can match eol */
 YY_RULE_SETUP
+#line 1809 "compiler/EaseaLex.l"
 {putc(yytext[0],fpOutputFile);BEGIN COPY;}
 	YY_BREAK
 /* Looking for the first number following the macro definition */
 /*gobbles up spaces and tabs*/
 case 224:
 YY_RULE_SETUP
+#line 1814 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",yytext);}
 	YY_BREAK
 case 225:
 YY_RULE_SETUP
+#line 1815 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = myStrtod();
   pSymbolTable->insert(pASymbol);
@@ -5871,6 +6135,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 226:
 YY_RULE_SETUP
+#line 1820 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = atoi(yytext);
   pSymbolTable->insert(pASymbol);
@@ -5884,6 +6149,7 @@ YY_RULE_SETUP
 case 227:
 /* rule 227 can match eol */
 YY_RULE_SETUP
+#line 1829 "compiler/EaseaLex.l"
 {
   if (!bSymbolInserted) delete pASymbol;
   else bSymbolInserted=0;
@@ -5897,50 +6163,59 @@ YY_RULE_SETUP
 /*blah blah on a line containing sth else*/
 case 228:
 YY_RULE_SETUP
+#line 1842 "compiler/EaseaLex.l"
 ;         
 	YY_BREAK
 /*blah blah on its own on a single line*/
 case 229:
 /* rule 229 can match eol */
 YY_RULE_SETUP
+#line 1844 "compiler/EaseaLex.l"
 ;
 	YY_BREAK
 /* blah blah on a line containing sth else */
 case 230:
 /* rule 230 can match eol */
 YY_RULE_SETUP
+#line 1846 "compiler/EaseaLex.l"
 ;  
 	YY_BREAK
 /* blah blah with nothing before the comment */
 case 231:
 /* rule 231 can match eol */
 YY_RULE_SETUP
+#line 1848 "compiler/EaseaLex.l"
 ;
 	YY_BREAK
 /*gobbles up white spaces, tabs or carriage returns*/
 case 232:
 YY_RULE_SETUP
+#line 1851 "compiler/EaseaLex.l"
 { /* do nothing */ }
 	YY_BREAK
 case 233:
 /* rule 233 can match eol */
 YY_RULE_SETUP
+#line 1852 "compiler/EaseaLex.l"
 { /*return '\n';*/ }
 	YY_BREAK
 case 234:
 /* rule 234 can match eol */
 YY_RULE_SETUP
+#line 1853 "compiler/EaseaLex.l"
 { /*return '\n';*/ }
 	YY_BREAK
 /*keywords*/
 case 235:
 YY_RULE_SETUP
+#line 1856 "compiler/EaseaLex.l"
 {
   yylval.pSymbol = pSymbolTable->find("bool");
   return BOOL;}
 	YY_BREAK
 case 236:
 YY_RULE_SETUP
+#line 1859 "compiler/EaseaLex.l"
 {
     yylval.pSymbol = new CSymbol(yytext);
     return IDENTIFIER;
@@ -5948,6 +6223,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 237:
 YY_RULE_SETUP
+#line 1863 "compiler/EaseaLex.l"
 {
   yylval.pSymbol = new CSymbol("GPNode");
   //yylval.pSymbol->ObjectType = oPointer;
@@ -5957,40 +6233,49 @@ YY_RULE_SETUP
 	YY_BREAK
 case 238:
 YY_RULE_SETUP
+#line 1870 "compiler/EaseaLex.l"
 {return STATIC;}
 	YY_BREAK
 case 239:
 YY_RULE_SETUP
+#line 1871 "compiler/EaseaLex.l"
 {yylval.pSymbol = pSymbolTable->find("int"); return INT;}
 	YY_BREAK
 case 240:
 YY_RULE_SETUP
+#line 1872 "compiler/EaseaLex.l"
 {yylval.pSymbol = pSymbolTable->find("double"); return DOUBLE;}
 	YY_BREAK
 case 241:
 YY_RULE_SETUP
+#line 1873 "compiler/EaseaLex.l"
 {yylval.pSymbol = pSymbolTable->find("float"); return FLOAT;}
 	YY_BREAK
 case 242:
 YY_RULE_SETUP
+#line 1874 "compiler/EaseaLex.l"
 {yylval.pSymbol = pSymbolTable->find("char"); return CHAR;}
 	YY_BREAK
 case 243:
 YY_RULE_SETUP
+#line 1875 "compiler/EaseaLex.l"
 {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}
 	YY_BREAK
 /*<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}*/
 /*Back to the template file*/
 case 244:
 YY_RULE_SETUP
+#line 1878 "compiler/EaseaLex.l"
 {rewind(fpGenomeFile);yyin = fpTemplateFile;yypop_buffer_state();BEGIN TEMPLATE_ANALYSIS;}
 	YY_BREAK
 case 245:
 YY_RULE_SETUP
+#line 1880 "compiler/EaseaLex.l"
 {return GENOME; }                         
 	YY_BREAK
 case 246:
 YY_RULE_SETUP
+#line 1882 "compiler/EaseaLex.l"
 {BEGIN GET_METHODS;
   yylval.szString=yytext;  
   bMethodsInGenome=1;
@@ -5999,21 +6284,25 @@ YY_RULE_SETUP
 /*number*/
 case 247:
 YY_RULE_SETUP
+#line 1887 "compiler/EaseaLex.l"
 { yylval.dValue = myStrtod(); return NUMBER; }
 	YY_BREAK
 case 248:
 YY_RULE_SETUP
+#line 1888 "compiler/EaseaLex.l"
 {yylval.dValue=atoi(yytext); return NUMBER;}
 	YY_BREAK
 /*identifier*/
 case 249:
 YY_RULE_SETUP
+#line 1891 "compiler/EaseaLex.l"
 { yylval.pSymbol = new CSymbol(yytext);
   return IDENTIFIER; }
 	YY_BREAK
 case 250:
 /* rule 250 can match eol */
 YY_RULE_SETUP
+#line 1893 "compiler/EaseaLex.l"
 {BEGIN GENOME_ANALYSIS; return END_METHODS;}
 	YY_BREAK
 /*****************************************
@@ -6022,6 +6311,7 @@ YY_RULE_SETUP
 case 251:
 /* rule 251 can match eol */
 YY_RULE_SETUP
+#line 1899 "compiler/EaseaLex.l"
 { 
  /*   //DEBUG_PRT_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
  /*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
@@ -6031,6 +6321,7 @@ YY_RULE_SETUP
 	YY_BREAK
 /*No display function was found in the .ez file*/
 case YY_STATE_EOF(COPY_DISPLAY):
+#line 1906 "compiler/EaseaLex.l"
 {
   bDisplayFunction=0;
   if (bVERBOSE) printf("*** No display function was found. ***\n");
@@ -6044,11 +6335,13 @@ case YY_STATE_EOF(COPY_DISPLAY):
 case 252:
 /* rule 252 can match eol */
 YY_RULE_SETUP
+#line 1915 "compiler/EaseaLex.l"
 {/*putc(yytext[0],fpOutputFile);*/}                                      
 	YY_BREAK
 case 253:
 /* rule 253 can match eol */
 YY_RULE_SETUP
+#line 1917 "compiler/EaseaLex.l"
 {
   //DEBUG_PRT_PRT("LDFLAGS is beg: %s",yytext); 
   bWithinMAKEFILEOPTION=1;
@@ -6061,6 +6354,7 @@ YY_RULE_SETUP
   ****************************************/
 case 254:
 YY_RULE_SETUP
+#line 1929 "compiler/EaseaLex.l"
 {
   if( bWithinMAKEFILEOPTION ){
     //DEBUG_PRT_PRT("end of makefile options");
@@ -6075,6 +6369,7 @@ YY_RULE_SETUP
 case 255:
 /* rule 255 can match eol */
 YY_RULE_SETUP
+#line 1940 "compiler/EaseaLex.l"
 {
   if( bWithinMAKEFILEOPTION ){
     putc(yytext[0],fpOutputFile);
@@ -6088,6 +6383,7 @@ YY_RULE_SETUP
  }
  */
 case YY_STATE_EOF(COPY_MAKEFILE_OPTION):
+#line 1953 "compiler/EaseaLex.l"
 { 
   //DEBUG_PRT_PRT("No makefile options defined.");
 
@@ -6105,6 +6401,7 @@ case YY_STATE_EOF(COPY_MAKEFILE_OPTION):
 case 256:
 /* rule 256 can match eol */
 YY_RULE_SETUP
+#line 1967 "compiler/EaseaLex.l"
 {
   bWithinInitialiser=1;
   BEGIN COPY_USER_FUNCTION;
@@ -6115,11 +6412,13 @@ YY_RULE_SETUP
 case 257:
 /* rule 257 can match eol */
 YY_RULE_SETUP
+#line 1973 "compiler/EaseaLex.l"
 {/*putc(yytext[0],fpOutputFile);*/}                                      
 	YY_BREAK
 case 258:
 /* rule 258 can match eol */
 YY_RULE_SETUP
+#line 1974 "compiler/EaseaLex.l"
 {
   bWithinXover=1;
   if( bLINE_NUM_EZ_FILE )
@@ -6130,16 +6429,19 @@ YY_RULE_SETUP
 	YY_BREAK
 case 259:
 YY_RULE_SETUP
+#line 1981 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 260:
 /* rule 260 can match eol */
 YY_RULE_SETUP
+#line 1982 "compiler/EaseaLex.l"
 {lineCounter++;}
 	YY_BREAK
 case 261:
 /* rule 261 can match eol */
 YY_RULE_SETUP
+#line 1983 "compiler/EaseaLex.l"
 {
   bWithinMutator=1;
   if( bLINE_NUM_EZ_FILE )
@@ -6150,16 +6452,19 @@ YY_RULE_SETUP
 	YY_BREAK
 case 262:
 YY_RULE_SETUP
+#line 1990 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 263:
 /* rule 263 can match eol */
 YY_RULE_SETUP
+#line 1991 "compiler/EaseaLex.l"
 {lineCounter++;}
 	YY_BREAK
 case 264:
 /* rule 264 can match eol */
 YY_RULE_SETUP
+#line 1993 "compiler/EaseaLex.l"
 {
   BEGIN COPY_USER_FUNCTION;            
   bWithinEvaluator=1;
@@ -6170,16 +6475,19 @@ YY_RULE_SETUP
 	YY_BREAK
 case 265:
 YY_RULE_SETUP
+#line 2000 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 266:
 /* rule 266 can match eol */
 YY_RULE_SETUP
+#line 2001 "compiler/EaseaLex.l"
 {lineCounter++;}
 	YY_BREAK
 case 267:
 /* rule 267 can match eol */
 YY_RULE_SETUP
+#line 2004 "compiler/EaseaLex.l"
 {
   BEGIN COPY_USER_FUNCTION;
   bWithinOptimiser=1;
@@ -6190,11 +6498,13 @@ YY_RULE_SETUP
 	YY_BREAK
 case 268:
 YY_RULE_SETUP
+#line 2011 "compiler/EaseaLex.l"
 {}
 	YY_BREAK
 case 269:
 /* rule 269 can match eol */
 YY_RULE_SETUP
+#line 2012 "compiler/EaseaLex.l"
 {lineCounter++;}
 	YY_BREAK
 /****************************************
@@ -6203,47 +6513,56 @@ YY_RULE_SETUP
 /*blah blah on a line containing sth else*/
 case 270:
 YY_RULE_SETUP
+#line 2019 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,yytext);}
 	YY_BREAK
 /*blah blah on its own on a single line*/
 case 271:
 /* rule 271 can match eol */
 YY_RULE_SETUP
+#line 2021 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,yytext);} 
 	YY_BREAK
 /* blah blah on a line containing sth else */
 case 272:
 /* rule 272 can match eol */
 YY_RULE_SETUP
+#line 2023 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,yytext);}
 	YY_BREAK
 /* blah blah with nothing before the comment */
 case 273:
 /* rule 273 can match eol */
 YY_RULE_SETUP
+#line 2025 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,yytext);}
 	YY_BREAK
 /*local genome name*/
 case 274:
 YY_RULE_SETUP
+#line 2027 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"genome");}
 	YY_BREAK
 case 275:
 YY_RULE_SETUP
+#line 2028 "compiler/EaseaLex.l"
 {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 	YY_BREAK
 case 276:
 YY_RULE_SETUP
+#line 2029 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"\\\"");}
 	YY_BREAK
 case 277:
 YY_RULE_SETUP
+#line 2031 "compiler/EaseaLex.l"
 {bWaitingToClosePopulation=true;
     fprintf(fpOutputFile,"((IndividualImpl*)pPopulation[");
  }
 	YY_BREAK
 case 278:
 YY_RULE_SETUP
+#line 2034 "compiler/EaseaLex.l"
 {
   if (!bWaitingToClosePopulation) fprintf(fpOutputFile,"]");
   else {
@@ -6254,6 +6573,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 279:
 YY_RULE_SETUP
+#line 2042 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else {
@@ -6265,6 +6585,7 @@ case 280:
 (yy_c_buf_p) = yy_cp = yy_bp + 17;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2046 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else {
@@ -6272,6 +6593,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 281:
 YY_RULE_SETUP
+#line 2050 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
  /*local genome name*/
   else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }} 
@@ -6282,12 +6604,14 @@ case 282:
 (yy_c_buf_p) = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2053 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
  /*local genome name*/
   else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }} 
 	YY_BREAK
 case 283:
 YY_RULE_SETUP
+#line 2056 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");}
 	YY_BREAK
 /*local genome name*/
@@ -6297,10 +6621,12 @@ case 284:
 (yy_c_buf_p) = yy_cp = yy_bp + 8;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2058 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");}
 	YY_BREAK
 case 285:
 YY_RULE_SETUP
+#line 2059 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else {fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
@@ -6314,6 +6640,7 @@ case 286:
 (yy_c_buf_p) = yy_cp = yy_bp + 8;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2065 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else {fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
@@ -6322,6 +6649,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 287:
 YY_RULE_SETUP
+#line 2070 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
   else {
@@ -6336,6 +6664,7 @@ case 288:
 (yy_c_buf_p) = yy_cp = yy_bp + 10;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2077 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
   else {
@@ -6345,6 +6674,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 289:
 YY_RULE_SETUP
+#line 2083 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC"); //local genome name
     }
 	YY_BREAK
@@ -6354,11 +6684,13 @@ case 290:
 (yy_c_buf_p) = yy_cp = yy_bp + 9;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2085 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC"); //local genome name
     }
 	YY_BREAK
 case 291:
 YY_RULE_SETUP
+#line 2087 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE"); // local genome name
     } 
 	YY_BREAK
@@ -6368,11 +6700,13 @@ case 292:
 (yy_c_buf_p) = yy_cp = yy_bp + 8;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2089 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE"); // local genome name
     } 
 	YY_BREAK
 case 293:
 YY_RULE_SETUP
+#line 2091 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE"); // local genome name
     }
 	YY_BREAK
@@ -6382,11 +6716,13 @@ case 294:
 (yy_c_buf_p) = yy_cp = yy_bp + 8;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2093 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE"); // local genome name
     }
 	YY_BREAK
 case 295:
 YY_RULE_SETUP
+#line 2095 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE"); // local genome name
     }
 	YY_BREAK
@@ -6396,11 +6732,13 @@ case 296:
 (yy_c_buf_p) = yy_cp = yy_bp + 8;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2097 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE"); // local genome name
     }
 	YY_BREAK
 case 297:
 YY_RULE_SETUP
+#line 2099 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE"); // local genome name
     }
 	YY_BREAK
@@ -6410,12 +6748,14 @@ case 298:
 (yy_c_buf_p) = yy_cp = yy_bp + 8;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2101 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE"); // local genome name
     }
 	YY_BREAK
 case 299:
 /* rule 299 can match eol */
 YY_RULE_SETUP
+#line 2104 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n    hint -> You must have meant \"NB_GEN=...\" rather than \"currentGeneration=...\"\n",sEZ_FILE_NAME,yylineno);
   exit(1);
  } 
@@ -6423,6 +6763,7 @@ YY_RULE_SETUP
 case 300:
 /* rule 300 can match eol */
 YY_RULE_SETUP
+#line 2109 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else {
       fprintf(fpOutputFile,"(*EZ_NB_GEN)=");
@@ -6431,12 +6772,14 @@ YY_RULE_SETUP
 case 301:
 /* rule 301 can match eol */
 YY_RULE_SETUP
+#line 2113 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     } // local genome name
 	YY_BREAK
 case 302:
 /* rule 302 can match eol */
 YY_RULE_SETUP
+#line 2115 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else {
       fprintf(fpOutputFile,"(*pEZ_MUT_PROB)=");
@@ -6446,6 +6789,7 @@ YY_RULE_SETUP
 case 303:
 /* rule 303 can match eol */
 YY_RULE_SETUP
+#line 2120 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else {
       fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)=");
@@ -6455,63 +6799,75 @@ YY_RULE_SETUP
 case 304:
 /* rule 304 can match eol */
 YY_RULE_SETUP
+#line 2125 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     } // local genome name
 	YY_BREAK
 case 305:
 /* rule 305 can match eol */
 YY_RULE_SETUP
+#line 2127 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     }
 	YY_BREAK
 case 306:
 /* rule 306 can match eol */
 YY_RULE_SETUP
+#line 2129 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     }
 	YY_BREAK
 case 307:
 /* rule 307 can match eol */
 YY_RULE_SETUP
+#line 2131 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     }
 	YY_BREAK
 case 308:
 /* rule 308 can match eol */
 YY_RULE_SETUP
+#line 2133 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     }
 	YY_BREAK
 case 309:
 YY_RULE_SETUP
+#line 2135 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"false");} // local name
 	YY_BREAK
 case 310:
 YY_RULE_SETUP
+#line 2136 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"true");} // local name
 	YY_BREAK
 case 311:
 /* rule 311 can match eol */
 YY_RULE_SETUP
+#line 2137 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,yytext);}
 	YY_BREAK
 case 312:
 YY_RULE_SETUP
+#line 2139 "compiler/EaseaLex.l"
 { // local random name
   fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 	YY_BREAK
 case 313:
 YY_RULE_SETUP
+#line 2141 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,"globalRandomGenerator->random");}
 	YY_BREAK
 case 314:
 YY_RULE_SETUP
+#line 2143 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"genome._evaluated");} // local name
 	YY_BREAK
 case 315:
 YY_RULE_SETUP
+#line 2144 "compiler/EaseaLex.l"
 {
   if(bBeginGenerationFunction || bEndGenerationFunction || bGenerationFunctionBeforeReplacement){
     fprintf(fpOutputFile,"pPopulation)");
@@ -6521,12 +6877,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 316:
 YY_RULE_SETUP
+#line 2150 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,"((IndividualImpl*)bBest)");
  }
 	YY_BREAK
 case 317:
 YY_RULE_SETUP
+#line 2153 "compiler/EaseaLex.l"
 {rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   yypop_buffer_state();
@@ -6535,6 +6893,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 318:
 YY_RULE_SETUP
+#line 2158 "compiler/EaseaLex.l"
 {if (bWaitingForSemiColon){
     bWaitingForSemiColon=0;
     if (bFinishMINIMISE) {fprintf(fpOutputFile,");\n  if (MINIMISE) g.minimize() else g.maximize();\n"); bFinishMINIMISE=0;}
@@ -6549,15 +6908,18 @@ YY_RULE_SETUP
 	YY_BREAK
 case 319:
 YY_RULE_SETUP
+#line 2169 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"(*evoluationaryAlgorithm).");}
 	YY_BREAK
 case 320:
 YY_RULE_SETUP
+#line 2170 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"(*evoluationaryAlgorithm).");}
 	YY_BREAK
 case 321:
 /* rule 321 can match eol */
 YY_RULE_SETUP
+#line 2171 "compiler/EaseaLex.l"
 {putc(yytext[0],fpOutputFile);}                                      
 	YY_BREAK
 /****************************************
@@ -6566,36 +6928,43 @@ YY_RULE_SETUP
 /* takes care of C++-like comments */
 case 322:
 YY_RULE_SETUP
+#line 2178 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,yytext);}         // blah blah on a line containing sth else
 	YY_BREAK
 case 323:
 /* rule 323 can match eol */
 YY_RULE_SETUP
+#line 2179 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,yytext);} // blah blah on its own on a single line
 	YY_BREAK
 case 324:
 /* rule 324 can match eol */
 YY_RULE_SETUP
+#line 2180 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,yytext);printf("%s\n",yytext);}  /* blah blah on a line containing sth else */
 	YY_BREAK
 case 325:
 /* rule 325 can match eol */
 YY_RULE_SETUP
+#line 2181 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,yytext);}  /* blah blah on a line containing sth else */
 	YY_BREAK
 case 326:
 /* rule 326 can match eol */
 YY_RULE_SETUP
+#line 2182 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,yytext);} /* blah blah with nothing before the comment */
 	YY_BREAK
 case 327:
 YY_RULE_SETUP
+#line 2184 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,"Genome.");
  }
 	YY_BREAK
 case 328:
 YY_RULE_SETUP
+#line 2188 "compiler/EaseaLex.l"
 {
   if( bWithinCUDA_Evaluator && TARGET==CUDA && TARGET_FLAVOR==CUDA_FLAVOR_MO ){
     fprintf(fpOutputFile,"(f[0])");
@@ -6606,6 +6975,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 329:
 YY_RULE_SETUP
+#line 2196 "compiler/EaseaLex.l"
 {
   if( bWithinCUDA_Evaluator &&  TARGET==CUDA && TARGET_FLAVOR==CUDA_FLAVOR_MO ){
     fprintf(fpOutputFile,"(f[1])");
@@ -6616,6 +6986,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 330:
 YY_RULE_SETUP
+#line 2205 "compiler/EaseaLex.l"
 {
   if( ((bWithinEvaluator || bWithinOptimiser) && !bWithinCUDA_Evaluator) && ( TARGET==STD || TARGET==CUDA )){
     fprintf(fpOutputFile,"");
@@ -6626,6 +6997,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 331:
 YY_RULE_SETUP
+#line 2214 "compiler/EaseaLex.l"
 {
 
   if(bWithinOptimiser || bWithinEvaluator || bWithinMutator || bWithinDisplayFunction){ 
@@ -6638,14 +7010,17 @@ YY_RULE_SETUP
 	YY_BREAK
 case 332:
 YY_RULE_SETUP
+#line 2224 "compiler/EaseaLex.l"
 {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 	YY_BREAK
 case 333:
 YY_RULE_SETUP
+#line 2225 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"\\\"");}
 	YY_BREAK
 case 334:
 YY_RULE_SETUP
+#line 2227 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
@@ -6657,6 +7032,7 @@ case 335:
 (yy_c_buf_p) = yy_cp = yy_bp + 17;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2231 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
@@ -6664,6 +7040,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 336:
 YY_RULE_SETUP
+#line 2235 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 	YY_BREAK
@@ -6673,11 +7050,13 @@ case 337:
 (yy_c_buf_p) = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2237 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 	YY_BREAK
 case 338:
 YY_RULE_SETUP
+#line 2239 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 	YY_BREAK
@@ -6687,11 +7066,13 @@ case 339:
 (yy_c_buf_p) = yy_cp = yy_bp + 8;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2241 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 	YY_BREAK
 case 340:
 YY_RULE_SETUP
+#line 2243 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else if( TARGET==CUDA || TARGET==STD)
@@ -6705,6 +7086,7 @@ case 341:
 (yy_c_buf_p) = yy_cp = yy_bp + 8;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2249 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else if( TARGET==CUDA || TARGET==STD)
@@ -6714,6 +7096,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 342:
 YY_RULE_SETUP
+#line 2255 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
@@ -6727,6 +7110,7 @@ case 343:
 (yy_c_buf_p) = yy_cp = yy_bp + 10;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2261 "compiler/EaseaLex.l"
 {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
@@ -6736,6 +7120,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 344:
 YY_RULE_SETUP
+#line 2267 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else fprintf(fpOutputFile,"EZ_REPL_PERC");} // local genome name
 	YY_BREAK
@@ -6745,27 +7130,32 @@ case 345:
 (yy_c_buf_p) = yy_cp = yy_bp + 9;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
+#line 2269 "compiler/EaseaLex.l"
 {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else fprintf(fpOutputFile,"EZ_REPL_PERC");} // local genome name
 	YY_BREAK
 case 346:
 /* rule 346 can match eol */
 YY_RULE_SETUP
+#line 2272 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);}
 	YY_BREAK
 case 347:
 /* rule 347 can match eol */
 YY_RULE_SETUP
+#line 2273 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 348:
 /* rule 348 can match eol */
 YY_RULE_SETUP
+#line 2274 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 349:
 /* rule 349 can match eol */
 YY_RULE_SETUP
+#line 2275 "compiler/EaseaLex.l"
 {
   fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
   exit (1);
@@ -6774,63 +7164,76 @@ YY_RULE_SETUP
 case 350:
 /* rule 350 can match eol */
 YY_RULE_SETUP
+#line 2280 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The crossover proability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 351:
 /* rule 351 can match eol */
 YY_RULE_SETUP
+#line 2281 "compiler/EaseaLex.l"
 {fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 	YY_BREAK
 case 352:
 YY_RULE_SETUP
+#line 2282 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"false");} // local name
 	YY_BREAK
 case 353:
 YY_RULE_SETUP
+#line 2283 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"true");} // local name
 	YY_BREAK
 case 354:
 /* rule 354 can match eol */
 YY_RULE_SETUP
+#line 2284 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,yytext);}
 	YY_BREAK
 case 355:
 YY_RULE_SETUP
+#line 2286 "compiler/EaseaLex.l"
 { // local random name
   fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 	YY_BREAK
 case 356:
 YY_RULE_SETUP
+#line 2288 "compiler/EaseaLex.l"
 {
   fprintf(fpOutputFile,"globalRandomGenerator->random");}
 	YY_BREAK
 case 357:
 YY_RULE_SETUP
+#line 2290 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"child1");
  }
 	YY_BREAK
 case 358:
 YY_RULE_SETUP
+#line 2292 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"child2");
  }
 	YY_BREAK
 case 359:
 YY_RULE_SETUP
+#line 2294 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"parent1");
  }
 	YY_BREAK
 case 360:
 YY_RULE_SETUP
+#line 2296 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"parent2");
  }
 	YY_BREAK
 case 361:
 YY_RULE_SETUP
+#line 2298 "compiler/EaseaLex.l"
 {fprintf(fpOutputFile,"genome._evaluated");} // local name
 	YY_BREAK
 case 362:
 YY_RULE_SETUP
+#line 2299 "compiler/EaseaLex.l"
 {if (bWithinEvaluator) {
     if( TARGET==CUDA || TARGET==STD) {
       if( bWithinCUDA_Evaluator ){
@@ -6851,6 +7254,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 363:
 YY_RULE_SETUP
+#line 2316 "compiler/EaseaLex.l"
 {if (!bCatchNextSemiColon) fprintf(fpOutputFile,";");
   else if (bWithinMutator){fprintf(fpOutputFile,">0?true:false;");/* bWithinMutator=false;*/}
   else fprintf(fpOutputFile,"));");
@@ -6859,6 +7263,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 364:
 YY_RULE_SETUP
+#line 2321 "compiler/EaseaLex.l"
 {rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   yypop_buffer_state();
@@ -6872,6 +7277,7 @@ YY_RULE_SETUP
 case 365:
 /* rule 365 can match eol */
 YY_RULE_SETUP
+#line 2330 "compiler/EaseaLex.l"
 {putc(yytext[0],fpOutputFile);}                                      
 	YY_BREAK
 /****************************************
@@ -6880,6 +7286,7 @@ YY_RULE_SETUP
 case 366:
 /* rule 366 can match eol */
 YY_RULE_SETUP
+#line 2336 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("Analysing parameters...\n");
   BEGIN GET_PARAMETERS;
@@ -6888,126 +7295,151 @@ YY_RULE_SETUP
 case 367:
 /* rule 367 can match eol */
 YY_RULE_SETUP
+#line 2340 "compiler/EaseaLex.l"
 {/*putc(yytext[0],fpOutputFile);*/}                                      
 	YY_BREAK
 /* takes care of C++-like comments */
 case 368:
 YY_RULE_SETUP
+#line 2343 "compiler/EaseaLex.l"
 ;         // blah blah on a line containing sth else
 	YY_BREAK
 case 369:
 /* rule 369 can match eol */
 YY_RULE_SETUP
+#line 2344 "compiler/EaseaLex.l"
 ; // blah blah on its own on a single line
 	YY_BREAK
 case 370:
 /* rule 370 can match eol */
 YY_RULE_SETUP
+#line 2345 "compiler/EaseaLex.l"
 ;  /* blah blah on a line containing sth else */
 	YY_BREAK
 case 371:
 /* rule 371 can match eol */
 YY_RULE_SETUP
+#line 2346 "compiler/EaseaLex.l"
 ; /* blah blah with nothing before the comment */
 	YY_BREAK
 /* gobbles up white spaces, tabs or carriage returns */
 case 372:
 YY_RULE_SETUP
+#line 2348 "compiler/EaseaLex.l"
 { /* do nothing */ }
 	YY_BREAK
 case 373:
 /* rule 373 can match eol */
 YY_RULE_SETUP
+#line 2349 "compiler/EaseaLex.l"
 { /*return '\n';*/ }
 	YY_BREAK
 case 374:
 /* rule 374 can match eol */
 YY_RULE_SETUP
+#line 2350 "compiler/EaseaLex.l"
 { /*return '\n';*/ }
 	YY_BREAK
 case 375:
 /* rule 375 can match eol */
 YY_RULE_SETUP
+#line 2352 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tNb of Gen...\n");return NB_GEN;}
 	YY_BREAK
 case 376:
 /* rule 376 can match eol */
 YY_RULE_SETUP
+#line 2353 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tTime Limit...\n");return TIME_LIMIT;}
 	YY_BREAK
 case 377:
 /* rule 377 can match eol */
 YY_RULE_SETUP
+#line 2354 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tPop Size...\n");return POP_SIZE;}
 	YY_BREAK
 case 378:
 /* rule 378 can match eol */
 YY_RULE_SETUP
+#line 2355 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tElite Size...\n");return ELITE;}
 	YY_BREAK
 case 379:
 /* rule 379 can match eol */
 YY_RULE_SETUP
+#line 2356 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tSelection Operator...\n");return SELECTOR;}
 	YY_BREAK
 case 380:
 /* rule 380 can match eol */
 YY_RULE_SETUP
+#line 2357 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tSel Genitors...\n");}
 	YY_BREAK
 case 381:
 /* rule 381 can match eol */
 YY_RULE_SETUP
+#line 2358 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tMut Prob...\n");return MUT_PROB;}
 	YY_BREAK
 case 382:
 /* rule 382 can match eol */
 YY_RULE_SETUP
+#line 2359 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tXov Prob...\n");return XOVER_PROB;}
 	YY_BREAK
 case 383:
 /* rule 383 can match eol */
 YY_RULE_SETUP
+#line 2360 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tOff Size...\n");return OFFSPRING;}
 	YY_BREAK
 case 384:
 /* rule 384 can match eol */
 YY_RULE_SETUP
+#line 2362 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf("\tPrint Stats...\n");return PRINT_STATS;}
 	YY_BREAK
 case 385:
 /* rule 385 can match eol */
 YY_RULE_SETUP
+#line 2363 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf("\tPlot Stats with gnuplot...\n");return PLOT_STATS;}
 	YY_BREAK
 case 386:
 /* rule 386 can match eol */
 YY_RULE_SETUP
+#line 2364 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf("\tPrint Stats to csv File...\n");return GENERATE_CSV_FILE;}
 	YY_BREAK
 case 387:
 /* rule 387 can match eol */
 YY_RULE_SETUP
+#line 2365 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf("\tGenerate Gnuplot Script...\n");return GENERATE_GNUPLOT_SCRIPT;}
 	YY_BREAK
 case 388:
 /* rule 388 can match eol */
 YY_RULE_SETUP
+#line 2366 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf("\tGenerate R Script...\n");return GENERATE_R_SCRIPT;}
 	YY_BREAK
 case 389:
 /* rule 389 can match eol */
 YY_RULE_SETUP
+#line 2368 "compiler/EaseaLex.l"
 {if(bVERBOSE) printf("\tSave population...\n"); return SAVE_POPULATION;}
 	YY_BREAK
 case 390:
 /* rule 390 can match eol */
 YY_RULE_SETUP
+#line 2369 "compiler/EaseaLex.l"
 {if(bVERBOSE) printf("\tStart from file...\n"); return START_FROM_FILE;}
 	YY_BREAK
 case 391:
 /* rule 391 can match eol */
 YY_RULE_SETUP
+#line 2371 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("\tReduce Parents Operator...\n");
   bIsParentReduce = true;
@@ -7017,11 +7449,13 @@ YY_RULE_SETUP
 case 392:
 /* rule 392 can match eol */
 YY_RULE_SETUP
+#line 2376 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tSurv Par...\n");return SURVPAR;}
 	YY_BREAK
 case 393:
 /* rule 393 can match eol */
 YY_RULE_SETUP
+#line 2378 "compiler/EaseaLex.l"
 {
   if (bVERBOSE) printf ("\tReduce Offspring Operator...\n");
   bIsOffspringReduce = true;
@@ -7031,65 +7465,78 @@ YY_RULE_SETUP
 case 394:
 /* rule 394 can match eol */
 YY_RULE_SETUP
+#line 2383 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tSurv Off...\n");return SURVOFF;}
 	YY_BREAK
 case 395:
 /* rule 395 can match eol */
 YY_RULE_SETUP
+#line 2386 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tFinal Reduce Operator...\n");return RED_FINAL;/* DISCARD; */}
 	YY_BREAK
 case 396:
 /* rule 396 can match eol */
 YY_RULE_SETUP
+#line 2389 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tElitism...\n");return ELITISM;}
 	YY_BREAK
 case 397:
 /* rule 397 can match eol */
 YY_RULE_SETUP
+#line 2390 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;}
 	YY_BREAK
 case 398:
 /* rule 398 can match eol */
 YY_RULE_SETUP
+#line 2391 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tNb of Optimisation It...\n");return NB_OPT_IT;}
 	YY_BREAK
 case 399:
 /* rule 399 can match eol */
 YY_RULE_SETUP
+#line 2392 "compiler/EaseaLex.l"
 {if (bVERBOSE) printf ("\tBaldwinism...\n");return BALDWINISM;}
 	YY_BREAK
 case 400:
 /* rule 400 can match eol */
 YY_RULE_SETUP
+#line 2395 "compiler/EaseaLex.l"
 {if(bVERBOSE) printf ("\tRemote Island Model...\n"); return REMOTE_ISLAND_MODEL;}
 	YY_BREAK
 case 401:
 /* rule 401 can match eol */
 YY_RULE_SETUP
+#line 2396 "compiler/EaseaLex.l"
 {if(bVERBOSE) printf("\tIP File...\n"); return IP_FILE;}
 	YY_BREAK
 case 402:
 /* rule 402 can match eol */
 YY_RULE_SETUP
+#line 2397 "compiler/EaseaLex.l"
 {if(bVERBOSE) printf("\tMigration Probability...\n"); return MIGRATION_PROBABILITY;}
 	YY_BREAK
 case 403:
 /* rule 403 can match eol */
 YY_RULE_SETUP
+#line 2398 "compiler/EaseaLex.l"
 {if(bVERBOSE) printf("\tServer port...\n"); return SERVER_PORT;}
 	YY_BREAK
 /* number */
 case 404:
 YY_RULE_SETUP
+#line 2402 "compiler/EaseaLex.l"
 { yylval.dValue = myStrtod(); return NUMBER2; }
 	YY_BREAK
 case 405:
 YY_RULE_SETUP
+#line 2403 "compiler/EaseaLex.l"
 {yylval.dValue=atof(yytext); return NUMBER2;}
 	YY_BREAK
 /* identifier */
 case 406:
 YY_RULE_SETUP
+#line 2406 "compiler/EaseaLex.l"
 {
   yylval.pSymbol = new CSymbol(yytext);
   return IDENTIFIER2;}
@@ -7098,6 +7545,7 @@ YY_RULE_SETUP
 /* switch back to .tpl file and analyser */
 case 407:
 YY_RULE_SETUP
+#line 2411 "compiler/EaseaLex.l"
 {
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
@@ -7108,6 +7556,7 @@ YY_RULE_SETUP
 case 408:
 /* rule 408 can match eol */
 YY_RULE_SETUP
+#line 2418 "compiler/EaseaLex.l"
 {
   lineCounter++;
  }
@@ -7115,6 +7564,7 @@ YY_RULE_SETUP
 case 409:
 /* rule 409 can match eol */
 YY_RULE_SETUP
+#line 2422 "compiler/EaseaLex.l"
 {
   if( bVERBOSE ) printf("\tMax init tree depth...\n");
   return MAX_INIT_TREE_D;
@@ -7123,6 +7573,7 @@ YY_RULE_SETUP
 case 410:
 /* rule 410 can match eol */
 YY_RULE_SETUP
+#line 2427 "compiler/EaseaLex.l"
 {
   if( bVERBOSE ) printf("\tMin init tree depth...\n");
   return MIN_INIT_TREE_D;
@@ -7131,6 +7582,7 @@ YY_RULE_SETUP
 case 411:
 /* rule 411 can match eol */
 YY_RULE_SETUP
+#line 2432 "compiler/EaseaLex.l"
 {
   if( bVERBOSE ) printf("\tMax tree depth...\n");
   return MAX_TREE_D;
@@ -7139,6 +7591,7 @@ YY_RULE_SETUP
 case 412:
 /* rule 412 can match eol */
 YY_RULE_SETUP
+#line 2437 "compiler/EaseaLex.l"
 {
   if( bVERBOSE ) printf("\tNo of GPUs...\n");
   return NB_GPU;
@@ -7147,6 +7600,7 @@ YY_RULE_SETUP
 case 413:
 /* rule 413 can match eol */
 YY_RULE_SETUP
+#line 2442 "compiler/EaseaLex.l"
 {
   if( bVERBOSE ) printf("\tProgramm length buffer...\n");
   return PRG_BUF_SIZE;
@@ -7155,6 +7609,7 @@ YY_RULE_SETUP
 case 414:
 /* rule 414 can match eol */
 YY_RULE_SETUP
+#line 2447 "compiler/EaseaLex.l"
 {
   if( bVERBOSE ) printf("\tNo of fitness cases...\n");
   return NO_FITNESS_CASES;
@@ -7165,12 +7620,15 @@ YY_RULE_SETUP
  *****************************************/
 case 415:
 YY_RULE_SETUP
+#line 2457 "compiler/EaseaLex.l"
 {return  (char)yytext[0];}
 	YY_BREAK
 case 416:
 YY_RULE_SETUP
+#line 2460 "compiler/EaseaLex.l"
 ECHO;
 	YY_BREAK
+#line 7632 "compiler/EaseaLex.cpp"
 			case YY_STATE_EOF(INITIAL):
 			case YY_STATE_EOF(GENOME_ANALYSIS):
 			case YY_STATE_EOF(TEMPLATE_ANALYSIS):
@@ -8174,6 +8632,9 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
+#line 2460 "compiler/EaseaLex.l"
+
+
 		       /////////////////////////////////////////////////////////////////////////////
 
 inline char  mytolower(char c) {
@@ -8264,6 +8725,7 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
   strcpy(sTPL_DIR,sEZ_PATH);
   strcat(sTPL_DIR,"tpl/");
   
+ 
   switch (OPERATING_SYSTEM) {
   case UNIX : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '/') strcat (sEZ_PATH,"./"); break;
   case WINDOWS : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '\\') strcat (sEZ_PATH,"\\"); break;
@@ -8334,6 +8796,7 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
  
   return 1;
 }
+
 
 /////////////////////////////////////////////////////////////////////////////
 // calc_lexer attribute commands

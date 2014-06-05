@@ -65,6 +65,8 @@
 
 /* Copy the first part of user declarations.  */
 
+/* Line 268 of yacc.c  */
+#line 1 "compiler/EaseaParse.y"
 
 /****************************************************************************
 EaseaLex.y
@@ -151,6 +153,8 @@ void yyerror(const char * s){
 
 
 
+/* Line 268 of yacc.c  */
+#line 158 "compiler/EaseaParse.cpp"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -247,6 +251,8 @@ void yyerror(const char * s){
 typedef union YYSTYPE
 {
 
+/* Line 293 of yacc.c  */
+#line 93 "compiler/EaseaParse.y"
 
   CSymbol* pSymbol;
   double dValue;
@@ -256,6 +262,8 @@ typedef union YYSTYPE
 
 
 
+/* Line 293 of yacc.c  */
+#line 267 "compiler/EaseaParse.cpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -264,11 +272,15 @@ typedef union YYSTYPE
 
 /* "%code provides" blocks.  */
 
+/* Line 340 of yacc.c  */
+#line 87 "compiler/EaseaParse.y"
 
 // forward references
 class CSymbol;
 
 
+/* Line 340 of yacc.c  */
+#line 179 "compiler/EaseaParse.y"
 
 #include "EaseaSym.h"
 #include "EaseaLex.h"
@@ -284,10 +296,14 @@ class CSymbol;
 
 
 
+/* Line 340 of yacc.c  */
+#line 301 "compiler/EaseaParse.cpp"
 
 /* Copy the second part of user declarations.  */
 
 
+/* Line 343 of yacc.c  */
+#line 307 "compiler/EaseaParse.cpp"
 
 #ifdef short
 # undef short
@@ -1717,11 +1733,15 @@ yyreduce:
     {
         case 2:
 
+/* Line 1806 of yacc.c  */
+#line 195 "compiler/EaseaParse.y"
     {return 0;}
     break;
 
   case 3:
 
+/* Line 1806 of yacc.c  */
+#line 198 "compiler/EaseaParse.y"
     {
         if (bVERBOSE){ printf("                    _______________________________________\n");
         printf ("\nGeneration of the C++ source file for %s.\n\n",sPROJECT_NAME);}
@@ -1730,6 +1750,8 @@ yyreduce:
 
   case 5:
 
+/* Line 1806 of yacc.c  */
+#line 203 "compiler/EaseaParse.y"
     {
         if (bVERBOSE) printf("                    _______________________________________\n");
         if (bVERBOSE) printf ("\nGeneration of the C++ source file for %s.\n\n",sPROJECT_NAME);
@@ -1738,18 +1760,24 @@ yyreduce:
 
   case 7:
 
+/* Line 1806 of yacc.c  */
+#line 211 "compiler/EaseaParse.y"
     {
     if (bVERBOSE) printf("Declaration of user classes :\n\n");}
     break;
 
   case 9:
 
+/* Line 1806 of yacc.c  */
+#line 214 "compiler/EaseaParse.y"
     {
       if (bVERBOSE) printf("No user class declaration found other than GenomeClass.\n");}
     break;
 
   case 12:
 
+/* Line 1806 of yacc.c  */
+#line 224 "compiler/EaseaParse.y"
     {
       pCURRENT_CLASS=SymbolTable.insert((yyvsp[(1) - (1)].pSymbol));  
       pCURRENT_CLASS->pSymbolList=new CLList<CSymbol *>();
@@ -1761,6 +1789,8 @@ yyreduce:
 
   case 13:
 
+/* Line 1806 of yacc.c  */
+#line 231 "compiler/EaseaParse.y"
     {
       if (bVERBOSE) printf("Class %s declared for %d bytes.\n\n",(yyvsp[(1) - (5)].pSymbol)->sName,(yyvsp[(1) - (5)].pSymbol)->nSize);
       //DEBUG_PRT("Yacc variable declaration %s %d",$1->sName,$1->nSize);
@@ -1769,26 +1799,36 @@ yyreduce:
 
   case 16:
 
+/* Line 1806 of yacc.c  */
+#line 244 "compiler/EaseaParse.y"
     {pCURRENT_TYPE=(yyvsp[(2) - (2)].pSymbol); pCURRENT_TYPE->ObjectQualifier=(yyvsp[(1) - (2)].ObjectQualifier);}
     break;
 
   case 17:
 
+/* Line 1806 of yacc.c  */
+#line 244 "compiler/EaseaParse.y"
     {}
     break;
 
   case 18:
 
+/* Line 1806 of yacc.c  */
+#line 245 "compiler/EaseaParse.y"
     {pCURRENT_TYPE=(yyvsp[(2) - (2)].pSymbol); pCURRENT_TYPE->ObjectQualifier=(yyvsp[(1) - (2)].ObjectQualifier);}
     break;
 
   case 19:
 
+/* Line 1806 of yacc.c  */
+#line 245 "compiler/EaseaParse.y"
     {}
     break;
 
   case 21:
 
+/* Line 1806 of yacc.c  */
+#line 250 "compiler/EaseaParse.y"
     {
     pCURRENT_CLASS->sString = new char[strlen((yyvsp[(2) - (2)].szString)) + 1];
     strcpy(pCURRENT_CLASS->sString, (yyvsp[(2) - (2)].szString));      
@@ -1798,31 +1838,43 @@ yyreduce:
 
   case 22:
 
+/* Line 1806 of yacc.c  */
+#line 258 "compiler/EaseaParse.y"
     {(yyval.ObjectQualifier)=1;}
     break;
 
   case 23:
 
+/* Line 1806 of yacc.c  */
+#line 259 "compiler/EaseaParse.y"
     {(yyval.ObjectQualifier)=0;}
     break;
 
   case 25:
 
+/* Line 1806 of yacc.c  */
+#line 264 "compiler/EaseaParse.y"
     {}
     break;
 
   case 26:
 
+/* Line 1806 of yacc.c  */
+#line 268 "compiler/EaseaParse.y"
     {}
     break;
 
   case 27:
 
+/* Line 1806 of yacc.c  */
+#line 269 "compiler/EaseaParse.y"
     {}
     break;
 
   case 35:
 
+/* Line 1806 of yacc.c  */
+#line 283 "compiler/EaseaParse.y"
     {  
       CSymbol *pSym=SymbolTable.find((yyvsp[(1) - (1)].pSymbol)->sName);
       if (pSym==NULL) {
@@ -1836,6 +1888,8 @@ yyreduce:
 
   case 38:
 
+/* Line 1806 of yacc.c  */
+#line 304 "compiler/EaseaParse.y"
     {
 //      CSymbol *pSym;
 //      pSym=$1;
@@ -1852,6 +1906,8 @@ yyreduce:
 
   case 39:
 
+/* Line 1806 of yacc.c  */
+#line 316 "compiler/EaseaParse.y"
     {
       (yyvsp[(2) - (2)].pSymbol)->nSize=sizeof (char *);
       (yyvsp[(2) - (2)].pSymbol)->pClass=pCURRENT_CLASS;
@@ -1866,6 +1922,8 @@ yyreduce:
 
   case 40:
 
+/* Line 1806 of yacc.c  */
+#line 326 "compiler/EaseaParse.y"
     {
       (yyvsp[(2) - (2)].pSymbol)->nSize=sizeof (char *);
       (yyvsp[(2) - (2)].pSymbol)->pClass=pCURRENT_CLASS;
@@ -1880,6 +1938,8 @@ yyreduce:
 
   case 41:
 
+/* Line 1806 of yacc.c  */
+#line 336 "compiler/EaseaParse.y"
     {
       (yyvsp[(3) - (3)].pSymbol)->nSize=sizeof (char *);
       (yyvsp[(3) - (3)].pSymbol)->pClass=pCURRENT_CLASS;
@@ -1896,6 +1956,8 @@ yyreduce:
 
   case 42:
 
+/* Line 1806 of yacc.c  */
+#line 349 "compiler/EaseaParse.y"
     {
       if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=(yyvsp[(1) - (4)].pSymbol)->sName; nPROBLEM_DIM=(int)(yyvsp[(3) - (4)].dValue);}
 
@@ -1914,6 +1976,8 @@ yyreduce:
 
   case 43:
 
+/* Line 1806 of yacc.c  */
+#line 363 "compiler/EaseaParse.y"
     {
 
     // this is for support of pointer array. This should be done in a more generic way in a later version
@@ -1938,11 +2002,15 @@ yyreduce:
 
   case 46:
 
+/* Line 1806 of yacc.c  */
+#line 391 "compiler/EaseaParse.y"
     {}
     break;
 
   case 47:
 
+/* Line 1806 of yacc.c  */
+#line 404 "compiler/EaseaParse.y"
     {
     ////DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName);
       if (bVERBOSE) printf ("\nGenome declaration analysis :\n\n");
@@ -1957,21 +2025,29 @@ yyreduce:
 
   case 48:
 
+/* Line 1806 of yacc.c  */
+#line 414 "compiler/EaseaParse.y"
     {}
     break;
 
   case 51:
 
+/* Line 1806 of yacc.c  */
+#line 431 "compiler/EaseaParse.y"
     {}
     break;
 
   case 52:
 
+/* Line 1806 of yacc.c  */
+#line 435 "compiler/EaseaParse.y"
     {(yyval.pSymbol)=(yyvsp[(1) - (1)].pSymbol);}
     break;
 
   case 55:
 
+/* Line 1806 of yacc.c  */
+#line 444 "compiler/EaseaParse.y"
     {         
       if (bVERBOSE) printf("Inserting genome initialiser (taken from .ez file).\n");
     }
@@ -1979,11 +2055,15 @@ yyreduce:
 
   case 56:
 
+/* Line 1806 of yacc.c  */
+#line 447 "compiler/EaseaParse.y"
     {}
     break;
 
   case 57:
 
+/* Line 1806 of yacc.c  */
+#line 448 "compiler/EaseaParse.y"
     {
       if (bVERBOSE) printf("Inserting user genome crossover (taken from .ez file).\n");
     }
@@ -1991,11 +2071,15 @@ yyreduce:
 
   case 58:
 
+/* Line 1806 of yacc.c  */
+#line 451 "compiler/EaseaParse.y"
     {}
     break;
 
   case 59:
 
+/* Line 1806 of yacc.c  */
+#line 452 "compiler/EaseaParse.y"
     {
       if (bVERBOSE) printf("Inserting user genome mutator (taken from .ez file).\n");
     }
@@ -2003,11 +2087,15 @@ yyreduce:
 
   case 60:
 
+/* Line 1806 of yacc.c  */
+#line 455 "compiler/EaseaParse.y"
     {}
     break;
 
   case 61:
 
+/* Line 1806 of yacc.c  */
+#line 456 "compiler/EaseaParse.y"
     { 
       if (bVERBOSE) printf("Inserting user genome evaluator (taken from .ez file).\n");
     }
@@ -2015,11 +2103,15 @@ yyreduce:
 
   case 62:
 
+/* Line 1806 of yacc.c  */
+#line 459 "compiler/EaseaParse.y"
     {}
     break;
 
   case 63:
 
+/* Line 1806 of yacc.c  */
+#line 460 "compiler/EaseaParse.y"
     { 
       if (bVERBOSE) printf("Inserting user genome optimiser (taken from .ez file).\n");
     }
@@ -2027,11 +2119,15 @@ yyreduce:
 
   case 64:
 
+/* Line 1806 of yacc.c  */
+#line 463 "compiler/EaseaParse.y"
     {}
     break;
 
   case 65:
 
+/* Line 1806 of yacc.c  */
+#line 464 "compiler/EaseaParse.y"
     {
      //DEBUG_PRT("User makefile options have been reduced");
      }
@@ -2039,41 +2135,57 @@ yyreduce:
 
   case 66:
 
+/* Line 1806 of yacc.c  */
+#line 467 "compiler/EaseaParse.y"
     {}
     break;
 
   case 69:
 
+/* Line 1806 of yacc.c  */
+#line 477 "compiler/EaseaParse.y"
     {nNB_GEN=(int)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 70:
 
+/* Line 1806 of yacc.c  */
+#line 479 "compiler/EaseaParse.y"
     {nNB_OPT_IT=(int)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 71:
 
+/* Line 1806 of yacc.c  */
+#line 481 "compiler/EaseaParse.y"
     {nTIME_LIMIT=(int)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 72:
 
+/* Line 1806 of yacc.c  */
+#line 483 "compiler/EaseaParse.y"
     {fMUT_PROB=(float)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 73:
 
+/* Line 1806 of yacc.c  */
+#line 485 "compiler/EaseaParse.y"
     {fXOVER_PROB=(float)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 74:
 
+/* Line 1806 of yacc.c  */
+#line 487 "compiler/EaseaParse.y"
     {nPOP_SIZE=(int)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 75:
 
+/* Line 1806 of yacc.c  */
+#line 488 "compiler/EaseaParse.y"
     {
       strcpy(sSELECTOR, (yyvsp[(2) - (2)].pSymbol)->sName);
       strcpy(sSELECTOR_OPERATOR, (yyvsp[(2) - (2)].pSymbol)->sName);
@@ -2088,6 +2200,8 @@ yyreduce:
 
   case 76:
 
+/* Line 1806 of yacc.c  */
+#line 498 "compiler/EaseaParse.y"
     {
       sprintf(sSELECTOR, (yyvsp[(2) - (3)].pSymbol)->sName);   
       sprintf(sSELECTOR_OPERATOR, (yyvsp[(2) - (3)].pSymbol)->sName);   
@@ -2102,6 +2216,8 @@ yyreduce:
 
   case 77:
 
+/* Line 1806 of yacc.c  */
+#line 508 "compiler/EaseaParse.y"
     {
         sprintf(sRED_PAR, (yyvsp[(2) - (2)].pSymbol)->sName);
 	sprintf(sRED_PAR_OPERATOR, (yyvsp[(2) - (2)].pSymbol)->sName);
@@ -2116,6 +2232,8 @@ yyreduce:
 
   case 78:
 
+/* Line 1806 of yacc.c  */
+#line 518 "compiler/EaseaParse.y"
     {
         sprintf(sRED_PAR, (yyvsp[(2) - (3)].pSymbol)->sName);
 	sprintf(sRED_PAR_OPERATOR, (yyvsp[(2) - (3)].pSymbol)->sName);
@@ -2130,6 +2248,8 @@ yyreduce:
 
   case 79:
 
+/* Line 1806 of yacc.c  */
+#line 528 "compiler/EaseaParse.y"
     {
 	sprintf(sRED_OFF, (yyvsp[(2) - (2)].pSymbol)->sName);
 	sprintf(sRED_OFF_OPERATOR, (yyvsp[(2) - (2)].pSymbol)->sName);
@@ -2144,6 +2264,8 @@ yyreduce:
 
   case 80:
 
+/* Line 1806 of yacc.c  */
+#line 538 "compiler/EaseaParse.y"
     {
         sprintf(sRED_OFF, (yyvsp[(2) - (3)].pSymbol)->sName);
 	sprintf(sRED_OFF_OPERATOR, (yyvsp[(2) - (3)].pSymbol)->sName);
@@ -2156,6 +2278,8 @@ yyreduce:
 
   case 81:
 
+/* Line 1806 of yacc.c  */
+#line 546 "compiler/EaseaParse.y"
     {
         sprintf(sRED_FINAL, (yyvsp[(2) - (2)].pSymbol)->sName);
         sprintf(sRED_FINAL_OPERATOR, (yyvsp[(2) - (2)].pSymbol)->sName);
@@ -2169,6 +2293,8 @@ yyreduce:
 
   case 82:
 
+/* Line 1806 of yacc.c  */
+#line 555 "compiler/EaseaParse.y"
     {
         sprintf(sRED_FINAL, (yyvsp[(2) - (3)].pSymbol)->sName);
         sprintf(sRED_FINAL_OPERATOR, (yyvsp[(2) - (3)].pSymbol)->sName);
@@ -2182,36 +2308,50 @@ yyreduce:
 
   case 83:
 
+/* Line 1806 of yacc.c  */
+#line 564 "compiler/EaseaParse.y"
     {nOFF_SIZE=(int)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 84:
 
+/* Line 1806 of yacc.c  */
+#line 565 "compiler/EaseaParse.y"
     {nOFF_SIZE=(int)((yyvsp[(2) - (3)].dValue)*nPOP_SIZE/100);}
     break;
 
   case 85:
 
+/* Line 1806 of yacc.c  */
+#line 566 "compiler/EaseaParse.y"
     {fSURV_PAR_SIZE=(float)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 86:
 
+/* Line 1806 of yacc.c  */
+#line 567 "compiler/EaseaParse.y"
     {fSURV_PAR_SIZE=(float)((yyvsp[(2) - (3)].dValue)/100);}
     break;
 
   case 87:
 
+/* Line 1806 of yacc.c  */
+#line 568 "compiler/EaseaParse.y"
     {fSURV_OFF_SIZE=(float)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 88:
 
+/* Line 1806 of yacc.c  */
+#line 569 "compiler/EaseaParse.y"
     {fSURV_OFF_SIZE=(float)((yyvsp[(2) - (3)].dValue)/100);}
     break;
 
   case 89:
 
+/* Line 1806 of yacc.c  */
+#line 570 "compiler/EaseaParse.y"
     {
       if ((!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"Maximise")) || (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"Maximize"))) nMINIMISE=0;
       else if ((!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"Minimise")) || (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"Minimize"))) nMINIMISE=1;
@@ -2225,6 +2365,8 @@ yyreduce:
 
   case 90:
 
+/* Line 1806 of yacc.c  */
+#line 579 "compiler/EaseaParse.y"
     {
         nELITE=(int)(yyvsp[(2) - (2)].dValue);
         }
@@ -2232,6 +2374,8 @@ yyreduce:
 
   case 91:
 
+/* Line 1806 of yacc.c  */
+#line 582 "compiler/EaseaParse.y"
     {
         nELITE=(int)(yyvsp[(2) - (3)].dValue)*nPOP_SIZE/100;
         }
@@ -2239,6 +2383,8 @@ yyreduce:
 
   case 92:
 
+/* Line 1806 of yacc.c  */
+#line 585 "compiler/EaseaParse.y"
     {
       if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"Weak")) bELITISM=0;
       else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"Strong")) bELITISM=1;
@@ -2250,6 +2396,8 @@ yyreduce:
 
   case 93:
 
+/* Line 1806 of yacc.c  */
+#line 592 "compiler/EaseaParse.y"
     {
       if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"False")) bBALDWINISM=0;
       else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"True")) bBALDWINISM=1;
@@ -2261,6 +2409,8 @@ yyreduce:
 
   case 94:
 
+/* Line 1806 of yacc.c  */
+#line 600 "compiler/EaseaParse.y"
     {
 	if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"False")) bREMOTE_ISLAND_MODEL=0;
 	else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"True")) bREMOTE_ISLAND_MODEL=1;
@@ -2272,6 +2422,8 @@ yyreduce:
 
   case 95:
 
+/* Line 1806 of yacc.c  */
+#line 607 "compiler/EaseaParse.y"
     {
         sprintf(sIP_FILE, (yyvsp[(2) - (4)].pSymbol)->sName);
 	strcat(sIP_FILE,".");
@@ -2281,6 +2433,8 @@ yyreduce:
 
   case 96:
 
+/* Line 1806 of yacc.c  */
+#line 612 "compiler/EaseaParse.y"
     {
 	fMIGRATION_PROBABILITY=(float)(yyvsp[(2) - (2)].dValue);
 	}
@@ -2288,6 +2442,8 @@ yyreduce:
 
   case 97:
 
+/* Line 1806 of yacc.c  */
+#line 615 "compiler/EaseaParse.y"
     {
       nSERVER_PORT=(int)(yyvsp[(2) - (2)].dValue);
     }
@@ -2295,6 +2451,8 @@ yyreduce:
 
   case 98:
 
+/* Line 1806 of yacc.c  */
+#line 618 "compiler/EaseaParse.y"
     {
       if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"False")) bPRINT_STATS=0;
       else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"True")) bPRINT_STATS=1;
@@ -2306,6 +2464,8 @@ yyreduce:
 
   case 99:
 
+/* Line 1806 of yacc.c  */
+#line 625 "compiler/EaseaParse.y"
     {
       if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"False")) bPLOT_STATS=0;
       else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"True")) bPLOT_STATS=1;
@@ -2317,6 +2477,8 @@ yyreduce:
 
   case 100:
 
+/* Line 1806 of yacc.c  */
+#line 632 "compiler/EaseaParse.y"
     {
       if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"False")) bGENERATE_CSV_FILE=0;
       else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"True")) bGENERATE_CSV_FILE=1;
@@ -2328,6 +2490,8 @@ yyreduce:
 
   case 101:
 
+/* Line 1806 of yacc.c  */
+#line 639 "compiler/EaseaParse.y"
     {
       if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"False")) bGENERATE_GNUPLOT_SCRIPT=0;
       else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"True")) bGENERATE_GNUPLOT_SCRIPT=1;
@@ -2339,6 +2503,8 @@ yyreduce:
 
   case 102:
 
+/* Line 1806 of yacc.c  */
+#line 646 "compiler/EaseaParse.y"
     {
       if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"False")) bGENERATE_R_SCRIPT=0;
       else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"True")) bGENERATE_R_SCRIPT=1;
@@ -2350,6 +2516,8 @@ yyreduce:
 
   case 103:
 
+/* Line 1806 of yacc.c  */
+#line 653 "compiler/EaseaParse.y"
     {
       if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"False")) bSAVE_POPULATION=0;
       else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"True")) bSAVE_POPULATION=1;
@@ -2361,6 +2529,8 @@ yyreduce:
 
   case 104:
 
+/* Line 1806 of yacc.c  */
+#line 660 "compiler/EaseaParse.y"
     {
       if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"False")) bSTART_FROM_FILE=0;
       else if (!mystricmp((yyvsp[(2) - (2)].pSymbol)->sName,"True")) bSTART_FROM_FILE=1;
@@ -2372,36 +2542,50 @@ yyreduce:
 
   case 105:
 
+/* Line 1806 of yacc.c  */
+#line 667 "compiler/EaseaParse.y"
     {iMAX_INIT_TREE_D = (unsigned)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 106:
 
+/* Line 1806 of yacc.c  */
+#line 668 "compiler/EaseaParse.y"
     {iMIN_INIT_TREE_D = (unsigned)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 107:
 
+/* Line 1806 of yacc.c  */
+#line 669 "compiler/EaseaParse.y"
     {iMAX_TREE_D = (unsigned)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 108:
 
+/* Line 1806 of yacc.c  */
+#line 670 "compiler/EaseaParse.y"
     {iNB_GPU = (unsigned)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 109:
 
+/* Line 1806 of yacc.c  */
+#line 671 "compiler/EaseaParse.y"
     {iPRG_BUF_SIZE = (unsigned)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 110:
 
+/* Line 1806 of yacc.c  */
+#line 674 "compiler/EaseaParse.y"
     {iNO_FITNESS_CASES = (unsigned)(yyvsp[(2) - (2)].dValue);}
     break;
 
   case 111:
 
+/* Line 1806 of yacc.c  */
+#line 678 "compiler/EaseaParse.y"
     { 
       if (SymbolTable.find((yyvsp[(1) - (3)].pSymbol)->sName)==NULL){
          fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,(yyvsp[(1) - (3)].pSymbol)->sName);
@@ -2413,21 +2597,29 @@ yyreduce:
 
   case 112:
 
+/* Line 1806 of yacc.c  */
+#line 685 "compiler/EaseaParse.y"
     { (yyval.dValue) = (yyvsp[(1) - (3)].dValue) + (yyvsp[(3) - (3)].dValue); }
     break;
 
   case 113:
 
+/* Line 1806 of yacc.c  */
+#line 686 "compiler/EaseaParse.y"
     { (yyval.dValue) = (yyvsp[(1) - (3)].dValue) - (yyvsp[(3) - (3)].dValue); }
     break;
 
   case 114:
 
+/* Line 1806 of yacc.c  */
+#line 687 "compiler/EaseaParse.y"
     { (yyval.dValue) = (yyvsp[(1) - (3)].dValue) * (yyvsp[(3) - (3)].dValue); }
     break;
 
   case 115:
 
+/* Line 1806 of yacc.c  */
+#line 688 "compiler/EaseaParse.y"
     { /* CEASEAParser_divide can't be used because g++ can't goto the label YYERROR go,
                                            So I directely use its code. I don't know why g++ can't compile CEASEAParser_divide */
                                         if((yyvsp[(3) - (3)].dValue) == 0) {(yyval.dValue)=0; YYERROR; return 0;}
@@ -2436,21 +2628,29 @@ yyreduce:
 
   case 116:
 
+/* Line 1806 of yacc.c  */
+#line 692 "compiler/EaseaParse.y"
     { (yyval.dValue) = (yyvsp[(2) - (3)].dValue); }
     break;
 
   case 117:
 
+/* Line 1806 of yacc.c  */
+#line 693 "compiler/EaseaParse.y"
     { (yyval.dValue) = -(yyvsp[(2) - (2)].dValue); }
     break;
 
   case 118:
 
+/* Line 1806 of yacc.c  */
+#line 694 "compiler/EaseaParse.y"
     { (yyval.dValue) = (yyvsp[(1) - (1)].dValue); }
     break;
 
   case 119:
 
+/* Line 1806 of yacc.c  */
+#line 695 "compiler/EaseaParse.y"
     {
       if (SymbolTable.find((yyvsp[(1) - (1)].pSymbol)->sName)==NULL){
          fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,(yyvsp[(1) - (1)].pSymbol)->sName);
@@ -2462,6 +2662,8 @@ yyreduce:
 
 
 
+/* Line 1806 of yacc.c  */
+#line 2667 "compiler/EaseaParse.cpp"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2691,6 +2893,8 @@ yyreturn:
 
 
 
+/* Line 2067 of yacc.c  */
+#line 704 "compiler/EaseaParse.y"
 
                        
 /////////////////////////////////////////////////////////////////////////////
