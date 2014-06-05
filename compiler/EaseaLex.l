@@ -1107,7 +1107,6 @@ exponent  ([Ee][+-]?[0-9]+)
   BEGIN COPY_MUTATOR;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_EVALUATOR"  {
-  printf("evaluator insert\n");
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter=1;
@@ -1687,7 +1686,9 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"currentGeneration"|"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else if(TARGET == STD) fprintf(fpOutputFile,"(*EZ_current_generation)");
     } // local genome name
-<COPY>"NB_GEN"|"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
+<COPY>"NB_GEN" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
+  else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
+<COPY>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 <COPY>"POP_SIZE"|"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
@@ -2038,27 +2039,40 @@ if(OPERATING_SYSTEM=WINDOWS)
   }
  }
 
-<COPY_USER_GENERATION>"currentGeneration"?
+<COPY_USER_GENERATION>"currentGeneration" {
+  if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
+  else {
+      fprintf(fpOutputFile,"(*EZ_current_generation)");}} // local genome name
 <COPY_USER_GENERATION>"currentGeneration"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else {
       fprintf(fpOutputFile,"(*EZ_current_generation)");}} // local genome name
-<COPY_USER_GENERATION>"NB_GEN"?
+<COPY_USER_GENERATION>"NB_GEN" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
+ /*local genome name*/
+  else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }} 
 <COPY_USER_GENERATION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
  /*local genome name*/
   else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }} 
-<COPY_USER_GENERATION>"POP_SIZE"?
+<COPY_USER_GENERATION>"POP_SIZE" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");}
  /*local genome name*/
-<COPY_USER_GENERATION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
+<COPY_USER_GENERATION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");}
+<COPY_USER_GENERATION>"MUT_PROB" {
+  if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
+  else {fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
     }
-<COPY_USER_GENERATION>"MUT_PROB"?
+ }
  /* local genome name*/
 <COPY_USER_GENERATION>"MUT_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else {fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
     }
  }
-<COPY_USER_GENERATION>"XOVER_PROB"?
+<COPY_USER_GENERATION>"XOVER_PROB" {
+  if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
+  else {
+      fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");     
+    }
+ }
  /*local genome name*/
 <COPY_USER_GENERATION>"XOVER_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"XOVER_PROB");
@@ -2066,25 +2080,32 @@ if(OPERATING_SYSTEM=WINDOWS)
       fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");     
     }
  }
-<COPY_USER_GENERATION>"REPL_PERC"?
+<COPY_USER_GENERATION>"REPL_PERC" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC"); //local genome name
+    }
 <COPY_USER_GENERATION>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC"); //local genome name
     }
-<COPY_USER_GENERATION>"MINIMISE"?
+<COPY_USER_GENERATION>"MINIMISE" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE"); // local genome name
+    } 
 <COPY_USER_GENERATION>"MINIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMISE"); // local genome name
     } 
-<COPY_USER_GENERATION>"MINIMIZE"?
+<COPY_USER_GENERATION>"MINIMIZE" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE"); // local genome name
+    }
 <COPY_USER_GENERATION>"MINIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MINIMIZE"); // local genome name
     }
-<COPY_USER_GENERATION>"MAXIMISE"?
+<COPY_USER_GENERATION>"MAXIMISE" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE"); // local genome name
+    }
 <COPY_USER_GENERATION>"MAXIMISE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMISE"); // local genome name
     }
-<COPY_USER_GENERATION>"MAXIMIZE"?
+<COPY_USER_GENERATION>"MAXIMIZE" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE"); // local genome name
+    }
 <COPY_USER_GENERATION>"MAXIMIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"MAXIMIZE"); // local genome name
     }
 
 <COPY_USER_GENERATION>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n    hint -> You must have meant \"NB_GEN=...\" rather than \"currentGeneration=...\"\n",sEZ_FILE_NAME,yylineno);
   exit(1);
  } 
+
+
 <COPY_USER_GENERATION>"NB_GEN"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else {
       fprintf(fpOutputFile,"(*EZ_NB_GEN)=");
@@ -2145,10 +2166,8 @@ if(OPERATING_SYSTEM=WINDOWS)
     else fprintf(fpOutputFile,"));");
   }
   else fprintf(fpOutputFile,";");}
-<COPY_USER_GENERATION>"evoluationaryAlgorithm."? 
-<COPY_USER_GENERATION>"ea." {
-  fprintf(fpOutputFile,"(*evoluationaryAlgorithm).");
- }
+<COPY_USER_GENERATION>"evoluationaryAlgorithm." {fprintf(fpOutputFile,"(*evoluationaryAlgorithm).");}
+<COPY_USER_GENERATION>"ea." {fprintf(fpOutputFile,"(*evoluationaryAlgorithm).");}
 <COPY_USER_GENERATION>.|\n {putc(yytext[0],fpOutputFile);}                                      
 
  /****************************************
@@ -2205,32 +2224,48 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 <COPY_USER_FUNCTION>"\\\""  {fprintf(fpOutputFile,"\\\"");}
 
-<COPY_USER_FUNCTION>"currentGeneration"?
+<COPY_USER_FUNCTION>"currentGeneration" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
+  else switch  (TARGET) {
+    case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
+    }} // local genome name
 <COPY_USER_FUNCTION>"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }} // local genome name
-<COPY_USER_FUNCTION>"NB_GEN"?
+<COPY_USER_FUNCTION>"NB_GEN" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
+  else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 <COPY_USER_FUNCTION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
-<COPY_USER_FUNCTION>"POP_SIZE"?
+<COPY_USER_FUNCTION>"POP_SIZE"  {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
+  else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 <COPY_USER_FUNCTION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
-<COPY_USER_FUNCTION>"MUT_PROB"?
+<COPY_USER_FUNCTION>"MUT_PROB" {
+  if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
+  else if( TARGET==CUDA || TARGET==STD)
+    fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
+  else fprintf(fpOutputFile,"EZ_MUT_PROB");
+ } // local genome name
 <COPY_USER_FUNCTION>"MUT_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else if( TARGET==CUDA || TARGET==STD)
     fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
   else fprintf(fpOutputFile,"EZ_MUT_PROB");
  } // local genome name
-<COPY_USER_FUNCTION>"XOVER_PROB"?
+<COPY_USER_FUNCTION>"XOVER_PROB" {
+  if (bDoubleQuotes) 
+    fprintf(fpOutputFile,"XOVER_PROB");
+  else if( TARGET==CUDA || TARGET==STD )
+    fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
+  else fprintf(fpOutputFile,"EZ_XOVER_PROB");} // local genome name
 <COPY_USER_FUNCTION>"XOVER_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
   else if( TARGET==CUDA || TARGET==STD )
     fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
   else fprintf(fpOutputFile,"EZ_XOVER_PROB");} // local genome name
-<COPY_USER_FUNCTION>"REPL_PERC"?
+<COPY_USER_FUNCTION>"REPL_PERC" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
+  else fprintf(fpOutputFile,"EZ_REPL_PERC");} // local genome name
 <COPY_USER_FUNCTION>"REPL_PERC"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
   else fprintf(fpOutputFile,"EZ_REPL_PERC");} // local genome name
 
