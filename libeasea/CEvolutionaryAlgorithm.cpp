@@ -554,8 +554,10 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       this->server->read_data_lock();
       string line = this->server->parm->data[this->treatedIndividuals].data;
       this->population->parents[index]->deserialize(line);
-            //TAG THE INDIVIDUAL AS IMMIGRANT
-            this->population->parents[index]->isImmigrant = true;
+      //TAG THE INDIVIDUAL AS IMMIGRANT
+      this->population->parents[index]->isImmigrant = true;
+      delete [] this->population->parents;
+      this->population->parents = NULL;
 
       this->server->read_data_unlock();
       //cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
