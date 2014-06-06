@@ -25,7 +25,7 @@ SET_TARGET_PROPERTIES(program_options PROPERTIES OUTPUT_NAME "program_options" P
 
 find_package(BISON)
 find_package(FLEX)
-FLEX_TARGET(Lexer compiler/EaseaLex.l compiler/EaseaLex.cpp COMPILE_FLAGS -i)
+FLEX_TARGET(Lexer compiler/EaseaLex.l compiler/EaseaLex.cpp)
 BISON_TARGET(Parser compiler/EaseaParse.y compiler/EaseaParse.cpp COMPILE_FLAGS -d)
 
 #Easea compiler

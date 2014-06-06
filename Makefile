@@ -95,7 +95,7 @@ compiler/EaseaParse.cpp:compiler/EaseaParse.y
 	$(YACC) -d -o $@ $<
 
 compiler/EaseaLex.cpp:compiler/EaseaLex.l
-	$(LEX) -i -o $@ $<
+	$(LEX) -o $@ $<
 
 #ifeq ($(UNAME),Darwin)
 boost/program_options.a:boost/*.cpp
