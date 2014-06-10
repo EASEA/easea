@@ -54,7 +54,7 @@ void * CComUDPServer::UDP_server_thread(void *parm) {
       printf("    Received individual from %s:%d\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
       pthread_mutex_lock(&server_mutex);
       /*process received data */
-      RECV_DATA buffer_copy = RECV_DATA();
+      RECV_DATA buffer_copy;
       memmove(buffer_copy.data,buffer,sizeof(char)*MAXINDSIZE);
       //  printf("address %p\n",(p->data));
       p->data.push_back(buffer_copy);
@@ -72,7 +72,6 @@ CComUDPServer::CComUDPServer(unsigned short port,int dg) {
   struct sockaddr_in ServAddr; /* Local address */
   debug = dg;
   this->nb_data = 0;
-  this->data.assign(sizeof(RECV_DATA),RECV_DATA());
 #ifdef WIN32
   WSADATA wsadata;
   if (WSAStartup(MAKEWORD(1,1), &wsadata) == SOCKET_ERROR) {

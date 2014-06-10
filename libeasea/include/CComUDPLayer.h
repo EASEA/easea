@@ -33,7 +33,7 @@
 #define MAXINDSIZE 50000 /*maximum size of an individual in number of characters*/
 
 
-typedef struct {
+typedef struct recv_data {
         char data[MAXINDSIZE];
 }RECV_DATA;
 
@@ -41,7 +41,7 @@ typedef struct {
 	int Socket; /* Socket descriptor for server */
         struct sockaddr_in ServAddr;   /* Local address */
         int debug;
-	std::vector<RECV_DATA> data;
+	std::vector<recv_data> data;
 	int *nb_data;
 }UDP_server_thread_parm_t;
 
@@ -49,7 +49,7 @@ class CComUDPServer {
 
 public:
 	int debug;
-	std::vector<RECV_DATA> data;
+	std::vector<recv_data> data;
 	int nb_data;
 	UDP_server_thread_parm_t *parm;
 	CComUDPServer(unsigned short port, int dg);
