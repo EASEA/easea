@@ -1,4 +1,8 @@
-#include "EaseaLex.h"
+#include "Easea.h"
+//#include "EaseaLex.h"
+#include "debug.h"
 
-void pickupSTDSelector(char* sSELECTOR, float* fSELECT_PRM, char* sEZ_FILE_NAME, CEASEALexer* EASEALexer);
-void pickupSTDSelectorArgument(char* sSELECTOR, float* fSELECT_PRM, char* sEZ_FILE_NAME, float thirdParam, CEASEALexer* EASEALexer);
+extern int yylineno;
+
+void pickupSTDSelector(char* sSELECTOR, float* fSELECT_PRM, char* sEZ_FILE_NAME);
+void pickupSTDSelectorArgument(char* sSELECTOR, float* fSELECT_PRM, char* sEZ_FILE_NAME, float thirdParam);

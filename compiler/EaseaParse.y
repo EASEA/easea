@@ -12,6 +12,12 @@ Centre de Math�matiques Appliqu�es
 #include "Easea.h"
 #include "debug.h"
 #include "EaseaYTools.h"
+#include "EaseaParse.hpp"
+
+#define YYEXIT_FAILURE	1
+#define YYEXIT_SUCCESS	0
+
+
 
 // Globals     
 CSymbol *pCURRENT_CLASS;
@@ -63,11 +69,22 @@ float fMUT_PROB;
 float fXOVER_PROB;
 FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile;//, *fpExplodedGenomeFile;
 
+CSymbolTable SymbolTable;    // the symbol table
+
+
  unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_SIZE,iMAX_TREE_DEPTH,iMAX_XOVER_DEPTH,iNO_FITNESS_CASES;
+
+extern int yylex();
+extern char * yytext;
+
+void yyerror(const char * s){
+  printf("%s\nSyntax Error at line : %d (on text : %s)\nFor more details during the EASEA compiling, use the \"-v\" option\n",
+	 s,yylineno,yytext);
+}
+
 %}
 
-// include file
-%include {
+%code provides {
 // forward references
 class CSymbol;
 }
@@ -90,8 +107,8 @@ class CSymbol;
 
 // tokens
 %right '='
-%left '+', '-'
-%left '*', '/'
+%left '+' '-'
+%left '*' '/'
 %right UMINUS
 
 // keywords
@@ -157,69 +174,25 @@ class CSymbol;
 %token NB_GPU
 %token PRG_BUF_SIZE
 %token NO_FITNESS_CASES
+%token TEMPLATE_END
 // include file
-%include {
+%code provides {
 #include "EaseaSym.h"
 #include "EaseaLex.h"
-}
 
-// parser name and class definition
-%name CEASEAParser 
-{
-protected:
-  CEASEALexer EASEALexer;       // the lexical analyser
+  int  CEASEAParser_create();
   
-public:
-  CSymbolTable SymbolTable;    // the symbol table
+  double  CEASEAParser_assign(CSymbol* pIdentifier, double dValue);
+  double  CEASEAParser_divide(double dDividend, double dDivisor);
+  CSymbol*  CEASEAParser_insert();
 
-  int create();
-  
-  double assign(CSymbol* pIdentifier, double dValue);
-  double divide(double dDividend, double dDivisor);
-  CSymbol* insert() const;
+  //virtual void yysyntaxerror();
 
-  virtual void yysyntaxerror();
 }
-
-// constructor
-{
-      CSymbol *pNewBaseType;
-
-      pNewBaseType=new CSymbol("bool");
-      pNewBaseType->nSize=sizeof(bool);   
-      pNewBaseType->ObjectType=oBaseClass;
-      SymbolTable.insert(pNewBaseType);
-
-      pNewBaseType=new CSymbol("int");
-      pNewBaseType->nSize=sizeof(int);   
-      pNewBaseType->ObjectType=oBaseClass;
-      SymbolTable.insert(pNewBaseType);
-
-      pNewBaseType=new CSymbol("double");
-      pNewBaseType->nSize=sizeof(double);   
-      pNewBaseType->ObjectType=oBaseClass;
-      SymbolTable.insert(pNewBaseType);
-
-      pNewBaseType=new CSymbol("float");
-      pNewBaseType->nSize=sizeof(float);   
-      pNewBaseType->ObjectType=oBaseClass;
-      SymbolTable.insert(pNewBaseType);
-
-      pNewBaseType=new CSymbol("char");
-      pNewBaseType->nSize=sizeof(char);   
-      pNewBaseType->ObjectType=oBaseClass;
-      SymbolTable.insert(pNewBaseType);
-
-      pNewBaseType=new CSymbol("pointer");
-      pNewBaseType->nSize=sizeof(char *);   
-      pNewBaseType->ObjectType=oBaseClass;
-      SymbolTable.insert(pNewBaseType);
-}
-
 %start EASEA
 %%
 
-EASEA :  RunParameters GenomeAnalysis;
+EASEA :  RunParameters GenomeAnalysis TEMPLATE_END {return 0;};
 
 GenomeAnalysis
     : ClassDeclarationsSection GenomeDeclarationSection {
@@ -310,7 +283,7 @@ UserType
   : Symbol {  
       CSymbol *pSym=SymbolTable.find($1->sName);
       if (pSym==NULL) {
-        fprintf(stderr,"\n%s - Error line %d: Class \"%s\" was not defined.\n",sEZ_FILE_NAME,EASEALexer.yylineno,$1->sName);
+        fprintf(stderr,"\n%s - Error line %d: Class \"%s\" was not defined.\n",sEZ_FILE_NAME,yylineno,$1->sName);
         fprintf(stderr,"Only base types (bool, int, float, double, char) or new user classes defined\nwithin the \"User classes\" sections are allowed.\n");
         exit(1);
       }       
@@ -518,7 +491,7 @@ Parameter
       switch (TARGET) {
       case CUDA:
       case STD:
-	pickupSTDSelector(sSELECTOR,&fSELECT_PRM,sEZ_FILE_NAME,&EASEALexer);
+	pickupSTDSelector(sSELECTOR,&fSELECT_PRM,sEZ_FILE_NAME);
 	break;
       }
     }
@@ -528,7 +501,7 @@ Parameter
       switch (TARGET) {
       case CUDA:
       case STD:
-	pickupSTDSelectorArgument(sSELECTOR,&fSELECT_PRM,sEZ_FILE_NAME,(float)$3,&EASEALexer);
+	pickupSTDSelectorArgument(sSELECTOR,&fSELECT_PRM,sEZ_FILE_NAME,(float)$3);
 	break;
       }
     }
@@ -538,7 +511,7 @@ Parameter
         switch (TARGET) {
 	case CUDA:
 	case STD:
-	  pickupSTDSelector(sRED_PAR,&fRED_PAR_PRM,sEZ_FILE_NAME,&EASEALexer);
+	  pickupSTDSelector(sRED_PAR,&fRED_PAR_PRM,sEZ_FILE_NAME);
 	  break;
 	}
     }
@@ -548,7 +521,7 @@ Parameter
         switch (TARGET) {
 	case CUDA :
 	case STD:
-	  pickupSTDSelectorArgument(sRED_PAR,&fRED_PAR_PRM,sEZ_FILE_NAME,(float)$3,&EASEALexer);
+	  pickupSTDSelectorArgument(sRED_PAR,&fRED_PAR_PRM,sEZ_FILE_NAME,(float)$3);
 	  break;
 	}
     }
@@ -558,7 +531,7 @@ Parameter
       switch (TARGET) {
       case STD:
       case CUDA:
-	pickupSTDSelector(sRED_OFF,&fRED_OFF_PRM,sEZ_FILE_NAME,&EASEALexer);
+	pickupSTDSelector(sRED_OFF,&fRED_OFF_PRM,sEZ_FILE_NAME);
 	break;
       }
     }
@@ -568,7 +541,7 @@ Parameter
         switch (TARGET) {
 	case STD:
 	case CUDA:
-	  pickupSTDSelectorArgument(sRED_OFF,&fRED_OFF_PRM,sEZ_FILE_NAME,$3,&EASEALexer);
+	  pickupSTDSelectorArgument(sRED_OFF,&fRED_OFF_PRM,sEZ_FILE_NAME,$3);
        }}
   |  RED_FINAL IDENTIFIER2{
         sprintf(sRED_FINAL, $2->sName);
@@ -576,7 +549,7 @@ Parameter
         switch (TARGET) {
 	case CUDA:
 	case STD:
-	  pickupSTDSelector(sRED_FINAL,&fRED_FINAL_PRM,sEZ_FILE_NAME,&EASEALexer);
+	  pickupSTDSelector(sRED_FINAL,&fRED_FINAL_PRM,sEZ_FILE_NAME);
 	  break;
        }}
   |  RED_FINAL IDENTIFIER2 NUMBER2 {
@@ -585,7 +558,7 @@ Parameter
         switch (TARGET) {
 	case CUDA :
 	case STD:
-	  pickupSTDSelectorArgument(sRED_FINAL,&fRED_FINAL_PRM,sEZ_FILE_NAME,$3,&EASEALexer);
+	  pickupSTDSelectorArgument(sRED_FINAL,&fRED_FINAL_PRM,sEZ_FILE_NAME,$3);
 	  break;
 	}}
   |  OFFSPRING NUMBER2 {nOFF_SIZE=(int)$2;}
@@ -598,8 +571,8 @@ Parameter
       if ((!mystricmp($2->sName,"Maximise")) || (!mystricmp($2->sName,"Maximize"))) nMINIMISE=0;
       else if ((!mystricmp($2->sName,"Minimise")) || (!mystricmp($2->sName,"Minimize"))) nMINIMISE=1;
       else {
-         fprintf(stderr,"\n%s - Error line %d: The evaluator goal default parameter can only take\n",sEZ_FILE_NAME,EASEALexer.yylineno);
-         fprintf(stderr,"two values : maximi[sz]e or minimi[sz]e.\n",sEZ_FILE_NAME,EASEALexer.yylineno);
+         fprintf(stderr,"\n%s - Error line %d: The evaluator goal default parameter can only take\n",sEZ_FILE_NAME,yylineno);
+         fprintf(stderr,"two values : maximi[sz]e or minimi[sz]e.\n",sEZ_FILE_NAME,yylineno);
          exit(1);
        }
       }
@@ -613,14 +586,14 @@ Parameter
       if (!mystricmp($2->sName,"Weak")) bELITISM=0;
       else if (!mystricmp($2->sName,"Strong")) bELITISM=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: Elitism must be \"Strong\" or \"Weak\".\nDefault value \"Strong\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         fprintf(stderr,"\n%s - Warning line %d: Elitism must be \"Strong\" or \"Weak\".\nDefault value \"Strong\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bELITISM=1;
        }}
   | BALDWINISM IDENTIFIER2{
       if (!mystricmp($2->sName,"False")) bBALDWINISM=0;
       else if (!mystricmp($2->sName,"True")) bBALDWINISM=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: Baldwinism must be \"True\" or \"False\".\nDefault value \"True\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         fprintf(stderr,"\n%s - Warning line %d: Baldwinism must be \"True\" or \"False\".\nDefault value \"True\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bBALDWINISM=1;
        }}
 
@@ -628,7 +601,7 @@ Parameter
 	if (!mystricmp($2->sName,"False")) bREMOTE_ISLAND_MODEL=0;
 	else if (!mystricmp($2->sName,"True")) bREMOTE_ISLAND_MODEL=1;
 	else {
-	  fprintf(stderr,"\n%s - Warning line %d: remote island model must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+	  fprintf(stderr,"\n%s - Warning line %d: remote island model must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n",sEZ_FILE_NAME,yylineno);nWARNINGS++;
 	  bREMOTE_ISLAND_MODEL=0;
 	}}
   | IP_FILE IDENTIFIER2'.'IDENTIFIER2{
@@ -646,49 +619,49 @@ Parameter
       if (!mystricmp($2->sName,"False")) bPRINT_STATS=0;
       else if (!mystricmp($2->sName,"True")) bPRINT_STATS=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: Print stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         fprintf(stderr,"\n%s - Warning line %d: Print stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bPRINT_STATS=0;
        }}
   | PLOT_STATS IDENTIFIER2{
       if (!mystricmp($2->sName,"False")) bPLOT_STATS=0;
       else if (!mystricmp($2->sName,"True")) bPLOT_STATS=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: Generate stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         fprintf(stderr,"\n%s - Warning line %d: Generate stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bPLOT_STATS=0;
        }}
   | GENERATE_CSV_FILE IDENTIFIER2{
       if (!mystricmp($2->sName,"False")) bGENERATE_CSV_FILE=0;
       else if (!mystricmp($2->sName,"True")) bGENERATE_CSV_FILE=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: Generate csv file must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         fprintf(stderr,"\n%s - Warning line %d: Generate csv file must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bGENERATE_CSV_FILE=0;
        }}
   | GENERATE_GNUPLOT_SCRIPT IDENTIFIER2{
       if (!mystricmp($2->sName,"False")) bGENERATE_GNUPLOT_SCRIPT=0;
       else if (!mystricmp($2->sName,"True")) bGENERATE_GNUPLOT_SCRIPT=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: Generate gnuplot script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         fprintf(stderr,"\n%s - Warning line %d: Generate gnuplot script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bGENERATE_GNUPLOT_SCRIPT=0;
        }}
   | GENERATE_R_SCRIPT IDENTIFIER2{
       if (!mystricmp($2->sName,"False")) bGENERATE_R_SCRIPT=0;
       else if (!mystricmp($2->sName,"True")) bGENERATE_R_SCRIPT=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: Generate R script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         fprintf(stderr,"\n%s - Warning line %d: Generate R script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bGENERATE_R_SCRIPT=0;
        }}
   | SAVE_POPULATION IDENTIFIER2{
       if (!mystricmp($2->sName,"False")) bSAVE_POPULATION=0;
       else if (!mystricmp($2->sName,"True")) bSAVE_POPULATION=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: SavePopulation must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         fprintf(stderr,"\n%s - Warning line %d: SavePopulation must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bSAVE_POPULATION=0;
        }}
   | START_FROM_FILE IDENTIFIER2{
       if (!mystricmp($2->sName,"False")) bSTART_FROM_FILE=0;
       else if (!mystricmp($2->sName,"True")) bSTART_FROM_FILE=1;
       else {
-         fprintf(stderr,"\n%s - Warning line %d: StartFromFile must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,EASEALexer.yylineno);nWARNINGS++;
+         fprintf(stderr,"\n%s - Warning line %d: StartFromFile must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bSTART_FROM_FILE=0;
        }}
 | MAX_INIT_TREE_D NUMBER2 {iMAX_INIT_TREE_D = (unsigned)$2;}
@@ -704,21 +677,24 @@ Parameter
 Expr
   : IDENTIFIER '=' Expr { 
       if (SymbolTable.find($1->sName)==NULL){
-         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,$1->sName);
+         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,$1->sName);
          exit(1);
       }
-      $$ = assign(SymbolTable.find($1->sName), $3);
+      $$ = CEASEAParser_assign(SymbolTable.find($1->sName), $3);
     }
   | Expr '+' Expr                    { $$ = $1 + $3; }
   | Expr '-' Expr                     { $$ = $1 - $3; }
   | Expr '*' Expr                     { $$ = $1 * $3; }
-  | Expr '/' Expr                     { $$ = divide($1, $3); }
+  | Expr '/' Expr                     { /* CEASEAParser_divide can't be used because g++ can't goto the label YYERROR go,
+                                           So I directely use its code. I don't know why g++ can't compile CEASEAParser_divide */
+                                        if($3 == 0) {$$=0; YYERROR; return 0;}
+                                        else $$ = $1 / $3; }
   | '(' Expr ')'                          { $$ = $2; }
   | '-' Expr %prec UMINUS { $$ = -$2; }
   | NUMBER                         { $$ = $1; }
   | IDENTIFIER{
       if (SymbolTable.find($1->sName)==NULL){
-         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,EASEALexer.yylineno,$1->sName);
+         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,$1->sName);
          exit(1);
       }
       $$ = (SymbolTable.find($1->sName))->dValue;
@@ -809,8 +785,8 @@ int main(int argc, char *argv[]){
     else strcpy(sRAW_PROJECT_NAME,argv[nParamNb]);
   }
 
-  CEASEAParser Parser;
-  if (Parser.create())  n = Parser.yyparse();
+  CEASEAParser_create();
+  n = yyparse();
   exit(n);
   return n;
 }
@@ -818,12 +794,45 @@ int main(int argc, char *argv[]){
 /////////////////////////////////////////////////////////////////////////////
 // EASEAParser commands
 
-int CEASEAParser::create()
+int CEASEAParser_create()
 {
-  if (!yycreate(&EASEALexer)) {
-    return 0;
-  }
-  if (!EASEALexer.create(this, &SymbolTable)) {
+  CSymbol *pNewBaseType;
+
+  pNewBaseType=new CSymbol("bool");
+  pNewBaseType->nSize=sizeof(bool);   
+  pNewBaseType->ObjectType=oBaseClass;
+  SymbolTable.insert(pNewBaseType);
+
+  pNewBaseType=new CSymbol("int");
+  pNewBaseType->nSize=sizeof(int);   
+  pNewBaseType->ObjectType=oBaseClass;
+  SymbolTable.insert(pNewBaseType);
+
+  pNewBaseType=new CSymbol("double");
+  pNewBaseType->nSize=sizeof(double);   
+  pNewBaseType->ObjectType=oBaseClass;
+  SymbolTable.insert(pNewBaseType);
+
+  pNewBaseType=new CSymbol("float");
+  pNewBaseType->nSize=sizeof(float);   
+  pNewBaseType->ObjectType=oBaseClass;
+  SymbolTable.insert(pNewBaseType);
+
+  pNewBaseType=new CSymbol("char");
+  pNewBaseType->nSize=sizeof(char);   
+  pNewBaseType->ObjectType=oBaseClass;
+  SymbolTable.insert(pNewBaseType);
+
+  pNewBaseType=new CSymbol("pointer");
+  pNewBaseType->nSize=sizeof(char *);   
+  pNewBaseType->ObjectType=oBaseClass;
+  SymbolTable.insert(pNewBaseType);
+
+
+  //if (!yycreate(&EASEALexer)) {
+  //  return 0;
+  //}
+  if (!CEASEALexer_create(&SymbolTable)) {
     return 0;
   }
   return 1; // success
@@ -832,7 +841,7 @@ int CEASEAParser::create()
 /////////////////////////////////////////////////////////////////////////////
 // calc_parser attribute commands
 
-double CEASEAParser::assign(CSymbol* spIdentifier, double dValue)
+double CEASEAParser_assign(CSymbol* spIdentifier, double dValue)
 {
   assert(spIdentifier != NULL);
 
@@ -840,22 +849,22 @@ double CEASEAParser::assign(CSymbol* spIdentifier, double dValue)
   return spIdentifier->dValue;
 }
 
-double CEASEAParser::divide(double a, double b)
+/*double CEASEAParser_divide(double a, double b)
 {
   if (b == 0) {
     printf("division by zero\n");
-    yyforceerror();   // causes a syntax error
+    YYERROR;
     return 0;
   }
   else {
     return a / b;
   }
 }
+*/
 
-
-void CEASEAParser::yysyntaxerror(){
+void CEASEAParser_yysyntaxerror(){
 
   printf("Syntax Error at line : %d (on text : %s)\nFor more details during the EASEA compiling, use the \"-v\" option\n",
-	 EASEALexer.yylineno,EASEALexer.yytext);
+	 yylineno,yytext);
 }
 

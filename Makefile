@@ -2,11 +2,13 @@ UNAME := $(shell uname)
 ifeq ($(shell uname -o 2>/dev/null),Msys)
 	OS := MINGW
 endif
+YACC=bison
+LEX=flex
 EXEC = bin/easea
-CPPFLAGS += -DUNIX_OS -Ialexyacc/include/ -g  -Wno-deprecated -DDEBUG -DLINE_NUM_EZ_FILE
+CPPFLAGS += -DUNIX_OS -g -Wno-deprecated -DDEBUG -DLINE_NUM_EZ_FILE
 LDFLAGS = 
 
-OBJ= build/EaseaSym.o build/EaseaParse.o build/EaseaLex.o alexyacc/libalex.a build/EaseaYTools.o boost/program_options.a libeasea/libeasea.a
+OBJ= build/EaseaSym.o build/EaseaParse.o build/EaseaLex.o build/EaseaYTools.o boost/program_options.a libeasea/libeasea.a
 
 #ifeq ($(UNAME),Darwin)
 $(EXEC):build bin $(OBJ)
@@ -82,19 +84,18 @@ bin:
 
 build/EaseaParse.o: compiler/EaseaParse.cpp compiler/EaseaLex.cpp
 	$(CXX) $(CPPFLAGS) $< -o $@ -c -w
-build/EaseaLex.o:  compiler/EaseaLex.cpp
+build/EaseaLex.o:  compiler/EaseaLex.cpp compiler/EaseaParse.hpp
 	$(CXX) $(CPPFLAGS) $< -o $@ -c -w
 
 
 build/%.o:compiler/%.cpp
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
-#compile library for alex and ayacc unix version
-alexyacc/libalex.so:alexyacc/*.cpp
-	cd alexyacc && make libalex.so
+compiler/EaseaParse.cpp:compiler/EaseaParse.y
+	$(YACC) -d -o $@ $<
 
-alexyacc/libalex.a:alexyacc/*.cpp
-	cd alexyacc && make libalex.a
+compiler/EaseaLex.cpp:compiler/EaseaLex.l
+	$(LEX) -o $@ $<
 
 #ifeq ($(UNAME),Darwin)
 boost/program_options.a:boost/*.cpp
@@ -107,7 +108,6 @@ libeasea/libeasea.a:libeasea/*.cpp
 
 clean:
 	rm -f build/*.o $(EXEC) $(EXEC)_bin
-	cd alexyacc && make clean
 	cd libeasea && make clean
 	cd boost && make clean
 #ifeq ($(UNAME),Darwin)
