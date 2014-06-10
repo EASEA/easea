@@ -18,12 +18,25 @@ Features
 - Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
 - C++ description language.
 
-Github mirror
+Requirements
+--------------
+This project required you to have flex and bison installed:
+```
+$ sudo apt-get install flex bison
+```
+
+Installation
+-------------
+Please refer to INSTALL.txt or the wiki : https://github.com/EASEA/easea/wiki/Building-and-installation
+Note that the CMake way is prefered and that the GNU/Makefile one is there for
+legacy OSes and distribution lacking CMake in there repositories. 
+
+Sourceforge mirror
 --------------
 
 To mirror this repositories on the github one, please add to .git/config:
-[remote "github"]
-	url = git@github.com:EASEA/easea.git
+[remote "sourceforge"]
+	url = ssh://USERNAME@git.code.sf.net/p/easea/code easea-code
 	mirror = true
 
-Add after pushing, do "git push github" manually or add a hook.
+Add after pushing, do "git push sourceforge" manually or add a hook.
