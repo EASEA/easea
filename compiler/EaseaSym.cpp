@@ -164,8 +164,8 @@ void CSymbol::print(FILE *fp)
 				fprintf(fp,"    cudaMemcpy(ret,dev_ptr,sizeof(%s),cudaMemcpyDeviceToHost);\n",sName);
 				//while (pSym=pSymbolList->walkToNextItem())
 				//fprintf(fp,"    this->%s=ret->%s;\n",pSym->Object->sName,pSym->Object->sName);      
-				fprintf(fp,"  }\n\n");
 			}
+		  fprintf(fp,"  }\n\n");
 		}
 
 		// creation of class constructor

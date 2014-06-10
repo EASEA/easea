@@ -54,10 +54,11 @@ void * CComUDPServer::UDP_server_thread(void *parm) {
       printf("    Received individual from %s:%d\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
       pthread_mutex_lock(&server_mutex);
       /*process received data */
-      memmove(p->data[(*p->nb_data)].data,buffer,sizeof(char)*MAXINDSIZE);
-      (*p->nb_data)++;
+      recv_data buffer_copy;
+      memmove(buffer_copy.data,buffer,sizeof(char)*MAXINDSIZE);
       //  printf("address %p\n",(p->data));
-      p->data = (RECV_DATA*)realloc(p->data,sizeof(RECV_DATA)*((*p->nb_data)+1));
+      p->data->push_back(buffer_copy);
+      (*p->nb_data)++;
       //  printf("address %p\n",(p->data));
       pthread_mutex_unlock(&server_mutex);
       /*reset receiving buffer*/
@@ -71,7 +72,6 @@ CComUDPServer::CComUDPServer(unsigned short port,int dg) {
   struct sockaddr_in ServAddr; /* Local address */
   debug = dg;
   this->nb_data = 0;
-  this->data = (RECV_DATA*)calloc(1,sizeof(RECV_DATA));
 #ifdef WIN32
   WSADATA wsadata;
   if (WSAStartup(MAKEWORD(1,1), &wsadata) == SOCKET_ERROR) {
@@ -108,7 +108,7 @@ CComUDPServer::CComUDPServer(unsigned short port,int dg) {
   this->parm->Socket = ServerSocket;
   this->parm->ServAddr = ServAddr;
   this->parm->nb_data = &this->nb_data;
-  this->parm->data = this->data;
+  this->parm->data = new std::vector<recv_data>;
   this->parm->debug = this->debug;
 
   if(pthread_create(&thread, NULL, &CComUDPServer::UDP_server_thread, (void *)this->parm) != 0) {

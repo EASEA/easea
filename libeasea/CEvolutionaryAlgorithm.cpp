@@ -535,13 +535,13 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 
 void CEvolutionaryAlgorithm::receiveIndividuals(){
   //Checking every generation for received individuals
-  if(this->treatedIndividuals<(unsigned)this->server->nb_data){
+  if(this->server->parm->data->size() != 0){
     //cout << "number of received individuals :" << this->server->nb_data << endl;
     //cout << "number of treated individuals :" << this->treatedIndividuals << endl;
     CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);   
 
     //Treating all the individuals before continuing
-    while(this->treatedIndividuals < (unsigned)this->server->nb_data){
+    while(this->server->parm->data->size() != 0){
       //selecting the individual to erase
       antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
       unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
@@ -552,14 +552,14 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       //cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
       //cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
       this->server->read_data_lock();
-      string line = this->server->parm->data[this->treatedIndividuals].data;
+      string line = this->server->parm->data->back().data;
+      this->server->parm->data->pop_back();
       this->population->parents[index]->deserialize(line);
-            //TAG THE INDIVIDUAL AS IMMIGRANT
-            this->population->parents[index]->isImmigrant = true;
+      //TAG THE INDIVIDUAL AS IMMIGRANT
+      this->population->parents[index]->isImmigrant = true;
 
       this->server->read_data_unlock();
       //cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
-      this->treatedIndividuals++;
     }
   }
 }
