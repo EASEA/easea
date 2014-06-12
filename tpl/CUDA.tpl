@@ -108,7 +108,6 @@ PopulationImpl* Pop = NULL;
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
 
-\INSERT_USER_CLASSES
 
 \INSERT_USER_FUNCTIONS
 
@@ -724,7 +723,7 @@ class Parameters;
 class CCuda;
 
 
-\INSERT_USER_CLASSES_DEFINITIONS
+\INSERT_USER_CLASSES
 
 class IndividualImpl : public CIndividual {
 
