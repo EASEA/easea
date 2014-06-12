@@ -19,6 +19,9 @@
 #include "EaseaSym.h"
 #include "debug.h"
 
+using std::cout;
+using std::endl;
+
 void debug(char *s)
 {
 #ifdef _DEBUG
@@ -55,7 +58,7 @@ template <class T> CListItem<T> *CLList<T>::walkToNextItem()
 /////////////////////////////////////////////////////////////////////////////
 // symbol construction/destruction
 
-CSymbol::CSymbol(char *s)
+CSymbol::CSymbol(const char *s)
 {
 	assert(s != NULL);
 
@@ -256,9 +259,16 @@ void CSymbol::print(FILE *fp)
 					fprintf(fpOutputFile,"\t\t\tEASEA_Line << \"NULL\" << \" \";\n");
 					fprintf(fpOutputFile,"}\n");
 				}
+				// it's a classical array
+				else if(pSym->Object->ObjectType==oArray)
+				{
+					fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
+							pSym->Object->nSize/pSym->Object->pType->nSize);
+					fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s[EASEA_Ndx] <<\" \";\n", pSym->Object->sName);
+				}
 				else
 				{
-					// it's not an array of pointers
+					// it's a pointer to an user-defined clas
 					fprintf(fpOutputFile,"\tif(this->%s != NULL){\n",pSym->Object->sName);
 					fprintf(fpOutputFile,"\t\tEASEA_Line << \"\\a \";\n");
 					fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s->serializer() << \" \";\n",pSym->Object->sName);
@@ -317,7 +327,7 @@ void CSymbol::print(FILE *fp)
 					fprintf(fpOutputFile,"\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
 					fprintf(fpOutputFile,"\t\tthis->%s = NULL;\n",pSym->Object->sName);
 					fprintf(fpOutputFile,"\telse{\n");
-					fprintf(fpOutputFile,"\t\tthis->%s = new %s;\n", pSym->Object->sName, pSym->Object->pType->sName);
+					fprintf(fpOutputFile,"\t\tthis->%s = new %s;\n",pSym->Object->sName, sName);
 					fprintf(fpOutputFile,"\t\tthis->%s->deserializer(EASEA_Line);\n",pSym->Object->sName);
 					fprintf(fpOutputFile,"\t}");
 				}
@@ -558,6 +568,18 @@ void CSymbol::serializeIndividual(FILE *fp, char* sCompleteName)
 				fprintf(fpOutputFile,"\t\t\tEASEA_Line << \"NULL\" << \" \";\n");
 				fprintf(fpOutputFile,"}\n");
 
+			}
+			// it's a classical array
+			else if(pSym->Object->ObjectType==oArray)
+			{
+				fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
+						pSym->Object->nSize);
+				fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s[EASEA_Ndx].serialize() <<\" \";\n", pSym->Object->sName);
+			}
+			else if(pSym->Object->ObjectType==oObject)
+			{
+				fprintf(fpOutputFile,"\tEASEA_Line << \"\\a \";\n");
+				fprintf(fpOutputFile,"\tEASEA_Line << this->%s.serializer() << \" \";\n",pSym->Object->sName);
 			}
 			else
 			{
