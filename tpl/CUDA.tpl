@@ -108,8 +108,6 @@ PopulationImpl* Pop = NULL;
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
 
-\INSERT_USER_CLASSES
-
 \INSERT_USER_FUNCTIONS
 
 
@@ -712,6 +710,8 @@ PopulationImpl::~PopulationImpl(){
 #include <Parameters.h>
 #include <string>
 #include <CStats.h>
+#include "CCuda.h"
+#include <sstream>
 
 using namespace std;
 
@@ -724,7 +724,7 @@ class Parameters;
 class CCuda;
 
 
-\INSERT_USER_CLASSES_DEFINITIONS
+\INSERT_USER_CLASSES
 
 class IndividualImpl : public CIndividual {
 
