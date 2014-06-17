@@ -79,7 +79,6 @@ extern CEvolutionaryAlgorithm* EA;
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
 
-\INSERT_USER_CLASSES
 
 \INSERT_USER_FUNCTIONS
 
@@ -372,6 +371,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <CIndividual.h>
 #include <Parameters.h>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -385,7 +385,7 @@ class Parameters;
 extern int EZ_POP_SIZE;
 extern int OFFSPRING_SIZE;
 
-\INSERT_USER_CLASSES_DEFINITIONS
+\INSERT_USER_CLASSES
 
 class IndividualImpl : public CIndividual {
 
