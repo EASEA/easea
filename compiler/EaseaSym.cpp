@@ -332,7 +332,7 @@ void CSymbol::print(FILE *fp)
 				{
 					fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
 							pSym->Object->nSize/pSym->Object->pType->nSize);
-					fprintf(fpOutputFile,"\t\tthis->%s[EASEA_Ndx].deserializer(&EASEA_Line) ;\n", pSym->Object->sName);
+					fprintf(fpOutputFile,"\t\tthis->%s[EASEA_Ndx].deserializer(EASEA_Line) ;\n", pSym->Object->sName);
 				}
 				/* it's a simple struct/class */
 				else if(pSym->Object->ObjectType==oObject)
