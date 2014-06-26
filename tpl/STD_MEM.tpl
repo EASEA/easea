@@ -76,10 +76,8 @@ CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 #define STD_TPL
 
-\INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
 
-\INSERT_USER_CLASSES
 
 \INSERT_USER_FUNCTIONS
 
@@ -401,6 +399,7 @@ PopulationImpl::~PopulationImpl(){
 #include <iostream>
 #include <CIndividual.h>
 #include <Parameters.h>
+#include <sstream>
 
 using namespace std;
 
@@ -414,7 +413,8 @@ class Parameters;
 extern int EZ_POP_SIZE;
 extern int OFFSPRING_SIZE;
 
-\INSERT_USER_CLASSES_DEFINITIONS
+\INSERT_USER_CLASSES
+\INSERT_USER_DECLARATIONS
 
 class IndividualImpl : public CIndividual {
 
