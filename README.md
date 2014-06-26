@@ -1,3 +1,81 @@
+Roadmap
+=======
+
+Big refactoring needs !
+
+Structural change
+-----------------
+- Use MPI for distribution
+- Full CPU parallelization
+- Full GPU parallelization
+- OOP in genome/user classes
+- Pointer usage in genome/user class 
+
+Template addition
+-----------------
+- PARADE
+- ASREA(2)
+- Parisian algorithms support
+
+Module
+------
+- Add the monitoring code
+
+Visualization
+-------------
+- Plug GridVis on or/in EASEA
+
+Code convention
+---------------
+Indentation
+- 2 whitespace
+- "Egyptian" bracket
+
+Naming convention:
+- Camelcase except for pre-processor directives 
+- Globals : g[NAME]
+- Class member variable : m[NAME]
+- Macro : ue unscore instead 
+
+Variable declaration:
+- Class : bottom
+- Function : top
+- ALL locale variable are defined at the top of the function
+
+Memory allocation:
+- The C++ way (new and delete) except in extern C block (huh)
+
+Documentation:
+- Doxygen style 
+
+No plateform/library specifics directives in function place them in macro at the
+start of the files.
+For pointesr put the star * next to the type 
+Much more to be added ...
+
+Tools
+-----
+- Use clanganalyzer (static analyzer) 
+- Use valgrind 
+- Use gdb/cuda\_gdb for debugging 
+
+Documentation
+-------------- 
+- How to create template
+- Parsed paramaters and section in .ez
+- Variable/scope accessibility
+
+Additional info
+---------------
+
+- Use the regression tests ("examples/regression.sh")
+- Add (for example) in your bashrc: 
+
+```
+alias Weierstrass="cd ../.. && make clean && make -j2 && . install.sh && cd examples/weierstrass && make easeaclea && easea weierstrass.ez && make && ./weierstrass"
+```
+to recompile and install easea from examples/weierstrass
+
 
 The EASEA-CLOUD platform
 ========================
