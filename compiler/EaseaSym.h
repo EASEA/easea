@@ -14,9 +14,16 @@ Rocquencourt BP 105
 #define SYMBOL_H
 #include "Easea.h"
 
-
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+#include "debug.h"
 #include <iostream>
 #include <sstream>
+#include <string>
+
+using std::string;
+using std::ostringstream;
 
 extern void debug (char *);
 
@@ -65,7 +72,7 @@ public :
 
 class CSymbol {
 public:
- CSymbol(char *s);
+ CSymbol(const char *s);
  virtual ~CSymbol();
 
 // Attributes
@@ -118,8 +125,6 @@ public:
   CSymbol* find(const char* s);
 };
 
-
-using namespace std;
 
 class OPCodeDesc {
  public:

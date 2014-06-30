@@ -1,10 +1,13 @@
+#ifndef _EASEA__H
+#define _EASEA__H
+
 /****************************************************************************
 Easea.h
 General header for the EASEA language (EAsy Specification for Evolutionary Algorithms)
 
 Pierre COLLET (Pierre.Collet@polytechnique.fr)
 Ecole Polytechnique
-Centre de Mathématiques Appliquées
+Centre de Math?matiques Appliqu?es
 91128 Palaiseau cedex
 ****************************************************************************/
 
@@ -34,6 +37,7 @@ Centre de Mathématiques Appliquées
 #define WINDOWS 2
 #define UNKNOWN_OS 3
 #define YYTEXT_SIZE 10000
+
 class CSymbol;
 
 extern CSymbol *pCURRENT_CLASS, *pCURRENT_TYPE, *pGENOME, *pCLASSES[128];
@@ -65,3 +69,5 @@ extern unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_S
 
 // Prototypes
 extern int mystricmp(const char *, const char *);
+
+#endif
