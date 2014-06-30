@@ -319,43 +319,74 @@ void CPopulation::reduceTotalPopulation(CIndividual** elitPop){
 void CPopulation::produceOffspringPopulation(){
 
   unsigned crossoverArrity = CIndividual::getCrossoverArrity();
-  CIndividual* p1;
+  /*
   CIndividual** ps = new CIndividual*[crossoverArrity]();
+  */
+  CIndividual* p1;
   CIndividual* child;
+  int tid;
+  int i;
+  int numThreads=omp_get_max_threads();
+  /*
+  CIndividual** p1= new CIndividual*[numThreads]();
+  CIndividual* child = new CIndividual*[numThreads]();
+  */
 
+  CIndividual*** ps = new CIndividual**[numThreads]();
+  
+  for (i = 0; i < numThreads ; i++) {
+    ps[i]=new CIndividual*[crossoverArrity]();
+  }
   selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
-
-  for( unsigned i=0 ; i<offspringPopulationSize ; i++ ){
-    unsigned index = selectionOperator->selectNext(parentPopulationSize);
-    p1 = parents[index];
-
-    //Check if Any Immigrants will reproduce
-    if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
-        this->cstats->currentNumberOfImmigrantReproductions++;
-    }
-
-    if( rg->tossCoin(pCrossover) ){
-      for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
-      index = selectionOperator->selectNext(parentPopulationSize);
-      ps[j] = parents[index];
-        if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
-            this->cstats->currentNumberOfImmigrantReproductions++;
-        }
+  
+  #pragma omp parallel private(tid,i,p1,child)
+  {
+  int tid2;
+  tid=omp_get_thread_num();
+  CRandomGenerator safeRG(CRandomGenerator(selectionOperator->rg->get_seed()+tid));
+  CSelectionOperator* safeSelector=selectionOperator->copy(actualParentPopulationSize,&safeRG);
+  
+  #pragma omp parallel for schedule(runtime) 
+    for(i=0 ; i<offspringPopulationSize ; i++ ){
+      unsigned index = safeSelector->selectNext(parentPopulationSize);
+      printf("%d\n",index);
+      p1 = parents[index];
+      //Check if Any Immigrants will reproduce
+      if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
+          this->cstats->currentNumberOfImmigrantReproductions++;
       }
-      child = p1->crossover(ps);
+
+      if( safeRG.tossCoin(pCrossover) ){
+        for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
+        index = safeSelector->selectNext(parentPopulationSize);
+        ps[tid][j] = parents[index];
+          if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
+              this->cstats->currentNumberOfImmigrantReproductions++;
+          }
+        }
+        child = p1->crossover(ps[tid]);
+      }
+      else child = parents[index]->clone();//new CIndividual(*parents[index]);
+      
+      
+      if( rg->tossCoin(pMutation) ){
+        child->mutate(pMutationPerGene);
+      }
+      
+      child->boundChecking();
+
+      offsprings[i] = child;
     }
-    else child = parents[index]->clone();//new CIndividual(*parents[index]);
-
-    if( rg->tossCoin(pMutation) ){
-      child->mutate(pMutationPerGene);
-    }
-
-    child->boundChecking();
-
-    offsprings[actualOffspringPopulationSize++] = child;
   }
+  /*Reduce in parallel region*/
+  actualOffspringPopulationSize=offspringPopulationSize;
+  for (i = 0; i < numThreads; i++) {
+    delete[](ps[i]);
+  }
+
   delete[](ps);
-  }
+
+}
 
 
 

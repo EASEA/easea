@@ -11,16 +11,24 @@
 #include <stdlib.h>
 #include "CIndividual.h"
 #include <string>
+#include <omp.h>
 
+/*TODO: Refactor CSelectionOperator*/
 class CSelectionOperator {
   public:
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
     virtual float getExtremum() = 0 ;
     virtual ~CSelectionOperator(){;}
+    virtual size_t selectNext(size_t populationSize, int rgId);
+    virtual void setThreadRg();
+    virtual void setRg(CRandomGenerator* rg);
+    virtual CSelectionOperator* copy(size_t populationSize,CRandomGenerator* rg);
+    CRandomGenerator* rg;
   protected:
     CIndividual** population;
     float currentSelectionPressure;
+    CRandomGenerator** threadRg;
 };
 
 extern float getSelectionPressure(std::string selectop);
@@ -34,10 +42,12 @@ class MaxTournament : public CSelectionOperator{
     MaxTournament(CRandomGenerator* rg){ this->rg = rg; }
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
+    virtual size_t selectNext(size_t populationSize, int rgId);
+    virtual CSelectionOperator* copy(size_t populationSize,CRandomGenerator* rg);
+    void setThreadRg();
     float getExtremum();
+    CSelectionOperator* copy();
   private:
-    CRandomGenerator* rg;
-
 };
 
 
@@ -47,9 +57,11 @@ class MinTournament : public CSelectionOperator{
     MinTournament(CRandomGenerator* rg){ this->rg = rg; }
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
+    virtual size_t selectNext(size_t populationSize, int rgId);
+    virtual CSelectionOperator* copy(size_t populationSize,CRandomGenerator* rg);
     float getExtremum();
+    void setThreadRg();
   private:
-    CRandomGenerator* rg;
 
 };
 
@@ -57,7 +69,7 @@ class MinTournament : public CSelectionOperator{
 class MaxDeterministic : public CSelectionOperator{
   public:
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
-    virtual size_t selectNext(size_t populationSize);
+    size_t selectNext(size_t populationSize);
     float getExtremum();
   private:
     size_t populationSize;
@@ -66,7 +78,7 @@ class MaxDeterministic : public CSelectionOperator{
 class MinDeterministic : public CSelectionOperator{
   public:
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
-    virtual size_t selectNext(size_t populationSize);
+    size_t selectNext(size_t populationSize);
     float getExtremum();
   private:
     size_t populationSize;
@@ -79,10 +91,10 @@ class MaxRandom : public CSelectionOperator{
     MaxRandom(CRandomGenerator* globalCRandomGenerator);
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
+    virtual size_t selectNext(size_t populationSize, int rgId);
     float getExtremum();
+    void setThreadRg();
   private:
-    //size_t populationSize;
-    CRandomGenerator* rg;
 
 };
 
@@ -91,10 +103,10 @@ class MinRandom : public CSelectionOperator{
     MinRandom(CRandomGenerator* globalCRandomGenerator);
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
+    virtual size_t selectNext(size_t populationSize, int rgId);
     float getExtremum();
+    void setThreadRg();
   private:
-    //size_t populationSize;
-    CRandomGenerator* rg;
 };
 
 /* ****************************************
@@ -106,10 +118,11 @@ class MaxRoulette : public CSelectionOperator{
     MaxRoulette(CRandomGenerator* rg){ this->rg = rg; }
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
+    virtual size_t selectNext(size_t populationSize, int rgId);
     float getExtremum();
+    void setThreadRg();
   private:
     size_t populationSize;
-    CRandomGenerator* rg;
 };
 
 

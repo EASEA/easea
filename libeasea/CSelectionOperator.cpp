@@ -63,6 +63,17 @@ void CSelectionOperator::initialize(CIndividual** population, float selectionPre
 
 size_t CSelectionOperator::selectNext(size_t populationSize){ return 0; }
 
+size_t CSelectionOperator::selectNext(size_t populationSize,int rgId){
+  return 0;
+}
+
+void CSelectionOperator::setThreadRg(){}
+void CSelectionOperator::setRg(CRandomGenerator* rg){this->rg=rg;}
+
+CSelectionOperator* CSelectionOperator::copy(size_t populationSize,CRandomGenerator* rg){
+  return NULL;
+}
+
 /* ****************************************
    MaxDeterministic class
 ****************************************/
@@ -97,6 +108,7 @@ float MinDeterministic::getExtremum(){
   return FLT_MAX;
 }
 
+
 /* ****************************************
    MaxRandom class
 ****************************************/
@@ -114,6 +126,22 @@ size_t MaxRandom::selectNext(size_t populationSize){
 
 float MaxRandom::getExtremum(){
   return -FLT_MAX;
+}
+
+void MaxRandom::setThreadRg(){
+  unsigned int seed=rg->get_seed();
+  unsigned int numThreads=omp_get_max_threads();
+  int i;
+  
+  /*TODO:upper bound of seed is limit unsigned int*/
+  threadRg=new CRandomGenerator*[numThreads]();
+  for (i = 0; i < numThreads; i++) {
+    threadRg[i]=new CRandomGenerator(seed+i);
+  }
+}
+
+size_t MaxRandom::selectNext(size_t populationSize, int rgId){
+  return threadRg[rgId]->random(0,populationSize-1);
 }
 
 /* ****************************************
@@ -136,6 +164,21 @@ float MinRandom::getExtremum(){
 }
 
 
+void MinRandom::setThreadRg(){
+  unsigned int seed=rg->get_seed();
+  unsigned int numThreads=omp_get_max_threads();
+  int i;
+  
+  /*TODO:upper bound of seed is limit unsigned int*/
+  threadRg=new CRandomGenerator*[numThreads]();
+  for (i = 0; i < numThreads; i++) {
+    threadRg[i]=new CRandomGenerator(seed+i);
+  }
+}
+
+size_t MinRandom::selectNext(size_t populationSize, int rgId){
+  return threadRg[rgId]->random(0,populationSize-1);
+}
 /* ****************************************
    MinTournament class
 ****************************************/
@@ -170,6 +213,67 @@ size_t MinTournament::selectNext(size_t populationSize){
     size_t i2 = rg->getRandomIntMax(populationSize);
 
     if( rg->tossCoin(currentSelectionPressure) ){
+      if( population[i1]->getFitness() < population[i2]->getFitness() ){
+  bestIndex = i1;
+      }
+    }
+    else{
+      if( population[i1]->getFitness() < population[i2]->getFitness() ){
+  bestIndex = i2;
+      }
+    }
+  }
+  else{
+    std::cerr << " MinTournament selection operator doesn't handle selection pressure : "
+        << currentSelectionPressure << std::endl;
+  }
+
+  //std::cout << std::endl;
+  return bestIndex;
+
+}
+
+void MinTournament::setThreadRg(){
+  unsigned int seed=rg->get_seed();
+  unsigned int numThreads=omp_get_max_threads();
+  int i;
+  
+  /*TODO:upper bound of seed is limit unsigned int*/
+  threadRg=new CRandomGenerator*[numThreads]();
+  for (i = 0; i < numThreads; i++) {
+    threadRg[i]=new CRandomGenerator(seed+i);
+  }
+}
+
+CSelectionOperator* MinTournament::copy(size_t populationSize,CRandomGenerator* rg){
+  MinTournament* copy=new MinTournament(rg);
+  copy->initialize(this->population,currentSelectionPressure,populationSize);
+  return (CSelectionOperator*)copy;
+}
+
+size_t MinTournament::selectNext(size_t populationSize, int rgId){
+  size_t bestIndex = 0;
+  float bestFitness = FLT_MAX;
+
+  //std::cout << "MinTournament selection " ;
+  if( currentSelectionPressure >= 2 ){
+    for( size_t i = 0 ; i<currentSelectionPressure ; i++ ){
+      size_t selectedIndex = threadRg[rgId]->getRandomIntMax(populationSize);
+      //std::cout << selectedIndex << " ";
+      float currentFitness = population[selectedIndex]->getFitness();
+
+      if( bestFitness > currentFitness ){
+  bestIndex = selectedIndex;
+  bestFitness = currentFitness;
+      }
+
+    }
+  }
+  else if( currentSelectionPressure <= 1 && currentSelectionPressure > 0 ){
+    size_t i1 = threadRg[rgId]->getRandomIntMax(populationSize);
+    size_t i2 = threadRg[rgId]->getRandomIntMax(populationSize);
+
+    if( threadRg[rgId]->tossCoin(currentSelectionPressure) ){
       if( population[i1]->getFitness() < population[i2]->getFitness() ){
   bestIndex = i1;
       }
@@ -243,6 +347,65 @@ size_t MaxTournament::selectNext(size_t populationSize){
   return bestIndex;
 }
 
+CSelectionOperator* MaxTournament::copy(size_t populationSize,CRandomGenerator* rg){
+  MaxTournament* copy=new MaxTournament(rg);
+  copy->initialize(this->population,currentSelectionPressure,populationSize);
+
+  return (CSelectionOperator*)copy;
+}
+void MaxTournament::setThreadRg(){
+  unsigned int seed=rg->get_seed();
+  unsigned int numThreads=omp_get_max_threads();
+  int i;
+  
+  /*TODO:upper bound of seed is limit unsigned int*/
+  threadRg=new CRandomGenerator*[numThreads]();
+  for (i = 0; i < numThreads; i++) {
+    threadRg[i]=new CRandomGenerator(seed+i);
+  }
+}
+
+size_t MaxTournament::selectNext(size_t populationSize, int rgId){
+  size_t bestIndex = 0;
+  float bestFitness = -FLT_MAX;
+
+  //std::cout << "MinTournament selection " ;
+  if( currentSelectionPressure >= 2 ){
+    for( size_t i = 0 ; i<currentSelectionPressure ; i++ ){
+      size_t selectedIndex = threadRg[rgId]->getRandomIntMax(populationSize);
+      //std::cout << selectedIndex << " ";
+      float currentFitness = population[selectedIndex]->getFitness();
+
+      if( bestFitness < currentFitness ){
+  bestIndex = selectedIndex;
+  bestFitness = currentFitness;
+      }
+
+    }
+  }
+  else if( currentSelectionPressure <= 1 && currentSelectionPressure > 0 ){
+    size_t i1 = threadRg[rgId]->getRandomIntMax(populationSize);
+    size_t i2 = threadRg[rgId]->getRandomIntMax(populationSize);
+
+    if( rg->tossCoin(currentSelectionPressure) ){
+      if( population[i1]->getFitness() > population[i2]->getFitness() ){
+  bestIndex = i1;
+      }
+    }
+    else{
+      if( population[i1]->getFitness() > population[i2]->getFitness() ){
+  bestIndex = i2;
+      }
+    }
+  }
+  else{
+    std::cerr << " MinTournament selection operator doesn't handle selection pressure : "
+        << currentSelectionPressure << std::endl;
+  }
+
+  //std::cout << std::endl;
+  return bestIndex;
+}
 /*****************************************
  *    MaxRoulette class
  *****************************************/
@@ -282,3 +445,40 @@ float MaxRoulette::getExtremum(){
   return -FLT_MAX;
 }
 
+void MaxRoulette::setThreadRg(){
+  unsigned int seed=rg->get_seed();
+  unsigned int numThreads=omp_get_max_threads();
+  int i;
+  
+  /*TODO:upper bound of seed is limit unsigned int*/
+  threadRg=new CRandomGenerator*[numThreads]();
+  for (i = 0; i < numThreads; i++) {
+    threadRg[i]=new CRandomGenerator(seed+i);
+  }
+}
+
+size_t MaxRoulette::selectNext(size_t populationSize, int rgId){
+        size_t bestIndex = 0;
+        float poidsTotal = 0.;
+        float poidsCourant = 0.;
+        float poidsSelectionne;
+        float *poids = (float*)malloc(populationSize*sizeof(float));
+        int i;
+
+        for(i=0; (unsigned)i<populationSize; i++){
+                poidsTotal += population[i]->getFitness();
+        }
+        for(i=0; (unsigned)i<populationSize; i++){
+                poidsCourant += (population[i]->getFitness()/poidsTotal);
+                poids[i] = poidsCourant;
+        }
+        poidsSelectionne = threadRg[rgId]->randFloat(0.0,1.0);
+        for(i=0; (unsigned)i<populationSize; i++){
+                if(poidsSelectionne<poids[i]){
+                        bestIndex = i;
+                        break;
+                }
+        }
+    free(poids);
+        return bestIndex;
+}
