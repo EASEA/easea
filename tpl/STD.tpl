@@ -57,7 +57,7 @@ int main(int argc, char** argv){
 
 #include <fstream>
 #include <time.h>
-#include <string>
+#include <cstring>
 #include <sstream>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
@@ -79,7 +79,6 @@ extern CEvolutionaryAlgorithm* EA;
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
 
-\INSERT_USER_CLASSES
 
 \INSERT_USER_FUNCTIONS
 
@@ -371,7 +370,8 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <iostream>
 #include <CIndividual.h>
 #include <Parameters.h>
-#include <string>
+#include <cstring>
+#include <sstream>
 
 using namespace std;
 
@@ -385,14 +385,13 @@ class Parameters;
 extern int EZ_POP_SIZE;
 extern int OFFSPRING_SIZE;
 
-\INSERT_USER_CLASSES_DEFINITIONS
+\INSERT_USER_CLASSES
 
 class IndividualImpl : public CIndividual {
 
 public: // in EASEA the genome is public (for user functions,...)
 	// Class members
   	\INSERT_GENOME
-
 
 public:
 	IndividualImpl();

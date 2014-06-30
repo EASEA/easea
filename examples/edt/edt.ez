@@ -1,0 +1,1179 @@
+/*________________________________________________________________________________________________
+Projet de recherche stochastique : Université de Strasbourg (2010-11) - Besset Samuel [M1 ILC]
+Création d'un emplois du temps
+Selection operator: Tournament
+________________________________________________________________________________________________*/
+
+
+\User declarations : 
+
+#include <math.h>
+#include <cstring>
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <time.h> 
+
+#define Abs(x) ((x) < 0 ? -(x) : (x))
+#define MAX(x,y) ((x)>(y)?(x):(y))
+#define MIN(x,y) ((x)<(y)?(x):(y))
+
+/* -------------------------------------------------------------------------------------------- */
+/* Valeurs permettant la sélection par la fitness des individus :				*/
+
+#define VALERR0		100000		/* 		= Valeur de pénalité contrainte oblig	*/
+#define VALERR1		1000		/* 		= Valeur de pénalité contrainte forte	*/
+#define VALERR2		1		/* 		= Valeur de pénalité contrainte faible	*/
+
+/* -------------------------------------------------------------------------------------------- */
+/* Le bon fonctionnement du programme est garanti par la justesse des calculs suivants :	*/
+
+#define NBCRENEAUX	20		/*	=> NBJOURS * NBHORAIRES				*/
+
+#define NBCLASSES	4		/*	=> SOMME(NBCLASSESx)				*/
+					/*	avec x € nombre de typee de classes		*/
+#define NBCOURS		44		/* 	=> SOMME(SOMME(NBCOURSTxCy) * NBCLASSESCy))	*/
+					/*	avec x € NBMATIERES et y € NBCLASSES		*/
+#define NBSALLES	5		/* 	=> SOMME(NBSALLESTx)				*/
+					/*	avec x € NBMATIERES				*/
+#define NBPROFS		10		/* 	=> SOMME(NBPROFSTx)				*/
+					/*	avec x € NBMATIERES				*/
+/* -------------------------------------------------------------------------------------------- */
+/* Le bon fonctionnement du programme est garanti par le respect des intervals suivants :	*/
+
+#define NBJOURS		5		/* [  1 -  6 ]	= Jours de la semaine			*/
+#define	NBHORAIRES	4		/* [  1 - 12 ]	= Créneaux de 2h par jours		*/
+
+#define NBCOURSMAX	4		/* [  1 - 12 ]	= Nbre max de cours par jours par elem	*/
+
+#define NBMATIERES	4		/* [  4 -  4 ]	= Nombre de matières différentes	*/
+#define NBCxCLASSE	2		/* [  2 -  2 ]	= Nombre de types de classes		*/
+#define NBTxSALLE	3		/* [  3 -  3 ]	= Nombre de types de salles		*/
+
+#define NBCLASSESC0	2		/* [  1 -  5 ]	= Nbre de classes de type 0		*/
+#define NBCLASSESC1	2		/* [  1 -  5 ]	= Nbre de classes de type 1		*/
+
+#define NBSALLESTA	3		/* [  1 - 10 ]	= Nbre de salles de type A (Math/Phy)	*/
+#define NBSALLESTB	1		/* [  1 - 10 ]	= Nbre de salles de type B (Info)	*/
+#define NBSALLESTC	1		/* [  1 - 10 ]	= Nbre de salles de type C (Anglais)	*/
+
+#define NBPROFST0	3		/* [  1 -  5 ]	= Nbre de prof de type 0 (Math)		*/
+#define NBPROFST1	3		/* [  1 -  5 ]	= Nbre de prof de type 1 (Phy)		*/
+#define NBPROFST2	2		/* [  1 -  5 ]	= Nbre de prof de type 2 (Info)		*/
+#define NBPROFST3	2		/* [  1 -  5 ]	= Nbre de prof de type 3 (Anglais)	*/
+
+#define NBCOURSP0	6		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 0	*/
+#define NBCOURSP1	4		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 1	*/
+#define NBCOURSP2	2		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 2	*/
+#define NBCOURSP3	4		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 3	*/
+#define NBCOURSP4	4		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 4	*/
+#define NBCOURSP5	4		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 5	*/
+#define NBCOURSP6	6		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 6	*/
+#define NBCOURSP7	6		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 7	*/
+#define NBCOURSP8	6		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 8	*/
+#define NBCOURSP9	2		/* [  0 -  9 ]	= Nbre d'horaires pour le prof 9	*/
+
+#define NBCOURSC0	11		/* 		= Nbre de cours de la classe de type 0	*/
+
+#define NBCOURST0C0	4		/* [  0 -  5 ]	= Nbre de cours de type 0 (Math)	*/
+#define NBCOURST1C0	2		/* [  0 -  5 ]	= Nbre de cours de type 1 (phy)		*/
+#define NBCOURST2C0	3		/* [  0 -  5 ]	= Nbre de cours de type 2 (Info)	*/
+#define NBCOURST3C0	2		/* [  0 -  5 ]	= Nbre de cours de type 3 (Anglais)	*/
+
+#define NBCOURSC1	11		/* 		= Nbre de cours de la classe de type 1	*/
+
+#define NBCOURST0C1	2		/* [  0 -  5 ]	= Nbre de cours de type 0 (Math)	*/
+#define NBCOURST1C1	4		/* [  0 -  5 ]	= Nbre de cours de type 1 (Phy)		*/
+#define NBCOURST2C1	3		/* [  0 -  5 ]	= Nbre de cours de type 2 (Info)	*/
+#define NBCOURST3C1	2		/* [  0 -  5 ]	= Nbre de cours de type 3 (Anglais)	*/
+/* -------------------------------------------------------------------------------------------- */
+
+
+/************************************************************************************************/
+/***************///             DECLARATION DES VARIABLES GLOBALES               ///*************/
+/************************************************************************************************/
+
+float	pMutPerGene		= 0.5;	/* 		= probabilité de mutation par individu	*/
+int	nbProfsManquants	= 0;	/* 		= nombre de profs suposés manquants	*/
+int	nbSallesManquantes	= 0;	/* 		= nombre de salles suposées manquantes	*/
+int	nbCreneauxManquants	= 0;	/* 		= nombre de creneaux suposés manquants	*/
+
+clock_t	start, finish;			/* 		= permet l'estimation du temps de calcul*/
+double	duration;			/* 		= temps de calcul			*/
+
+/* -------------------------------------------------------------------------------------------- */
+\end
+
+
+\User functions:
+/************************************************************************************************/
+/***************///             DECLARATION DES FONCTIONS GLOBALES               ///*************/
+/************************************************************************************************/
+
+/* Fonction d'affichage, utilisée pour mettre des tirets.					*/
+string cmpTiret(int unsigned n)
+	{ string Emot = ""; while (Emot.length() < n) { Emot += "-"; } return Emot; }
+/* Fonctions d'affichage, utilisées pour placer des espaces à coté du texte.			*/
+string cmpEspaceAlignGauche(string mot, int unsigned n)
+	{ string Emot = mot; if ((Emot.length() > n) && (n > 2)) { Emot = mot.substr(0,n-3) + "..."; }
+	while (Emot.length() < n) { Emot = Emot + " "; } return Emot; }
+string cmpEspaceAlignCentre(string mot, int unsigned n)
+	{ string Emot = mot; bool pos = true; if ((Emot.length() > n) && (n > 2)) { Emot = mot.substr(0,n-3) + "..."; }
+	while (Emot.length() < n) { if (pos) { Emot = Emot + " "; pos = false; }  else { Emot = " " + Emot; pos = true; } } return Emot; }
+string cmpEspaceAlignDroite(string mot, int unsigned n)
+	{ string Emot = mot; if ((Emot.length() > n) && (n > 2)) { Emot = mot.substr(0,n-3) + "..."; }
+	while (Emot.length() < n) { Emot = + " " + Emot; } return Emot; }
+/* Fonction de convertion, permet de changer une valeur numérique en texte pour son affichage	*/
+template<typename T>
+string chiffre2string(T c) { ostringstream oss; oss << c; return oss.str(); }
+
+/* -------------------------------------------------------------------------------------------- */
+\end
+
+
+/************************************************************************************************/
+/**************///             DECLARATION DES FONCTIONS TEMPORELLES               ///***********/
+/************************************************************************************************/
+\Before everything else function:
+/* Sauvegarde de l'heure de début du calcul							*/
+	start = clock();
+\end
+
+\After everything else function:
+/* Sauvegarde de l'heure de fin du calcul							*/
+	finish = clock();
+/* Affichage du meilleur individu								*/
+	bBest->printOn(cout);
+
+/* Estimation et affichage du temps de calcul							*/
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	cout<<"OBJECTIF\t\t:\t"<<"Atteindre 0 pts."<<endl;
+	cout<<"MEILLEUR SCORE\t\t:\t"<<bBest->evaluate()<<" pts"<<endl;
+	printf("TEMPS D'EXECUTION\t:\t%2.1f secondes\n", duration );
+\end
+
+\At the beginning of each generation function:
+// cout<<"(DEB) FITNESS : "<<bBest->evaluate()<<endl;
+\end
+
+\At the end of each generation function:
+// cout<<"(FIN) FITNESS : "<<bBest->evaluate()<<endl;
+\end
+
+\At each generation before reduce function:
+//cout << "At each generation before replacement function called" << endl;
+\end
+
+/* -------------------------------------------------------------------------------------------- */
+
+/************************************************************************************************/
+/*******************///             DECLARATION DES CLASSES               ///********************/
+/************************************************************************************************/
+\User classes :
+
+/* Classe représentant un cours. Un cours se compose de chaque élément ci-dessous.		*/
+CoursClass
+{
+	int		classe;				/* représente une classe d'élève	*/
+	int		matiere;			/* représente une matière		*/
+    
+ 	int		prof;				/* représente un prof			*/
+	int		salle;				/* représente une salle			*/
+	int		creneau;			/* représente un créneau		*/
+}
+/* Classe représentant une classe d'élèves.							*/
+ClassesClass
+{
+	int		occupation	[20];	/* indique si présente dans le créneau	*/
+	int		matiere		[20];	/* indique la matière dans le créneau	*/
+}
+/* Classe représentant un enseignant.							*/
+ProfsClass
+{
+	int		potentiel;			/* indique son nombre d'horaires	*/
+	int		occupation	[20];	/* indique si présent dans le créneau	*/
+	int		classe		[20];	/* indique la classe dans le créneau	*/
+}
+/* Classe représentant une salle de cours.							*/
+SallesClass
+{
+	int		potentiel;			/* indique le nombre de cours simultanés*/
+	int		occupation	[20];	/* indique si occupée dans le créneau	*/
+}
+/* Classe représentant une plage horaire.							*/
+CreneauxClass
+{
+	int		potentiel;			/* indique les cours simultanés		*/
+}
+/* Classe représentant un génome, soit un emplois du temps complet.				*/
+GenomeClass
+{ 
+	CoursClass	cours		[NBCOURS];	/* les cours				*/
+	ClassesClass	classes		[NBCLASSES];	/* les classes				*/
+	ProfsClass	profs		[NBPROFS];	/* les profs				*/
+	SallesClass	salles		[NBSALLES];	/* les salles				*/
+	CreneauxClass	creneaux	[NBCRENEAUX];	/* les créneaux				*/
+}
+
+\end
+/* -------------------------------------------------------------------------------------------- */
+
+
+/************************************************************************************************/
+/********************///                     AFFICHAGE                     ///*******************/
+/************************************************************************************************/
+
+\GenomeClass::display:
+/* -------------------------------------------------------------------------------------------- */
+/* DECLARATION DES VARIABLES									*/
+/* -------------------------------------------------------------------------------------------- */
+string	txtH,txtJ,txtCr,txtR,txtF;
+string	tmpC,tmpM,tmpP,tmpS,tmpH,tmpJ;
+string	txt0,txt1,txt2,txtO;
+string	tmp0,tmp1,tmp2,tmpO;
+string	txtE,txtT,tmpE,tmpF;
+
+int	nbE = 0, nbT = 0, nbC = 0;
+int	totalJ = 0, totalH = 0, totalC = 0, totalE = 0, totalF = 0;
+int	totalO = 0, totalR1 = 0, totalR2 = 0;
+
+/* -------------------------------------------------------------------------------------------- */
+/* AFFICHAGE DE l'EDT										*/
+/* -------------------------------------------------------------------------------------------- */
+
+txtE	= "+" + cmpTiret(20) + "+" + cmpTiret(65) + "+"; tmpE = "";
+
+cout	<<txtE<<endl;
+cout	<<"|"<< cmpEspaceAlignGauche("",20)
+	<<"|"<< cmpEspaceAlignCentre("LUNDI",10)	<<"+"<< cmpEspaceAlignCentre("MARDI",10)
+	<<"+"<< cmpEspaceAlignCentre("MERCREDI",10)	<<"+"<< cmpEspaceAlignCentre("JEUDI",10)
+	<<"+"<< cmpEspaceAlignCentre("VENDREDI",10)	<<"+"<< cmpEspaceAlignCentre("SAMEDI",10)
+	<<"|"<< endl;
+cout	<<"|"<< cmpEspaceAlignCentre("HORAIRE",10)	<<"+"<< cmpEspaceAlignCentre("TYPE",9)
+	<<"|"<< cmpEspaceAlignGauche("",65)		<<"|"<<endl;
+cout	<<txtE<<endl;
+
+for (int j=0; j<6-NBJOURS; j++)				{ tmpE += cmpEspaceAlignCentre("",10) + "|"; }
+
+
+string txtC [NBHORAIRES], txtM [NBHORAIRES], txtP [NBHORAIRES], txtS [NBHORAIRES];
+
+for (int j=0; j<NBJOURS; j++)
+{
+	for (int h=0; h<NBHORAIRES; h++)
+	{
+		tmpC = ""; tmpM = ""; tmpP = ""; tmpS = "";
+		
+		for( int i=0 ; i<NBCOURS; i++)
+		{
+			if (Genome.cours[i].creneau == nbC)
+			{
+				tmpC += chiffre2string(Genome.cours[i].classe) + " ";
+				tmpM += chiffre2string(Genome.cours[i].matiere) + " ";
+				tmpP += chiffre2string(Genome.cours[i].prof) + " ";
+				tmpS += chiffre2string(Genome.cours[i].salle) + " ";
+			}
+		}
+		
+		txtC[h] += cmpEspaceAlignGauche(tmpC,10) + "|";
+		txtM[h] += cmpEspaceAlignGauche(tmpM,10) + "|";
+		txtP[h] += cmpEspaceAlignGauche(tmpP,10) + "|";
+		txtS[h] += cmpEspaceAlignGauche(tmpS,10) + "|";
+		nbC++;
+	}
+}
+
+for (int h=0; h<NBHORAIRES; h++)
+{
+	txtH	= "Horaire "+chiffre2string(h);
+	
+	cout	<<"|"<< cmpEspaceAlignCentre("",10)	<<"|"<< cmpEspaceAlignGauche("CLASSE",9)
+		<<"|"<< txtC[h]<<tmpE<<endl;
+	cout	<<"|"<< cmpEspaceAlignCentre(txtH,10)	<<"|"<< cmpEspaceAlignGauche("MATIERE",9)
+		<<"|"<< txtM[h]<<tmpE<<endl;
+	cout	<<"|"<< cmpEspaceAlignCentre("",10)	<<"|"<< cmpEspaceAlignGauche("PROF",9)
+		<<"|"<< txtP[h]<<tmpE<<endl;
+	cout	<<"|"<< cmpEspaceAlignCentre("",10)	<<"|"<< cmpEspaceAlignGauche("SALLE",9)
+		<<"|"<< txtS[h]<<tmpE<<endl;
+	cout	<<txtE<<endl;
+}
+cout	<<endl;
+
+
+/* -------------------------------------------------------------------------------------------- */
+/* EVALUATION & AFFICHAGE DES ELEMENTS								*/
+/* -------------------------------------------------------------------------------------------- */
+
+/* Initialisation des compteurs d'occupation garantissant la cohérence et la validité		*/
+for(int j=0; j<NBCRENEAUX; j++)
+{
+	for (int k=0; k<NBCLASSES; k++)
+	{
+    (*const_cast<IndividualImpl*>(this)).classes[k].occupation[j]	= 0;
+		(*const_cast<IndividualImpl*>(this)).classes[k].matiere[j]		= -1;	
+	}
+	
+	for (int k=0; k<NBPROFS; k++)
+	{
+		(*const_cast<IndividualImpl*>(this)).profs[k].occupation[j]		= 0;
+		(*const_cast<IndividualImpl*>(this)).profs[k].classe[j]		= -1;		
+	}
+	
+	for (int k=0; k<NBSALLES; k++)
+	{ (*const_cast<IndividualImpl*>(this)).salles[k].occupation[j]		= 0; }
+	
+	(*const_cast<IndividualImpl*>(this)).creneaux[j].potentiel			= NBSALLES;
+}
+
+/* Affectation des compteurs 									*/
+for (int i=0; i<NBCOURS; i++)
+{
+	int j = Genome.cours[i].creneau;
+  (*const_cast<IndividualImpl*>(this)).classes	[Genome.cours[i].classe]	.occupation[j]++;
+  (*const_cast<IndividualImpl*>(this)).classes	[Genome.cours[i].classe]	.matiere[j] 		= Genome.cours[i].matiere;
+  (*const_cast<IndividualImpl*>(this)).profs	[Genome.cours[i].prof]		.occupation[j]++;
+  (*const_cast<IndividualImpl*>(this)).profs	[Genome.cours[i].prof]		.classe[j] 		= Genome.cours[i].classe;
+  (*const_cast<IndividualImpl*>(this)).salles	[Genome.cours[i].salle]	.occupation[j]++;
+  (*const_cast<IndividualImpl*>(this)).creneaux	[j]				.potentiel--;
+}
+
+
+/* -------------------------------------------------------------------------------------------- */
+/* EVALUATION DES CLASSES (Commentée)								*/
+/* -------------------------------------------------------------------------------------------- */
+tmpJ	= ""; tmpH = ""; tmpF = ""; tmpC = ""; txtT = ""; tmpE = "";
+nbE	= floor(65/NBCLASSES)-1, nbT = 65%NBCLASSES+1;
+totalJ	= 0, totalH = 0, totalC = 0, totalE = 0;
+
+/* Pour chaque classe on cherche à relever les points d'erreurs					*/
+for (int k=0; k<NBCLASSES; k++)
+{
+	int nb_creux = 0, nb_horaires = 0, nb_fautes_matieres = 0, nb_fautes_horaires = 0, nb_horaires_total = 0, nb_jours = 0, nb_creux_total = 0;
+	int matiere_par_jour [NBMATIERES];
+	
+/* Pour chaque créneaux on va détecter les erreurs dans les tableaux d'occupation		*/
+	for(int j=0; j<NBCRENEAUX; j++)
+	{
+		
+/* On initialise lors du premier horaire de la journée						*/
+		if (j%NBHORAIRES == 0)
+		{ nb_creux = 0; nb_horaires = 0; memset(matiere_par_jour,0,NBMATIERES*sizeof(int)); }
+		
+/* On cherche à repérer les creux. Il ne sont considérés que si ils sont entre deux cours	*/
+		if (Genome.classes[k].occupation[j] > 0)
+		{
+			if (nb_creux > 0)
+			{ nb_creux_total += nb_creux; nb_creux = 0;  }
+			nb_horaires++;
+			matiere_par_jour[Genome.classes[k].matiere[j]]++;
+		}
+/* Si le creux n'est pas entre deux cours, il est juste enregistré				*/
+		else if (nb_horaires > 0)
+		{ nb_creux++; }
+		
+/* On cherche à repérer les autres erreurs dans le dernier créneau de la journée		*/
+		if (j%NBHORAIRES == NBHORAIRES-1)
+		{
+			if (nb_horaires > 0)
+			{
+/* Si c'est un jour avec 1 cours pour la classe on met une erreur.				*/
+/* Si c'est un jour avec plus de NBCOURSMAX cours pour la classe on met une erreur.		*/
+				if ((nb_horaires == 1) || (nb_horaires >= NBCOURSMAX))	{ nb_fautes_horaires++; }
+				nb_jours++;
+				nb_horaires_total	+= nb_horaires;
+				
+/* Pour chaque matière, on met une erreur si elle est deux fois dans la journée.		*/
+				for (int m=0; m<NBMATIERES; m++)
+				{
+					if (matiere_par_jour[m] > 1)
+					{ nb_fautes_matieres += matiere_par_jour[m]-1; }
+				}
+			}
+		}
+	}
+
+	totalJ	+= nb_jours; totalH += nb_horaires_total; totalE += nb_fautes_matieres; totalF += nb_fautes_horaires; totalC += nb_creux_total;
+	txtT	+= cmpEspaceAlignCentre(chiffre2string(k),nbE) + "|";
+	tmpJ	+= cmpEspaceAlignDroite(chiffre2string(nb_jours),nbE) + "|";
+	tmpH	+= cmpEspaceAlignDroite(chiffre2string(nb_horaires_total),nbE) + "|";
+	tmpF	+= cmpEspaceAlignDroite(chiffre2string(nb_fautes_horaires),nbE) + "|";
+	tmpC	+= cmpEspaceAlignDroite(chiffre2string(nb_creux_total),nbE) + "|";
+	tmpE	+= cmpEspaceAlignDroite(chiffre2string(nb_fautes_matieres),nbE) + "|";
+}
+
+
+/* Ajout des erreurs de creux aux erreurs de type 2.						*/
+totalR2 += totalC;
+/* Ajout des erreurs du nombre de jours aux erreurs de type 2.					*/
+totalR2	+= totalJ;
+/* Ajout des erreurs de matières répétées aux erreurs de type 2.				*/
+totalR2	+= totalE;
+/* Ajout des erreurs d'horaires aux erreurs de type 2.						*/
+totalR2	+= totalF;
+
+/* -------------------------------------------------------------------------------------------- */
+/* AFFICHAGE STATS DES CLASSES									*/
+/* -------------------------------------------------------------------------------------------- */
+
+txtE	= "+" + cmpTiret(20+nbT) + "+" + cmpTiret(65-nbT) + "+";
+txtJ	= cmpEspaceAlignGauche("Nb jours",10) + "|" + cmpEspaceAlignDroite(chiffre2string(totalJ),9+nbT);
+txtH	= cmpEspaceAlignGauche("Nb Horaire",10) + "|" + cmpEspaceAlignDroite(chiffre2string(totalH),9+nbT);
+txtF	= "Err." + cmpEspaceAlignDroite("H.",6) + "|" + cmpEspaceAlignDroite(chiffre2string(totalF),9+nbT);
+txtCr	= cmpEspaceAlignGauche("Err. Creux",10) + "|" + cmpEspaceAlignDroite(chiffre2string(totalC),9+nbT);
+txtR	= "Err." + cmpEspaceAlignDroite("m/j",6) + "|" + cmpEspaceAlignDroite(chiffre2string(totalE),9+nbT);
+	
+cout	<<txtE<<endl;
+cout	<<"|"<< cmpEspaceAlignGauche("",20+nbT)	<<"|"<< cmpEspaceAlignCentre(" Affichage par Classe de leurs stats :",65-nbT)
+	<<"|"<< endl<<txtE<<endl;
+cout	<<"|"<< cmpEspaceAlignGauche("",10)	<<"|"<< cmpEspaceAlignCentre("Total",9+nbT) <<"|"<<	txtT
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtJ				<<"|"<< cmpEspaceAlignDroite(tmpJ,65-nbT+1)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtH				<<"|"<< cmpEspaceAlignDroite(tmpH,65-nbT+1)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtF				<<"|"<< cmpEspaceAlignDroite(tmpF,65-nbT+1)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtCr				<<"|"<< cmpEspaceAlignDroite(tmpC,65-nbT+1)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtR				<<"|"<< cmpEspaceAlignDroite(tmpE,65-nbT+1)
+	<<endl<<txtE<<"\n"<<endl;
+
+
+/* -------------------------------------------------------------------------------------------- */
+/* EVALUATION DES PROFS	(meme principe que celle des classes)					*/
+/* -------------------------------------------------------------------------------------------- */
+tmpJ	= ""; tmpH = ""; tmpF = ""; tmpC = ""; txtT = ""; tmpE = "";
+nbE	= floor(65/NBPROFS)-1, nbT = 65%NBPROFS+1;
+totalJ	= 0, totalH = 0, totalC = 0, totalE = 0, totalF = 0;
+
+for (int k=0; k<NBPROFS; k++)
+{
+	int nb_creux = 0, nb_horaires = 0, nb_fautes_classes = 0, nb_fautes_horaires = 0, nb_horaires_total = 0, nb_jours = 0, nb_creux_total = 0;
+	int classe_par_jour [NBMATIERES];
+
+	for(int j=0; j<NBCRENEAUX; j++)
+	{
+		if (j%NBHORAIRES == 0)
+		{ nb_creux = 0; nb_horaires = 0; memset(classe_par_jour,0,NBMATIERES*sizeof(int)); }
+		
+		if (Genome.profs[k].occupation[j] > 0)
+		{
+			if (nb_creux > 0)
+			{ nb_creux_total += nb_creux; nb_creux = 0;  }
+			nb_horaires++;
+			classe_par_jour[Genome.profs[k].classe[j]]++;
+		}
+		else if (nb_horaires > 0)
+		{ nb_creux++; }
+		
+		if (j%NBHORAIRES == NBHORAIRES-1)
+		{
+			if (nb_horaires > 0)
+			{
+				if ((nb_horaires == 1) || (nb_horaires >= NBCOURSMAX))	{ nb_fautes_horaires++; }
+				nb_jours++;
+				nb_horaires_total	+= nb_horaires;
+				for (int c=0; c<NBCLASSES; c++)
+				{
+					if (classe_par_jour[c] > 1)
+					{ nb_fautes_classes += classe_par_jour[c]-1; }
+				}
+			}
+		}
+	}
+	
+	totalJ	+= nb_jours; totalH += nb_horaires_total; totalE += nb_fautes_classes; totalF += nb_fautes_horaires; totalC += nb_creux_total;
+	txtT	+= cmpEspaceAlignCentre(chiffre2string(k),nbE) + "|";
+	tmpJ	+= cmpEspaceAlignDroite(chiffre2string(nb_jours),nbE) + "|";
+	tmpH	+= cmpEspaceAlignDroite(chiffre2string(nb_horaires_total),nbE) + "|";
+	tmpF	+= cmpEspaceAlignDroite(chiffre2string(nb_fautes_horaires),nbE) + "|";
+	tmpC	+= cmpEspaceAlignDroite(chiffre2string(nb_creux_total),nbE) + "|";
+	tmpE	+= cmpEspaceAlignDroite(chiffre2string(nb_fautes_classes),nbE) + "|";
+}
+
+totalR2 += totalC;
+totalR2	+= totalJ;
+totalR2	+= totalE;
+totalR2 += totalF;
+
+/* -------------------------------------------------------------------------------------------- */
+/* AFFICHAGE STATS DES PROFS									*/
+/* -------------------------------------------------------------------------------------------- */
+
+txtE	= "+" + cmpTiret(20+nbT) + "+" + cmpTiret(65-nbT) + "+";
+txtJ	= cmpEspaceAlignGauche("Nb jours",10) + "|" + cmpEspaceAlignDroite(chiffre2string(totalJ),9+nbT);
+txtH	= cmpEspaceAlignGauche("Nb Horaire",10) + "|" + cmpEspaceAlignDroite(chiffre2string(totalH),9+nbT);
+txtF	= "Err." + cmpEspaceAlignDroite("H.",6) + "|" + cmpEspaceAlignDroite(chiffre2string(totalF),9+nbT);
+txtCr	= cmpEspaceAlignGauche("Err. Creux",10) + "|" + cmpEspaceAlignDroite(chiffre2string(totalC),9+nbT);
+txtR	= "Err." + cmpEspaceAlignDroite("c/j",6) + "|" + cmpEspaceAlignDroite(chiffre2string(totalE),9+nbT);
+
+cout	<<txtE<<endl;
+cout	<<"|"<< cmpEspaceAlignGauche("",20+nbT)	<<"|"<< cmpEspaceAlignCentre(" Affichage par Prof de leurs stats :",65-nbT)
+	<<"|"<< endl<<txtE<<endl;
+cout	<<"|"<< cmpEspaceAlignGauche("",10)	<<"|"<< cmpEspaceAlignCentre("Total",9+nbT) <<"|"<<	txtT
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtJ				<<"|"<< cmpEspaceAlignDroite(tmpJ,65-nbT+1)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtH				<<"|"<< cmpEspaceAlignDroite(tmpH,65-nbT+1)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtF				<<"|"<< cmpEspaceAlignDroite(tmpF,65-nbT+1)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtCr				<<"|"<< cmpEspaceAlignDroite(tmpC,65-nbT+1)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtR				<<"|"<< cmpEspaceAlignDroite(tmpE,65-nbT+1)
+	<<endl<<txtE<<"\n"<<endl;
+	
+/* -------------------------------------------------------------------------------------------- */
+/* EVALUATION DES CRENEAUX									*/
+/* -------------------------------------------------------------------------------------------- */
+	
+tmp0 = ""; tmp1 = ""; tmp2 = "|"; tmpO = ""; txtT = "";
+nbE = floor(65/NBCRENEAUX)-1, nbT = 65%NBCRENEAUX+1;
+
+/* Pour chaque creneau on recherche les incohérences (erreurs de type 1)			*/
+for(int j=0; j<NBCRENEAUX; j++)
+{
+	int nbR1 = 0;
+	
+	for (int k=0; k<NBCLASSES; k++)
+	{
+		if (Genome.classes[k].occupation[j] > 1)
+		{ nbR1 += Genome.classes[k].occupation[j]-1; }
+	}
+	
+	for (int k=0; k<NBPROFS; k++)
+	{ 
+		if (Genome.profs[k].occupation[j] > 1)
+		{ nbR1 += Genome.profs[k].occupation[j]-1; }
+	}
+	
+	for (int k=0; k<NBSALLES; k++)
+	{
+		if (Genome.salles[k].occupation[j] > 1)
+		{ nbR1 += Genome.salles[k].occupation[j]-1; }
+	}
+	
+	totalR1 += nbR1; totalO += NBSALLES - Genome.creneaux[j].potentiel;
+	txtT	+= cmpEspaceAlignDroite(chiffre2string(j),nbE) + "|";
+	tmp1	+= cmpEspaceAlignDroite(chiffre2string(nbR1),nbE) + "|";
+	tmpO	+= cmpEspaceAlignDroite(chiffre2string(NBSALLES - Genome.creneaux[j].potentiel),nbE) + "|";
+}
+
+/* -------------------------------------------------------------------------------------------- */
+/* AFFICHAGE STATS DES CRENEAUX									*/
+/* -------------------------------------------------------------------------------------------- */
+
+txtE	= "+" + cmpTiret(20+nbT) + "+" + cmpTiret(65-nbT) + "+"; tmpE = "";
+txtO	= cmpEspaceAlignGauche("Occup.   ",10) + "|" + cmpEspaceAlignDroite(chiffre2string(totalO),9+nbT);
+txt1	= "Err."+cmpEspaceAlignDroite(chiffre2string(VALERR1),6) + "|" + cmpEspaceAlignDroite(chiffre2string(totalR1),9+nbT);
+txt2	= "Err."+cmpEspaceAlignDroite(chiffre2string(VALERR2),6) + "|" + cmpEspaceAlignDroite(chiffre2string(totalR2),9+nbT);
+
+cout	<<txtE<<endl;
+cout	<<"|"<< cmpEspaceAlignGauche("",20+nbT)	<<"|"<< cmpEspaceAlignCentre(" Affichage par Creneau de leurs stats :",65-nbT)
+	<<"|"<< endl<<txtE<<endl;
+cout	<<"|"<< cmpEspaceAlignGauche("",10)	<<"|"<< cmpEspaceAlignCentre("Total",9+nbT) <<"|"<<	txtT
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txtO				<<"|"<< cmpEspaceAlignDroite(tmpO,60)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txt1				<<"|"<< cmpEspaceAlignDroite(tmp1,60)
+	<<endl<<txtE<<endl;
+cout	<<"|"<< txt2				<<"|"<< cmpEspaceAlignDroite(tmp2,60)
+<<endl<<txtE<<endl;
+
+/* -------------------------------------------------------------------------------------------- */
+/* AFFICHAGE DES IMPOSSIBILITES									*/
+/* -------------------------------------------------------------------------------------------- */
+
+/* Permet d'indiquer les manques supposés d'éléments empéchant un bon résultat.			*/
+cout	<<"\n"<<endl;
+if (nbProfsManquants > 0)
+{ cout<<"Une ERREUR concernant les PROFS est apparue. >> Vérifiez que leur nombre est suffisant !"<<endl; }
+if (nbSallesManquantes > 0)
+{ cout<<"Une ERREUR concernant les SALLES est apparue. >> Vérifiez que leur nombre est suffisant !"<<endl; }
+if (nbCreneauxManquants > 0)
+{ cout<<"Une ERREUR concernant les CRENEAUX est apparue. >> Vérifiez que leur nombre est suffisant !"<<endl; }
+
+/* -------------------------------------------------------------------------------------------- */
+\end
+
+
+
+/************************************************************************************************/
+/********************///                  INITIALISATION                   ///*******************/
+/************************************************************************************************/
+
+\GenomeClass::initialiser :
+
+/*	Initialisation des Classes								*/
+for(int k=0; k<NBCLASSES; k++ ) 
+{
+}
+
+/*	Initialisation des profs								*/
+if (NBPROFS == 10)
+{
+	int k = 0;
+	Genome.profs[k].potentiel	= NBCOURSP0; k++;
+	Genome.profs[k].potentiel	= NBCOURSP1; k++;
+	Genome.profs[k].potentiel	= NBCOURSP2; k++;
+	Genome.profs[k].potentiel	= NBCOURSP3; k++;
+	Genome.profs[k].potentiel	= NBCOURSP4; k++;
+	Genome.profs[k].potentiel	= NBCOURSP5; k++;
+	Genome.profs[k].potentiel	= NBCOURSP6; k++;
+	Genome.profs[k].potentiel	= NBCOURSP7; k++;
+	Genome.profs[k].potentiel	= NBCOURSP8; k++;
+	Genome.profs[k].potentiel	= NBCOURSP9;
+}
+else
+{
+	for(int k=0; k<NBPROFS; k++ ) 
+	{
+		Genome.profs[k].potentiel	= 9;
+	}
+}
+
+/*	Initialisation des Salles								*/
+for(int k=0; k<NBSALLES; k++ ) 
+{
+	Genome.salles[k].potentiel		= NBCRENEAUX;;
+}
+
+/*	Initialisation des créneaux								*/
+for(int j=0; j<NBCRENEAUX; j++ ) 
+{
+	Genome.creneaux[j].potentiel		= NBSALLES;
+}
+
+int	indexClasse		= -1;
+int	min			= 0;
+int	max			= 0;
+int	r			= 0;
+int	t			= 0;
+
+int*	po_par_profsTx		[NBMATIERES];
+int*	po_par_sallesTx		[NBMATIERES];
+int	nbProfsTx		[NBMATIERES] = {NBPROFST0,NBPROFST1,NBPROFST2,NBPROFST3};
+int	nbSallesTx		[NBMATIERES] = {NBSALLESTA,NBSALLESTA,NBSALLESTB,NBSALLESTC};
+int	nbPoPTx			[NBMATIERES] = {0,0,0,0};
+int	nbPoSTx			[NBMATIERES] = {0,0,0,0};
+int	seuilP			= 0;
+int	seuilS			= 0;
+int	nbP			= 0;
+int	nbS			= 0;
+
+nbProfsManquants		= 0;
+nbSallesManquantes		= 0;
+nbCreneauxManquants		= 0;
+
+
+/*	Initialisation des disponibilités des Profs & Salles par Matiere			*/
+
+for (int x=0; x<NBMATIERES; x++)
+{
+	for (int k=0; k<nbProfsTx[x]; k++)		{ nbPoPTx[x] += Genome.profs[k+seuilP].potentiel; }
+	for (int k=0; k<nbSallesTx[x]; k++)		{ nbPoSTx[x] += Genome.salles[k+seuilS].potentiel; }
+	po_par_profsTx[x]	= new int [nbPoPTx[x]]; nbP = 0;
+	po_par_sallesTx[x]	= new int [nbPoSTx[x]]; nbS = 0;
+	
+	for (int k=0; k<nbProfsTx[x]; k++)
+	{
+		for (int d=0; d<Genome.profs[k+seuilP].potentiel; d++)
+		{ po_par_profsTx[x][nbP] = k+seuilP; nbP++; }
+	}
+	for (int k=0; k<nbSallesTx[x]; k++)
+	{
+		for (int d=0; d<Genome.salles[k+seuilS].potentiel; d++)
+		{ po_par_sallesTx[x][nbS] = k+seuilS; nbS++; }
+	}
+	seuilP += nbProfsTx[x];
+	if (x > 0)
+	{ seuilS += nbSallesTx[x]; }
+}
+
+/*	Initialisation des Cours par Classe (Matière & Creneau) semi-aléatoire			*/
+for(int i=0; i<NBCOURS; i++ ) 
+{
+	
+	if (i < (NBCLASSESC0 * NBCOURSC0))
+	{
+		if (i%NBCOURSC0 == 0) { indexClasse++; }
+		
+		if (i%NBCOURSC0 < (NBCOURST0C0))
+		{ Genome.cours[i].matiere = 0; }
+		else if (i%NBCOURSC0 < (NBCOURST0C0+NBCOURST1C0))
+		{ Genome.cours[i].matiere = 1; }
+		else if (i%NBCOURSC0 < (NBCOURST0C0+NBCOURST1C0+NBCOURST2C0))
+		{ Genome.cours[i].matiere = 2; }
+		else if (i%NBCOURSC0 < (NBCOURST0C0+NBCOURST1C0+NBCOURST2C0+NBCOURST3C0))
+		{ Genome.cours[i].matiere = 3; }
+		else
+		{ Genome.cours[i].matiere = -1; }
+	}
+	else if (i < (NBCOURS))
+	{
+		if (i%NBCOURSC1 == 0) { indexClasse++; }
+		
+		if (i%NBCOURSC1 < (NBCOURST0C1))
+		{ Genome.cours[i].matiere = 0; }
+		else if (i%NBCOURSC1 < (NBCOURST0C1+NBCOURST1C1))
+		{ Genome.cours[i].matiere = 1; }
+		else if (i%NBCOURSC1 < (NBCOURST0C1+NBCOURST1C1+NBCOURST2C1))
+		{ Genome.cours[i].matiere = 2; }
+		else if (i%NBCOURSC1 < (NBCOURST0C1+NBCOURST1C1+NBCOURST2C1+NBCOURST3C1))
+		{ Genome.cours[i].matiere = 3; }
+		else
+		{ Genome.cours[i].matiere = -1; }
+	}
+
+	r				= random(0,NBCRENEAUX); t = 0;
+	do
+	{ r = (r + 1)%NBCRENEAUX; if (t++ > NBCRENEAUX) { break; } }
+	while ((Genome.creneaux[r].potentiel <= 0) || (Genome.classes[indexClasse].occupation[r] > 0));
+	
+	if (t > NBCRENEAUX) { nbCreneauxManquants++; }
+	
+	Genome.cours[i].classe		= indexClasse;
+	Genome.cours[i].creneau	= r;
+	Genome.classes[indexClasse].occupation[r]++;
+	Genome.creneaux[r].potentiel--;
+}
+
+/*	Affectation guidée des Profs & Salles							*/
+for (int i=0; i<NBCOURS; i++)
+{
+	int x = Genome.cours[i].matiere;
+	
+	if (nbPoPTx[x] == 0) { nbProfsManquants++; }
+	else
+	{
+		min = 0; max = nbPoPTx[x]; r	= random(min,max);
+		Genome.cours[i].prof		= po_par_profsTx[x][r];
+		po_par_profsTx[x][r]		= po_par_profsTx[x][--nbPoPTx[x]];
+	}
+	if (nbPoSTx[x] == 0) { nbSallesManquantes++; }
+	else
+	{
+		
+		min=0; max = nbPoSTx[x]; r	= random(min,max);
+		Genome.cours[i].salle		= po_par_sallesTx[x][r];
+		po_par_sallesTx[x][r]		= po_par_sallesTx[x][--nbPoSTx[x]];
+	}
+}
+
+\end
+/* -------------------------------------------------------------------------------------------- */
+
+
+/************************************************************************************************/
+/********************///                     CROSS-OVER                    ///*******************/
+/************************************************************************************************/
+
+\GenomeClass::crossover :
+
+float	limite			= 0.5;
+
+for (int i=0; i<NBCOURS; i++)
+{
+	if((float)random(0.,1.) < limite)
+	{ child.cours[i].creneau = parent2.cours[i].creneau; }
+}
+
+\end
+/* -------------------------------------------------------------------------------------------- */
+
+
+/************************************************************************************************/
+/********************///                      MUTATION                     ///*******************/
+/************************************************************************************************/
+
+\GenomeClass::mutator : // retourne le nombre de mutations
+
+int	nb			= 0;
+
+/* -------------------------------------------------------------------------------------------- */
+/* EVALUATION DES CRENEAUX									*/
+/* -------------------------------------------------------------------------------------------- */
+
+/* Initialisation des compteurs 								*/
+for (int k=0; k<NBCLASSES; k++)
+{
+
+	for(int j=0; j<NBCRENEAUX; j++)
+	{ Genome.classes[k].occupation[j]	= 0; }
+}
+
+for (int k=0; k<NBPROFS; k++)
+{
+
+	for(int j=0; j<NBCRENEAUX; j++)
+	{ Genome.profs[k].occupation[j]	= 0; }
+}
+
+for (int k=0; k<NBSALLES; k++)
+{	
+
+	for(int j=0; j<NBCRENEAUX; j++)
+	{ Genome.salles[k].occupation[j]	= 0; }
+}
+
+for (int j=0; j<NBCRENEAUX; j++)
+{	
+	Genome.creneaux[j].potentiel		= NBSALLES;
+}
+
+/* Affectation des compteurs 									*/
+for (int i=0; i<NBCOURS; i++)
+{
+	int j = Genome.cours[i].creneau;
+	Genome.classes	[Genome.cours[i].classe]	.occupation[j]++;
+	Genome.profs	[Genome.cours[i].prof]		.occupation[j]++;
+	Genome.salles	[Genome.cours[i].salle]	.occupation[j]++;
+	Genome.creneaux	[j]				.potentiel--;
+}
+
+
+/* Analyse & Modification des compteurs 							*/
+for (int i=0; i<NBCOURS; i++)
+{
+	int	j				= Genome.cours[i].creneau;
+	int	c				= Genome.cours[i].classe;
+	int	p				= Genome.cours[i].prof;
+	int	s				= Genome.cours[i].salle;
+	int	err				= 0;
+	int	r				= j;
+//	int	nbProfsTx [NBMATIERES]		= {NBPROFST0,NBPROFST1,NBPROFST2,NBPROFST3};
+//	float	sigmaP	= random(0.,1.);
+	
+/* en cas de mutation, on échange deux profs de même matière					*/
+/*
+	if (sigmaP < pMutPerGene)
+	{
+//		cout<<"MUTATION !!"<<endl;
+		int k		= 0;
+		int minprof	= 0;
+		int maxprof	= nbProfsTx[k];
+		int y		= 0;
+			
+		while (p > maxprof)
+		{
+			minprof = maxprof;
+			maxprof += nbProfsTx[++k];
+		}
+			
+		if (p == maxprof)	{ y = minprof; }
+		else			{ y = p+1; }
+			
+		for (int x=0; x<NBCOURS; x++)
+		{
+			if (Genome.cours[x].prof == y)
+			{
+//				cout<<"On remplace :"<<chiffre2string(p)<<" par "<<chiffre2string(y)<<endl;
+				Genome.cours[x].prof = p;
+				Genome.profs	[p]	.occupation[Genome.cours[x].creneau]++;
+				Genome.profs	[y]	.occupation[Genome.cours[x].creneau]--;
+				Genome.cours[i].prof = y;
+				Genome.profs	[y]	.occupation[j]++;
+				Genome.profs	[p]	.occupation[j]--;
+				break;
+			}
+		}
+	}
+	*/
+
+/* on vérifie l'occupation des éléments du cours 						*/
+	
+	if (err == 0)
+	{ if (Genome.classes[c].occupation[j] > 1)	{ err = 1; } }
+	
+	if (err == 0)
+	{ if (Genome.profs[p].occupation[j] > 1)	{ err = 2; } }
+	
+	if (err == 0)
+	{ if (Genome.salles[s].occupation[j] > 1)	{ err = 3; } }
+	
+	if (err == 0)
+	{ if (Genome.salles[s].occupation[j] > 1)	{ err = 3; } }
+
+/* en cas d'erreur, on "corrige" le cours en le réinitialisant de manière valide.		*/
+	if (err > 0)
+	{
+		nb++;
+		r 	= j; int mode = 1;
+		do
+		{
+			r = (r + 1)%NBCRENEAUX;
+			if (r == j) { if (mode == 2) { break; } else { mode++; } }
+		}
+		while
+		(
+			(Genome.creneaux[r].potentiel <= 0) ||
+			(
+				((Genome.creneaux[r].potentiel == NBSALLES) && (mode < 2)) ||
+				(Genome.classes	[c]	.occupation[r] > 0) ||
+				(Genome.profs	[p]	.occupation[r] > 0) ||
+				(Genome.salles	[s]	.occupation[r] > 0)
+			)
+		);
+		
+		Genome.classes	[c]	.occupation[j]--;
+		Genome.profs	[p]	.occupation[j]--;
+		Genome.salles	[s]	.occupation[j]--;
+		Genome.creneaux	[j]	.potentiel++;
+		
+		Genome.classes	[c]	.occupation[r]++;
+		Genome.profs	[p]	.occupation[r]++;
+		Genome.salles	[s]	.occupation[r]++;
+		Genome.creneaux	[r]	.potentiel--;
+	}
+
+	Genome.cours[i].creneau = r;
+}
+
+return nb;
+
+\end
+/* -------------------------------------------------------------------------------------------- */
+
+
+/************************************************************************************************/
+/********************///                     EVALUATION                    ///*******************/
+/************************************************************************************************/
+
+\GenomeClass::evaluator : // retourne le score
+
+/* Méthode réutilisée dans l'affichage (voir plus haut dans le code) et y est commentée		*/
+
+/* -------------------------------------------------------------------------------------------- */
+/* DECLARATION DES VARIABLES									*/
+/* -------------------------------------------------------------------------------------------- */
+int	totalR0 = 0, totalR1 = 0, totalR2 = 0;
+float	score = 0;
+
+/* -------------------------------------------------------------------------------------------- */
+/* EVALUATION DES CRENEAUX									*/
+/* -------------------------------------------------------------------------------------------- */
+
+/* Initialisation des compteurs 								*/
+for (int k=0; k<NBCLASSES; k++)
+{
+
+	for(int j=0; j<NBCRENEAUX; j++)
+	{
+		Genome.classes[k].occupation[j]	= 0;
+		Genome.classes[k].matiere[j]		= -1;
+	}
+}
+
+for (int k=0; k<NBPROFS; k++)
+{
+
+	for(int j=0; j<NBCRENEAUX; j++)
+	{
+		Genome.profs[k].occupation[j]		= 0;
+		Genome.profs[k].classe[j]		= -1;
+	}
+}
+
+for (int k=0; k<NBSALLES; k++)
+{
+
+	for(int j=0; j<NBCRENEAUX; j++)
+	{ Genome.salles[k].occupation[j]		= 0; }
+	Genome.salles[k].potentiel			= NBCRENEAUX;
+}
+
+for(int j=0; j<NBCRENEAUX; j++)
+{
+	
+	Genome.creneaux[j].potentiel			= NBSALLES;
+}
+
+/* Affectation des compteurs 									*/
+for (int i=0; i<NBCOURS; i++)
+{
+	int j = Genome.cours[i].creneau;
+	Genome.classes	[Genome.cours[i].classe]	.occupation[j]++;
+	Genome.classes	[Genome.cours[i].classe]	.matiere[j] 		= Genome.cours[i].matiere;
+	Genome.profs	[Genome.cours[i].prof]		.occupation[j]++;
+	Genome.profs	[Genome.cours[i].prof]		.classe[j] 		= Genome.cours[i].classe;
+	Genome.salles	[Genome.cours[i].salle]	.occupation[j]++;
+	Genome.creneaux	[j]				.potentiel--;
+}
+
+
+/* Analyse des compteurs 									*/
+
+/* -------------------------------------------------------------------------------------------- */
+/* EVALUATION DES CLASSES									*/
+/* -------------------------------------------------------------------------------------------- */
+int	totalJ = 0, totalH = 0, totalC = 0;
+
+for (int k=0; k<NBCLASSES; k++)
+{
+	int nbR2 = 0, nb_creux = 0, nb_horaires = 0, nb_horaires_total = 0, nb_jours = 0;
+	int matiere_par_jour [NBMATIERES];
+	
+	for(int j=0; j<NBCRENEAUX; j++)
+	{
+		if (j%NBHORAIRES == 0)
+		{ nb_creux = 0; nb_horaires = 0; memset(matiere_par_jour,0,NBMATIERES*sizeof(int)); }
+		
+		if (Genome.classes[k].occupation[j] > 0)
+		{
+			if (nb_creux > 0)
+			{ nbR2 += nb_creux; nb_creux = 0;  }
+			nb_horaires++;
+			matiere_par_jour[Genome.classes[k].matiere[j]]++;
+		}
+		else if (nb_horaires > 0)
+		{ nb_creux++; }
+		
+		if (j%NBHORAIRES == NBHORAIRES-1)
+		{
+			if (nb_horaires > 0)
+			{
+				if ((nb_horaires == 1) || (nb_horaires >= NBCOURSMAX))	{ totalR2++; }
+				nb_jours++;
+				nb_horaires_total	+= nb_horaires;
+				for (int m=0; m<NBMATIERES; m++)
+				{
+					if (matiere_par_jour[m] > 1)
+					{ totalR2 += matiere_par_jour[m]-1; }
+				}
+			}
+		}
+	}
+
+	totalJ += nb_jours; totalH += nb_horaires_total; totalC += nbR2; 
+}
+
+totalR2 += totalC;
+totalR2	+= totalJ;
+
+/* -------------------------------------------------------------------------------------------- */
+/* EVALUATION DES PROFS										*/
+/* -------------------------------------------------------------------------------------------- */
+totalJ	= 0, totalH = 0, totalC = 0;
+
+for (int k=0; k<NBPROFS; k++)
+{
+	int nbR2 = 0, nb_creux = 0, nb_horaires = 0, nb_horaires_total = 0, nb_jours = 0;
+	int classe_par_jour [NBMATIERES];
+
+	for(int j=0; j<NBCRENEAUX; j++)
+	{
+		if (j%NBHORAIRES == 0)
+		{ nb_creux = 0; nb_horaires = 0; memset(classe_par_jour,0,NBMATIERES*sizeof(int)); }
+		
+		if (Genome.profs[k].occupation[j] > 0)
+		{
+			if (nb_creux > 0)
+			{ nbR2 += nb_creux; nb_creux = 0;  }
+			nb_horaires++;
+			classe_par_jour[Genome.profs[k].classe[j]]++;
+		}
+		else if (nb_horaires > 0)
+		{ nb_creux++; }
+		
+		if (j%NBHORAIRES == NBHORAIRES-1)
+		{
+			if (nb_horaires > 0)
+			{
+				if ((nb_horaires == 1) || (nb_horaires >= NBCOURSMAX))	{ totalR2++; }
+				nb_jours++;
+				nb_horaires_total	+= nb_horaires;
+				for (int c=0; c<NBCLASSES; c++)
+				{
+					if (classe_par_jour[c] > 1)
+					{ totalR2 += classe_par_jour[c]-1; }
+				}
+			}
+		}
+	}
+	
+	totalJ	+= nb_jours; totalH += nb_horaires_total; totalC += nbR2;
+}
+
+totalR2 += totalC;
+totalR2	+= totalJ;
+	
+/* -------------------------------------------------------------------------------------------- */
+/* EVALUATION DES CRENEAUX									*/
+/* -------------------------------------------------------------------------------------------- */
+
+for(int j=0; j<NBCRENEAUX; j++)
+{
+	int nbR1 = 0;
+	
+	for (int k=0; k<NBCLASSES; k++)
+	{
+		if (Genome.classes[k].occupation[j] > 1)
+		{ nbR1 += Genome.classes[k].occupation[j]-1; }
+	}
+	
+	for (int k=0; k<NBPROFS; k++)
+	{ 
+		if (Genome.profs[k].occupation[j] > 1)
+		{ nbR1 += Genome.profs[k].occupation[j]-1; }
+	}
+	
+	for (int k=0; k<NBSALLES; k++)
+	{
+		if (Genome.salles[k].occupation[j] > 1)
+		{ nbR1 += Genome.salles[k].occupation[j]-1; }
+	}
+	
+	totalR1 += nbR1;
+}
+
+/* -------------------------------------------------------------------------------------------- */
+/* RETOUR DU SCORE										*/
+/* -------------------------------------------------------------------------------------------- */
+
+score = totalR0 * VALERR0 + totalR1 * VALERR1 + totalR2 * VALERR2;
+//cout<<"SCORE :"<<score<<endl;
+return score;
+\end
+/* -------------------------------------------------------------------------------------------- */
+
+
+/************************************************************************************************/
+/********************///                     PARAMETRAGE                    ///******************/
+/************************************************************************************************/
+
+\User Makefile options: 
+CPPFLAGS+=
+\end
+
+\Default run parameters :       		// Please let the parameters appear in this order
+
+  Number of generations :	100	     		// NB_GEN
+  Time limit:			10 			// In seconds, 0 to deactivate
+  Population size :		100			// POP_SIZE
+  Offspring size :		40%			// 40% 
+  Mutation probability :	1       		// MUT_PROB
+  Crossover probability :	1	      		// XOVER_PROB
+  Evaluator goal :		Minimise      		// Maximise
+  Selection operator:		Tournament 2.0
+  Surviving parents:		90%			// percentage or absolute  
+  Surviving offspring:		90%
+  Reduce parents operator:	Tournament 2
+  Reduce offspring operator:	Tournament 2
+  Final reduce operator:	Tournament 2
+
+  Elitism:			Strong			//Weak or Strong
+  Elite:			1
+  Print stats:			true			//Default: 1
+  Generate csv stats file:	false			
+  Generate gnuplot script:	false
+  Generate R script:		false
+  Plot stats:			false			//Default: 0
+
+  Remote island model:		false
+  IP file:			ip.txt 			//File containing all the remote island's IP
+  Migration probability:	0
+
+  Save population:		true
+  Start from file:		false
+  
+\end
+/* -------------------------------------------------------------------------------------------- */	

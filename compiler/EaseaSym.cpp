@@ -264,7 +264,12 @@ void CSymbol::print(FILE *fp)
 				{
 					fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
 							pSym->Object->nSize/pSym->Object->pType->nSize);
-					fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s[EASEA_Ndx] <<\" \";\n", pSym->Object->sName);
+					fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s[EASEA_Ndx].serializer() <<\" \";\n", pSym->Object->sName);
+				}
+				// it's a simple struct/class
+				else if(pSym->Object->ObjectType==oObject)
+				{
+					fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s.serializer() <<\" \";\n", pSym->Object->sName);
 				}
 				else
 				{
@@ -306,6 +311,7 @@ void CSymbol::print(FILE *fp)
 		{
 			if(pSym->Object->pType->ObjectType==oUserClass)
 			{
+				/* it's an array of pointer */
 				if (pSym->Object->ObjectType==oArrayPointer)
 				{
 					fprintf(fp,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",
@@ -321,6 +327,19 @@ void CSymbol::print(FILE *fp)
 					fprintf(fpOutputFile,"\t\t}");
 					fprintf(fpOutputFile,"\t}");
 				}
+				/* it's a classical array*/
+				else if(pSym->Object->ObjectType==oArray)
+				{
+					fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
+							pSym->Object->nSize/pSym->Object->pType->nSize);
+					fprintf(fpOutputFile,"\t\tthis->%s[EASEA_Ndx].deserializer(EASEA_Line) ;\n", pSym->Object->sName);
+				}
+				/* it's a simple struct/class */
+				else if(pSym->Object->ObjectType==oObject)
+				{
+					fprintf(fpOutputFile,"\t\tthis->%s.deserializer(EASEA_Line);\n", pSym->Object->sName);
+				}
+				/*it's a pointer*/
 				else
 				{
 					fprintf(fpOutputFile,"\t(*EASEA_Line) >> line;\n");
@@ -572,10 +591,12 @@ void CSymbol::serializeIndividual(FILE *fp, char* sCompleteName)
 			// it's a classical array
 			else if(pSym->Object->ObjectType==oArray)
 			{
+				/*TODO: not clean at all*/
 				fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-						pSym->Object->nSize);
-				fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s[EASEA_Ndx].serialize() <<\" \";\n", pSym->Object->sName);
+						pSym->Object->nSize/pSym->Object->pType->nSize);
+				fprintf(fpOutputFile,"\t\tEASEA_Line << this->%s[EASEA_Ndx].serializer() <<\" \";\n", pSym->Object->sName);
 			}
+			// it's a simple struct/class 
 			else if(pSym->Object->ObjectType==oObject)
 			{
 				fprintf(fpOutputFile,"\tEASEA_Line << \"\\a \";\n");
@@ -693,6 +714,14 @@ void CSymbol::deserializeIndividual(FILE *fp, char* sCompleteName){
 				fprintf(fpOutputFile,"\t\t\tthis->%s[EASEA_Ndx]->deserializer(&EASEA_Line);\n",pSym->Object->sName);
 				fprintf(fpOutputFile,"\t\t}");
 				fprintf(fpOutputFile,"\t}");
+			}
+			else if(pSym->Object->ObjectType==oArray){
+				fprintf(fpOutputFile,"\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+				fprintf(fpOutputFile,"\t\tthis->%s[EASEA_Ndx].deserializer(&EASEA_Line);\n", pSym->Object->sName);
+			}
+			else if(pSym->Object->ObjectType==oObject)
+			{
+				fprintf(fpOutputFile,"\t this->%s.deserializer(&EASEA_Line);",pSym->Object->sName);
 			}
 			else{
 				fprintf(fpOutputFile,"\tEASEA_Line >> line;\n");
