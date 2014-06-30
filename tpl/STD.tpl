@@ -57,7 +57,7 @@ int main(int argc, char** argv){
 
 #include <fstream>
 #include <time.h>
-#include <string>
+#include <cstring>
 #include <sstream>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
@@ -370,7 +370,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <iostream>
 #include <CIndividual.h>
 #include <Parameters.h>
-#include <string>
+#include <cstring>
 #include <sstream>
 
 using namespace std;
@@ -392,7 +392,6 @@ class IndividualImpl : public CIndividual {
 public: // in EASEA the genome is public (for user functions,...)
 	// Class members
   	\INSERT_GENOME
-
 
 public:
 	IndividualImpl();
