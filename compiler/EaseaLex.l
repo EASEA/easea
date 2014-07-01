@@ -1744,7 +1744,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"true"  {fprintf(fpOutputFile,"true");} // local name
 <COPY>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
   fprintf(fpOutputFile,yytext);}
-<COPY>"tossCoin"  { // local random name 
+<COPY>"tossCoin"  { // local random name
   fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 <COPY>"random"  {
   fprintf(fpOutputFile,"globalRandomGenerator->random");}
@@ -2284,7 +2284,10 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
   fprintf(fpOutputFile,yytext);}
 <COPY_USER_FUNCTION>"tossCoin"  { // local random name
-  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
+  if (bWithinMutator)
+    fprintf(fpOutputFile,"rg->tossCoin");
+  else
+    fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 <COPY_USER_FUNCTION>"random"  {
   fprintf(fpOutputFile,"globalRandomGenerator->random");}
 <COPY_USER_FUNCTION>"child1"  {fprintf(fpOutputFile,"child1");

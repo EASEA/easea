@@ -326,30 +326,24 @@ void CPopulation::produceOffspringPopulation(){
   CIndividual* child;
   int tid;
   int i;
-  int numThreads=omp_get_max_threads();
+  int startIndex=actualOffspringPopulationSize;
   /*
   CIndividual** p1= new CIndividual*[numThreads]();
   CIndividual* child = new CIndividual*[numThreads]();
   */
 
-  CIndividual*** ps = new CIndividual**[numThreads]();
   
-  for (i = 0; i < numThreads ; i++) {
-    ps[i]=new CIndividual*[crossoverArrity]();
-  }
   selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
   
   #pragma omp parallel private(tid,i,p1,child)
   {
-  int tid2;
-  tid=omp_get_thread_num();
-  CRandomGenerator safeRG(CRandomGenerator(selectionOperator->rg->get_seed()+tid));
-  CSelectionOperator* safeSelector=selectionOperator->copy(actualParentPopulationSize,&safeRG);
+    CRandomGenerator safeRG(CRandomGenerator(selectionOperator->rg->get_seed()+tid));
+    CSelectionOperator* safeSelector=selectionOperator->copy(actualParentPopulationSize,&safeRG);
+    CIndividual** ps = new CIndividual*[crossoverArrity]();
   
-  #pragma omp parallel for schedule(runtime) 
+    #pragma omp parallel for schedule(runtime) 
     for(i=0 ; i<offspringPopulationSize ; i++ ){
       unsigned index = safeSelector->selectNext(parentPopulationSize);
-      printf("%d\n",index);
       p1 = parents[index];
       //Check if Any Immigrants will reproduce
       if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
@@ -359,33 +353,28 @@ void CPopulation::produceOffspringPopulation(){
       if( safeRG.tossCoin(pCrossover) ){
         for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
         index = safeSelector->selectNext(parentPopulationSize);
-        ps[tid][j] = parents[index];
+        ps[j] = parents[index];
           if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
               this->cstats->currentNumberOfImmigrantReproductions++;
           }
         }
-        child = p1->crossover(ps[tid]);
+        child = p1->crossover(ps,&safeRG);
       }
       else child = parents[index]->clone();//new CIndividual(*parents[index]);
       
       
-      if( rg->tossCoin(pMutation) ){
-        child->mutate(pMutationPerGene);
+      if( safeRG.tossCoin(pMutation) ){
+        child->mutate(pMutationPerGene,&safeRG);
       }
       
       child->boundChecking();
 
-      offsprings[i] = child;
+      offsprings[startIndex+i] = child;
     }
+    delete[](ps);
+    delete safeSelector;
   }
-  /*Reduce in parallel region*/
-  actualOffspringPopulationSize=offspringPopulationSize;
-  for (i = 0; i < numThreads; i++) {
-    delete[](ps[i]);
-  }
-
-  delete[](ps);
-
+  actualOffspringPopulationSize+=offspringPopulationSize;
 }
 
 

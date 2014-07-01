@@ -171,7 +171,7 @@ IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 }
 
 
-CIndividual* IndividualImpl::crossover(CIndividual** ps){
+CIndividual* IndividualImpl::crossover(CIndividual** ps,CRandomGenerator* globalRandomGenerator){
 	// ********************
 	// Generic part
 	IndividualImpl** tmp = (IndividualImpl**)ps;
@@ -212,7 +212,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-unsigned IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate( float pMutationPerGene,CRandomGenerator* rg ){
   this->valid=false;
 
 
@@ -400,11 +400,11 @@ public:
 	float evaluate();
 	static unsigned getCrossoverArrity(){ return 2; }
 	float getFitness(){ return this->fitness; }
-	CIndividual* crossover(CIndividual** p2);
+	CIndividual* crossover(CIndividual** p2,CRandomGenerator* rg);
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	unsigned mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene,CRandomGenerator* rg);
 
 	void boundChecking();      
 
