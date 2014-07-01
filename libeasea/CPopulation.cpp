@@ -341,7 +341,7 @@ void CPopulation::produceOffspringPopulation(){
     CSelectionOperator* safeSelector=selectionOperator->copy(actualParentPopulationSize,&safeRG);
     CIndividual** ps = new CIndividual*[crossoverArrity]();
   
-    #pragma omp parallel for schedule(runtime) 
+    #pragma omp for schedule(runtime) 
     for(i=0 ; i<offspringPopulationSize ; i++ ){
       unsigned index = safeSelector->selectNext(parentPopulationSize);
       p1 = parents[index];
