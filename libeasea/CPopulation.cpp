@@ -150,25 +150,45 @@ void CPopulation::optimiseOffspringPopulation(){
 void CPopulation::reducePopulation(CIndividual** population, unsigned populationSize,
             CIndividual** reducedPopulation, unsigned obSize,
             CSelectionOperator* replacementOperator,int pressure){
+  
+  int nbThread=omp_get_max_threads();
+  int popSizeThread=(populationSize)/nbThread;
+  int popSizeLastThread=populationSize/nbThread+populationSize%nbThread;
+  int tid;
+  unsigned int i;
 
+  #pragma omp parallel private(tid,i)
+  {
+    tid=omp_get_thread_num();
+    int actualPopSize=popSizeThread;
+    int last=actualPopSize-1;
+    int j=0;
+    printf("%d nbThread %d popSize %d \n", actualPopSize,nbThread, populationSize );
+    unsigned int selectedIndex;
+    CRandomGenerator safeRG(CRandomGenerator(selectionOperator->rg->get_seed()+tid));
+    CSelectionOperator* safeSelector=replacementOperator->copy(actualPopSize,&safeRG);
+    CIndividual** popThread=population+(tid*(popSizeThread));
+    printf(" %d pop %d \n",tid,popThread);
+    
+    safeSelector->initialize(population+((tid*(popSizeThread))),pressure,actualPopSize);
+    
+    #pragma omp for schedule(runtime)    
+    for( i=0 ; i<obSize ; i++ ){
 
-  replacementOperator->initialize(population,pressure,populationSize);
-
-  for( unsigned i=0 ; i<obSize ; i++ ){
-
-    // select an CIndividual and add it to the reduced population
-    unsigned selectedIndex = replacementOperator->selectNext(populationSize - i);
-    // std::cout << "Selected " << selectedIndex << "/" << populationSize
-    //        << " replaced by : " << populationSize-(i+1)<< std::endl;
-    reducedPopulation[i] = population[selectedIndex];
-    //printf("TEST REMPLACEMENT %d %d %f %f\n", i, selectedIndex, reducedPopulation[i]->fitness, population[selectedIndex]->fitness);
-
-    // erase it to the std population by swapping last CIndividual end current
-    population[selectedIndex] = population[populationSize-(i+1)];
-    //population[populationSize-(i+1)] = NULL;
+      // select an CIndividual and add it to the reduced population
+      selectedIndex = safeSelector->selectNext((popSizeThread) - j);
+      //printf(" %d index %d %d \n",tid,selectedIndex,i);
+      
+      printf("%d %p",i,&(popThread[selectedIndex]));
+      reducedPopulation[i] = popThread[selectedIndex];
+      
+      //printf("%d move to %d \n",last,selectedIndex);
+      popThread[selectedIndex] = popThread[last];
+      last--;
+      j++;
+    }
   }
-
-  //return reducedPopulation;
+ printf("finito\n");
 }
 
 
@@ -337,6 +357,7 @@ void CPopulation::produceOffspringPopulation(){
   
   #pragma omp parallel private(tid,i,p1,child)
   {
+    tid=omp_get_thread_num();
     CRandomGenerator safeRG(CRandomGenerator(selectionOperator->rg->get_seed()+tid));
     CSelectionOperator* safeSelector=selectionOperator->copy(actualParentPopulationSize,&safeRG);
     CIndividual** ps = new CIndividual*[crossoverArrity]();
