@@ -6,7 +6,24 @@ PROFILE="$USER_HOME/.bashrc" # default
 if [ "$(uname)" = "Linux" ]; then
 
   #Linux case
-  PROFILE="$USER_HOME/.bashrc"
+  # Check which sheel the user is using
+  # Trim the $SHELL variable to only have the shell name
+  SHELL_NAME=`echo $SHELL | awk -F/ '{print $NF}'`
+
+  case "$SHELL_NAME" in
+    "sh" )
+      PROFILE="$USER_HOME/.profile" ;;
+    "bash" )
+      PROFILE="$USER_HOME/.bashrc" ;;
+    "zsh" )
+      PROFILE="$USER_HOME/.zshrc" ;;
+    "csh" )
+      PROFILE="$USER_HOME/.cshrc" ;;
+    "tcsh" )
+      PROFILE="$USER_HOME/.tcshrc" ;;
+    "ksh" )
+      PROFILE="$USER_HOME/.kshrc" ;;
+  esac
 
 else
 
