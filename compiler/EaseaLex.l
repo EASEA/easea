@@ -2289,7 +2289,10 @@ if(OPERATING_SYSTEM=WINDOWS)
   else
     fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 <COPY_USER_FUNCTION>"random"  {
-  fprintf(fpOutputFile,"globalRandomGenerator->random");}
+  if (bWithinMutator || bWithinXover)
+    fprintf(fpOutputFile,"safeRG->random");
+  else
+    fprintf(fpOutputFile,"globalRandomGenerator->random");}
 <COPY_USER_FUNCTION>"child1"  {fprintf(fpOutputFile,"child1");
  }
 <COPY_USER_FUNCTION>"child2"  {fprintf(fpOutputFile,"child2");
