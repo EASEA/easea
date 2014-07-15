@@ -1745,9 +1745,9 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
   fprintf(fpOutputFile,yytext);}
 <COPY>"tossCoin"  { // local random name
-  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
+  fprintf(fpOutputFile,"safeRG->tossCoin");}
 <COPY>"random"  {
-  fprintf(fpOutputFile,"globalRandomGenerator->random");}
+  fprintf(fpOutputFile,"safeRG->random");}
 <COPY>"Genome" {
   if (bWithinEO_Function && TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"_genotype");
   else if(bWithinEO_Function && bWithinCUDA_Initializer )fprintf(fpOutputFile,"(*this)");
@@ -2284,8 +2284,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
   fprintf(fpOutputFile,yytext);}
 <COPY_USER_FUNCTION>"tossCoin"  { // local random name
-  if (bWithinMutator)
-    fprintf(fpOutputFile,"rg->tossCoin");
+  if (bWithinMutator || bWithinXover)
+    fprintf(fpOutputFile,"safeRG->tossCoin");
   else
     fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
 <COPY_USER_FUNCTION>"random"  {

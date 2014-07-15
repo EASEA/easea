@@ -96,13 +96,13 @@ extern bool INSTEAD_EVAL_STEP;
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
   this->params = params;
     this->cstats = new CStats();
-
   CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
       params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
   this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
       params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
-
+  
+  
   this->currentGeneration = 0;
 
   this->reduceParents = 0;

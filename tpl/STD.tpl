@@ -30,7 +30,7 @@ CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
 
-
+  omp_set_dynamic(0);
 	parseArguments("EASEA.prm",argc,argv);
 
 	ParametersImpl p;
@@ -74,6 +74,8 @@ bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
+extern CRandomGenerator* safeRG;
+#pragma omp threadprivate(safeRG)
 #define STD_TPL
 
 \INSERT_USER_DECLARATIONS
@@ -171,7 +173,7 @@ IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 }
 
 
-CIndividual* IndividualImpl::crossover(CIndividual** ps,CRandomGenerator* globalRandomGenerator){
+CIndividual* IndividualImpl::crossover(CIndividual** ps){
 	// ********************
 	// Generic part
 	IndividualImpl** tmp = (IndividualImpl**)ps;
@@ -212,7 +214,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-unsigned IndividualImpl::mutate( float pMutationPerGene,CRandomGenerator* rg ){
+unsigned IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 
@@ -227,6 +229,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 
 	seed = setVariable("seed",(int)time(0));
+  CPopulation::initThreadRG(seed);
 	globalRandomGenerator = new CRandomGenerator(seed);
 	this->randomGenerator = globalRandomGenerator;
 
@@ -400,11 +403,11 @@ public:
 	float evaluate();
 	static unsigned getCrossoverArrity(){ return 2; }
 	float getFitness(){ return this->fitness; }
-	CIndividual* crossover(CIndividual** p2,CRandomGenerator* rg);
+	CIndividual* crossover(CIndividual** p2);
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	unsigned mutate(float pMutationPerGene,CRandomGenerator* rg);
+	unsigned mutate(float pMutationPerGene);
 
 	void boundChecking();      
 
@@ -458,7 +461,7 @@ endif
 
 EASEALIB_PATH=$(EZ_PATH)/libeasea/
 
-CXXFLAGS =  -fopenmp	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
+CXXFLAGS =  -fopenmp -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
 
 OBJS = EASEA.o EASEAIndividual.o 
 

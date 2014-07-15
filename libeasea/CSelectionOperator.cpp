@@ -16,6 +16,11 @@
 #include "include/CPopulation.h"
 #include "include/CRandomGenerator.h"
 
+CRandomGenerator* rg;
+
+#pragma omp threadprivate(rg)
+
+
 float getSelectionPressure(std::string selectop){
   int pos1 = selectop.find('(',0)+1;
   int pos2 = selectop.find(')',0);

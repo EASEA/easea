@@ -23,8 +23,8 @@ class CIndividual {
     virtual ~CIndividual();
     virtual float evaluate() = 0;
     virtual void printOn(std::ostream& O) const = 0;
-    virtual unsigned mutate(float pMutationPerGene, CRandomGenerator* rg) = 0;
-    virtual CIndividual* crossover(CIndividual** p2,CRandomGenerator* rg) = 0;
+    virtual unsigned mutate(float pMutationPerGene) = 0;
+    virtual CIndividual* crossover(CIndividual** p2) = 0;
     virtual CIndividual* clone() = 0;
 
     virtual std::string serialize() = 0;

@@ -15,7 +15,7 @@ __________________________________________________________*/
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #define SIGMA  1.                     /*  mutation parameter */
 #define PI 3.141592654
-
+#include<unistd.h>
  
 float pMutPerGene=0.1;
 
@@ -65,7 +65,6 @@ float gauss()
   float gset = 0.0;
   float v1 = 0.0, v2 = 0.0, r = 0.0;
   float factor = 0.0;
-
   if (iset) {
         iset = 0;
         return gset;
@@ -143,16 +142,19 @@ GenomeClass {
   int NbMut=0;
   float pond = 1./sqrt((float)SIZE);
 
-    for (int i=0; i<SIZE; i++)
+  for (int i=0; i<SIZE; i++)
     if (tossCoin(pMutPerGene)){
-    	NbMut++;
-       	Genome.sigma[i] = Genome.sigma[i] * exp(SIGMA*pond*(float)gauss());
-       	Genome.sigma[i] = MIN(0.5,Genome.sigma[i]);              
-       	Genome.sigma[i] = MAX(0.,Genome.sigma[i]);
-       	Genome.x[i] += Genome.sigma[i]*(float)gauss();
-       	Genome.x[i] = MIN(X_MAX,Genome.x[i]);              // pour eviter les depassements
-       	Genome.x[i] = MAX(X_MIN,Genome.x[i]);
-    	}
+      NbMut++;
+      #pragma omp critical
+      {
+        Genome.sigma[i] = Genome.sigma[i] * exp(SIGMA*pond*(float)gauss());
+        Genome.sigma[i] = MIN(0.5,Genome.sigma[i]);              
+        Genome.sigma[i] = MAX(0.,Genome.sigma[i]);
+        Genome.x[i] += Genome.sigma[i]*(float)gauss();
+        Genome.x[i] = MIN(X_MAX,Genome.x[i]);              // pour eviter les depassements
+        Genome.x[i] = MAX(X_MIN,Genome.x[i]);
+      }
+    }
 return NbMut;
 \end
 

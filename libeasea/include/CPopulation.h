@@ -128,6 +128,7 @@ class CPopulation {
 
     void syncOutVector();
     void syncInVector();
+    static void initThreadRG(time_t seed);
 
 };
 

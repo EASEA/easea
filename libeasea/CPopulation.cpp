@@ -36,6 +36,9 @@ extern float* pEZ_XOVER_PROB;
 extern CIndividual** pPopulation;
 extern CIndividual* bBest;
 
+CRandomGenerator* safeRG;
+#pragma omp threadprivate(safeRG)
+
 CPopulation::CPopulation(){
 }
 
@@ -109,9 +112,20 @@ void CPopulation::initPopulation(CSelectionOperator* selectionOperator,
 
 }
 
-
-
-
+void CPopulation::initThreadRG(time_t seed){
+  #pragma omp parallel
+  {
+    int tid=omp_get_thread_num();
+    safeRG=new CRandomGenerator(seed+tid+1);
+  }
+}
+/*
+void shuffling(CIndividual** population, size_t populationSize){
+  for (i = 0; i < populationSize -1 ; i++) {
+    index= this->rg->random(i,populationSize -1 )
+  }
+}
+*/
 void CPopulation::evaluatePopulation(CIndividual** population, unsigned populationSize){
   #pragma omp parallel for schedule(runtime)
   for( unsigned i=0 ; i < populationSize ; i++ )
@@ -147,6 +161,30 @@ void CPopulation::optimiseOffspringPopulation(){
 
 
  */
+void CPopulation::reducePopulation(CIndividual** population, unsigned populationSize,
+            CIndividual** reducedPopulation, unsigned obSize,
+            CSelectionOperator* replacementOperator,int pressure){
+
+
+  replacementOperator->initialize(population,pressure,populationSize);
+
+  for( unsigned i=0 ; i<obSize ; i++ ){
+
+    // select an CIndividual and add it to the reduced population
+    unsigned selectedIndex = replacementOperator->selectNext(populationSize - i);
+    // std::cout << "Selected " << selectedIndex << "/" << populationSize
+    //        << " replaced by : " << populationSize-(i+1)<< std::endl;
+    reducedPopulation[i] = population[selectedIndex];
+    //printf("TEST REMPLACEMENT %d %d %f %f\n", i, selectedIndex, reducedPopulation[i]->fitness, population[selectedIndex]->fitness);
+
+    // erase it to the std population by swapping last CIndividual end current
+    population[selectedIndex] = population[populationSize-(i+1)];
+    //population[populationSize-(i+1)] = NULL;
+  }
+
+  //return reducedPopulation;
+}
+/*
 void CPopulation::reducePopulation(CIndividual** population, unsigned populationSize,
             CIndividual** reducedPopulation, unsigned obSize,
             CSelectionOperator* replacementOperator,int pressure){
@@ -190,7 +228,7 @@ void CPopulation::reducePopulation(CIndividual** population, unsigned population
   }
  printf("finito\n");
 }
-
+*/
 
 CIndividual** CPopulation::reduceParentPopulation(unsigned obSize){
   CIndividual** nextGeneration;
@@ -342,10 +380,6 @@ void CPopulation::produceOffspringPopulation(){
   /*
   CIndividual** ps = new CIndividual*[crossoverArrity]();
   */
-  CIndividual* p1;
-  CIndividual* child;
-  int tid;
-  int i;
   int startIndex=actualOffspringPopulationSize;
   /*
   CIndividual** p1= new CIndividual*[numThreads]();
@@ -354,38 +388,42 @@ void CPopulation::produceOffspringPopulation(){
 
   
   selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
-  
-  #pragma omp parallel private(tid,i,p1,child)
+  int i;
+  #pragma omp parallel private(i)
   {
-    tid=omp_get_thread_num();
-    CRandomGenerator safeRG(CRandomGenerator(selectionOperator->rg->get_seed()+tid));
-    CSelectionOperator* safeSelector=selectionOperator->copy(actualParentPopulationSize,&safeRG);
+    CSelectionOperator* safeSelector=selectionOperator->copy(actualParentPopulationSize,safeRG);
+    int j;
+    CIndividual* p1;
+    CIndividual* child;
     CIndividual** ps = new CIndividual*[crossoverArrity]();
   
     #pragma omp for schedule(runtime) 
     for(i=0 ; i<offspringPopulationSize ; i++ ){
-      unsigned index = safeSelector->selectNext(parentPopulationSize);
+      unsigned int index = safeSelector->selectNext(parentPopulationSize);
       p1 = parents[index];
       //Check if Any Immigrants will reproduce
+      /*
       if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
           this->cstats->currentNumberOfImmigrantReproductions++;
       }
-
-      if( safeRG.tossCoin(pCrossover) ){
-        for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
+      */
+      if( safeRG->tossCoin(pCrossover) ){
+        for( j=0 ; j<crossoverArrity-1 ; j++ ){
         index = safeSelector->selectNext(parentPopulationSize);
         ps[j] = parents[index];
+          /*
           if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
               this->cstats->currentNumberOfImmigrantReproductions++;
           }
+          */
         }
-        child = p1->crossover(ps,&safeRG);
+        child = p1->crossover(ps);
       }
       else child = parents[index]->clone();//new CIndividual(*parents[index]);
       
       
-      if( safeRG.tossCoin(pMutation) ){
-        child->mutate(pMutationPerGene,&safeRG);
+      if( safeRG->tossCoin(pMutation) ){
+        child->mutate(pMutationPerGene);
       }
       
       child->boundChecking();
@@ -398,8 +436,48 @@ void CPopulation::produceOffspringPopulation(){
   actualOffspringPopulationSize+=offspringPopulationSize;
 }
 
+/*
+void CPopulation::produceOffspringPopulation(){
 
+  unsigned crossoverArrity = CIndividual::getCrossoverArrity();
+  CIndividual* p1;
+  CIndividual** ps = new CIndividual*[crossoverArrity]();
+  CIndividual* child;
 
+  selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
+
+  for( unsigned i=0 ; i<offspringPopulationSize ; i++ ){
+    unsigned index = selectionOperator->selectNext(parentPopulationSize);
+    p1 = parents[index];
+
+    //Check if Any Immigrants will reproduce
+    if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
+        this->cstats->currentNumberOfImmigrantReproductions++;
+    }
+
+    if( rg->tossCoin(pCrossover) ){
+      for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
+      index = selectionOperator->selectNext(parentPopulationSize);
+      ps[j] = parents[index];
+        if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
+            this->cstats->currentNumberOfImmigrantReproductions++;
+        }
+      }
+      child = p1->crossover(ps);
+    }
+    else child = parents[index]->clone();//new CIndividual(*parents[index]);
+
+    if( rg->tossCoin(pMutation) ){
+      child->mutate(pMutationPerGene);
+    }
+
+    child->boundChecking();
+
+    offsprings[actualOffspringPopulationSize++] = child;
+  }
+  delete[](ps);
+  }
+/*
 
 /**
    Here we save elit CIndividuals to the replacement
