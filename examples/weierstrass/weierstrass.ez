@@ -185,8 +185,6 @@ return NbMut;
   Reduce offspring operator: Tournament 2
   Final reduce operator: Tournament 2
 
-  Elitism: Strong			//Weak or Strong
-  Elite: 1
   Print stats: true				//Default: 1
   Generate csv stats file:false			
   Generate gnuplot script:false
