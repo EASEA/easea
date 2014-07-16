@@ -129,6 +129,7 @@ class CPopulation {
     void syncOutVector();
     void syncInVector();
     static void initThreadRG(time_t seed);
+    static void shuffling(CIndividual** population, size_t populationSize,CRandomGenerator* rg);
 
 };
 
