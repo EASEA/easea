@@ -64,11 +64,16 @@ CSelectionOperator* getSelectionOperator(std::string selectop, int minimizing, C
 void CSelectionOperator::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
   this->population = population;
   this->currentSelectionPressure = selectionPressure;
+  (void)populationSize;
 }
 
-size_t CSelectionOperator::selectNext(size_t populationSize){ return 0; }
+size_t CSelectionOperator::selectNext(size_t populationSize){ return 0; 
+  (void)populationSize;
+}
 
 size_t CSelectionOperator::selectNext(size_t populationSize,int rgId){
+  (void)populationSize;
+  (void)rgId;
   return 0;
 }
 
@@ -76,6 +81,8 @@ void CSelectionOperator::setThreadRg(){}
 void CSelectionOperator::setRg(CRandomGenerator* rg){this->rg=rg;}
 
 CSelectionOperator* CSelectionOperator::copy(size_t populationSize,CRandomGenerator* rg){
+  (void)populationSize;
+  (void)rg;
   return NULL;
 }
 
@@ -136,7 +143,7 @@ float MaxRandom::getExtremum(){
 void MaxRandom::setThreadRg(){
   unsigned int seed=rg->get_seed();
   unsigned int numThreads=omp_get_max_threads();
-  int i;
+  unsigned int i;
   
   /*TODO:upper bound of seed is limit unsigned int*/
   threadRg=new CRandomGenerator*[numThreads]();
@@ -172,7 +179,7 @@ float MinRandom::getExtremum(){
 void MinRandom::setThreadRg(){
   unsigned int seed=rg->get_seed();
   unsigned int numThreads=omp_get_max_threads();
-  int i;
+  unsigned int i;
   
   /*TODO:upper bound of seed is limit unsigned int*/
   threadRg=new CRandomGenerator*[numThreads]();
@@ -241,7 +248,7 @@ size_t MinTournament::selectNext(size_t populationSize){
 void MinTournament::setThreadRg(){
   unsigned int seed=rg->get_seed();
   unsigned int numThreads=omp_get_max_threads();
-  int i;
+  unsigned int i;
   
   /*TODO:upper bound of seed is limit unsigned int*/
   threadRg=new CRandomGenerator*[numThreads]();
@@ -361,7 +368,7 @@ CSelectionOperator* MaxTournament::copy(size_t populationSize,CRandomGenerator* 
 void MaxTournament::setThreadRg(){
   unsigned int seed=rg->get_seed();
   unsigned int numThreads=omp_get_max_threads();
-  int i;
+  unsigned int i;
   
   /*TODO:upper bound of seed is limit unsigned int*/
   threadRg=new CRandomGenerator*[numThreads]();
@@ -453,7 +460,7 @@ float MaxRoulette::getExtremum(){
 void MaxRoulette::setThreadRg(){
   unsigned int seed=rg->get_seed();
   unsigned int numThreads=omp_get_max_threads();
-  int i;
+  unsigned int i;
   
   /*TODO:upper bound of seed is limit unsigned int*/
   threadRg=new CRandomGenerator*[numThreads]();

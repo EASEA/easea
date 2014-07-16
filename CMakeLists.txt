@@ -4,7 +4,7 @@ project(EASEA)
 SET(CMAKE_STATIC_LIBRARY_PREFIX="")
 INCLUDE_DIRECTORIES(libeasea/include boost)
 
-ADD_DEFINITIONS(-g -Wall -fopenmp -Wno-deprecated -Wno-write-strings -fmessage-length=0 )
+ADD_DEFINITIONS(-g -fopenmp -Wno-deprecated -Wno-write-strings -fmessage-length=0 )
 
 
 if(WIN32)
@@ -14,7 +14,8 @@ endif(WIN32)
 #Libeasea static library
 FILE(GLOB libeasea_src libeasea/*.cpp )
 ADD_LIBRARY( libeasea STATIC ${libeasea_src} ${libeasea_src_win})
-SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS " -fopenmp")
+SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX ""
+  COMPILE_FLAGS " -fopenmp -Wextra -Wall ")
 
 
 #Boost program_options static library

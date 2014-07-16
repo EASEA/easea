@@ -96,6 +96,7 @@ void signal_handler(int sig){
 #endif
   printf("Ctrl C entered ... closing down\nNext Ctrl C will kill the Program !!!\n");
   ARRET_DEMANDE=true;
+  (void)sig;
 }
 
 
