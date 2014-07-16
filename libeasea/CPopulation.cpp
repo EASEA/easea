@@ -119,13 +119,21 @@ void CPopulation::initThreadRG(time_t seed){
     safeRG=new CRandomGenerator(seed+tid+1);
   }
 }
-/*
-void shuffling(CIndividual** population, size_t populationSize){
+
+void CPopulation::shuffling(CIndividual** population, size_t populationSize,CRandomGenerator* rg){
+  CIndividual* tmp;
+  int index;
+  unsigned int i;
+
   for (i = 0; i < populationSize -1 ; i++) {
-    index= this->rg->random(i,populationSize -1 )
+    index=rg->random((int)i,populationSize-1);
+    tmp=population[index];
+    
+    population[index]=population[i];
+    population[i]=tmp;
   }
 }
-*/
+
 void CPopulation::evaluatePopulation(CIndividual** population, unsigned populationSize){
   #pragma omp parallel for schedule(runtime)
   for( unsigned i=0 ; i < populationSize ; i++ )
@@ -133,6 +141,8 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 }
 
 void CPopulation::optimisePopulation(CIndividual** population, unsigned populationSize){
+  (void)population;
+  (void)populationSize;
 }
 
 void CPopulation::evaluateParentPopulation(){
@@ -161,6 +171,7 @@ void CPopulation::optimiseOffspringPopulation(){
 
 
  */
+
 void CPopulation::reducePopulation(CIndividual** population, unsigned populationSize,
             CIndividual** reducedPopulation, unsigned obSize,
             CSelectionOperator* replacementOperator,int pressure){
@@ -184,6 +195,8 @@ void CPopulation::reducePopulation(CIndividual** population, unsigned population
 
   //return reducedPopulation;
 }
+
+
 /*
 void CPopulation::reducePopulation(CIndividual** population, unsigned populationSize,
             CIndividual** reducedPopulation, unsigned obSize,
@@ -191,42 +204,52 @@ void CPopulation::reducePopulation(CIndividual** population, unsigned population
   
   int nbThread=omp_get_max_threads();
   int popSizeThread=(populationSize)/nbThread;
-  int popSizeLastThread=populationSize/nbThread+populationSize%nbThread;
-  int tid;
+  //int popSizeLastThread=populationSize/nbThread+populationSize%nbThread;
   unsigned int i;
 
-  #pragma omp parallel private(tid,i)
+  //Everyday I'm Shufflin'
+  shuffling(population,populationSize,selectionOperator->rg);
+
+  #pragma omp parallel private(i)
   {
-    tid=omp_get_thread_num();
-    int actualPopSize=popSizeThread;
-    int last=actualPopSize-1;
+    int last=popSizeThread-1;
     int j=0;
-    printf("%d nbThread %d popSize %d \n", actualPopSize,nbThread, populationSize );
+    int tid;
     unsigned int selectedIndex;
-    CRandomGenerator safeRG(CRandomGenerator(selectionOperator->rg->get_seed()+tid));
-    CSelectionOperator* safeSelector=replacementOperator->copy(actualPopSize,&safeRG);
+    CIndividual** reducedPopThread;
+    tid=omp_get_thread_num();
+    
+    CSelectionOperator* safeSelector=replacementOperator->copy(popSizeThread,safeRG);
     CIndividual** popThread=population+(tid*(popSizeThread));
-    printf(" %d pop %d \n",tid,popThread);
     
-    safeSelector->initialize(population+((tid*(popSizeThread))),pressure,actualPopSize);
-    
-    #pragma omp for schedule(runtime)    
-    for( i=0 ; i<obSize ; i++ ){
+    safeSelector->initialize(popThread,pressure,popSizeThread);
+    reducedPopThread=reducedPopulation+(tid*(obSize/nbThread));
+
+    #pragma omp parallel for schedule(runtime)    
+    for( i=0 ; i<obSize/nbThread ; i++ ){
 
       // select an CIndividual and add it to the reduced population
       selectedIndex = safeSelector->selectNext((popSizeThread) - j);
       //printf(" %d index %d %d \n",tid,selectedIndex,i);
       
-      printf("%d %p",i,&(popThread[selectedIndex]));
-      reducedPopulation[i] = popThread[selectedIndex];
+      //printf("%d %p",i,&(popThread[selectedIndex]));
+      reducedPopThread[i] = popThread[selectedIndex];
       
       //printf("%d move to %d \n",last,selectedIndex);
       popThread[selectedIndex] = popThread[last];
       last--;
       j++;
     }
+    
+    #pragma omp parallel for
+    for (i = 0; i < popSizeThread-(obSize/nbThread); i++) {
+      delete(popThread[i]);
+    }
+    
+    delete safeSelector;
+    #pragma omp barrier
+  
   }
- printf("finito\n");
 }
 */
 
@@ -388,11 +411,11 @@ void CPopulation::produceOffspringPopulation(){
 
   
   selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
-  int i;
+  unsigned int i;
   #pragma omp parallel private(i)
   {
     CSelectionOperator* safeSelector=selectionOperator->copy(actualParentPopulationSize,safeRG);
-    int j;
+    unsigned int j;
     CIndividual* p1;
     CIndividual* child;
     CIndividual** ps = new CIndividual*[crossoverArrity]();
@@ -477,9 +500,9 @@ void CPopulation::produceOffspringPopulation(){
   }
   delete[](ps);
   }
-/*
+*/
 
-/**
+/*
    Here we save elit CIndividuals to the replacement
 
    @ARG elitismSize the number of CIndividuals save by elitism
@@ -494,9 +517,9 @@ void CPopulation::strongElitism(unsigned elitismSize, CIndividual** population, 
 
   float bestFitness = population[0]->getFitness();
   unsigned bestCIndividual = 0;
-
+  (void)outPopulationSize;
 #ifndef WIN32
-  if( elitismSize >= 5 )DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%d)",elitismSize);
+  if( elitismSize >= 5 ){DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%d)",elitismSize);}
 #endif
 
   //printf("MINIMIZING ? %d\n",params->minimizing);
@@ -524,6 +547,7 @@ void CPopulation::weakElitism(unsigned elitismSize, CIndividual** parentsPopulat
   float bestOffspringFitness = offspringPopulation[0]->getFitness();
   int bestParentIndiv = 0;
   int bestOffspringIndiv = 0;
+  (void)outPopulationSize;
 
   for(int i=1; (unsigned)i<(*parentPopSize); i++){
         if( (params->minimizing && bestParentFitness > parentsPopulation[i]->getFitness() ) ||
