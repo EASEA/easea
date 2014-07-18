@@ -2,6 +2,7 @@
 *.a
 
 *.swp
+*.swo
 
 *.mak
 *.csv
