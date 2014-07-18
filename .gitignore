@@ -15,3 +15,8 @@ doc/*
 examples/*/*.cpp
 examples/*/*.hpp
 examples/*/Makefile
+
+compiler/EaseaLex.cpp
+compiler/EaseaLex.hpp
+compiler/EaseaParse.cpp
+compiler/EaseaParse.hpp
