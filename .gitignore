@@ -1,0 +1,17 @@
+*.o
+*.a
+
+*.swp
+
+*.mak
+*.csv
+*.dat
+*.pop
+*.prm
+*.cu
+*.plot
+
+doc/*
+examples/*/*.cpp
+examples/*/*.hpp
+examples/*/Makefile
