@@ -4,13 +4,31 @@
  *  Created on: 22 juin 2009
  *      Author: maitre
  */
+/**
+ * @file CSelectionOperator.h
+ * @author SONIC BFO, ogier Maitre 
+ * @version 1.0
+ *
+ * @section LICENSE
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details at
+ * http://www.gnu.org/licenses/
+**/  
 
 #ifndef CSELECTIONOPERATOR_H_
 #define CSELECTIONOPERATOR_H_
 
 #include <stdlib.h>
-#include "CIndividual.h"
 #include <string>
+#include "CIndividual.h"
 
 class CSelectionOperator {
   public:

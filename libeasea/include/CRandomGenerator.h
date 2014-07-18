@@ -39,9 +39,7 @@
 *  
 **/
 class CRandomGenerator {
-  private:
-    unsigned seed;
-    MTRand* mt_rnd;
+  
   public:
     /*Constructors/Destructors----------------------------------------------------*/
     /**
@@ -200,6 +198,12 @@ class CRandomGenerator {
     * @return   var return stream, for chaining
     **/
     friend std::ostream & operator << (std::ostream & os, const CRandomGenerator& rg);
+  
+  private:
+    /*Datas-----------------------------------------------------------------------*/
+    unsigned seed;
+    MTRand* mt_rnd;
+  
 
 };
 
