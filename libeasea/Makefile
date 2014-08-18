@@ -3,6 +3,10 @@ ifeq ($(shell uname -o 2>/dev/null),Msys)
 	OS := MINGW
 endif
 
+ifeq ($(shell uname -o 2>/dev/null),Cygwin)
+	OS := CYGWIN
+endif
+
 CXXFLAGS = -g -O1 -fopenmp -Wall -fmessage-length=0 -I/usr/local/cuda/include -I../boost/
 
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
@@ -11,7 +15,7 @@ OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	CComUDPLayer.o CStats.o CGPNode.o
 
 ifneq ("$(OS)","")
-OBJS += win32/inet_pton.o
+OBJS += inet_pton.o
 endif
 
 #ifeq ($(EZ_CUDA),1)
@@ -20,6 +24,7 @@ endif
 
 ifneq ("$(OS)","")
 LIBS = -L"C:\MinGW\lib" -lws2_32 -lwinmm
+CXXFLAGS += -I"C:\MinGW\include"
 endif
 
 TARGET = libeasea.a
