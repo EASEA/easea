@@ -186,6 +186,11 @@ __device__ __host__ inline IndividualImpl* INDIVIDUAL_ACCESS(void* buffer,unsign
 __device__ float cudaEvaluate(void* devBuffer, unsigned id){
   \INSERT_CUDA_EVALUATOR
 }
+
+__device__ float cudaCross(void* devBufferParent,void* devBufferoffspring, unsigned id){
+  //content of function CPopulation::produceOffspringPopulation
+  \INSERT_CUDA_CROSSOVER
+}
   
 
 extern "C" 
@@ -200,10 +205,19 @@ __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, flo
         d_fitnesses[id] = cudaEvaluate(d_population,id);
 }
 
+__global_ void cudaCrossoverPopulation(void* d_population, unsigned offspringSize, void* d_offspring){
+        
+        unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
+        
+        // escaping for the last block
+        if( id >= offspringSize ) return;
+        
+        d_offspring[id]=cudaCross(d_population,id)
+}
 
 
 void* gpuThreadMain(void* arg){
-
+  bool evaluation=true;
   cudaError_t lastError;
   struct gpuEvaluationData* localGpuData = (struct gpuEvaluationData*)arg;
   //std::cout << " gpuId : " << localGpuData->gpuId << std::endl;
@@ -233,54 +247,59 @@ void* gpuThreadMain(void* arg){
   // Wait for population to evaluate
    while(1){
 	    sem_wait(&localGpuData->sem_in);
+      if(evaluation){
 
-	    if( freeGPU ) {
-	      // do we need to free gpu memory ?
-	      cudaFree(localGpuData->d_fitness);
-	      cudaFree(localGpuData->d_population);
-	      break;
-	    }
+        if( freeGPU ) {
+          // do we need to free gpu memory ?
+          cudaFree(localGpuData->d_fitness);
+          cudaFree(localGpuData->d_population);
+          break;
+        }
 
-	    if(nbr_cudaPreliminaryProcess > 0) {
-	      
-	      if( nbr_cudaPreliminaryProcess==2 ) 
-		cudaPreliminaryProcess(localGpuData,EA->population->parentPopulationSize);
-	      else {
-		cudaPreliminaryProcess(localGpuData,EA->population->offspringPopulationSize);
-	      }
-	      nbr_cudaPreliminaryProcess--;
+        if(nbr_cudaPreliminaryProcess > 0) {
+          
+          if( nbr_cudaPreliminaryProcess==2 ) 
+      cudaPreliminaryProcess(localGpuData,EA->population->parentPopulationSize);
+          else {
+      cudaPreliminaryProcess(localGpuData,EA->population->offspringPopulationSize);
+          }
+          nbr_cudaPreliminaryProcess--;
 
-	      if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
-		// due to lack of individuals, the population distribution is not optimial according to core organisation
-		// warn the user and propose a proper configuration
-		std::cerr << "Warning, population distribution is not optimial, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
-			  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
-	      }
-            }
-	    
-	    // transfer data to GPU memory
-            lastError = cudaMemcpy(localGpuData->d_population,(IndividualImpl*)(Pop->cudaBuffer)+localGpuData->indiv_start,
-				   (sizeof(IndividualImpl)*localGpuData->sh_pop_size),cudaMemcpyHostToDevice);
+          if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
+      // due to lack of individuals, the population distribution is not optimial according to core organisation
+      // warn the user and propose a proper configuration
+      std::cerr << "Warning, population distribution is not optimial, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
+          << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
+          }
+              }
+        
+        // transfer data to GPU memory
+              lastError = cudaMemcpy(localGpuData->d_population,(IndividualImpl*)(Pop->cudaBuffer)+localGpuData->indiv_start,
+             (sizeof(IndividualImpl)*localGpuData->sh_pop_size),cudaMemcpyHostToDevice);
 
-	    CUDA_SAFE_CALL(lastError);
-	    
-	    
-	    //std::cout << localGpuData->sh_pop_size << ";" << localGpuData->dimGrid << ";"<<  localGpuData->dimBlock << std::endl;
-				      
-	    // the real GPU computation (kernel launch)
-	    cudaEvaluatePopulation<<< localGpuData->dimGrid, localGpuData->dimBlock>>>(localGpuData->d_population, localGpuData->sh_pop_size, localGpuData->d_fitness);
-	    lastError = cudaGetLastError();
-	    CUDA_SAFE_CALL(lastError);
+        CUDA_SAFE_CALL(lastError);
+        
+        
+        //std::cout << localGpuData->sh_pop_size << ";" << localGpuData->dimGrid << ";"<<  localGpuData->dimBlock << std::endl;
+                
+        // the real GPU computation (kernel launch)
+        cudaEvaluatePopulation<<< localGpuData->dimGrid, localGpuData->dimBlock>>>(localGpuData->d_population, localGpuData->sh_pop_size, localGpuData->d_fitness);
+        lastError = cudaGetLastError();
+        CUDA_SAFE_CALL(lastError);
 
-	    if( cudaGetLastError()!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
+        if( cudaGetLastError()!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
 
-	    // be sure the GPU has finished computing evaluations, and get results to CPU
-	    lastError = cudaThreadSynchronize();
-	    if( lastError!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
-	    lastError = cudaMemcpy(fitnessTemp + localGpuData->indiv_start, localGpuData->d_fitness, localGpuData->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
-	    
-	    // this thread has finished its phase, so lets tell it to the main thread
-	    sem_post(&localGpuData->sem_out);
+        // be sure the GPU has finished computing evaluations, and get results to CPU
+        lastError = cudaThreadSynchronize();
+        if( lastError!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
+        lastError = cudaMemcpy(fitnessTemp + localGpuData->indiv_start, localGpuData->d_fitness, localGpuData->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
+	      // this thread has finished its phase, so lets tell it to the main thread
+	      sem_post(&localGpuData->sem_out);
+     }
+     //Crossing over 
+     else{
+     
+     }
    }
   sem_post(&localGpuData->sem_out);
   fflush(stdout);
@@ -504,6 +523,10 @@ void PopulationImpl::evaluateParentPopulation(){
 	}  
 
         delete[](fitnessTemp);
+
+}
+
+void PopulationImpl::produceOffspringPopulation(){
 
 }
 
@@ -792,6 +815,7 @@ public:
         virtual ~PopulationImpl();
         void evaluateParentPopulation();
 	void evaluateOffspringPopulation();
+  void produceOffspringPopulation();
 };
 
 #endif /* PROBLEM_DEP_H */
