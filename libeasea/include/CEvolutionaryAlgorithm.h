@@ -115,7 +115,16 @@ class CEvolutionaryAlgorithm {
     #else
       void showPopulationStats(struct timeval beginTime);
     #endif
-    
+   
+    /**
+    * \brief    Print to a file the genealogic tree and in the future other data
+    *           relevant for visualization purpose.
+    * \details  Print to a file named by fileOutput parameters
+    *
+    **/
+    void writeVisualizationStats();
+
+
     /**
     * \brief        Empy
     * \deprecated   Empty

@@ -168,6 +168,7 @@ IndividualImpl::IndividualImpl(const IndividualImpl& genome){
   this->valid = genome.valid;
   this->fitness = genome.fitness;
   this->isImmigrant = false;
+  this->gainFitness = 0;
 }
 
 
@@ -298,6 +299,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->printFinalPopulation = setVariable("printFinalPopulation",0);
 	this->savePopulation = setVariable("savePopulation",\SAVE_POPULATION);
 	this->startFromFile = setVariable("startFromFile",\START_FROM_FILE);
+	this->saveGenealogy = setVariable("saveGenealogy",0);
 
 	this->outputFilename = (char*)"EASEA";
 	this->plotOutputFilename = (char*)"EASEA.png";

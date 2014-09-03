@@ -139,6 +139,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
   ("reduceFinalOperator",po::value<string>(),"Set the Final Reducing Operator (default : Tournament)")
   ("reduceFinalPressure",po::value<float>(),"Set the Final Reducing Pressure (default : 2.0)")
   ("optimiseIterations",po::value<int>(),"Set the number of optimisation iterations (default : 100)")
+  ("saveGenealogy",po::value<int>(),"Print the complete genealogy tree to a file")
   ("baldwinism",po::value<int>(),"Only keep fitness (default : 0)")
   ("remoteIslandModel",po::value<int>(),"Boolean to activate the individual exachange with remote islands (default : 0)")
   ("ipFile",po::value<string>(),"File containing all the IPs of the remote islands)")

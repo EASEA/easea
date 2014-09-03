@@ -138,6 +138,7 @@ class Parameters {
     int plotStats;
     int printInitialPopulation;
     int printFinalPopulation;
+    int saveGenealogy;
 
     bool savePopulation;
     bool startFromFile;

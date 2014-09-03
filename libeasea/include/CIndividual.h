@@ -157,6 +157,14 @@ class CIndividual {
     bool isImmigrant;
     float fitness;
     static CRandomGenerator* rg;
+    
+    //For genealogic and visualization purpose
+    unsigned int id;
+	  char origin;
+	  int parent1;
+	  int parent2;
+	  int survival;
+	  float gainFitness;
 
 
 };

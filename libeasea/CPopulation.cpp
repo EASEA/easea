@@ -97,6 +97,7 @@ void CPopulation::initPopulation(CSelectionOperator* selectionOperator,
         CSelectionOperator* offspringReductionOperator,
         float selectionPressure, float replacementPressure,
         float parentReductionPressure, float offspringReductionPressure){
+  
   CPopulation::selectionOperator   = selectionOperator;
   CPopulation::replacementOperator = replacementOperator;
   CPopulation::parentReductionOperator = parentReductionOperator;
@@ -343,11 +344,35 @@ void CPopulation::produceOffspringPopulation(){
         }
       }
       child = p1->crossover(ps);
+      
+      if( this->params->saveGenealogy ){
+        child->origin ='C';
+        child->parent1 = (p1->id);
+        child->parent2 = (ps[0]->id);
+        child->survival = 0;
+        child->gainFitness = -(float)((p1->fitness)+ (ps[0]->fitness))/(float)2;
+      }
     }
-    else child = parents[index]->clone();//new CIndividual(*parents[index]);
+    else {
+      child = parents[index]->clone();//new CIndividual(*parents[index]);
+	    
+      if( this->params->saveGenealogy ){
+        child->parent1 =(parents[index]->id);
+        child->survival=0;
+        child->gainFitness=-(p1->fitness);
+      }
+    }
 
     if( rg->tossCoin(pMutation) ){
       child->mutate(pMutationPerGene);
+      if( this->params->saveGenealogy ){
+        if(child->origin == 'C')child->origin = 'B';
+        else child->origin = 'M';
+      } 
+    }
+    
+    if( this->params->saveGenealogy ){
+      if(child->origin !='M' && child->origin !='C' && child->origin !='B') {child->origin ='N';}
     }
 
     child->boundChecking();
@@ -355,7 +380,7 @@ void CPopulation::produceOffspringPopulation(){
     offsprings[actualOffspringPopulationSize++] = child;
   }
   delete[](ps);
-  }
+}
 
 
 

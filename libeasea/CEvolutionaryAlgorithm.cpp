@@ -169,7 +169,7 @@ void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
 /* MAIN FUNCTION TO RUN THE EVOLUTIONARY LOOP */
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   CIndividual** elitistPopulation = NULL;
-
+  unsigned int idCounter=1;
 #ifdef WIN32
    clock_t begin(clock());
 #else
@@ -199,6 +199,19 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   std::cout << "Population initialisation (Generation 0)... "<< std::endl;
 
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
+  
+  //Tag individual for genealogy
+  if(params->saveGenealogy){
+    idCounter=1;
+    for (int i=0 ; i < this->population->parentPopulationSize;i++)
+      {
+        this->population->parents[i]->id = idCounter;
+        this->population->parents[i]->origin = 'A';
+        this->population->parents[i]->survival = 0;
+        idCounter ++;
+      }
+    writeVisualizationStats();
+  }
 
   TIME_ST(eval);
   if(!INSTEAD_EVAL_STEP)
@@ -224,6 +237,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   //Initialize elitPopulation
   if(params->elitSize)
     elitistPopulation = (CIndividual**)malloc(params->elitSize*sizeof(CIndividual*)); 
+  
 
   // EVOLUTIONARY LOOP
   while( this->allCriteria() == false){
@@ -248,6 +262,20 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     if(this->params->optimise){
           population->optimiseOffspringPopulation();
     }
+    
+    if(params->saveGenealogy){
+      for(int i=0 ; i<this->population->parentPopulationSize; i++){
+        (this->population->parents[i]->survival)++;
+      }
+
+      for(int i=0 ; i<this->population-> offspringPopulationSize ; i++){
+        this->population->offsprings[i]->id=idCounter;
+        this->population->offsprings[i]-> gainFitness += this->population->offsprings[i]->getFitness();
+        idCounter++;
+      }
+      writeVisualizationStats();
+    }
+
     TIME_END(eval);
     TIME_ACC(eval);
 
@@ -337,6 +365,114 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 #endif
 }
 
+void CEvolutionaryAlgorithm::writeVisualizationStats(){
+  FILE *f;
+  int i;
+  int id;
+  float fitness;
+  float gfitness;
+  std::ostringstream flport;
+  string fichier;
+  
+  fichier = params->outputFilename;
+  flport << this->params->serverPort;
+  std::string exte = flport.str();
+  
+  fichier.append(exte);
+  fichier.append("Gen.txt");
+  f=fopen(fichier.c_str(),"a");
+   
+  if(f!=NULL){
+    
+    /*
+    #ifdef WIN32
+      if(currentGeneration==0){
+        fprintf(f,"Individu : NoGen 0 -- id 0 -- fitness 0 -- gainFitness 0\n");
+        
+        for(i=0 ; i< this-> population->parentPopulationSize;i++){
+          fitness =this->population->parents[i]->fitness;
+          id = (this->population->parents[i])->id;
+          gfitness = (this->population->parents[i])->gainFitness;
+          fprintf(f,"Individu : NoGen %lu -- id %lu -- fitness %2.3f -- gainFitness %2.3f\n", currentGeneration,id,fitness,gfitness);
+        }
+      }
+
+      if(currentGeneration !=0){
+        for(i=0 ; i< this->population->parentPopulationSize;i++){
+          id=(this->population->parents[i])->id;
+          fprintf(f,"Member : id %lu\n",id);
+        }
+
+        for(i=0 ; i < this->population->offspringPopulationSize;i++){
+          id = (this->population->offsprings[i])->id;
+          
+          if((this->population->offsprings[i])->origin=='C')
+            fprintf(f,"Cross : NoGen %lu -- parent1 %lu --parent2 %lu -- son %lu\n", currentGeneration,
+                                                                                    (this->population->offsprings[i])->parent1 ,
+                                                                                    (this->population->offsprings[i])->parent2,id);
+          if((this->population->offsprings[i])->origin=='B')
+            fprintf(f,"Both : NoGen %lu -- parent1 %lu --parent2 %lu -- son %lu\n", currentGeneration,
+                                                                                    (this->population->offsprings[i])->parent1 ,
+                                                                                    (this->population->offsprings[i])->parent2,id);
+          if((this->population->offsprings[i])->origin=='M')
+            fprintf(f,"Mutation : NoGen %lu -- id_parent %lu -- id_mute %lu\n", currentGeneration,(this->population->offsprings[i])->parent1,id);
+          if((this->population->offsprings[i])->origin=='N')
+            fprintf(f,"Clone : NoGen %lu -- id_parent %lu -- id_mute %lu\n", currentGeneration,(this->population->offsprings[i])->parent1,id);
+        }
+
+        for(i=0 ; i<this->population->offspringPopulationSize ; i++){
+          fitness = this->population->offsprings[i]->fitness;
+          id = (this->population->offsprings[i])->id;
+          gfitness = (this->population->offsprings[i])->gainFitness;
+          fprintf(f,"Individu : NoGen %lu -- id %lu -- fitness %2.3f -- gainFitness %2.3f\n",currentGeneration,id,fitness,gfitness);
+        }
+      }
+    #else
+    */
+      if(currentGeneration==0){
+        fprintf(f,"Individu : NoGen 0 -- id 0 -- fitness 0 -- gainFitness 0\n");
+        
+        for(i=0 ; i< this-> population->parentPopulationSize;i++){
+          fitness =this->population->parents[i]->getFitness();
+          id = (this->population->parents[i])->id;
+          gfitness = (this->population->parents[i])->gainFitness;
+          fprintf(f,"Individu : NoGen %d -- id %d -- fitness %2.3f -- gainFitness %2.3f\n", currentGeneration,id,fitness,gfitness);
+        }
+      }
+      
+      if(currentGeneration !=0){
+        for(i=0 ; i< this->population->parentPopulationSize;i++){
+          id=(this->population->parents[i])->id;
+          fprintf(f,"Member : id %d\n",id);
+        }
+
+        for(i=0 ; i < this->population->offspringPopulationSize;i++){
+          id = (this->population->offsprings[i])->id;
+          if((this->population->offsprings[i])->origin=='C')
+            fprintf(f,"Cross : NoGen %d -- parent1 %d -- parent2 %d -- son %d\n", currentGeneration,
+                                                                                  (this->population->offsprings[i])->parent1 ,
+                                                                                  (this->population->offsprings[i])->parent2,id);
+          if((this->population->offsprings[i])->origin=='B')
+            fprintf(f,"Both : NoGen %d -- parent1 %d -- parent2 %d -- son %d\n",  currentGeneration,
+                                                                                  (this->population->offsprings[i])->parent1 ,
+                                                                                  (this->population->offsprings[i])->parent2,id);
+          if((this->population->offsprings[i])->origin=='M')
+            fprintf(f,"Mutation : NoGen %d -- id_parent %d -- id_mute %d\n", currentGeneration,(this->population->offsprings[i])->parent1,id);
+          if((this->population->offsprings[i])->origin=='N')
+            fprintf(f,"Clone : NoGen %d -- id_parent %d -- id_mute %d\n", currentGeneration,(this->population->offsprings[i])->parent1,id);
+        }
+
+        for(i=0 ; i<this->population->offspringPopulationSize ; i++){
+          fitness = this->population->offsprings[i]->getFitness();
+          id = (this->population->offsprings[i])->id;
+          gfitness = (this->population->offsprings[i])->gainFitness;
+          fprintf(f,"Individu : NoGen %d -- id %d -- fitness %f -- gainFitness %f\n",currentGeneration,id,fitness,gfitness);   
+        }
+      }
+    //#endif
+      fclose(f);
+  }
+}
 
 #ifdef WIN32
 void CEvolutionaryAlgorithm::showPopulationStats(clock_t beginTime){
