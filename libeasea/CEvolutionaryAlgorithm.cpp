@@ -200,6 +200,13 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
   
+
+  TIME_ST(eval);
+  if(!INSTEAD_EVAL_STEP)
+    this->population->evaluateParentPopulation();
+  else
+    evale_pop_chunk(population->parents, population->parentPopulationSize);
+
   //Tag individual for genealogy
   if(params->saveGenealogy){
     idCounter=1;
@@ -212,12 +219,6 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
       }
     writeVisualizationStats();
   }
-
-  TIME_ST(eval);
-  if(!INSTEAD_EVAL_STEP)
-    this->population->evaluateParentPopulation();
-  else
-    evale_pop_chunk(population->parents, population->parentPopulationSize);
 
   if(this->params->optimise){
         population->optimiseParentPopulation();
@@ -371,6 +372,8 @@ void CEvolutionaryAlgorithm::writeVisualizationStats(){
   int id;
   float fitness;
   float gfitness;
+  int parent1;
+  int parent2;
   std::ostringstream flport;
   string fichier;
   
@@ -378,8 +381,8 @@ void CEvolutionaryAlgorithm::writeVisualizationStats(){
   flport << this->params->serverPort;
   std::string exte = flport.str();
   
-  fichier.append(exte);
-  fichier.append("Gen.txt");
+  //fichier.append(exte);
+  fichier.append("Tree.csv");
   f=fopen(fichier.c_str(),"a");
    
   if(f!=NULL){
@@ -430,17 +433,17 @@ void CEvolutionaryAlgorithm::writeVisualizationStats(){
     #else
     */
       if(currentGeneration==0){
-        fprintf(f,"Individu : NoGen 0 -- id 0 -- fitness 0 -- gainFitness 0\n");
+        fprintf(f,"generation,source,target,fitness,gain\n");
         
         for(i=0 ; i< this-> population->parentPopulationSize;i++){
           fitness =this->population->parents[i]->getFitness();
           id = (this->population->parents[i])->id;
           gfitness = (this->population->parents[i])->gainFitness;
-          fprintf(f,"Individu : NoGen %d -- id %d -- fitness %2.3f -- gainFitness %2.3f\n", currentGeneration,id,fitness,gfitness);
+          fprintf(f,"%d,-1,%d,%f,%f\n", currentGeneration,id,fitness,gfitness);
         }
       }
-      
       if(currentGeneration !=0){
+      /*
         for(i=0 ; i< this->population->parentPopulationSize;i++){
           id=(this->population->parents[i])->id;
           fprintf(f,"Member : id %d\n",id);
@@ -461,12 +464,16 @@ void CEvolutionaryAlgorithm::writeVisualizationStats(){
           if((this->population->offsprings[i])->origin=='N')
             fprintf(f,"Clone : NoGen %d -- id_parent %d -- id_mute %d\n", currentGeneration,(this->population->offsprings[i])->parent1,id);
         }
+        */
 
         for(i=0 ; i<this->population->offspringPopulationSize ; i++){
           fitness = this->population->offsprings[i]->getFitness();
           id = (this->population->offsprings[i])->id;
           gfitness = (this->population->offsprings[i])->gainFitness;
-          fprintf(f,"Individu : NoGen %d -- id %d -- fitness %f -- gainFitness %f\n",currentGeneration,id,fitness,gfitness);   
+          parent1=this->population->offsprings[i]->parent1;
+          parent2=this->population->offsprings[i]->parent2;
+          fprintf(f,"%d,%d,%d,%f,%f\n",currentGeneration,parent1,id,fitness,gfitness);   
+          fprintf(f,"%d,%d,%d,%f,%f\n",currentGeneration,parent2,id,fitness,gfitness);   
         }
       }
     //#endif
