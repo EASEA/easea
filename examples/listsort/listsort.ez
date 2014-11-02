@@ -10,7 +10,7 @@ Operating System: Windows XP
 _________________________________________________________*/
 
 \User declarations:
-  int SIZE=10;
+  int _SIZE_=10;
   double pMutPerGene=0.4;
   #include<cstring>
   inline void swap(int& a,int& b) {int c=a; a=b; b=c;}
@@ -20,7 +20,7 @@ _________________________________________________________*/
 void cross(GenomeClass *pChild, GenomeClass *pParent, int locus){
   Element *p, *pChildList, *pParentList;
   pChildList=pChild->pList; pParentList=pParent->pList;
-  for (int i=0;i<SIZE;i++){
+  for (int i=0;i<_SIZE_;i++){
     if (i>=locus){
       for(p=pChild->pList;pParentList->Value!=p->Value;p=p->pNext);
       swap(p->Value, pChildList->Value);
@@ -32,7 +32,7 @@ void cross(GenomeClass *pChild, GenomeClass *pParent, int locus){
 \end
 
 \Before everything else function:
-  if ((argc>1)&&(!strcmp(argv[1],"size"))) SIZE=atoi(argv[2]);
+  if ((argc>1)&&(!strcmp(argv[1],"size"))) _SIZE_=atoi(argv[2]);
 \end
 
 \User classes:
@@ -50,9 +50,9 @@ void cross(GenomeClass *pChild, GenomeClass *pParent, int locus){
   Element *pElt;
   Genome.Size=0;                       
   Genome.pList=NULL;
-  for (int i=0;i<SIZE;i++){  // creation of a linked list of SIZE elements
+  for (int i=0;i<_SIZE_;i++){  // creation of a linked list of _SIZE_ elements
     pElt=new Element;        // with the decreasing values:
-    pElt->Value=i+1;         //       (SIZE, SIZE-1, ... , 3, 2, 1)
+    pElt->Value=i+1;         //       (_SIZE_, _SIZE_-1, ... , 3, 2, 1)
     pElt->pNext=Genome.pList;
     Genome.pList=pElt;
     Genome.Size++;
@@ -60,7 +60,7 @@ void cross(GenomeClass *pChild, GenomeClass *pParent, int locus){
 \end
 
 \GenomeClass::crossover:
-  int locus=random(0,SIZE-1);
+  int locus=random(0,_SIZE_-1);
   cross(&child, &parent2, locus);
 \end
 
@@ -86,7 +86,7 @@ void cross(GenomeClass *pChild, GenomeClass *pParent, int locus){
     else eval-=2;
     p=p->pNext;
   }
-  if (p->Value==SIZE) eval+=10;
+  if (p->Value==_SIZE_) eval+=10;
 
   return (eval<0 ? 0 : eval);
 \end
