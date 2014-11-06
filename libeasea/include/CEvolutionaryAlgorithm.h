@@ -34,6 +34,8 @@
 #include "CStoppingCriterion.h"
 #include "CComUDPLayer.h"
 #include "CStats.h"
+#include "CMonitorModule.h"
+#include "ClientMonitorParameter.h"
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -221,6 +223,9 @@ class CEvolutionaryAlgorithm {
     unsigned myClientNumber;
     CComUDPServer *server;
     CComUDPClient **Clients;
+    
+    /*MONITORING*/
+    CMonitorModule* audioMonitor;
     
     /*META*/
     Parameters* params;

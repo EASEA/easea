@@ -97,6 +97,12 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
   this->params = params;
     this->cstats = new CStats();
 
+  /***********************************************************/
+  this->audioMonitor=new CMonitorModule("127.0.0.1",27800);
+  audioMonitor->setMigrationNotification();
+  audioMonitor->setParams(new ClientMonitorParameter(this));
+  /***********************************************************/
+  
   CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
       params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
@@ -573,6 +579,19 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
     fclose(f);
         }
   }
+
+
+  /********************************************************************************
+   *-BEGIN Monitoring Audio-----                                                  *
+   *******************************************************************************/
+  //TODO: multi platform, parser .ez etc...   
+  
+  audioMonitor->send();
+
+  /********************************************************************************
+   *-END   Monitoring Audio-----                                                  *
+   *******************************************************************************/
+  
   //print grapher
   #ifndef WIN32
   if(this->params->plotStats && this->grapher->valid){
@@ -667,6 +686,11 @@ void CEvolutionaryAlgorithm::sendIndividual(){
   
     //selecting a client randomly
     int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
+    
+    /*****************************************************************/
+    audioMonitor->sendingIndividuals();
+    /*****************************************************************/
+		
     //for(int client=0; client<this->numberOfClients; client++){
     cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to machine " 
     << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() <<endl;
@@ -681,6 +705,12 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
   if(this->server->parm->data->size() != 0){
     //cout << "number of received individuals :" << this->server->nb_data << endl;
     //cout << "number of treated individuals :" << this->treatedIndividuals << endl;
+    
+    /*****************************************************************/
+     audioMonitor->receivedIndividuals();
+    /*****************************************************************/
+		
+    
     CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);   
 
     //Treating all the individuals before continuing
