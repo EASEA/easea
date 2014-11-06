@@ -105,27 +105,26 @@
 ### Compiler option
     
   SYNOPSIS
-    easea [options] [file]
-    
-  OPTIONS
-    * -cuda
-    * -cuda_mo
-    * -cuda_gp
-    * -gp
-    * -std
-    * -std_mo
-    * -cmaes
-    * -memetic
-    * -v
-    * -path
-    * -eo_dir
+   * easea [options] [file]
 
-### Program option
+  OPTIONS
+   * -cuda
+   * -cuda_mo
+   * -cuda_gp
+   * -gp 
+   * -std
+   * -std_mo
+   * -cmaes
+   * -memetic
+   * -v
+   * -path
+   * -eo_dir
+
+### Program options
   Allowed options :
    * --help                        produce help message
    * --compression arg             set compression level
-   * --seed arg                    set the global seed of the pseudo random 
-   *                               generator
+   * --seed arg                    set the global seed of the pseudo random generator
    * --popSize arg                 set the population size
    * --nbOffspring arg             set the offspring population size
    * --survivingParents arg        set the reduction size for parent population
@@ -139,47 +138,31 @@
    * --selectionPressure arg       Set the Selection Pressure (default : 2.0)
    * --reduceParentsOperator arg   Set the Parents Reducing Operator (default : 
    *                               Tournament)
-   * --reduceParentsPressure arg   Set the Parents Reducing Pressure (default : 
-   *                               2.0)
-   * --reduceOffspringOperator arg Set the Offspring Reducing Operator (default : 
-   *                               Tournament)
-   * --reduceOffspringPressure arg Set the Offspring Reducing Pressure (default : 
-   *                               2.0)
-   * --reduceFinalOperator arg     Set the Final Reducing Operator (default : 
-   *                               Tournament)
+   * --reduceParentsPressure arg   Set the Parents Reducing Pressure (default : 2.0)
+   * --reduceOffspringOperator arg Set the Offspring Reducing Operator (default : Tournament)
+   * --reduceOffspringPressure arg Set the Offspring Reducing Pressure (default : 2.0)
+   * --reduceFinalOperator arg     Set the Final Reducing Operator (default : Tournament)
    * --reduceFinalPressure arg     Set the Final Reducing Pressure (default : 2.0)
-   * --optimiseIterations arg      Set the number of optimisation iterations 
-   *                               (default : 100)
+   * --optimiseIterations arg      Set the number of optimisation iterations (default : 100)
    * --saveGenealogy arg           Print the complete genealogy tree to a file
    * --baldwinism arg              Only keep fitness (default : 0)
-   * --remoteIslandModel arg       Boolean to activate the individual exachange 
-   *                               with remote islands (default : 0)
-   * --ipFile arg                  File containing all the IPs of the remote 
-   *                               islands)
-   * --migrationProbability arg    Probability to send an individual each generati
-   *                               on
+   * --remoteIslandModel arg       Boolean to activate the individual exachange with remote islands (default : 0)
+   * --ipFile arg                  File containing all the IPs of the remote islands)
+   * --migrationProbability arg    Probability to send an individual each generation
    * --serverPort arg              Port of the Server
-   * --outputfile arg              Set an output file for the final population 
-   *                               (default : none)
-   * --inputfile arg               Set an input file for the initial population 
-   *                               (default : none)
+   * --outputfile arg              Set an output file for the final population (default : none)
+   * --inputfile arg               Set an input file for the initial population (default : none)
    * --printStats arg              Print the Stats (default : 1)
    * --plotStats arg               Plot the Stats (default : 0)
-   * --generateCSVFile arg         Print the Stats to a CSV File (Filename: 
-   *                               ProjectName.dat) (default : 0)
-   * --generatePlotScript arg      Generates a Gnuplot script to plat the Stats 
-   *                               (Filename: ProjectName.plot) (default : 0)
-   * --generateRScript arg         Generates a R script to plat the Stats (Filenam
-   *                               e: ProjectName.r) (default : 0)
+   * --generateCSVFile arg         Print the Stats to a CSV File (Filename: ProjectName.dat) (default : 0)
+   * --generatePlotScript arg      Generates a Gnuplot script to plat the Stats (Filename: ProjectName.plot) (default : 0)
+   * --generateRScript arg         Generates a R script to plat the Stats (Filename: ProjectName.r) (default : 0)
    * --printInitialPopulation arg  Prints the initial population (default : 0)
    * --printFinalPopulation arg    Prints the final population (default : 0)
    * --savePopulation arg          Saves population at the end (default : 0)
-   * --startFromFile arg           Loads the population from a .pop file (default 
-   *                               : 0
-   * --fstgpu arg                  The number of the first GPU used for computatio
-   *                               n
-   * --lstgpu arg                  The number of the fisrt GPU NOT used for 
-   *                               computation
+   * --startFromFile arg           Loads the population from a .pop file (default : 0
+   * --fstgpu arg                  The number of the first GPU used for computatio n
+   * --lstgpu arg                  The number of the fisrt GPU NOT used for computation
    * --u1 arg                      User defined parameter 1
    * --u2 arg                      User defined parameter 2
    * --u3 arg                      User defined parameter 3
