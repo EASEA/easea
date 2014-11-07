@@ -1,0 +1,29 @@
+\documentclass[border=10pt,png]{standalone}
+\usepackage{bytefield}
+
+
+\begin{document}
+
+\begin{bytefield}[bitwidth=1.1em]{32}
+\bitheader{0-31} \\
+\begin{rightwordgroup}{Fixed \\ Header}
+  \bitbox{1}{IP} &\bitbox{1}{empty} \bitbox{4}{Nb param} & \bitbox{26}{padding}\\
+  \bitbox{32}{IP(v4)}\\
+  \bitbox{32}{IP(v6) (depending of IP type )}\\
+  \bitbox{32}{IP(v6) (depending of IP type )}\\
+  \bitbox{32}{IP(v6) (depending of IP type )}\\
+  \bitbox{16}{timestamp} &
+\bitbox{16}{checksum} \\
+\end{rightwordgroup} \\
+
+\begin{rightwordgroup}{Parameters \\ Header}
+  \bitbox{4}{pType} & \bitbox{28}{value (size depending of type )}\\
+  \bitbox{32}{$\cdots$}\\
+\end{rightwordgroup} \\
+
+\begin{rightwordgroup}{Body \\ individual}
+\wordbox{3}{individual raw data} \\
+\end{rightwordgroup}
+\end{bytefield}
+
+\end{document}
