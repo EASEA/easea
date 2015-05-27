@@ -2595,6 +2595,9 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
     }
   }
   
+  char* temp = basename(sRAW_PROJECT_NAME);
+
+
   if ((sRAW_PROJECT_NAME[0]=='"')&&(OPERATING_SYSTEM!=WINDOWS)){
     strcpy(sRAW_PROJECT_NAME,&(sRAW_PROJECT_NAME[1]));
     sRAW_PROJECT_NAME[strlen(sRAW_PROJECT_NAME)-1]=0;
@@ -2616,7 +2619,8 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
                                                                            
   if (!(fpGenomeFile = fopen(sEZ_FILE_NAME, "r"))){
     fprintf(stderr,"\n*** Could not open %s\n",sEZ_FILE_NAME); return 0;}
- 
+  
+  strcpy(sRAW_PROJECT_NAME, basename(sRAW_PROJECT_NAME));
   return 1;
 }
 
