@@ -18,6 +18,9 @@ Centre de Math?matiques Appliqu?es
 #include <assert.h>
 #include <errno.h>
 
+#ifdef WIN32
+#define isatty(...) 0
+#endif
 
 #define CUDA 4
 #define STD 5
