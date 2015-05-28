@@ -18,8 +18,6 @@ Centre de Math?matiques Appliqu?es
 #include <assert.h>
 #include <errno.h>
 
-#define true 1
-#define false 0
 
 #define CUDA 4
 #define STD 5
