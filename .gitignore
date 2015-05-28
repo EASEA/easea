@@ -1,0 +1,15 @@
+[Bb]in/
+[Oo]bj/
+[Ll]ib/
+[Tt]emp/
+[Ll]og/
+[Tt]mp/
+*.tmp
+*.bak
+*.old
+*.log
+.idea/
+*.*.user
+*.*.filters
+*.suo
+.vs/
