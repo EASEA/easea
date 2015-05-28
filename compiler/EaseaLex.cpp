@@ -3145,10 +3145,6 @@ Ecole Polytechnique
 Centre de Math�matiques Appliqu�es
 91128 Palaiseau cedex
   ****************************************************************************/
-#ifdef WIN32
-#define _CRT_SECURE_NO_WARNINGS
-//#pragma comment(lib, "libAlexYacc.lib")
-#endif
 #include "Easea.h"
 #include "EaseaParse.hpp"
 
