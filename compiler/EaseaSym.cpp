@@ -1,6 +1,3 @@
-#ifdef WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#endif
 /****************************************************************************
   EaseaSym.cpp
   Symbol table and other functions for the EASEA language (EAsy Specification for Evolutionary Algorithms)

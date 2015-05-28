@@ -1,6 +1,3 @@
-#ifdef WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#endif
 #include "EaseaYTools.h"
 
 void pickupSTDSelector(char* sSELECTOR, float* fSELECT_PRM, char* sEZ_FILE_NAME){
