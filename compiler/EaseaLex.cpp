@@ -3149,6 +3149,7 @@ Centre de Math�matiques Appliqu�es
 #include "EaseaParse.hpp"
 
 #if defined WIN32 || defined WIN64
+typedef size_t ssize_t;
 #include <direct.h>
 #else
 #include <unistd.h>
