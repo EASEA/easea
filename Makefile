@@ -6,19 +6,19 @@ YACC=bison
 LEX=flex
 EXEC = bin/easea
 CPPFLAGS += -DUNIX_OS -g -Wno-deprecated -DDEBUG -DLINE_NUM_EZ_FILE
-LDFLAGS = 
+LDFLAGS =
 
-OBJ= build/EaseaSym.o build/EaseaParse.o build/EaseaLex.o build/EaseaYTools.o boost/program_options.a libeasea/libeasea.a
+OBJ= build/EaseaSym.o build/EaseaParse.o build/EaseaLex.o build/EaseaYTools.o libeasea/libeasea.a
 
 #ifeq ($(UNAME),Darwin)
 $(EXEC):build bin $(OBJ)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJ) -o $@ 
+	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJ) -o $@
 ifneq ("$(OS)","")
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
-	# 
+	#
 	# You can use easea from this directory by typing :
-	#       For example : 
+	#       For example :
 	#      easea.exe examples\weierstrass_std\weierstrass.ez
 	# Go to the target directory and type make -f weierstrass.mak
 	#
@@ -27,8 +27,8 @@ ifneq ("$(OS)","")
 else
 	#
 	# Congratulations !  It looks like you compiled EASEA successfully.
-	# 
-	# You can now install easea into your system or use it from 
+	#
+	# You can now install easea into your system or use it from
 	# its current directory.
 	#
 	# Installation:
@@ -42,16 +42,16 @@ ifeq ($(UNAME),Darwin)
 else
 	# into your .bashrc file.
 endif
-	# 
+	#
 	# Local Usage:
-	# All EASEA elements will stay in the current directory, 
+	# All EASEA elements will stay in the current directory,
 	# but some environment variables need to be updated into your
 ifeq ($(UNAME),Darwin)
 	# .bash_profile file (EZ_PATH and). To do so type:
 else
 	# .bashrc file (EZ_PATH and). To do so type:
 endif
-	#	 ". install.sh local". 
+	#	 ". install.sh local".
 	#
 	# Thanks for using EASEA.
 	#
@@ -61,7 +61,7 @@ endif
 # 	$(CXX) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
 
 
-# $(EXEC)_bin:EaseaSym.o EaseaParse.o EaseaLex.o 
+# $(EXEC)_bin:EaseaSym.o EaseaParse.o EaseaLex.o
 # 	$(CXX) $(CPPFLAGS) $(LDFLAGS) $^ -o $@ -lalex
 
 
@@ -75,7 +75,7 @@ install:
 	cp -r boost/boost/ /usr/local/easea/boost/boost/
 	cp easeagrapher/EaseaGrapher.jar /usr/local/easea/easeagrapher/
 
-	 
+
 build:
 	@test -d build || mkdir build || echo "Cannot make dir build"
 bin:
@@ -113,7 +113,7 @@ clean:
 #ifeq ($(UNAME),Darwin)
 	cd boost && make clean
 #endif
-	
+
 #install:$(EXEC)
 #	sudo cp $< /usr/bin/dev-easea
 
