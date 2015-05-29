@@ -19,6 +19,6 @@
 #include <winsock2.h>
 #include <windows.h>
 
-#if !HAVE_DECL_INET_PTON
+#if !HAVE_DECL_INET_PTON && _MSC_VER < 1700 
 extern int inet_pton (int af, const char *src, void *dst);
 #endif

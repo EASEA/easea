@@ -29,7 +29,7 @@ Centre de Math�matiques Appliqu�es
 //#include <iostream>
 //#include <sstream>
 
-#if defined __WIN64__ || defined __APPLE__ || defined __WIN32__
+#if defined __WIN64__ || defined __APPLE__ || defined __WIN32__ || WIN32
  /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
 char *strndup (const char *s, size_t n){
     size_t len = strlen (s);

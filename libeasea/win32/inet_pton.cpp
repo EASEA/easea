@@ -35,6 +35,8 @@
 
 //#include <config.h>
 
+#if !HAVE_DECL_INET_PTON && _MSC_VER < 1700
+
 /* Specification.  */
 #include "include/inet_pton.h"
 
@@ -254,4 +256,5 @@ inet_pton6 (const char *restrict src, unsigned char *restrict dst)
   memcpy (dst, tmp, NS_IN6ADDRSZ);
   return (1);
 }
+#endif
 #endif

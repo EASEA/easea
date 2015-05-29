@@ -11,39 +11,58 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="debug.h" />
-    <ClInclude Include="Easea.h" />
-    <ClInclude Include="EaseaLex.h" />
-    <ClInclude Include="EaseaParse.hpp" />
-    <ClInclude Include="EaseaSym.h" />
-    <ClInclude Include="EaseaYTools.h" />
+    <ClInclude Include="include\CCmaes.h" />
+    <ClInclude Include="include\CCmaesCuda.h" />
+    <ClInclude Include="include\CComUDPLayer.h" />
+    <ClInclude Include="include\CCuda.h" />
+    <ClInclude Include="include\CEvolutionaryAlgorithm.h" />
+    <ClInclude Include="include\CGPNode.h" />
+    <ClInclude Include="include\CGrapher.h" />
+    <ClInclude Include="include\CIndividual.h" />
+    <ClInclude Include="include\COptionParser.h" />
+    <ClInclude Include="include\CPopulation.h" />
+    <ClInclude Include="include\CRandomGenerator.h" />
+    <ClInclude Include="include\CSelectionOperator.h" />
+    <ClInclude Include="include\CStats.h" />
+    <ClInclude Include="include\CStoppingCriterion.h" />
+    <ClInclude Include="include\define.h" />
+    <ClInclude Include="include\global.h" />
+    <ClInclude Include="include\inet_pton.h" />
+    <ClInclude Include="include\MersenneTwister.h" />
+    <ClInclude Include="include\Parameters.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EaseaLex.cpp" />
-    <ClCompile Include="EaseaParse.cpp" />
-    <ClCompile Include="EaseaSym.cpp" />
-    <ClCompile Include="EaseaYTools.cpp" />
-    <ClCompile Include="Win32Workarounds.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="EaseaLex.l" />
-    <None Include="EaseaParse.y" />
+    <ClCompile Include="CCmaes.cpp" />
+    <ClCompile Include="CCmaesCuda.cpp" />
+    <ClCompile Include="CComUDPLayer.cpp" />
+    <ClCompile Include="CEvolutionaryAlgorithm.cpp" />
+    <ClCompile Include="CGPNode.cpp" />
+    <ClCompile Include="CGrapher.cpp" />
+    <ClCompile Include="CIndividual.cpp" />
+    <ClCompile Include="COptionParser.cpp" />
+    <ClCompile Include="CPopulation.cpp" />
+    <ClCompile Include="CRandomGenerator.cpp" />
+    <ClCompile Include="CSelectionOperator.cpp" />
+    <ClCompile Include="CStats.cpp" />
+    <ClCompile Include="CStoppingCriterion.cpp" />
+    <ClCompile Include="Parameters.cpp" />
+    <ClCompile Include="win32\inet_pton.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{C9A6F6FC-46A2-4FD0-89EF-870C86B71BE9}</ProjectGuid>
+    <ProjectGuid>{5CE25FDB-8100-4000-8288-5F49BC6B6FA8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>easea</RootNamespace>
-    <ProjectName>easea</ProjectName>
+    <RootNamespace>libeasea</RootNamespace>
+    <ProjectName>libeasea</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -61,7 +80,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>../bin/$(Platform)_$(Configuration)_msvc_$(PlatformToolset)/</OutDir>
+    <OutDir>../lib/$(Platform)_$(Configuration)_msvc_$(PlatformToolset)/</OutDir>
     <IntDir>../obj/$(ProjectName)/$(Platform)_$(Configuration)_msvc_$(PlatformToolset)/</IntDir>
     <IncludePath>$(ProjectDir);$(Include);$(IncludePath)</IncludePath>
     <LibraryPath>$(Lib);$(LibraryPath)</LibraryPath>
@@ -73,7 +92,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>../bin/$(Platform)_$(Configuration)_msvc_$(PlatformToolset)/</OutDir>
+    <OutDir>../lib/$(Platform)_$(Configuration)_msvc_$(PlatformToolset)/</OutDir>
     <IntDir>../obj/$(ProjectName)/$(Platform)_$(Configuration)_msvc_$(PlatformToolset)/</IntDir>
     <IncludePath>$(ProjectDir);$(Include);$(IncludePath)</IncludePath>
     <LibraryPath>$(Lib);$(LibraryPath)</LibraryPath>
@@ -92,6 +111,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -114,6 +134,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
