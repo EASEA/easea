@@ -18,16 +18,10 @@ Centre de Math?matiques Appliqu?es
 #include <assert.h>
 #include <errno.h>
 
-// Set of "temporary" workarounds for windows
+// Set of "temporary" workarounds for Windows / Visual Studio
 #ifdef _MSC_VER 
-#define isatty(...) 0
-char* strndup(const char *s, size_t size);
-#if _MSC_VER >= 1800
-char* basename(const char* path);
+#include <Win32Workarounds.h>
 #endif
-#endif
-
-
 
 #define CUDA 4
 #define STD 5

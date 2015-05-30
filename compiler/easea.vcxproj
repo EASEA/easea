@@ -17,6 +17,7 @@
     <ClInclude Include="EaseaParse.hpp" />
     <ClInclude Include="EaseaSym.h" />
     <ClInclude Include="EaseaYTools.h" />
+    <ClInclude Include="Win32Workarounds.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EaseaLex.cpp" />
