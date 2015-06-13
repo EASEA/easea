@@ -69,11 +69,10 @@ endif
 
 
 install:
-	mkdir -p $(DESTDIR)$(PREFIX)/easea
 	mkdir -p $(DESTDIR)$(PREFIX)/easea/bin
 	mkdir -p $(DESTDIR)$(PREFIX)/easea/tpl
-	mkdir -p $(DESTDIR)$(PREFIX)/easea/include
-	mkdir -p $(DESTDIR)$(PREFIX)/easea/boost
+	mkdir -p $(DESTDIR)$(PREFIX)/easea/libeasea/include
+	mkdir -p $(DESTDIR)$(PREFIX)/easea/boost/boost
 	mkdir -p $(DESTDIR)$(PREFIX)/easea/easeagrapher
 	cp bin/easea $(DESTDIR)$(PREFIX)/easea/bin/
 	cp tpl/* $(DESTDIR)$(PREFIX)/easea/tpl/
