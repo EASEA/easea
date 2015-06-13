@@ -66,14 +66,19 @@ endif
 
 
 install:
-	mkdir -p /usr/local/easea/ /usr/local/easea/bin /usr/local/easea/tpl /usr/local/easea/libeasea/include /usr/local/easea/boost /usr/local/easea/easeagrapher/
-	cp bin/easea /usr/local/easea/bin/
-	cp tpl/* /usr/local/easea/tpl/
-	cp libeasea/include/* /usr/local/easea/libeasea/include/
-	cp libeasea/libeasea.a /usr/local/easea/libeasea/
-	cp boost/program_options.a /usr/local/easea/boost
-	cp -r boost/boost/ /usr/local/easea/boost/boost/
-	cp easeagrapher/EaseaGrapher.jar /usr/local/easea/easeagrapher/
+	mkdir -p $(DESTDIR)$(PREFIX)/easea
+	mkdir -p $(DESTDIR)$(PREFIX)/easea/bin
+	mkdir -p $(DESTDIR)$(PREFIX)/easea/tpl
+	mkdir -p $(DESTDIR)$(PREFIX)/easea/include
+	mkdir -p $(DESTDIR)$(PREFIX)/easea/boost
+	mkdir -p $(DESTDIR)$(PREFIX)/easea/easeagrapher
+	cp bin/easea $(DESTDIR)$(PREFIX)/easea/bin/
+	cp tpl/* $(DESTDIR)$(PREFIX)/easea/tpl/
+	cp libeasea/include/* $(DESTDIR)$(PREFIX)/easea/libeasea/include/
+	cp libeasea/libeasea.a $(DESTDIR)$(PREFIX)/easea/libeasea/
+	cp boost/program_options.a $(DESTDIR)$(PREFIX)/easea/boost
+	cp -r boost/boost/ $(DESTDIR)$(PREFIX)/easea/boost/boost/
+	cp easeagrapher/EaseaGrapher.jar $(DESTDIR)$(PREFIX)/easea/easeagrapher/
 
 	 
 build:
