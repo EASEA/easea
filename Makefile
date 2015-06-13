@@ -10,6 +10,9 @@ LDFLAGS =
 
 OBJ= build/EaseaSym.o build/EaseaParse.o build/EaseaLex.o build/EaseaYTools.o boost/program_options.a libeasea/libeasea.a
 
+DESTDIR=
+PREFIX=/usr/local
+
 #ifeq ($(UNAME),Darwin)
 $(EXEC):build bin $(OBJ)
 	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJ) -o $@ 
