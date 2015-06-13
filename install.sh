@@ -39,6 +39,8 @@ fi
 #Do the installation
 if [ "$1" = "local" ]; then
   echo "Installing easea 1.0.3 locally" 
+  mkdir -p $USER_HOME/easea_build/
+  make install PREFIX=$USER_HOME/easea_build > /dev/null
 
   echo "Exporting and setting environment variables"
   export EZ_PATH="$PWD/"
