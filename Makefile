@@ -117,6 +117,9 @@ clean:
 	rm -f build/*.o $(EXEC) $(EXEC)_bin
 	cd libeasea && make clean
 	cd boost && make clean
+	if [ -d "$(HOME)/easea_build/" ]; then \
+		rm -r $(HOME)/easea_build; \
+	fi
 #ifeq ($(UNAME),Darwin)
 	cd boost && make clean
 #endif
