@@ -26,3 +26,10 @@
 *.exe
 *.out
 *.app
+
+*.i
+*.ii
+*.gpu
+*.ptx
+*.cubin
+*.fatbin
