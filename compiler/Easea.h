@@ -25,6 +25,7 @@ Centre de Math?matiques Appliqu?es
 #define STD 5
 #define CMAES 6
 #define MEMETIC 7
+#define NSGA2 8
 
 #define STD_FLAVOR_SO 0
 #define STD_FLAVOR_MO 1
@@ -64,6 +65,7 @@ extern int nMINIMISE,nELITE;
 extern float fMUT_PROB, fXOVER_PROB, fSURV_PAR_SIZE, fSURV_OFF_SIZE;
 extern float fSELECT_PRM, fRED_PAR_PRM, fRED_FINAL_PRM, fRED_OFF_PRM;
 extern float fMIGRATION_PROBABILITY;
+extern int fCOUNT;
 
 extern unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_SIZE,iMAX_TREE_DEPTH,iNO_FITNESS_CASES;
 

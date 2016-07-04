@@ -3316,6 +3316,7 @@ void yyreset()
 
   CSymbolTable *pSymbolTable;   // the symbol table
   bool bSymbolInserted,bWithinEvaluator, bWithinOptimiser;  // used to change evalutor type from double to float 
+  bool firstMO;
   bool bInitFunction,bDisplayFunction,bFunction, bNotFinishedYet, bWithinEO_Function;
   bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
   bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationReplacementFunction;

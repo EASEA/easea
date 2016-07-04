@@ -179,6 +179,7 @@ void yyreset()
 
   CSymbolTable *pSymbolTable;   // the symbol table
   bool bSymbolInserted,bWithinEvaluator, bWithinOptimiser;  // used to change evalutor type from double to float 
+  bool firstMO;
   bool bInitFunction,bDisplayFunction,bFunction, bNotFinishedYet, bWithinEO_Function;
   bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
   bool bWaitingForSemiColon,bFinishNB_GEN,bFinishMINIMISE,bFinishMINIMIZE,bGenerationReplacementFunction;
@@ -2001,6 +2002,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_EVALUATOR>"\\GenomeClass::evaluator"[ \t\n]*":" {
   BEGIN COPY_USER_FUNCTION;            
   bWithinEvaluator=1;
+  firstMO = true;
   if( bLINE_NUM_EZ_FILE )
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
   return USER_EVALUATOR;
@@ -2224,16 +2226,6 @@ if(OPERATING_SYSTEM=WINDOWS)
     fprintf(fpOutputFile,"%s",yytext);
  }
 
-<COPY_USER_FUNCTION>"number of objectives = "  {
-  if( bWithinCUDA_Evaluator &&  TARGET==CUDA && TARGET_FLAVOR==CUDA_FLAVOR_MO ){
-    fprintf(fpOutputFile,"(f[1])");
-  }
-  else
-    fprintf(fpOutputFile,"%s",yytext);
- }
-
-
-
 <COPY_USER_FUNCTION>"initOpts."  {
   if( ((bWithinEvaluator || bWithinOptimiser) && !bWithinCUDA_Evaluator) && ( TARGET==STD || TARGET==CUDA )){
     fprintf(fpOutputFile,"");
@@ -2252,6 +2244,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   }
 
   else fprintf(fpOutputFile,"Genome");} // local genome name
+
+<COPY_USER_FUNCTION>"\\fitness"[ \t\n]*":"  {if(bWithinEvaluator && !firstMO) fCOUNT++; firstMO = false; }
 
 <COPY_USER_FUNCTION>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 <COPY_USER_FUNCTION>"\\\""  {fprintf(fpOutputFile,"\\\"");}
@@ -2345,6 +2339,10 @@ if(OPERATING_SYSTEM=WINDOWS)
       bCatchNextSemiColon=false;
     }
     //bWithinEvaluator=0;
+  else if (TARGET==NSGA2) {
+    fprintf(fpOutputFile,"f[%d] = ", fCOUNT);
+    bCatchNextSemiColon=false;
+  }
   }
   else if ((bWithinMutator)) {
     fprintf(fpOutputFile,"return ");

@@ -68,6 +68,7 @@ int nTIME_LIMIT=0;
 int nSERVER_PORT=0;
 float fMUT_PROB;
 float fXOVER_PROB;
+int fCOUNT = 0;
 FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile;//, *fpExplodedGenomeFile;
 
 CSymbolTable SymbolTable;    // the symbol table
@@ -754,6 +755,9 @@ int main(int argc, char *argv[]){
     }
     else if (!mystricmp(sTemp,"memetic"))  {
       TARGET_FLAVOR = MEMETIC;
+    }
+    else if (!mystricmp(sTemp,"nsga2") || !mystricmp(sTemp,"nsga"))  {
+      TARGET_FLAVOR = NSGA2;
     }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
