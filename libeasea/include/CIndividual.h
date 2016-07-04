@@ -16,6 +16,7 @@ class CIndividual {
     bool valid;
     bool isImmigrant;
     float fitness;
+    int rank;
     static CRandomGenerator* rg;
   public:
     CIndividual();
@@ -32,8 +33,12 @@ class CIndividual {
 
     virtual void boundChecking() = 0;
 
-    static unsigned getCrossoverArrity(){ return 2; }
-    float getFitness(){ return this->fitness; }
+    static unsigned getCrossoverArrity() {
+        return 2;
+    }
+    float getFitness() {
+        return this->fitness;
+    }
 
 
 };
