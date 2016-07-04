@@ -12,7 +12,7 @@ CXXFLAGS = -g -O1 -fopenmp -Wall -fmessage-length=0 -I/usr/local/cuda/include -I
 OBJS = CRandomGenerator.o CSelectionOperator.o CEvolutionaryAlgorithm.o\
 	   CStoppingCriterion.o COptionParser.o CPopulation.o CIndividual.o\
 	CGrapher.o CCmaes.o CCmaesCuda.o Parameters.o CGPNode.o\
-	CComUDPLayer.o CStats.o CGPNode.o
+	CComUDPLayer.o CStats.o CGPNode.o CNsgaII.o
 
 ifneq ("$(OS)","")
 OBJS += inet_pton.o

@@ -62,6 +62,7 @@ float fSURV_PAR_SIZE=-1.0, fSURV_OFF_SIZE=-1.0;
 char *nGENOME_NAME;
 int nPROBLEM_DIM;
 int nNB_GEN=0;
+int nNB_OBJECTIVE=1;
 int nNB_OPT_IT=0;
 int nTIME_LIMIT=0;
 int nSERVER_PORT=0;
@@ -139,6 +140,7 @@ class CSymbol;
 %token METHODS
 %token STATIC       
 %token NB_GEN       
+%token NB_OBJECTIVE       
 %token NB_OPT_IT //Memetic 
 %token BALDWINISM //Memetic
 %token MUT_PROB
@@ -475,6 +477,8 @@ RunParameters
 Parameter
   :  NB_GEN NUMBER2
       {nNB_GEN=(int)$2;}
+  |  NB_OBJECTIVE NUMBER2
+      {nNB_OBJECTIVE=(int)$2;}
   |  NB_OPT_IT NUMBER2
       {nNB_OPT_IT=(int)$2;}
   |  TIME_LIMIT NUMBER2

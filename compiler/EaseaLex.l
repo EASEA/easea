@@ -1140,6 +1140,7 @@ exponent  ([Ee][+-]?[0-9]+)
   yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   BEGIN PARAMETERS_ANALYSIS;   
  }
+
 <TEMPLATE_ANALYSIS>"\\INSERT_GEN_FCT_CALL"  {
   if (bGenerationReplacementFunction) {
     if( bVERBOSE ) fprintf(stdout,"Inserting generation function call\n");
@@ -1272,6 +1273,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\GENOME_NAME"  {fprintf(fpOutputFile,"%s",nGENOME_NAME);}
 <TEMPLATE_ANALYSIS>"\\PROBLEM_DIM"  {fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
 <TEMPLATE_ANALYSIS>"\\NB_GEN"  {fprintf(fpOutputFile,"%d",nNB_GEN);}
+<TEMPLATE_ANALYSIS>"\\NB_OBJECTIVE"  {fprintf(fpOutputFile,"%d",nNB_OBJECTIVE);}
 <TEMPLATE_ANALYSIS>"\\TIME_LIMIT" {fprintf(fpOutputFile,"%d",nTIME_LIMIT);}
 <TEMPLATE_ANALYSIS>"\\MUT_PROB"  {fprintf(fpOutputFile,"%f",fMUT_PROB);}
 <TEMPLATE_ANALYSIS>"\\XOVER_PROB"  {fprintf(fpOutputFile,"%f",fXOVER_PROB);}
@@ -1690,6 +1692,11 @@ if(OPERATING_SYSTEM=WINDOWS)
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 <COPY>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
+<COPY>"NB_OBJECTIVE" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_OBJECTIVE");
+  else fprintf(fpOutputFile,"(*EZ_NB_OBJECTIVE)");} // local genome name
+<COPY>"NB_OBJECTIVE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_OBJECTIVE");
+  else fprintf(fpOutputFile,"(*EZ_NB_OBJECTIVE)");} // local genome name
+
 <COPY>"POP_SIZE"|"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 <COPY>"MUT_PROB"|"MUT_PROB"/[ \t\n]*"==" {
@@ -1728,6 +1735,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);}
 <COPY>"NB_GEN"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+<COPY>"NB_OBJECTIVE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The numberof objective can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"POP_SIZE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MUT_PROB"[ \t\n]*"=" {
   fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
@@ -2052,7 +2060,18 @@ if(OPERATING_SYSTEM=WINDOWS)
   else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }} 
 <COPY_USER_GENERATION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
  /*local genome name*/
-  else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }} 
+  else {fprintf(fpOutputFile,"(*EZ_NB_GEN)"); }}
+<COPY_USER_GENERATION>"NB_OBJECTIVE" {
+  if (bDoubleQuotes)
+    fprintf(fpOutputFile,"NB_OBJECTIVE");
+ /*local genome name*/
+  else {fprintf(fpOutputFile,"(*EZ_NB_OBJECTIVE)"); }} 
+<COPY_USER_GENERATION>"NB_OBJECTIVE"/[ \t\n]*"==" {
+  if (bDoubleQuotes)
+    fprintf(fpOutputFile,"NB_OBJECTIVE");
+ /*local genome name*/
+  else {fprintf(fpOutputFile,"(*EZ_NB_OBJECTIVE)"); }} 
+
 <COPY_USER_GENERATION>"POP_SIZE" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");}
  /*local genome name*/
 <COPY_USER_GENERATION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");}
@@ -2109,6 +2128,10 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_GENERATION>"NB_GEN"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else {
       fprintf(fpOutputFile,"(*EZ_NB_GEN)=");
+    }} // local genome name
+<COPY_USER_GENERATION>"NB_OBJECTIVE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
+  else {
+      fprintf(fpOutputFile,"(*EZ_NB_OBJECTIVE)=");
     }} // local genome name
 <COPY_USER_GENERATION>"POP_SIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     } // local genome name
@@ -2201,6 +2224,15 @@ if(OPERATING_SYSTEM=WINDOWS)
     fprintf(fpOutputFile,"%s",yytext);
  }
 
+<COPY_USER_FUNCTION>"number of objectives = "  {
+  if( bWithinCUDA_Evaluator &&  TARGET==CUDA && TARGET_FLAVOR==CUDA_FLAVOR_MO ){
+    fprintf(fpOutputFile,"(f[1])");
+  }
+  else
+    fprintf(fpOutputFile,"%s",yytext);
+ }
+
+
 
 <COPY_USER_FUNCTION>"initOpts."  {
   if( ((bWithinEvaluator || bWithinOptimiser) && !bWithinCUDA_Evaluator) && ( TARGET==STD || TARGET==CUDA )){
@@ -2236,6 +2268,11 @@ if(OPERATING_SYSTEM=WINDOWS)
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 <COPY_USER_FUNCTION>"NB_GEN"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
+<COPY_USER_FUNCTION>"NB_OBJECTIVE" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_OBJECTIVE");
+  else fprintf(fpOutputFile,"(*EZ_NB_OBJECTIVE)");} // local genome name
+<COPY_USER_FUNCTION>"NB_OBJECTIVE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_OBJECTIVE");
+  else fprintf(fpOutputFile,"(*EZ_NB_OBJECTIVE)");} // local genome name
+
 <COPY_USER_FUNCTION>"POP_SIZE"  {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 <COPY_USER_FUNCTION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
@@ -2271,6 +2308,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_USER_FUNCTION>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);}
 <COPY_USER_FUNCTION>"NB_GEN"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+<COPY_USER_FUNCTION>"NB_OBJECTIVE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY_USER_FUNCTION>"POP_SIZE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY_USER_FUNCTION>"MUT_PROB"[ \t\n]*"=" {
   fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
@@ -2350,6 +2388,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>\n                 { /*return '\n';*/ }
 
 <GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"generations"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Gen...\n");return NB_GEN;}
+<GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"objectives"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Obj...\n");return NB_OBJECTIVE;}
 <GET_PARAMETERS>"Time"[ \t\n]+"limit"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tTime Limit...\n");return TIME_LIMIT;}
 <GET_PARAMETERS>"Population"[ \t\n]+"size"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tPop Size...\n");return POP_SIZE;}
 <GET_PARAMETERS>"Elite"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tElite Size...\n");return ELITE;}
