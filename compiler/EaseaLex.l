@@ -2630,6 +2630,8 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
       exit(1);
     }
+  } else (TARGET == NSGA2) {
+      strcat(sTemp,"NSGA2.tpl");
   }
   
   if ((sRAW_PROJECT_NAME[0]=='"')&&(OPERATING_SYSTEM!=WINDOWS)){
