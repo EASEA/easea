@@ -4,5 +4,7 @@
 
 extern int yylineno;
 
-void pickupSTDSelector(char* sSELECTOR, float* fSELECT_PRM, char* sEZ_FILE_NAME);
-void pickupSTDSelectorArgument(char* sSELECTOR, float* fSELECT_PRM, char* sEZ_FILE_NAME, float thirdParam);
+void pickupSTDSelector(char* sSELECTOR, float* fSELECT_PRM,
+                       char* sEZ_FILE_NAME);
+void pickupSTDSelectorArgument(char* sSELECTOR, float* fSELECT_PRM,
+                               char* sEZ_FILE_NAME, float thirdParam);
