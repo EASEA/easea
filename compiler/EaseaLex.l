@@ -1076,7 +1076,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_EO_INITIALISER"  {        
   bWithinEO_Function=1;
   lineCounter=1;
-  if( TARGET==CUDA || TARGET==STD) bWithinCUDA_Initializer = 1;
+  if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2) bWithinCUDA_Initializer = 1;
   yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
   yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   BEGIN COPY_EO_INITIALISER;                               // not implemented as a function !
@@ -1147,7 +1147,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_GEN_FCT_CALL"  {
   if (bGenerationReplacementFunction) {
     if( bVERBOSE ) fprintf(stdout,"Inserting generation function call\n");
-    if( TARGET==CUDA || TARGET==STD ){
+    if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2 ){
       fprintf(fpOutputFile,"\n\tEASEAGenerationFunction(this);");
     }
   }
@@ -1156,7 +1156,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_END_GEN_FCT_CALL"  {
   if( bEndGenerationFunction ) {
     if( bVERBOSE ) fprintf(stdout,"Inserting end generation function call\n");
-    if( TARGET==CUDA || TARGET==STD ){
+    if( TARGET==CUDA || TARGET==STD  || TARGET==NSGA2 ){
       fprintf(fpOutputFile,"\n\tEASEAEndGenerationFunction(this);");
     }
   }
@@ -1165,7 +1165,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_BEGINNING_GEN_FCT_CALL"  {
   if( bBeginGenerationFunction ) {
     if( bVERBOSE ) fprintf(stdout,"Inserting beginning generation function call\n");
-    if( TARGET==CUDA || TARGET==STD ){
+    if( TARGET==CUDA || TARGET==STD  || TARGET==NSGA2 ){
       fprintf(fpOutputFile,"\n\tEASEABeginningGenerationFunction(this);");
     }
   }
@@ -1174,7 +1174,7 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING_FCT_CALL"  {
   if (bBoundCheckingFunction) {
-    if( TARGET==CUDA || TARGET==STD ){
+    if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2  ){
       fprintf(fpOutputFile,"\n\tEASEABoundChecking(this);");
     }
   }
@@ -1202,7 +1202,7 @@ exponent  ([Ee][+-]?[0-9]+)
  }        
 
 <TEMPLATE_ANALYSIS>"\\SELECTOR"  {
-  if( TARGET==CUDA || TARGET==STD){
+  if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2 ){
     //DEBUG_PRT_PRT("Selector is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sSELECTOR);
     if( !selectorClass ){
@@ -1229,7 +1229,7 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\RED_PAR"  {
-  if( TARGET==CUDA || TARGET==STD){
+  if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2 ){
     //DEBUG_PRT_PRT("Parent reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sSELECTOR);
     if( !selectorClass ){
@@ -1242,7 +1242,7 @@ exponent  ([Ee][+-]?[0-9]+)
   else fprintf(fpOutputFile,"%s",sRED_PAR);
  }
 <TEMPLATE_ANALYSIS>"\\RED_OFF"  {
-  if( TARGET==CUDA || TARGET==STD){
+  if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2 ){
     //DEBUG_PRT_PRT("Offspring reduction is \"%s\" | Goal is %s",sSELECTOR,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sSELECTOR);
     if( !selectorClass ){
@@ -1255,7 +1255,7 @@ exponent  ([Ee][+-]?[0-9]+)
   else fprintf(fpOutputFile,"%s",sRED_OFF);
  }
 <TEMPLATE_ANALYSIS>"\\RED_FINAL"  {
-  if( TARGET==CUDA || TARGET==STD){
+  if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2 ){
     //DEBUG_PRT_PRT("Replacement selector is \"%s\" | Goal is %s",sRED_FINAL,(nMINIMISE?"Minimize":"Maximize"));
     char* selectorClass = selectorDetermination(nMINIMISE,sRED_FINAL);
     if( !selectorClass ){
@@ -1314,7 +1314,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   strcpy(sFileName, sRAW_PROJECT_NAME);
   if( TARGET==CUDA )
     strcat(sFileName,"Individual.cu");
-  else if( TARGET==STD )
+  else if( TARGET==STD  || TARGET==NSGA2 )
     strcat(sFileName,"Individual.cpp");
   fpOutputFile=fopen(sFileName,"w");    
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
@@ -1406,7 +1406,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   if (nWARNINGS) printf ("\nWARNING !!!\nTarget file(s) generation went through WITH %d WARNING(S) !\n",nWARNINGS);
   else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded without warnings.\n");
   printf ("You can now type \"make\" to compile your project.\n");
-  if (TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"\n# That's all folks ! \n");
+  if (TARGET==CUDA || TARGET==STD || TARGET==NSGA2 ) fprintf(fpOutputFile,"\n# That's all folks ! \n");
   else fprintf(fpOutputFile,"\n// That's all folks ! \n");
   fflush(fpOutputFile);
   fclose(fpOutputFile);
@@ -1547,7 +1547,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_END_GENERATION_FUNCTION>"\\At"[ \t\n]+"the"[ \t\n]+"end"[ \t\n]+"of"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"function"[ \t\n]*":" {
   //DEBUG_PRT_PRT("at each end");
-  if( (TARGET==CUDA || TARGET==STD)  ){
+  if( (TARGET==CUDA || TARGET==STD || TARGET==NSGA2 )  ){
     fprintf (fpOutputFile,"{\n");
     //fprintf (fpOutputFile,"// Function called at each new generation\nvoid EASEAEndGenerationFunction(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
     bFunction=1; 
@@ -1572,7 +1572,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_BEG_GENERATION_FUNCTION>"\\At"[ \t\n]+"the"[ \t\n]+"beginning"[ \t\n]+"of"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"function"[ \t\n]*":" {
   //DEBUG_PRT_PRT("at each beg");
-  if( (TARGET==CUDA || TARGET==STD)){
+  if( (TARGET==CUDA || TARGET==STD || TARGET==NSGA2 )){
     fprintf (fpOutputFile,"{\n");
     bFunction=1;
     bBeginGeneration = 0;
@@ -1585,7 +1585,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_INSTEAD_EVAL>"\\Instead"[ \t\n]+"evaluation"[ \t\n]+"function:" {
   //DEBUG_PRT_PRT("at each beg");
-  if( (TARGET==CUDA || TARGET==STD)){
+  if( (TARGET==CUDA || TARGET==STD || TARGET==NSGA2 )){
     fprintf (fpOutputFile,"{\n");
     bFunction=1;
     if( bLINE_NUM_EZ_FILE )
@@ -1629,7 +1629,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>"\\At"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"before"[ \t\n]+"reduce"[ \t\n]+"function"[ \t\n]*":" {
 //DEBUG_PRT_PRT("at each");
-  if((TARGET==CUDA || TARGET==STD) /* && !bBeginGeneration && !bEndGeneration ) */)
+  if((TARGET==CUDA || TARGET==STD || TARGET==NSGA2 ) /* && !bBeginGeneration && !bEndGeneration ) */)
   {
       fprintf (fpOutputFile,"{\n");
       bFunction=1; 
@@ -1654,7 +1654,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 
 <COPY_BOUND_CHECKING_FUNCTION>"\\Bound"[ \t\n]+"checking"[ \t\n]*":" {
-  if(TARGET==CUDA || TARGET==STD){
+  if(TARGET==CUDA || TARGET==STD || TARGET==NSGA2 ){
     //fprintf (fpOutputFile,"void EASEABoundChecking(EvolutionaryAlgorithm* evolutionaryAlgorithm){\n");
     fprintf (fpOutputFile,"{\n");
   }
@@ -1689,7 +1689,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"\\\""  {fprintf(fpOutputFile,"\\\"");}
 
 <COPY>"currentGeneration"|"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
-  else if(TARGET == STD) fprintf(fpOutputFile,"(*EZ_current_generation)");
+  else if(TARGET == STD || TARGET == NSGA2) fprintf(fpOutputFile,"(*EZ_current_generation)");
     } // local genome name
 <COPY>"NB_GEN" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
@@ -1706,7 +1706,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"MUT_PROB");
   else
-    if( TARGET==STD || TARGET==CUDA){
+    if( TARGET==STD || TARGET==CUDA || TARGET==NSGA2 ){
       fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
     }
     else fprintf(fpOutputFile,"EZ_MUT_PROB");
@@ -1715,7 +1715,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"XOVER_PROB"|"XOVER_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
-  else if( TARGET==CUDA || TARGET==STD )
+  else if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2  )
     fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
   else fprintf(fpOutputFile,"EZ_XOVER_PROB");
  } // local genome name
@@ -1760,7 +1760,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"random"  {
   fprintf(fpOutputFile,"globalRandomGenerator->random");}
 <COPY>"Genome" {
-  if (bWithinEO_Function && TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"_genotype");
+  if (bWithinEO_Function && TARGET!=CUDA && TARGET!=STD && TARGET!=NSGA2) fprintf(fpOutputFile,"_genotype");
   else if(bWithinEO_Function && bWithinCUDA_Initializer )fprintf(fpOutputFile,"(*this)");
   else fprintf(fpOutputFile,"Genome");} // local genome name
 <COPY>"identicalGenome"  {fprintf(fpOutputFile,"genome._evaluated");} // local name
@@ -1772,7 +1772,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   fprintf(fpOutputFile,"template <class fitT> %s %sGenome<fitT>::",yytext,sPROJECT_NAME);}         
 <COPY>"GenomeClass::"  {fprintf(fpOutputFile,"template <class fitT> %sGenome<fitT>::",sPROJECT_NAME);}
 <COPY>"GenomeClass"  {
-  if( TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"IndividualImpl");
+  if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2 ) fprintf(fpOutputFile,"IndividualImpl");
   else fprintf(fpOutputFile,"%sGenome",sPROJECT_NAME);} // local name
 <COPY>"pPopulation[" {
   if(bFinalizationFunction){
@@ -2229,7 +2229,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 
 <COPY_USER_FUNCTION>"initOpts."  {
-  if( ((bWithinEvaluator || bWithinOptimiser) && !bWithinCUDA_Evaluator) && ( TARGET==STD || TARGET==CUDA )){
+  if( ((bWithinEvaluator || bWithinOptimiser) && !bWithinCUDA_Evaluator) && ( TARGET==STD || TARGET==CUDA  || TARGET==NSGA2 )){
     fprintf(fpOutputFile,"");
   }
   else
@@ -2254,10 +2254,12 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_USER_FUNCTION>"currentGeneration" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
+    case NSGA2 : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }} // local genome name
 <COPY_USER_FUNCTION>"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else switch  (TARGET) {
+    case NSGA2 : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     case STD : fprintf(fpOutputFile,"(*EZ_current_generation)"); break;
     }} // local genome name
 <COPY_USER_FUNCTION>"NB_GEN" {if (bDoubleQuotes) fprintf(fpOutputFile,"NB_GEN");
@@ -2275,26 +2277,26 @@ if(OPERATING_SYSTEM=WINDOWS)
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 <COPY_USER_FUNCTION>"MUT_PROB" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
-  else if( TARGET==CUDA || TARGET==STD)
+  else if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2 )
     fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
   else fprintf(fpOutputFile,"EZ_MUT_PROB");
  } // local genome name
 <COPY_USER_FUNCTION>"MUT_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
-  else if( TARGET==CUDA || TARGET==STD)
+  else if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2 )
     fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
   else fprintf(fpOutputFile,"EZ_MUT_PROB");
  } // local genome name
 <COPY_USER_FUNCTION>"XOVER_PROB" {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
-  else if( TARGET==CUDA || TARGET==STD )
+  else if( TARGET==CUDA || TARGET==STD || TARGET==NSGA2  )
     fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
   else fprintf(fpOutputFile,"EZ_XOVER_PROB");} // local genome name
 <COPY_USER_FUNCTION>"XOVER_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"XOVER_PROB");
-  else if( TARGET==CUDA || TARGET==STD )
+  else if( TARGET==CUDA || TARGET==STD  || TARGET==NSGA2 )
     fprintf(fpOutputFile,"(*pEZ_XOVER_PROB)");
   else fprintf(fpOutputFile,"EZ_XOVER_PROB");} // local genome name
 <COPY_USER_FUNCTION>"REPL_PERC" {if (bDoubleQuotes) fprintf(fpOutputFile,"REPL_PERC");
@@ -2632,8 +2634,15 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
       exit(1);
     }
-  } else (TARGET == NSGA2) {
+  }
+  
+  if (TARGET == NSGA2) {
       strcat(sTemp,"NSGA2.tpl");
+    if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
+      fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
+      fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
+      exit(1);
+    }
   }
   
   if ((sRAW_PROJECT_NAME[0]=='"')&&(OPERATING_SYSTEM!=WINDOWS)){

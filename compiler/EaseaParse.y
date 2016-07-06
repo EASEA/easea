@@ -495,6 +495,7 @@ Parameter
       strcpy(sSELECTOR_OPERATOR, $2->sName);
       switch (TARGET) {
       case CUDA:
+	    case NSGA2:
       case STD:
 	pickupSTDSelector(sSELECTOR,&fSELECT_PRM,sEZ_FILE_NAME);
 	break;
@@ -505,6 +506,7 @@ Parameter
       sprintf(sSELECTOR_OPERATOR, $2->sName);   
       switch (TARGET) {
       case CUDA:
+      case NSGA2:
       case STD:
 	pickupSTDSelectorArgument(sSELECTOR,&fSELECT_PRM,sEZ_FILE_NAME,(float)$3);
 	break;
@@ -515,6 +517,7 @@ Parameter
 	sprintf(sRED_PAR_OPERATOR, $2->sName);
         switch (TARGET) {
 	case CUDA:
+	case NSGA2:
 	case STD:
 	  pickupSTDSelector(sRED_PAR,&fRED_PAR_PRM,sEZ_FILE_NAME);
 	  break;
@@ -525,6 +528,7 @@ Parameter
 	sprintf(sRED_PAR_OPERATOR, $2->sName);
         switch (TARGET) {
 	case CUDA :
+	case NSGA2:
 	case STD:
 	  pickupSTDSelectorArgument(sRED_PAR,&fRED_PAR_PRM,sEZ_FILE_NAME,(float)$3);
 	  break;
@@ -534,6 +538,7 @@ Parameter
 	sprintf(sRED_OFF, $2->sName);
 	sprintf(sRED_OFF_OPERATOR, $2->sName);
       switch (TARGET) {
+      case NSGA2:
       case STD:
       case CUDA:
 	pickupSTDSelector(sRED_OFF,&fRED_OFF_PRM,sEZ_FILE_NAME);
@@ -544,6 +549,7 @@ Parameter
         sprintf(sRED_OFF, $2->sName);
 	sprintf(sRED_OFF_OPERATOR, $2->sName);
         switch (TARGET) {
+  case NSGA2:
 	case STD:
 	case CUDA:
 	  pickupSTDSelectorArgument(sRED_OFF,&fRED_OFF_PRM,sEZ_FILE_NAME,$3);
@@ -553,7 +559,8 @@ Parameter
         sprintf(sRED_FINAL_OPERATOR, $2->sName);
         switch (TARGET) {
 	case CUDA:
-	case STD:
+	case NSGA2:
+  case STD:
 	  pickupSTDSelector(sRED_FINAL,&fRED_FINAL_PRM,sEZ_FILE_NAME);
 	  break;
        }}
@@ -562,6 +569,7 @@ Parameter
         sprintf(sRED_FINAL_OPERATOR, $2->sName);
         switch (TARGET) {
 	case CUDA :
+  case NSGA2:
 	case STD:
 	  pickupSTDSelectorArgument(sRED_FINAL,&fRED_FINAL_PRM,sEZ_FILE_NAME,$3);
 	  break;
@@ -756,8 +764,9 @@ int main(int argc, char *argv[]){
     else if (!mystricmp(sTemp,"memetic"))  {
       TARGET_FLAVOR = MEMETIC;
     }
-    else if (!mystricmp(sTemp,"nsga2") || !mystricmp(sTemp,"nsga"))  {
-      TARGET_FLAVOR = NSGA2;
+    else if (!mystricmp(sTemp,"nsga"))  {
+      TARGET = NSGA2;
+      //TARGET_FLAVOR = STD_FLAVOR_SO;
     }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
