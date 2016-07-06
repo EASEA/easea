@@ -142,6 +142,8 @@ char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
     strcat(selectorName,"Random(globalRandomGenerator)");
   else if( mystricmp("Roulette",sSELECTOR)==0 )
     strcat(selectorName,"Roulette(globalRandomGenerator)");
+  else if( mystricmp("Identity",sSELECTOR)==0 )
+    strcat(selectorName,"Identity(globalRandomGenerator)");
 
   else{
     //DEBUG_PRT_PRT("%s is not yet implemented",sSELECTOR);
