@@ -111,8 +111,8 @@ void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* ea){
    */
 
   /* Selection and reduction code*/
-  selectNSGA(*ea->population->offsprings, ea->population->offspringPopulationSize,
-  *ea->population->parents, ea->population->parentPopulationSize, false);
+  selectNSGA(ea->population->offsprings, ea->population->offspringPopulationSize,
+  ea->population->parents, ea->population->parentPopulationSize, false);
  
 }
 
@@ -124,6 +124,14 @@ void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 IndividualImpl::IndividualImpl() : CIndividual() {
   \GENOME_CTOR 
   \INSERT_EO_INITIALISER
+  
+  rank = 0;
+  fitness = 0.0f;
+  
+  for(int i = 0; i < \NB_OBJECTIVE; i++) {
+    f[i] = 0.0f;
+  }
+
   valid = false;
   isImmigrant = false;
 }
@@ -854,8 +862,8 @@ int comparator(const void *p, const void *q) {
 
 
 
-void selectNSGA(CIndividual* children, size_t numChildren,
-            CIndividual* parents, size_t numParents,
+void selectNSGA(CIndividual** children, size_t numChildren,
+            CIndividual** parents, size_t numParents,
             bool mixedpop) {
 
     int i;
@@ -882,7 +890,7 @@ void selectNSGA(CIndividual* children, size_t numChildren,
             nsga_pop->ind[i].id=i;
             for(j=0; j<nsga_nobj; j++) {
                 nsga_pop->ind[i].obj[j]
-                = reinterpret_cast<IndividualImpl*>(parents)[i].f[j];
+                = reinterpret_cast<IndividualImpl**>(parents)[i]->f[j];
             }
 
         }
@@ -891,7 +899,7 @@ void selectNSGA(CIndividual* children, size_t numChildren,
             nsga_pop->ind[numParents + i].id = i + numParents;
             for(j=0; j<nsga_nobj; j++) {
                 nsga_pop->ind[numParents + i].obj[j] =
-                    reinterpret_cast<IndividualImpl*>(children)[i].f[j];
+                    reinterpret_cast<IndividualImpl**>(children)[i]->f[j];
             }
 
         }
@@ -900,7 +908,8 @@ void selectNSGA(CIndividual* children, size_t numChildren,
         for (i=0; i<(int)nsga_popsize; i++) {
             nsga_pop->ind[i].id=i;
             for(j=0; j<nsga_nobj; j++) {
-                nsga_pop->ind[i].obj[j] = reinterpret_cast<IndividualImpl*>(children)[i].f[j];
+                nsga_pop->ind[i].obj[j] =
+                reinterpret_cast<IndividualImpl**>(children)[i]->f[j];
             }
 
         }
@@ -919,14 +928,14 @@ void selectNSGA(CIndividual* children, size_t numChildren,
         */
         if (!mixedpop) {
             if (nsga_pop->ind[i].id < numParents) {
-                CIndividual* indiv = &(parents[nsga_pop->ind[i].id]);
+                CIndividual* indiv = parents[nsga_pop->ind[i].id];
                 indiv->rank = nsga_pop->ind[i].rank;
             } else {
-                CIndividual* indiv = &(children[nsga_pop->ind[i].id - numParents]);
+                CIndividual* indiv = children[nsga_pop->ind[i].id - numParents];
                 indiv->rank = nsga_pop->ind[i].rank;
             }
         } else {
-            CIndividual* indiv = &(parents[nsga_pop->ind[i].id]);
+            CIndividual* indiv = parents[nsga_pop->ind[i].id];
             indiv->rank = nsga_pop->ind[i].rank;
         }
     }
@@ -1074,8 +1083,8 @@ void advance_random ();
 void randomize();
 void warmup_random (double nsga_seed);
 
-void selectNSGA(CIndividual* children, size_t numChildren,
-            CIndividual* parents, size_t numParents,
+void selectNSGA(CIndividual** children, size_t numChildren,
+            CIndividual** parents, size_t numParents,
             bool mixedpop);
 
 /* Definition of random number generation routines */
