@@ -14,7 +14,7 @@ class CRandomGenerator;
 #include "Parameters.h"
 
 /**
- *  \class   CGrapher 
+ *  \class   CGrapher
  *  \brief   Launch the grapher within EASEA
  *  \details Launch the java grapher in a exec'd fork.
  *           TODO:(re)Implement the constructor for Windows.

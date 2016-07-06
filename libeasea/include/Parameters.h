@@ -61,7 +61,7 @@ class Parameters {
     int printStats;
     int generateCSVFile;
     int generatePlotScript;
-    int generateRScript;	
+    int generateRScript;
     int plotStats;
     int printInitialPopulation;
     int printFinalPopulation;
@@ -86,7 +86,9 @@ class Parameters {
     Parameters();
     ~Parameters();
 #else
-    virtual ~Parameters(){;}
+    virtual ~Parameters() {
+        ;
+    }
 #endif
     virtual void setDefaultParameters(int argc, char** argv) = 0;
     virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;

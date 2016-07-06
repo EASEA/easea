@@ -25,63 +25,69 @@ class Parameters;
 class CGrapher;
 
 class CEvolutionaryAlgorithm {
-public:
+  public:
 
- /* CEvolutionaryAlgorithm( size_t parentPopulationSize,
-			 size_t offspringPopulationSize,
-			 float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
-			 CSelectionOperator* selectionOperator, CSelectionOperator* replacementOperator,
-			 CSelectionOperator* parentReductionOperator, CSelectionOperator* offspringReductionOperator,
-			 float pCrossover, float pMutation,
-			 float pMutationPerGene);*/
+    /* CEvolutionaryAlgorithm( size_t parentPopulationSize,
+    		 size_t offspringPopulationSize,
+    		 float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
+    		 CSelectionOperator* selectionOperator, CSelectionOperator* replacementOperator,
+    		 CSelectionOperator* parentReductionOperator, CSelectionOperator* offspringReductionOperator,
+    		 float pCrossover, float pMutation,
+    		 float pMutationPerGene);*/
 
-  CEvolutionaryAlgorithm( Parameters* params );
-  virtual void initializeParentPopulation() = 0;
+    CEvolutionaryAlgorithm( Parameters* params );
+    virtual void initializeParentPopulation() = 0;
 
-  unsigned int *getCurrentGenerationPtr(){ return &currentGeneration;}
-  void addStoppingCriterion(CStoppingCriterion* sc);
-  void runEvolutionaryLoop();
-  bool allCriteria();
-  CPopulation* getPopulation(){ return population;}
-  unsigned getCurrentGeneration() { return currentGeneration;}
-public:
-  unsigned currentGeneration;
-  CPopulation* population;
-  unsigned reduceParents;
-  unsigned reduceOffsprings;
+    unsigned int *getCurrentGenerationPtr() {
+        return &currentGeneration;
+    }
+    void addStoppingCriterion(CStoppingCriterion* sc);
+    void runEvolutionaryLoop();
+    bool allCriteria();
+    CPopulation* getPopulation() {
+        return population;
+    }
+    unsigned getCurrentGeneration() {
+        return currentGeneration;
+    }
+  public:
+    unsigned currentGeneration;
+    CPopulation* population;
+    unsigned reduceParents;
+    unsigned reduceOffsprings;
 
-  //methods and variables for remote island model
-  unsigned treatedIndividuals;
-  unsigned numberOfClients;
-  unsigned myClientNumber;
-  CComUDPServer *server;
-  CComUDPClient **Clients;
-  void initializeClients();
-  void receiveIndividuals();
-  void sendIndividual();
-  void refreshClient();
+    //methods and variables for remote island model
+    unsigned treatedIndividuals;
+    unsigned numberOfClients;
+    unsigned myClientNumber;
+    CComUDPServer *server;
+    CComUDPClient **Clients;
+    void initializeClients();
+    void receiveIndividuals();
+    void sendIndividual();
+    void refreshClient();
 
 #ifdef WIN32
-  void showPopulationStats(clock_t beginTime);
+    void showPopulationStats(clock_t beginTime);
 #else
-  void showPopulationStats(struct timeval beginTime);
+    void showPopulationStats(struct timeval beginTime);
 #endif
-  void generatePlotScript();
-  void generateRScript();
+    void generatePlotScript();
+    void generateRScript();
 
-  void outputGraph();
-  Parameters* params;
+    void outputGraph();
+    Parameters* params;
 
-  CGrapher* grapher;
+    CGrapher* grapher;
 
-  CStats* cstats;
+    CStats* cstats;
 
-  virtual ~CEvolutionaryAlgorithm();
+    virtual ~CEvolutionaryAlgorithm();
 
-  std::vector<CStoppingCriterion*> stoppingCriteria;
+    std::vector<CStoppingCriterion*> stoppingCriteria;
 
-  std::string* outputfile;
-  std::string* inputfile;
+    std::string* outputfile;
+    std::string* inputfile;
 };
 
 #endif /* CEVOLUTIONARYALGORITHM_H_ */

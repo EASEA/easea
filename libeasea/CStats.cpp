@@ -1,6 +1,6 @@
 #include "include/CStats.h"
 
-CStats::CStats(){
+CStats::CStats() {
     this->totalNumberOfImmigrants=0;
     this->currentNumberOfImmigrants=0;
 
@@ -11,12 +11,13 @@ CStats::CStats(){
     this->currentStdDev=0.0;
 }
 
-CStats::~CStats(){
+CStats::~CStats() {
 }
 
-void CStats::resetCurrentStats(){
+void CStats::resetCurrentStats() {
     this->totalNumberOfImmigrants += this->currentNumberOfImmigrants;
-    this->totalNumberOfImmigrantReproductions += this->currentNumberOfImmigrantReproductions;
+    this->totalNumberOfImmigrantReproductions +=
+        this->currentNumberOfImmigrantReproductions;
 
     this->currentNumberOfImmigrants=0;
 

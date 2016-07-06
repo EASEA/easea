@@ -30,8 +30,11 @@ class CRandomGenerator {
     void random_gauss(float min, float max, float* z_0, float* z_1);
     float random_gauss(float mean, float std_dev);
 
-    unsigned get_seed()const {return this->seed;}
-    friend std::ostream & operator << (std::ostream & os, const CRandomGenerator& rg);
+    unsigned get_seed()const {
+        return this->seed;
+    }
+    friend std::ostream & operator << (std::ostream & os,
+                                       const CRandomGenerator& rg);
 
 };
 

@@ -14,56 +14,54 @@
 /* ****************************************
    GenerationalCriterion class
 ****************************************/
-CGenerationalCriterion::CGenerationalCriterion(unsigned generationalLimit){
-  this->generationalLimit = generationalLimit;
+CGenerationalCriterion::CGenerationalCriterion(unsigned generationalLimit) {
+    this->generationalLimit = generationalLimit;
 }
 
-void CGenerationalCriterion::setCounterEa(unsigned* ea_counter){
-  this->currentGenerationPtr = ea_counter;
+void CGenerationalCriterion::setCounterEa(unsigned* ea_counter) {
+    this->currentGenerationPtr = ea_counter;
 }
 
-bool CGenerationalCriterion::reached(){
-  if( generationalLimit <= *currentGenerationPtr ){
-    std::cout << "Current generation " << *currentGenerationPtr << " Generational limit : " <<
-      generationalLimit << std::endl;
-    return true;
-  }
-  else return false;
+bool CGenerationalCriterion::reached() {
+    if( generationalLimit <= *currentGenerationPtr ) {
+        std::cout << "Current generation " << *currentGenerationPtr <<
+                  " Generational limit : " <<
+                  generationalLimit << std::endl;
+        return true;
+    } else return false;
 }
 
-unsigned* CGenerationalCriterion::getGenerationalLimit(){
-  return &(this->generationalLimit);
+unsigned* CGenerationalCriterion::getGenerationalLimit() {
+    return &(this->generationalLimit);
 }
 
 /* ****************************************
    TimeCriterion class
 ****************************************/
-CTimeCriterion::CTimeCriterion(unsigned timeLimit){
-  this->timeLimit = timeLimit;
-  this->elapsedTime = 0.0;
+CTimeCriterion::CTimeCriterion(unsigned timeLimit) {
+    this->timeLimit = timeLimit;
+    this->elapsedTime = 0.0;
 }
 
-bool CTimeCriterion::reached(){
-  if(timeLimit>0){
-    //gettimeofday(&(this->end),0);
-    //timersub(&(this->end),&(this->begin), &(this->res));
-    //if((unsigned)res.tv_sec>timeLimit-1){
-    if((unsigned)elapsedTime>timeLimit-1){
-      std::cout << "Time Over" << std::endl;
-    std::cout << "Time Limit was " << timeLimit << " seconds" << std::endl;
-      return true;
-    }
-    else return false;
-  }
-  else return false;
+bool CTimeCriterion::reached() {
+    if(timeLimit>0) {
+        //gettimeofday(&(this->end),0);
+        //timersub(&(this->end),&(this->begin), &(this->res));
+        //if((unsigned)res.tv_sec>timeLimit-1){
+        if((unsigned)elapsedTime>timeLimit-1) {
+            std::cout << "Time Over" << std::endl;
+            std::cout << "Time Limit was " << timeLimit << " seconds" << std::endl;
+            return true;
+        } else return false;
+    } else return false;
 }
 
-void CTimeCriterion::setElapsedTime(double elapsedTime){
-  this->elapsedTime = elapsedTime;
+void CTimeCriterion::setElapsedTime(double elapsedTime) {
+    this->elapsedTime = elapsedTime;
 }
 
-double CTimeCriterion::getElapsedTime(){
-  return this->elapsedTime;
+double CTimeCriterion::getElapsedTime() {
+    return this->elapsedTime;
 }
 
 /* ****************************************
@@ -71,31 +69,31 @@ double CTimeCriterion::getElapsedTime(){
 ****************************************/
 bool ARRET_DEMANDE;
 
-CControlCStopingCriterion::CControlCStopingCriterion(){
-  signal( SIGINT, signal_handler );
+CControlCStopingCriterion::CControlCStopingCriterion() {
+    signal( SIGINT, signal_handler );
 #ifdef WIN32
-  signal( SIGTERM, signal_handler );
+    signal( SIGTERM, signal_handler );
 #else
-  signal( SIGQUIT, signal_handler );
+    signal( SIGQUIT, signal_handler );
 #endif
-  ARRET_DEMANDE=false;
+    ARRET_DEMANDE=false;
 }
 
-bool CControlCStopingCriterion::reached(){
-  if(ARRET_DEMANDE)
-  std::cout << "Algorithm stopped on user demand" << std::endl; 
-  return ARRET_DEMANDE;
+bool CControlCStopingCriterion::reached() {
+    if(ARRET_DEMANDE)
+        std::cout << "Algorithm stopped on user demand" << std::endl;
+    return ARRET_DEMANDE;
 }
 
-void signal_handler(int sig){
-  signal(SIGINT, SIG_DFL);
+void signal_handler(int sig) {
+    signal(SIGINT, SIG_DFL);
 #ifdef WIN32
-  signal(SIGTERM, SIG_DFL);
+    signal(SIGTERM, SIG_DFL);
 #else
-  signal(SIGQUIT, SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
 #endif
-  printf("Ctrl C entered ... closing down\nNext Ctrl C will kill the Program !!!\n");
-  ARRET_DEMANDE=true;
+    printf("Ctrl C entered ... closing down\nNext Ctrl C will kill the Program !!!\n");
+    ARRET_DEMANDE=true;
 }
 
 

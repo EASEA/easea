@@ -12,12 +12,11 @@
 /**
  *  \class   CaleatoireCuda
  *  \brief   Random generator for CMA-ES CUDA
- *  \details Randomness using Gaussian or Uniform distribution.CUDA version of 
+ *  \details Randomness using Gaussian or Uniform distribution.CUDA version of
  *  class Caleatoire.
  *
  **/
-class CaleatoireCuda 
-{
+class CaleatoireCuda {
   public:
     /* Variables for Uniform() */
     long int startseed;
@@ -36,26 +35,26 @@ class CaleatoireCuda
 };
 
 /**
- *  \class   CCmaesCuda 
+ *  \class   CCmaesCuda
  *  \brief   Covariance Matrix Adaptation Evolution Strategy for CUDA
  *  \details Is set before entering the main evolutionary loop. CUDA version of
- *  class CCmaes 
- *  
+ *  class CCmaes
+ *
  **/
-class CCmaesCuda{
-  //random_t rand; /* random number generator */
-  public:	
-    int dim;	
+class CCmaesCuda {
+    //random_t rand; /* random number generator */
+  public:
+    int dim;
     float sigma;  /* step size */
     float *rgxmean;  /* mean x vector, "parent" */
-    float chiN; 
+    float chiN;
     float **C;  /* lower triangular matrix: i>=j for C[i][j] */
     float **B;  /* matrix with normalize eigenvectors in columns */
     float *rgD; /* axis lengths */
     float *rgpc;
     float *rgps;
-    float *rgxold; 
-    float *rgout; 
+    float *rgxold;
+    float *rgout;
     float *rgBDz;   /* for B*D*z */
     float *rgdTmp;  /* temporary (random) vector used in different places */
     short flgEigensysIsUptodate;
@@ -74,13 +73,17 @@ class CCmaesCuda{
     float ccov;         /* <- mucov, <- N */
     int gen;
 
-    float * xstart; 
-    float * typicalX; 
+    float * xstart;
+    float * typicalX;
     int typicalXcase;
     float * rgInitialStds;
     float * rgDiffMinChange;
 
-    struct { int flgalways; float modulo; float maxtime; } updateCmode;
+    struct {
+        int flgalways;
+        float modulo;
+        float maxtime;
+    } updateCmode;
     float facupdateCmode;
 
     CaleatoireCuda alea; /* random number generator */

@@ -10,13 +10,12 @@
 #include "define.h"
 
 /**
- *  \class   Caleatoire 
+ *  \class   Caleatoire
  *  \brief   Random generator for CMA-ES
  *  \details Randomness using Gaussian or Uniform distribution
- *  
+ *
  **/
-class Caleatoire 
-{
+class Caleatoire {
   public:
     /* Variables for Uniform() */
     long int startseed;
@@ -35,25 +34,25 @@ class Caleatoire
 };
 
 /**
- *  \class   CCmaes 
+ *  \class   CCmaes
  *  \brief   Covariance Matrix Adaptation Evolution Strategy
- *  \details Is set before entering the main evolutionary loop 
- *  
+ *  \details Is set before entering the main evolutionary loop
+ *
  **/
-class CCmaes{
-  //random_t rand; /* random number generator */
-  public:	
-    int dim;	
+class CCmaes {
+    //random_t rand; /* random number generator */
+  public:
+    int dim;
     double sigma;  /* step size */
     double *rgxmean;  /* mean x vector, "parent" */
-    double chiN; 
+    double chiN;
     double **C;  /* lower triangular matrix: i>=j for C[i][j] */
     double **B;  /* matrix with normalize eigenvectors in columns */
     double *rgD; /* axis lengths */
     double *rgpc;
     double *rgps;
-    double *rgxold; 
-    double *rgout; 
+    double *rgxold;
+    double *rgout;
     double *rgBDz;   /* for B*D*z */
     double *rgdTmp;  /* temporary (random) vector used in different places */
     short flgEigensysIsUptodate;
@@ -72,13 +71,17 @@ class CCmaes{
     double ccov;         /* <- mucov, <- N */
     int gen;
 
-    double * xstart; 
-    double * typicalX; 
+    double * xstart;
+    double * typicalX;
     int typicalXcase;
     double * rgInitialStds;
     double * rgDiffMinChange;
 
-    struct { int flgalways; double modulo; double maxtime; } updateCmode;
+    struct {
+        int flgalways;
+        double modulo;
+        double maxtime;
+    } updateCmode;
     double facupdateCmode;
 
     Caleatoire alea; /* random number generator */

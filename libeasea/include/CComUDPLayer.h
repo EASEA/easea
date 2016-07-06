@@ -34,52 +34,53 @@
 
 
 typedef struct recv_data {
-        char data[MAXINDSIZE];
-}RECV_DATA;
+    char data[MAXINDSIZE];
+} RECV_DATA;
 
 typedef struct {
-	int Socket; /* Socket descriptor for server */
-        struct sockaddr_in ServAddr;   /* Local address */
-        int debug;
-	std::vector<recv_data>* data;
-	int *nb_data;
-}UDP_server_thread_parm_t;
+    int Socket; /* Socket descriptor for server */
+    struct sockaddr_in ServAddr;   /* Local address */
+    int debug;
+    std::vector<recv_data>* data;
+    int *nb_data;
+} UDP_server_thread_parm_t;
 
 class CComUDPServer {
 
-public:
-	int debug;
-	std::vector<recv_data> data;
-	int nb_data;
-	UDP_server_thread_parm_t *parm;
-	CComUDPServer(unsigned short port, int dg);
-	static void * UDP_server_thread(void *parm);
-	~CComUDPServer();
-	void read_data_lock();
-	void read_data_unlock();
-private:
-	int ServerSocket;
-	pthread_t thread;
+  public:
+    int debug;
+    std::vector<recv_data> data;
+    int nb_data;
+    UDP_server_thread_parm_t *parm;
+    CComUDPServer(unsigned short port, int dg);
+    static void * UDP_server_thread(void *parm);
+    ~CComUDPServer();
+    void read_data_lock();
+    void read_data_unlock();
+  private:
+    int ServerSocket;
+    pthread_t thread;
 };
 
 class CComUDPClient {
 
-public:
-	int debug;
-	void CComUDP_client_send(char *individual);
-	CComUDPClient(unsigned short port, const char *ip,int dg);
-  CComUDPClient(struct sockaddr_in* addr, int dg);
-	~CComUDPClient();
-	std::string getIP();
+  public:
+    int debug;
+    void CComUDP_client_send(char *individual);
+    CComUDPClient(unsigned short port, const char *ip,int dg);
+    CComUDPClient(struct sockaddr_in* addr, int dg);
+    ~CComUDPClient();
+    std::string getIP();
     int getPort();
-private:
-	struct sockaddr_in ServAddr;
-	int Socket;
+  private:
+    struct sockaddr_in ServAddr;
+    int Socket;
 };
 
 bool isLocalMachine(const char* address);
 bool checkValidLine(std::string line);
 struct sockaddr_in parse_addr_string(const char* line);
-CComUDPClient** parse_file(const char* file_name, unsigned* p_no_client, int serverPort);
+CComUDPClient** parse_file(const char* file_name, unsigned* p_no_client,
+                           int serverPort);
 
 #endif /* CCOMUDPLAYER_H_ */

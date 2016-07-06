@@ -1,7 +1,7 @@
 #ifndef CSTATS_H_
 #define CSTATS_H_
 
-class CStats{
+class CStats {
 
   public:
     int totalNumberOfImmigrants;

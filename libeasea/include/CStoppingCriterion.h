@@ -28,7 +28,9 @@ class CStoppingCriterion {
 
   public:
     virtual bool reached() = 0;
-    virtual ~CStoppingCriterion(){;}
+    virtual ~CStoppingCriterion() {
+        ;
+    }
 };
 
 

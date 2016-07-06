@@ -25,41 +25,41 @@
       exit(-1);						\
     }							\
   }
-   
 
-struct gpuEvaluationData{
-   int indiv_start;
-   int sh_pop_size;
-   
-   int num_MP;
-   int num_thread_max;
-   int num_Warp;
-   
-   int dimGrid;
-   int dimBlock;
 
-  cudaDeviceProp gpuProp;
+struct gpuEvaluationData {
+    int indiv_start;
+    int sh_pop_size;
 
-  int gpuId;
-  int threadId;
-  sem_t sem_in;
-  sem_t sem_out;
-  
-  void* d_population;
-  float* d_fitness;
+    int num_MP;
+    int num_thread_max;
+    int num_Warp;
 
-  float* progs;
-  float* d_progs;
+    int dimGrid;
+    int dimBlock;
 
-  int* indexes;
-  int* d_indexes;
+    cudaDeviceProp gpuProp;
 
-  float* fitness;
-  
-  float* flatInputs; // flattened inputs for GP
+    int gpuId;
+    int threadId;
+    sem_t sem_in;
+    sem_t sem_out;
 
-  float* d_inputs;
-  float* d_outputs;
+    void* d_population;
+    float* d_fitness;
+
+    float* progs;
+    float* d_progs;
+
+    int* indexes;
+    int* d_indexes;
+
+    float* fitness;
+
+    float* flatInputs; // flattened inputs for GP
+
+    float* d_inputs;
+    float* d_outputs;
 
 };
 
