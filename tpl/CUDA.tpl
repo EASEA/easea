@@ -800,7 +800,7 @@ public:
 NVCC= nvcc
 CPPC= g++
 LIBAESAE=$(EZ_PATH)libeasea/
-CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include -I$(EZ_PATH)boost
+CXXFLAGS+= -D_GLIBCXX_USE_CXX11_ABI=0 -g -Wall -O2 -I$(LIBAESAE)include -I$(EZ_PATH)boost
 LDFLAGS=$(EZ_PATH)boost/program_options.a $(LIBAESAE)libeasea.a -lpthread 
 
 

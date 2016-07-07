@@ -458,7 +458,7 @@ endif
 
 EASEALIB_PATH=$(EZ_PATH)/libeasea/
 
-CXXFLAGS =  -fopenmp	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
+CXXFLAGS = -D_GLIBCXX_USE_CXX11_ABI=0  -fopenmp	-O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
 
 OBJS = EASEA.o EASEAIndividual.o 
 
