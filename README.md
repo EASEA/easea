@@ -24,13 +24,7 @@ This project required you to have flex and bison installed:
 ```
 $ sudo apt-get install flex bison
 ```
-
-Installation
--------------
-Please refer to INSTALL.txt or the wiki : https://github.com/EASEA/easea/wiki/Building-and-installation
-Note that the CMake way is prefered and that the GNU/Makefile one is there for
-legacy OSes and distribution lacking CMake in there repositories. 
-
+C++ compiler that supports C++14.
 
 Quick start
 -------------
