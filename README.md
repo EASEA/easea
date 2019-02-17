@@ -14,6 +14,21 @@ Release versions
 --------------
 easea_v2.0 is generally a work in progress.
 
+Changes
+--------------
+- Added new templates of three Multi-Objective Evolutionary Algorithm: NSGA-II, ASREA, FastEMO
+- Deleted boost
+- Added the lightweight C++ command line option parser from opensource https://github.com/jarro2783/cxxopts
+- Added event handler and fixed bug when the program is not responding after 1093 evaluations.
+- Fixed some bugs in template CUDA_GP.tpl for island model.
+- Added in libeasea three performance metrics: HV, GD, IGD 
+- Added in libeasea five 2-objective tests (ZDT) and seven 3-objective tests (DTLZ)
+- Added in libeasea three crossover operators: SBX, BLX-alpha, BLX-alpha-beta
+- Added in libeasea two mutation operators: Polynomial, Gaussian
+- Added in libeasea two selector operators: binary tournament (based on dominance comparison and crowding distance comparison), best individual selection
+- Added in libeasea dominance estimator and crowdind distance estimator
+- Added in libeasea crowding archive module
+- Added in libeasea simple logger
 
 Requirements
 --------------
@@ -32,42 +47,42 @@ Quick start
 New templates (MOEA)
 -------------
 - NSGA-II 
-Nondominated Sorting genetic algorithm II.
-
-it is found in tpl/NSGAII.tpl
+Nondominated Sorting genetic algorithm II (tpl/NSGAII.tpl).
 ```
 $ easea -nsgaii any_benchmark.ez 
 ```
 - ASREA
-Archived-Based Stcochastic Ranking Evolutionary Algorithm.
-
-It is found in tpl/ASREA.tpl
+Archived-Based Stcochastic Ranking Evolutionary Algorithm. (tpl/ASREA.tpl)
 ```
 $ easea -asrea any_benchmark.ez 
 ```
 - FastEMO
-Fast Evolutionary Multi-objective Optimization Algorithm.
-
-It is found in tpl/FastEMO.tpl
+Fast Evolutionary Multi-objective Optimization Algorithm. (tpl/FastEMO.tpl)
 ```
 $ easea -fastemo any_benchmark.ez 
 ```
 
 Benchmark Suite
 -------------
-- Zitzler-Deb-Thiele's Test Problems ZDT(1, 2, 3, 4, 6) : 2-objective tests are founf in examples/zdt
-- Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3, 4, 5, 6, 7) : 3-objective tests are found in examples/dtlz
-
+- Zitzler-Deb-Thiele's Test Problems ZDT(1, 2, 3, 4, 6) : 2-objective tests (see examples/zdt)
+- Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3, 4, 5, 6, 7) : 3-objective tests (see examples/dtlz)
+An example to compile test zdt1 with algorithm FastEMO:
+```
+$ cd examples/zdt1/
+$ easea -fastemo zdt1.ez 
+```
 Performance Metrics
 -------------
 - Hypervolume (HV) maximisation: it provides the volume of the objective space that is dominated by a Pareto Front (PF), therefore, it shows the convergence quality towards the PF and the diversity in the obtained solutions set.
 - Generational Distance (GD) minimization: it measures the average Euclidean distance between the optimal solutions,
 obtained by algorithm and those in the Pareto Optimal Front.
 - Inverted Generational Distance (IGD) minimization: it is an inverted variation of Generational Distance that: i) calculates the minimum Euclidean distance between an obtained solution and the real PF and ii)  measures both the diversity and the convergence towards the PF of the obtained set (if enough members of PF are known).
-
-
-Changes
---------------
+To use these performance metrics: in your ez-file
+```
+ #define QMETRICS 
+ #define PARETO_TRUE_FILE "pareto-true.dat"
+```
+where "pareto-true.dat" is a file with Pareto Otimal Front (which is in the same folder as ez-file). See examples in examples/zdt(1-6).ez and examples/dtlz(1-7).ez.
 
 Features
 --------------
