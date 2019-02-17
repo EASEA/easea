@@ -14,13 +14,6 @@ Release versions
 --------------
 easea_v2.0 is generally a work in progress.
 
-Features
---------------
-
-- Runs can be distributed over cluster of homogeneous AND heterogeneous machines.
-- Distribution can be done locally on the same machine or over the internet (using a embedded island model).
-- Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
-- C++ description language.
 
 Requirements
 --------------
@@ -35,5 +28,28 @@ Quick start
 - cmake ./
 - make
 - make install
+
+New templates (MOEA)
+-------------
+- NSGA-II
+
+- ASREA
+
+- FastEMO
+
+Benchmark Suite
+-------------
+- ZDT(1, 2, 3, 4, 6)
+- DTLZ(1, 2, 3, 4, 5, 6, 7)
+
+
+Features
+--------------
+
+- Runs can be distributed over cluster of homogeneous AND heterogeneous machines.
+- Distribution can be done locally on the same machine or over the internet (using a embedded island model).
+- Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
+- C++ description language.
+
 
 
