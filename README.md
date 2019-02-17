@@ -31,24 +31,39 @@ Quick start
 
 New templates (MOEA)
 -------------
-- NSGA-II
+- NSGA-II 
+Nondominated Sorting genetic algorithm II
+it is found in tpl/NSGAII.tpl
 ```
 $ easea -nsgaii any_benchmark.ez 
 ```
 - ASREA
+Archived-Based Stcochastic Ranking Evolutionary Algorithm
+It is found in tpl/ASREA.tpl
 ```
 $ easea -asrea any_benchmark.ez 
 ```
 - FastEMO
+Fast Evolutionary Multi-objective Optimization Algorithm
+It is found in tpl/FastEMO.tpl
 ```
 $ easea -fastemo any_benchmark.ez 
 ```
 
 Benchmark Suite
 -------------
-- Zitzler-Deb-Thiele's Test Problems ZDT(1, 2, 3, 4, 6) : 2-objective tests
-- Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3, 4, 5, 6, 7) : 3-objective tests
+- Zitzler-Deb-Thiele's Test Problems ZDT(1, 2, 3, 4, 6) : 2-objective tests are founf in examples/zdt
+- Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3, 4, 5, 6, 7) : 3-objective tests are found in examples/dtlz
 
+Performance Metrics
+-------------
+- Hypervolume (HV) maximisation: it provides the volume of the objective space that is dominated by a Pareto Front (PF), therefore, it shows the convergence quality towards the PF and the diversity in the obtained solutions set.
+- Generational Distance (GD) minimization:
+- Inverted Generational Distance (IGD) minimization: it is an inverted variation of Generational Distance that: i) calculates the minimum Euclidean distance between an obtained solution and the real PF and ii)  measures both the diversity and the convergence towards the PF of the obtained set (if enough members of PF are known).
+
+
+Changes
+--------------
 
 Features
 --------------
