@@ -16,7 +16,7 @@ easea_v2.0 is generally a work in progress.
 
 Changes
 --------------
-- Added new templates of three Multi-Objective Evolutionary Algorithm: NSGA-II, ASREA, FastEMO
+- Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, ASREA, FastEMO
 - Deleted boost
 - Added the lightweight C++ command line option parser from opensource https://github.com/jarro2783/cxxopts
 - Added event handler and fixed bug when the program is not responding after 1093 evaluations.
@@ -66,7 +66,8 @@ Benchmark Suite
 -------------
 - Zitzler-Deb-Thiele's Test Problems ZDT(1, 2, 3, 4, 6) : 2-objective tests (see examples/zdt)
 - Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3, 4, 5, 6, 7) : 3-objective tests (see examples/dtlz)
-An example to compile test zdt1 with algorithm FastEMO:
+
+An example to compile zdt1 test with algorithm FastEMO:
 ```
 $ cd examples/zdt1/
 $ easea -fastemo zdt1.ez 
@@ -78,7 +79,9 @@ Performance Metrics
 obtained by algorithm and those in the Pareto Optimal Front.
 - Inverted Generational Distance (IGD) minimization: it is an inverted variation of Generational Distance that: i) calculates the minimum Euclidean distance between an obtained solution and the real PF and ii)  measures both the diversity and the convergence towards the PF of the obtained set (if enough members of PF are known).
 
-To use these performance metrics: in your ez-file
+To use these performance metrics: 
+
+in your ez-file
 ```
  #define QMETRICS 
  #define PARETO_TRUE_FILE "pareto-true.dat"
