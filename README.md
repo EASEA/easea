@@ -31,6 +31,13 @@ Please refer to INSTALL.txt or the wiki : https://github.com/EASEA/easea/wiki/Bu
 Note that the CMake way is prefered and that the GNU/Makefile one is there for
 legacy OSes and distribution lacking CMake in there repositories. 
 
+
+Quick start
+-------------
+cmake ./
+make 
+make install
+
 Sourceforge mirror
 --------------
 
