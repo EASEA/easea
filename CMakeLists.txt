@@ -2,26 +2,19 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 project(EASEA)
 SET(CMAKE_STATIC_LIBRARY_PREFIX="")
-INCLUDE_DIRECTORIES(libeasea/include boost)
+INCLUDE_DIRECTORIES(libeasea/include cxxopts)
 
-ADD_DEFINITIONS(-g -w -Wno-deprecated -Wno-write-strings -fmessage-length=0 )
+ADD_DEFINITIONS(-std=c++14 -w -Wno-deprecated -Wno-write-strings -fmessage-length=0 )
 
 
 if(WIN32)
   FILE(GLOB libeasea_src_win  "libeasea/win32/*.cpp" )
 endif(WIN32)
-
+set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 #Libeasea static library
 FILE(GLOB libeasea_src libeasea/*.cpp )
 ADD_LIBRARY( libeasea STATIC ${libeasea_src} ${libeasea_src_win})
-SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-O3 -fopenmp")
-
-
-#Boost program_options static library
-FILE(GLOB boost_src boost/*.cpp)
-ADD_LIBRARY( program_options STATIC ${boost_src} )
-SET_TARGET_PROPERTIES(program_options PROPERTIES OUTPUT_NAME "program_options" PREFIX "" COMPILE_FLAGS "-O2")
-
+SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-std=c++14 -O3 -fopenmp")
 
 find_package(BISON)
 find_package(FLEX)
@@ -39,18 +32,15 @@ SET(easea_src
 ADD_EXECUTABLE(easea ${easea_src})
 ADD_DEPENDENCIES(easea Lexer Parser)
 SET_TARGET_PROPERTIES(easea PROPERTIES COMPILE_FLAGS "")
-TARGET_LINK_LIBRARIES(easea libeasea program_options)
+TARGET_LINK_LIBRARIES(easea libeasea)
 ADD_CUSTOM_COMMAND(TARGET easea POST_BUILD 
-                    COMMAND $(CMAKE_COMMAND) -E copy libeasea.a libeasea/ 
-                    COMMAND $(CMAKE_COMMAND) -E copy program_options.a boost/
+                    COMMAND $(CMAKE_COMMAND) -E copy libeasea.a libeasea/
                    )
 
 INSTALL(TARGETS easea DESTINATION /usr/local/easea/bin )
 INSTALL(TARGETS libeasea DESTINATION /usr/local/easea/libeasea )
-INSTALL(TARGETS program_options DESTINATION /usr/local/easea/boost )
 INSTALL(DIRECTORY tpl DESTINATION /usr/local/easea )
 INSTALL(DIRECTORY "libeasea/include" DESTINATION "/usr/local/easea/libeasea")
-INSTALL(DIRECTORY boost/boost DESTINATION /usr/local/easea/boost)
 INSTALL(DIRECTORY examples DESTINATION /usr/local/easea/examples)
 INSTALL(FILES easeagrapher/EaseaGrapher.jar DESTINATION /usr/local/easea/easeagrapher )
 

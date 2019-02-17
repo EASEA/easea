@@ -797,12 +797,12 @@ public:
 #endif /* PROBLEM_DEP_H */
 
 \START_CUDA_MAKEFILE_TPL
-NVCC= nvcc
-CPPC= g++
+NVCC= nvcc 
+CPPC= g++ 
 LIBAESAE=$(EZ_PATH)libeasea/
-CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include -I$(EZ_PATH)boost
-LDFLAGS=$(EZ_PATH)boost/program_options.a $(LIBAESAE)libeasea.a -lpthread 
-
+CXXFLAGS+= -std=c++11 -g -Wall -O2 -I$(LIBAESAE)include 
+LDFLAGS=$(LIBAESAE)libeasea.a -lpthread 
+ 
 
 
 EASEA_SRC= EASEAIndividual.cpp
@@ -819,8 +819,8 @@ OBJ= $(EASEA_SRC:.cpp=.o) $(EASEA_MAIN_HDR:.cpp=.o)
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
-CPPFLAGS+= -I$(LIBAESAE)include -I$(EZ_PATH)boost -I/usr/local/cuda/include/
-NVCCFLAGS+= #--ptxas-options="-v"# --gpu-architecture sm_23 --compiler-options -fpermissive 
+CPPFLAGS+= -I$(LIBAESAE)include  -I/usr/local/cuda/include/
+NVCCFLAGS+= -std=c++11 #--ptxas-options="-v"# --gpu-architecture sm_23 --compiler-options -fpermissive 
 
 
 BIN= EASEA

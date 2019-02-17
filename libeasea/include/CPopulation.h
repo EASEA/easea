@@ -3,7 +3,8 @@
  *
  *  Created on: 22 juin 2009
  *      Author: maitre
- */
+ *
+ **/
 
 #ifndef CPOPULATION_H_
 #define CPOPULATION_H_
@@ -20,14 +21,18 @@
 #endif
 
 #include <vector>
-#include "CSelectionOperator.h"
+#include <CSelectionOperator.h>
+#include <CComparator.h>
+#include <CLogger.h>
 
 class Parameters;
 class CStats;
 
 class CPopulation {
 
-  public:
+
+
+public:
 
     float pCrossover;
     float pMutation;
@@ -52,17 +57,17 @@ class CPopulation {
     static CSelectionOperator* parentReductionOperator;
     static CSelectionOperator* offspringReductionOperator;
 
+    std::vector<CIndividual*> pop_vect;
     unsigned currentEvaluationNb;
     CRandomGenerator* rg;
-    std::vector<CIndividual*> pop_vect;
-
     Parameters* params;
     CStats* cstats;
 
   public:
     CPopulation();
+
     CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
-                float pCrossover, float pMutation, float pMutationPerGene, 
+                float pCrossover, float pMutation, float pMutationPerGene,
                 CRandomGenerator* rg, Parameters* params, CStats* cstats);
     virtual ~CPopulation();
 
@@ -74,11 +79,11 @@ class CPopulation {
     virtual void evaluateParentPopulation();
     virtual void optimiseParentPopulation();
 
-    void strongElitism(unsigned elitismSize, CIndividual** population, unsigned populationSize, 
+    void strongElitism(unsigned elitismSize, CIndividual** population, unsigned populationSize,
          CIndividual** outPopulation, unsigned outPopulationSize);
 
     void weakElitism(unsigned elitismSize, CIndividual** parentsPopulation,
-         CIndividual** offspringPopulation, unsigned* parentPopSize, unsigned* offPopSize, 
+         CIndividual** offspringPopulation, unsigned* parentPopSize, unsigned* offPopSize,
          CIndividual** outPopulation, unsigned outPopulationSize);
 
     virtual void evaluateOffspringPopulation();
@@ -129,6 +134,8 @@ class CPopulation {
     void syncOutVector();
     void syncInVector();
 
-};
 
-#endif /* CPOPULATION_H_ */
+
+};
+#endif
+

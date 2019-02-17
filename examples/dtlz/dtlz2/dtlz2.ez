@@ -1,0 +1,181 @@
+/*_____________________________________________________________
+
+Template for an EASEA evolutionary algorithm for easea v1.0.3
+
+This file contains template of DTLZ2 problem.
+
+DTLZ2 :  Test Problem n2.
+DTLZ2 function contains 3 objectives.
+
+Reference: 
+_______________________________________________________________*/
+
+\User declarations : // This section is copied on top of the output file
+
+#include <math.h>
+
+
+#define NB_VARIABLES 20
+#define NB_OBJECTIVES 3
+#define NB_CONSTRAINTS 0
+#define XOVER_PROB  0.9
+#define XOVER_DIST_ID 0.5 //20.0
+#define MUT_PROB  1.0/NB_VARIABLES
+#define MUT_DIST_ID 20.0
+#define QMETRICS 
+#define PARETO_TRUE_FILE "DTLZ2_3D.dat" 
+#define PBLM_NAME "DTLZ2"
+
+#define PI 3.141592653589793
+\end
+
+\User functions:
+inline constexpr double getCrossoverProbability()  {
+  return XOVER_PROB;
+} 
+inline constexpr double getMutationProbability()  {
+  return MUT_PROB;
+} 
+inline constexpr double getCrossoverDistributionId() {
+  return XOVER_DIST_ID;
+} 
+inline constexpr double getMutationDistributionId() {
+  return MUT_DIST_ID;
+} 
+inline constexpr int getNumberOfObjectives() {
+  return NB_OBJECTIVES ;
+}
+inline constexpr int getNumberOfVariables() {
+  return NB_VARIABLES ;
+}
+inline constexpr int getNumberOfConstraints(){
+  return NB_CONSTRAINTS ;
+}
+
+\end
+
+\User CUDA:
+//Transfert some variables to GPU here (cudaMalloc, MemCpy)
+\end
+
+\User classes :
+
+GenomeClass { 
+  // need to declare the genome here
+ int x;
+}
+\end
+
+\Before everything else function:
+//cout<<"Before everything else function called "<<endl;
+\end
+
+\After everything else function:
+//cout << "After everything else function called" << endl;
+\end
+
+\At the beginning of each generation function:
+//cout << "At the beginning of each generation function called" << endl;
+\end
+
+\At the end of each generation function:
+//cout << "At the end of each generation function called" << endl;
+\end
+
+\At each generation before reduce function:
+//cout << "At each generation before replacement function called" << endl;
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser : // "initializer" is also accepted
+  // the genome to initialise is known as "Genome"
+  setNumberOfVariables(NB_VARIABLES);
+  setNumberOfObjectives(NB_OBJECTIVES);
+  setNumberOfConstraints(NB_CONSTRAINTS);
+  
+  lowerBound_ = new double[nbVar_];
+  if (lowerBound_ == nullptr) 
+    LOG_ERROR(errorCode::memory, "memory wasn't allocated for lower bounds");
+  upperBound_ = new double[nbVar_];
+  if (upperBound_ == nullptr) 
+    LOG_ERROR(errorCode::memory, "memory wasn't allocated for upper bounds");
+  for (int i = 0; i < nbVar_; i++) {
+    lowerBound_[i] = 0.0;
+    upperBound_[i] = 1.0;
+  }
+
+\end
+
+\GenomeClass::crossover : 
+  // must create "child" out of "parent1" and "parent2"
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+  // must mutate "Genome"
+  return 0;
+\end
+
+\GenomeClass::evaluator : // Returns the score as a real value
+  // uses Genome to evaluate the quality of the individual
+  if (objective_ == nullptr)
+	  objective_ = new double[getNumberOfObjectives()];
+    int k = NB_VARIABLES - NB_OBJECTIVES + 1;
+
+    double g = 0.0;
+    for ( int i = NB_VARIABLES - k; i < NB_VARIABLES; i++)
+	g += (getIndividualVariables()[i]->getValue() - 0.5)*(getIndividualVariables()[i]->getValue() - 0.5);
+
+    for (int i = 0; i < NB_OBJECTIVES; i++)
+	objective_[i] = 1.0 + g;
+
+    for ( int i = 0; i < NB_OBJECTIVES; i++){
+	for ( int j = 0; j < NB_OBJECTIVES - (i + 1); j++)
+	    objective_[i] *= cos(getIndividualVariables()[j]->getValue()*0.5*PI);
+        if (i!=0){
+	    int aux = NB_OBJECTIVES - (i + 1);
+	    objective_[i] *= sin(getIndividualVariables()[aux]->getValue()*0.5*PI);
+	}
+    }
+    
+  return 0.0;
+\end
+
+\User Makefile options: 
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 50000    // NB_GEN
+  Time limit: 0 			           // In seconds, 0 to deactivate
+  Population size : 10000 			   //POP_SIZE
+  Offspring size : 10000           // or a xx%
+//  Mutation probability : 1.0      // MUT_PROB
+//  Crossover probability : 0.9      // XOVER_PROB
+  Evaluator goal : maximize      // maximise
+  Selection operator: Tournament 2.0
+/*  Surviving parents: 100%        // Percentage or absolute  
+  Surviving offspring: 100%      // Percentage or absolute  */
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+/*  Final reduce operator: Tournament 2 */
+
+  Elitism: Strong			           // Weak or Strong
+  Elite: 1
+  Print stats: true				       // Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats: false				         // Default: 0
+  Save population: false
+
+/*  Remote island model: false
+  IP file: ip.txt 			         // List of IP:PORT of islands to send individuals to
+  Migration probability: 0.33    // Probability of sending an individual per generation
+  Server port : 2929
+
+  Save population: true
+  Start from file:false 
+*/
+\end
+

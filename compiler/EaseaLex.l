@@ -1222,7 +1222,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\OFF_SIZE"  {fprintf(fpOutputFile,"%d",nOFF_SIZE);}
 <TEMPLATE_ANALYSIS>"\\ELITE_SIZE"  { fprintf(fpOutputFile,"%d",nELITE); }
 <TEMPLATE_ANALYSIS>"\\FC_SIZE"  { fprintf(fpOutputFile,"%d",iNO_FITNESS_CASES); }
-
+<TEMPLATE_ANALYSIS>"\\ARCH_SIZE"  {fprintf(fpOutputFile,"%d",nARCH_SIZE);}
 
 <TEMPLATE_ANALYSIS>"\\RED_PAR"  {
   if( TARGET==CUDA || TARGET==STD){
@@ -1692,6 +1692,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   else fprintf(fpOutputFile,"(*EZ_NB_GEN)");} // local genome name
 <COPY>"POP_SIZE"|"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
+<COPY>"ARCH_SIZE"|"ARCH_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"ARCH_SIZE");
+  else fprintf(fpOutputFile,"EZ_ARCH_SIZE");} // local genome name
 <COPY>"MUT_PROB"|"MUT_PROB"/[ \t\n]*"==" {
   if (bDoubleQuotes) 
     fprintf(fpOutputFile,"MUT_PROB");
@@ -1729,6 +1731,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);}
 <COPY>"NB_GEN"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"POP_SIZE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+<COPY>"ARCH_SIZE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The size of the archive population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+
 <COPY>"MUT_PROB"[ \t\n]*"=" {
   fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
   exit (1);
@@ -2056,6 +2060,9 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_GENERATION>"POP_SIZE" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");}
  /*local genome name*/
 <COPY_USER_GENERATION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");}
+<COPY_USER_GENERATION>"ARCH_SIZE" {if (bDoubleQuotes) fprintf(fpOutputFile,"ARCH_SIZE");}
+ /*local genome name*/
+<COPY_USER_GENERATION>"ARCH_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"ARCH_SIZE");}
 <COPY_USER_GENERATION>"MUT_PROB" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else {fprintf(fpOutputFile,"(*pEZ_MUT_PROB)");
@@ -2111,6 +2118,8 @@ if(OPERATING_SYSTEM=WINDOWS)
       fprintf(fpOutputFile,"(*EZ_NB_GEN)=");
     }} // local genome name
 <COPY_USER_GENERATION>"POP_SIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
+    } // local genome name
+<COPY_USER_GENERATION>"ARCH_SIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     } // local genome name
 <COPY_USER_GENERATION>"MUT_PROB"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
   else {
@@ -2240,6 +2249,10 @@ if(OPERATING_SYSTEM=WINDOWS)
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
 <COPY_USER_FUNCTION>"POP_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"POP_SIZE");
   else fprintf(fpOutputFile,"EZ_POP_SIZE");} // local genome name
+<COPY_USER_FUNCTION>"ARCH_SIZE"  {if (bDoubleQuotes) fprintf(fpOutputFile,"ARCH_SIZE");
+  else fprintf(fpOutputFile,"EZ_ARCH_SIZE");} // local genome name
+<COPY_USER_FUNCTION>"ARCH_SIZE"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"ARCH_SIZE");
+  else fprintf(fpOutputFile,"EZ_ARCH_SIZE");} // local genome name
 <COPY_USER_FUNCTION>"MUT_PROB" {
   if (bDoubleQuotes) fprintf(fpOutputFile,"MUT_PROB");
   else if( TARGET==CUDA || TARGET==STD)
@@ -2272,6 +2285,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>"currentGeneration"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The current generation number cannot be changed (not an l-value).\n",sEZ_FILE_NAME,yylineno); exit(1);}
 <COPY_USER_FUNCTION>"NB_GEN"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The number of generations can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY_USER_FUNCTION>"POP_SIZE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The size of the population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+<COPY_USER_FUNCTION>"ARCH_SIZE"[ \t\n]*"="  {fprintf(stderr,"\n%s - Error line %d: The size of the archive population can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
+
 <COPY_USER_FUNCTION>"MUT_PROB"[ \t\n]*"=" {
   fprintf(stderr,"\n%s - Error line %d: The mutation probability can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); 
   exit (1);
@@ -2352,6 +2367,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"generations"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Gen...\n");return NB_GEN;}
 <GET_PARAMETERS>"Time"[ \t\n]+"limit"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tTime Limit...\n");return TIME_LIMIT;}
 <GET_PARAMETERS>"Population"[ \t\n]+"size"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tPop Size...\n");return POP_SIZE;}
+<GET_PARAMETERS>"Archive"[ \t\n]+"size"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tArch Size...\n");return ARCH_SIZE;}
 <GET_PARAMETERS>"Elite"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tElite Size...\n");return ELITE;}
 <GET_PARAMETERS>"Selection"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tSelection Operator...\n");return SELECTOR;}
 <GET_PARAMETERS>"Selected"[ \t\n]+"genitors"[ \t\n]*":"[ \ta-zA-Z0-9_]* {if (bVERBOSE) printf ("\tSel Genitors...\n");}
@@ -2562,6 +2578,8 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       strcat(sTemp,"CUDA.tpl");
     else if(TARGET_FLAVOR == CMAES )
       strcat(sTemp,"CMAES_CUDA.tpl");
+/*    else if (TARGET_FLAVOR == NSGAII)
+	strcat(sTemp,"NSGAII.tpl");*/
     else if( TARGET_FLAVOR == FLAVOR_GP )
       strcat(sTemp,"CUDA_GP.tpl");
     else if(TARGET_FLAVOR == MEMETIC )
@@ -2582,6 +2600,17 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       strcat(sTemp,"CMAES.tpl");
     else if (TARGET_FLAVOR == FLAVOR_GP)
       strcat(sTemp,"GP.tpl");
+    else if (TARGET_FLAVOR == NSGAII){
+	strcat(sTemp, "NSGAII.tpl");
+	std::cout << "STD:NSGAII" << std::endl;
+    }
+    else if (TARGET_FLAVOR == ASREA){
+	strcat(sTemp, "ASREA.tpl");
+	std::cout << "STD:ASREA" << std::endl;
+    }
+    else if (TARGET_FLAVOR == FASTEMO){
+	strcat(sTemp, "FastEMO.tpl");
+    }
     else if (TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"STD_MEM.tpl");
     //else if (TARGET_FLAVOR == STD_FLAVOR_GP )

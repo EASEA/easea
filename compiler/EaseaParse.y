@@ -57,7 +57,7 @@ bool bBALDWINISM=0; //memetic
 bool bREMOTE_ISLAND_MODEL=0; //remote island model
 float fMIGRATION_PROBABILITY=0.0;
 char sIP_FILE[128]; //remote island model
-int nPOP_SIZE, nOFF_SIZE;
+int nPOP_SIZE, nOFF_SIZE, nARCH_SIZE;
 float fSURV_PAR_SIZE=-1.0, fSURV_OFF_SIZE=-1.0;
 char *nGENOME_NAME;
 int nPROBLEM_DIM;
@@ -144,6 +144,7 @@ class CSymbol;
 %token MUT_PROB
 %token XOVER_PROB                       
 %token POP_SIZE
+%token ARCH_SIZE
 %token SELECTOR
 %token RED_PAR
 %token RED_OFF
@@ -485,6 +486,8 @@ Parameter
       {fXOVER_PROB=(float)$2;}
   |  POP_SIZE NUMBER2
       {nPOP_SIZE=(int)$2;}
+  |  ARCH_SIZE NUMBER2
+      {nARCH_SIZE=(int)$2;}
   |  SELECTOR IDENTIFIER2{
       strcpy(sSELECTOR, $2->sName);
       strcpy(sSELECTOR_OPERATOR, $2->sName);
@@ -750,6 +753,15 @@ int main(int argc, char *argv[]){
     }
     else if (!mystricmp(sTemp,"memetic"))  {
       TARGET_FLAVOR = MEMETIC;
+    }
+    else if (!mystricmp(sTemp,"nsgaii"))  {
+      TARGET_FLAVOR = NSGAII;
+    }
+    else if (!mystricmp(sTemp,"asrea"))  {
+      TARGET_FLAVOR = ASREA;
+    }
+    else if (!mystricmp(sTemp,"fastemo"))  {
+      TARGET_FLAVOR = FASTEMO;
     }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;

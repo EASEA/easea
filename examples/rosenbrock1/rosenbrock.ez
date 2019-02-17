@@ -1,0 +1,202 @@
+/*_________________________________________________________
+
+Test functions
+log normal adaptive mutation
+Selection operator: Tournament
+__________________________________________________________*/
+
+\User declarations :
+#define SIZE 100
+#define X_MIN -1.
+#define X_MAX 1.
+#define ITER 120      
+#define Abs(x) ((x) < 0 ? -(x) : (x))
+#define MAX(x,y) ((x)>(y)?(x):(y))
+#define MIN(x,y) ((x)<(y)?(x):(y))
+#define SIGMA  1.                     /*  mutation parameter */
+#define PI 3.141592654
+
+ 
+float pMutPerGene=0.1;
+
+\end
+
+\User functions:
+#include <math.h>
+
+__device__ __host__ inline static float SQR(float d)
+{
+  return (d*d);
+}
+
+__device__ __host__ inline float rosenbrock( float const *x)
+{
+  float qualitaet;
+  int i;
+  int DIM = SIZE;
+        qualitaet = 0.0;
+
+        for( i = DIM-2; i >= 0; --i)
+          qualitaet += 100.*SQR(SQR(x[i])-x[i+1]) + SQR(1.-x[i]);
+        return ( qualitaet);
+} /* f_rosenbrock() */
+
+__device__ __host__ inline float Weierstrass(float x[SIZE], int n)  // Weierstrass multimidmensionnel h = 0.25
+{
+   float res = 0.;
+   float val[SIZE];
+   float b=2.;
+   float h = 0.35;
+
+   for (int i = 0;i<n; i++) {
+	val[i] = 0.;
+    	for (int k=0;k<ITER;k++)
+		val[i] += pow(b,-(float)k*h) * sin(pow(b,(float)k)*x[i]);
+	res += Abs(val[i]);
+	}
+   return (res);
+} 
+
+float gauss()
+/* Generates a normally distributed random value with variance 1 and 0 mean.
+    Algorithm based on "gasdev" from Numerical recipes' pg. 203. */
+{
+  static int iset = 0;
+  float gset = 0.0;
+  float v1 = 0.0, v2 = 0.0, r = 0.0;
+  float factor = 0.0;
+
+  if (iset) {
+        iset = 0;
+        return gset;
+      	}
+  else {    
+        do {
+            v1 = (float)random(0.,1.) * 2.0 - 1.0;
+            v2 = (float)random(0.,1.) * 2.0 - 1.0;
+            r = v1 * v1 + v2 * v2;
+	                }
+        while (r > 1.0);
+        factor = sqrt (-2.0 * log (r) / r);
+        gset = v1 * factor;
+        iset = 1;
+        return (v2 * factor);
+    	}
+}
+\end
+
+\User CUDA:
+\end
+
+\Before everything else function:
+{
+}
+\end
+
+\After everything else function:
+  //cout << "After everything else function called" << endl;
+\end
+
+\At the beginning of each generation function:{
+}
+\end
+
+\At the end of each generation function:
+  //cout << "At the end of each generation function called" << endl;
+\end
+
+\At each generation before reduce function:
+  //cout << "At each generation before replacement function called" << endl;
+\end
+
+\User classes :
+
+GenomeClass { 
+  float x[SIZE];
+  float sigma[SIZE]; // auto-adaptative mutation parameter
+}
+\end
+
+\GenomeClass::display:
+/* 	 for( size_t i=0 ; i<SIZE ; i++){ */
+/* 	      //     cout << Genome.x[i] << ":" << Genome.sigma[i] << "|"; */
+/* 	      printf("%.02f:%.02f|",Genome.x[i],Genome.sigma[i]); */
+/* 	 }	       */
+\end
+
+\GenomeClass::initialiser : // "initializer" is also accepted
+  for(int i=0; i<SIZE; i++ ) {
+     	Genome.x[i] = (float)random(X_MIN,X_MAX);
+	Genome.sigma[i]=(float)random(0.,0.5);
+	}
+\end
+
+\GenomeClass::crossover :
+  for (int i=0; i<SIZE; i++)
+  {
+    float alpha = (float)random(0.,1.); // barycentric crossover
+     child.x[i] = alpha*parent1.x[i] + (1.-alpha)*parent2.x[i];
+  }
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+  int NbMut=0;
+  float pond = 1./sqrt((float)SIZE);
+
+    for (int i=0; i<SIZE; i++)
+    if (tossCoin(pMutPerGene)){
+    	NbMut++;
+       	Genome.sigma[i] = Genome.sigma[i] * exp(SIGMA*pond*(float)gauss());
+       	Genome.sigma[i] = MIN(0.5,Genome.sigma[i]);              
+       	Genome.sigma[i] = MAX(0.,Genome.sigma[i]);
+       	Genome.x[i] += Genome.sigma[i]*(float)gauss();
+       	Genome.x[i] = MIN(X_MAX,Genome.x[i]);              // pour eviter les depassements
+       	Genome.x[i] = MAX(X_MIN,Genome.x[i]);
+    	}
+return NbMut;
+\end
+
+\GenomeClass::evaluator : // Returns the score
+{
+  float Score= 0.0;
+  //Score= Weierstrass(Genome.x, SIZE);         
+  Score= rosenbrock(Genome.x);         
+  return Score;
+}
+\end
+
+\User Makefile options: 
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 35   	// NB_GEN
+  Time limit: 0 			// In seconds, 0 to deactivate
+  Population size : 2048			//POP_SIZE
+  Offspring size : 2048 // 40% 
+  Mutation probability : 1       // MUT_PROB
+  Crossover probability : 1      // XOVER_PROB
+  Evaluator goal : minimise      // Maximise
+  Selection operator: Tournament 2.0
+  Surviving parents: 100%//percentage or absolute  
+  Surviving offspring: 100%
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+  Final reduce operator: Tournament 2
+
+  Elitism: Strong			//Weak or Strong
+  Elite: 1
+  Print stats: true				//Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats:true				//Default: 0
+
+  Remote island model: false
+  IP file: ip.txt 			//File containing all the remote island's IP
+  Server port : 2929
+  Migration probability: 0.33
+
+  Save population: false
+  Start from file:false
+\end
+	
