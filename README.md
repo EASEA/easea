@@ -32,15 +32,22 @@ Quick start
 New templates (MOEA)
 -------------
 - NSGA-II
-
+```
+$ easea -nsgaii any_benchmark.ez 
+```
 - ASREA
-
+```
+$ easea -asrea any_benchmark.ez 
+```
 - FastEMO
+```
+$ easea -fastemo any_benchmark.ez 
+```
 
 Benchmark Suite
 -------------
-- ZDT(1, 2, 3, 4, 6)
-- DTLZ(1, 2, 3, 4, 5, 6, 7)
+- Zitzler-Deb-Thiele's Test Problems ZDT(1, 2, 3, 4, 6) : 2-objective tests
+- Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3, 4, 5, 6, 7) : 3-objective tests
 
 
 Features
