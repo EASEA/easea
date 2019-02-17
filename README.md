@@ -34,9 +34,10 @@ legacy OSes and distribution lacking CMake in there repositories.
 
 Quick start
 -------------
-cmake ./
-make 
-make install
+- cmake ./
+- make
+- make install
+
 
 Sourceforge mirror
 --------------
