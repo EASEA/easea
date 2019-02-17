@@ -10,6 +10,10 @@ EASEA (EAsy Specification of Evolutionary Algorithms) is an Artificial Evolution
 
 Then, for very large problems, EASEA can also exploit computational ecosystems as it can parallelize (using an embedded island model) over loosely coupled heterogenous machines (Windows, Linux or Macintosh, with or without GPGPU cards, provided that they have internet access) a grid of computers or a Cloud.
 
+Release versions
+--------------
+easea_v2.0 is generally a work in progress.
+
 Features
 --------------
 
@@ -33,12 +37,3 @@ Quick start
 - make install
 
 
-Sourceforge mirror
---------------
-
-To mirror this repositories on the github one, please add to .git/config:
-[remote "sourceforge"]
-	url = ssh://USERNAME@git.code.sf.net/p/easea/code easea-code
-	mirror = true
-
-Add after pushing, do "git push sourceforge" manually or add a hook.
