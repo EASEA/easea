@@ -77,6 +77,7 @@ Performance Metrics
 - Generational Distance (GD) minimization: it measures the average Euclidean distance between the optimal solutions,
 obtained by algorithm and those in the Pareto Optimal Front.
 - Inverted Generational Distance (IGD) minimization: it is an inverted variation of Generational Distance that: i) calculates the minimum Euclidean distance between an obtained solution and the real PF and ii)  measures both the diversity and the convergence towards the PF of the obtained set (if enough members of PF are known).
+
 To use these performance metrics: in your ez-file
 ```
  #define QMETRICS 
