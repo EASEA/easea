@@ -43,6 +43,7 @@ Quick start
 - cmake ./
 - make
 - make install
+- Export and setting evironent variables (EZ_PATH="/usr/local/easea/" and PATH="$PATH:/usr/local/easea/bin")
 
 New templates (MOEA)
 -------------

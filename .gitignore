@@ -1,0 +1,70 @@
+# .vscode settings
+.vscode/
+build/
+
+# Cmake generated files to ignore
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles/
+CPackConfig.cmake
+CPackSourceConfig.cmake
+install_manifest.txt
+Makefile
+
+# libeasea generated files to ignore
+libeasea/libeasea.a
+libeasea.a
+
+# easea generated files to ignore
+compiler/EaseaLex.cpp
+compiler/EaseaParse.cpp
+compiler/EaseaParse.hpp
+easea
+
+# easea examples generated files to ignore
+examples/ant/sortieEasea.txt
+examples/michalewicz/michalewiczIndividual.cu
+examples/rastrigin/rastrigin.csv
+examples/rastrigin/rastriginIndividual.cu
+examples/regression/regressionIndividual.cu
+examples/regression_okto_simulation/regressionIndividual.cu
+examples/regression-network/regressionIndividual.cu
+examples/sphere/sphere.csv
+examples/weierstrass/weierstrassIndividual.cu
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CUDA files to ignore
+*.i
+*.ii
+*.gpu
+*.ptx
+*.cubin
+*.fatbin

@@ -1,1 +1,0 @@
-memetic_weierstrass.mak

@@ -15,16 +15,12 @@ EASEA had been compiled and tested with those following compilers:
 * CUDA SDK > 4.1
 
 
-###Easea can be build using two method.
+###Easea can be build by following the next steps :
 
-1)By GNU Makefile:
-  $ make
-  $ . install.sh [local]  
-
-1)By CMake:
-  $ cmake .
-  $ make
-  $ . install.sh [local] 
+- cmake ./
+- make
+- (sudo )make install
+- Export and setting evironent variables (EZ_PATH="/usr/local/easea/" and PATH="$PATH:/usr/local/easea/bin")
 
 "." is equivalent to "source".
 
