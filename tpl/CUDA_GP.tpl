@@ -894,9 +894,12 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-    this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
-    this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
-    this->serverPort = setVariable("serverPort",\SERVER_PORT);
+//    	this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
+	std::string *ipFilename = new std::string();
+	*ipFilename = setVariable("ipFile", "\IP_FILE");
+	this->ipFile = (char *)ipFilename->c_str();
+	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
+	this->serverPort = setVariable("serverPort",\SERVER_PORT);
 
 }
 
@@ -955,7 +958,7 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
 
   // warning cstats parameter is null
-  this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params,NULL);
+  this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params, this->cstats); // NULL);
   int popSize = (params->parentPopulationSize>params->offspringPopulationSize?params->parentPopulationSize:params->offspringPopulationSize);
   ((PopulationImpl*)this->population)->cudaBuffer = (void*)malloc(sizeof(IndividualImpl)*( popSize ));
   
@@ -1078,8 +1081,8 @@ public:
 NVCC= nvcc
 CPPC= g++
 LIBAESAE=$(EZ_PATH)libeasea/
-CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include -I$(EZ_PATH)boost
-LDFLAGS=$(EZ_PATH)boost/program_options.a $(LIBAESAE)libeasea.a -lpthread 
+CXXFLAGS+= -std=c++11 -g -Wall -O2 -I$(LIBAESAE)include 
+LDFLAGS= $(LIBAESAE)libeasea.a -lpthread 
 
 
 
@@ -1097,8 +1100,8 @@ OBJ= $(EASEA_SRC:.cpp=.o) $(EASEA_MAIN_HDR:.cpp=.o)
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
-CPPFLAGS+= -I$(LIBAESAE)include -I$(EZ_PATH)boost -I/usr/local/cuda/include/
-NVCCFLAGS+= #--ptxas-options="-v"# --gpu-architecture sm_23 --compiler-options -fpermissive 
+CPPFLAGS+= -I$(LIBAESAE)include  -I/usr/local/cuda/include/
+NVCCFLAGS+= -std=c++11 #--ptxas-options="-v"# --gpu-architecture sm_23 --compiler-options -fpermissive 
 
 
 BIN= EASEA

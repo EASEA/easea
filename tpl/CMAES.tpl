@@ -464,7 +464,7 @@ endif
 
 EASEALIB_PATH=$(EZ_PATH)libeasea/
 
-CXXFLAGS =   -fopenmp -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include -I$(EZ_PATH)boost
+CXXFLAGS =  -std=c++14 -fopenmp -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include 
 
 OBJS = EASEA.o EASEAIndividual.o 
 
@@ -481,7 +481,7 @@ endif
 TARGET =	EASEA
 
 $(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) -g $(EASEALIB_PATH)libeasea.a $(EZ_PATH)boost/program_options.a $(LIBS)
+	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) -g $(EASEALIB_PATH)libeasea.a $(LIBS)
 
 	
 #%.o:%.cpp

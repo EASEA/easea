@@ -31,6 +31,9 @@ Centre de Math?matiques Appliqu?es
 #define CUDA_FLAVOR_SO 0
 #define CUDA_FLAVOR_MO 1
 #define FLAVOR_GP 2
+#define NSGAII 11 
+#define ASREA  12
+#define FASTEMO 15
 
 
 #define UNIX 1
@@ -55,7 +58,7 @@ extern bool bSAVE_POPULATION, bSTART_FROM_FILE;
 extern bool bREMOTE_ISLAND_MODEL;
 extern bool bLINE_NUM_EZ_FILE;
 extern char* nGENOME_NAME;
-extern int nPOP_SIZE, nNB_GEN, nNB_OPT_IT, nOFF_SIZE, nPROBLEM_DIM, nTIME_LIMIT;
+extern int nPOP_SIZE, nNB_GEN,nARCH_SIZE, nNB_OPT_IT, nOFF_SIZE, nPROBLEM_DIM, nTIME_LIMIT;
 extern int nSERVER_PORT;
 extern int nWARNINGS, nERRORS;
 extern int TARGET, OPERATING_SYSTEM;

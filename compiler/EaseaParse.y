@@ -17,8 +17,6 @@ Centre de Math�matiques Appliqu�es
 #define YYEXIT_FAILURE	1
 #define YYEXIT_SUCCESS	0
 
-
-
 // Globals     
 CSymbol *pCURRENT_CLASS;
 CSymbol *pCURRENT_TYPE;
@@ -57,7 +55,7 @@ bool bBALDWINISM=0; //memetic
 bool bREMOTE_ISLAND_MODEL=0; //remote island model
 float fMIGRATION_PROBABILITY=0.0;
 char sIP_FILE[128]; //remote island model
-int nPOP_SIZE, nOFF_SIZE;
+int nPOP_SIZE, nOFF_SIZE, nARCH_SIZE;
 float fSURV_PAR_SIZE=-1.0, fSURV_OFF_SIZE=-1.0;
 char *nGENOME_NAME;
 int nPROBLEM_DIM;
@@ -71,8 +69,7 @@ FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile;//, *fpExplodedGenomeFile;
 
 CSymbolTable SymbolTable;    // the symbol table
 
-
- unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_SIZE,iMAX_TREE_DEPTH,iMAX_XOVER_DEPTH,iNO_FITNESS_CASES;
+unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_SIZE,iMAX_TREE_DEPTH,iMAX_XOVER_DEPTH,iNO_FITNESS_CASES;
 
 extern int yylex();
 extern char * yytext;
@@ -144,6 +141,7 @@ class CSymbol;
 %token MUT_PROB
 %token XOVER_PROB                       
 %token POP_SIZE
+%token ARCH_SIZE
 %token SELECTOR
 %token RED_PAR
 %token RED_OFF
@@ -175,11 +173,13 @@ class CSymbol;
 %token PRG_BUF_SIZE
 %token NO_FITNESS_CASES
 %token TEMPLATE_END
+
 // include file
 %code provides {
 #include "EaseaSym.h"
 #include "EaseaLex.h"
 
+  int easeaParse(int argc, char *argv[]);
   int  CEASEAParser_create();
   
   double  CEASEAParser_assign(CSymbol* pIdentifier, double dValue);
@@ -187,8 +187,8 @@ class CSymbol;
   CSymbol*  CEASEAParser_insert();
 
   //virtual void yysyntaxerror();
-
 }
+
 %start EASEA
 %%
 
@@ -485,6 +485,8 @@ Parameter
       {fXOVER_PROB=(float)$2;}
   |  POP_SIZE NUMBER2
       {nPOP_SIZE=(int)$2;}
+  |  ARCH_SIZE NUMBER2
+      {nARCH_SIZE=(int)$2;}
   |  SELECTOR IDENTIFIER2{
       strcpy(sSELECTOR, $2->sName);
       strcpy(sSELECTOR_OPERATOR, $2->sName);
@@ -706,7 +708,7 @@ Expr
 /////////////////////////////////////////////////////////////////////////////
 // main
 
-int main(int argc, char *argv[]){
+int easeaParse(int argc, char *argv[]){
   int n = YYEXIT_FAILURE;
   int nParamNb=0;
   char *sTemp;
@@ -750,6 +752,15 @@ int main(int argc, char *argv[]){
     }
     else if (!mystricmp(sTemp,"memetic"))  {
       TARGET_FLAVOR = MEMETIC;
+    }
+    else if (!mystricmp(sTemp,"nsgaii"))  {
+      TARGET_FLAVOR = NSGAII;
+    }
+    else if (!mystricmp(sTemp,"asrea"))  {
+      TARGET_FLAVOR = ASREA;
+    }
+    else if (!mystricmp(sTemp,"fastemo"))  {
+      TARGET_FLAVOR = FASTEMO;
     }
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;

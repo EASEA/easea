@@ -1,0 +1,41 @@
+/**
+ *  Prototype of 'nz' file 
+*/
+
+\Architecture of network : // You have to delimit each element of layer by a semi-colon
+    Number of layers: 3
+    Neurons by layers: 784 ; 300 ; 10
+    Bias by layers: false ; false ; false
+    Activation function by layers: null ; tanhyper ; softmax // Choose between : null, identity, sigmoid, arctan, sinusoid, tanhyper, relu, gaussian, softmax
+    // Voir plus tard pour les différents types de couches
+\end
+
+\Learning parameters :
+    Learning dataset: ./relative/path/to/file.csv
+    Learning mode: online // Choose between : online or batch
+    Learning method: gradient // See later the other one such as Adam or RMSProp
+    Learning rate: 0.0001
+    Inertia rate: 0.9
+    Size of batch: 32
+    Sum or average batch error: sum // Choose between : sum or average
+    // Voir plus tard les méthodes d'estimation de fiabilité, les fonctions de coûts à minimiser et les métriques/méthodes pour l'évolution de l'apprentissage
+\end
+
+\Evaluation parameters :
+    Evaluation dataset: ./relative/path/to/file.csv
+    // Voir plus tard les méthodes d'évaluations et leurs paramètres, taille d'un batch et fonction de coût
+    Generate evaluation record: null // Set a relative path or let null
+\end
+
+\Randomization parameters :
+    Start weights from file: ./relative/path/to/file.csv null // Set a relative path or let null
+    seed: 10
+    distribution: normal // Choose between : normal, bernoulli, poisson, uniform
+    First parameter of distribution: 0.0 // See http://www.cplusplus.com/reference/random/ for details
+    Second parameter of distribution: 0.1 // See http://www.cplusplus.com/reference/random/ for details
+\end
+
+\Other parameters :
+    Precision: float // Choose between : half, float, double
+    Verbose mode: false
+\end

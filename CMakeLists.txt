@@ -1,87 +1,112 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-project(EASEA)
+PROJECT(EASENA)
+
 SET(CMAKE_STATIC_LIBRARY_PREFIX="")
-INCLUDE_DIRECTORIES(libeasea/include boost)
 
-ADD_DEFINITIONS(-g -w -Wno-deprecated -Wno-write-strings -fmessage-length=0 )
+INCLUDE_DIRECTORIES(libeasea/include cxxopts)
+INCLUDE_DIRECTORIES(libeasna/include)
 
+SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 
-if(WIN32)
-  FILE(GLOB libeasea_src_win  "libeasea/win32/*.cpp" )
-endif(WIN32)
-
-#Libeasea static library
+# Creation of a static library for EASEA that will be linked to the main program easena
 FILE(GLOB libeasea_src libeasea/*.cpp )
+if(WIN32)
+        FILE(GLOB libeasea_src_win  "libeasea/win32/*.cpp" )
+endif(WIN32)
 ADD_LIBRARY( libeasea STATIC ${libeasea_src} ${libeasea_src_win})
-SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-O3 -fopenmp")
+SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-std=c++14 -O3 -fopenmp")
 
+# Creation of a static library for EASNA that will be linked to the main program easena 
+# Program based on the one that can be found in https://git.unistra.fr/rorhand/perceptron/
+FILE(GLOB_RECURSE libeasna_src libeasna/*.cpp )
+ADD_LIBRARY(libeasna STATIC ${libeasna_src})
+SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "" COMPILE_FLAGS "-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op -std=c++11 -O3 -s -fopenmp")
 
-#Boost program_options static library
-FILE(GLOB boost_src boost/*.cpp)
-ADD_LIBRARY( program_options STATIC ${boost_src} )
-SET_TARGET_PROPERTIES(program_options PROPERTIES OUTPUT_NAME "program_options" PREFIX "" COMPILE_FLAGS "-O2")
+# FLEX and BISON management to create the easea language and soon the easna/neural language
+FIND_PACKAGE(FLEX)
+FIND_PACKAGE(BISON)
+FLEX_TARGET( EaseaLexer 
+        compiler/EaseaLex.l 
+        compiler/EaseaLex.cpp
+)
+BISON_TARGET( EaseaParser
+        compiler/EaseaParse.y 
+        compiler/EaseaParse.cpp 
+        COMPILE_FLAGS -d
+        DEFINES_FILE compiler/EaseaParse.hpp
+)
+FLEX_TARGET( NeuralLexer 
+        compiler/NeuralLex.l 
+        compiler/NeuralLex.cpp
+        DEFINES_FILE compiler/NeuralLex.h
+)
+BISON_TARGET( NeuralParser
+        compiler/NeuralParse.y 
+        compiler/NeuralParse.cpp 
+        COMPILE_FLAGS -d
+        DEFINES_FILE compiler/NeuralParse.hpp
+)
 
-
-find_package(BISON)
-find_package(FLEX)
-FLEX_TARGET(Lexer compiler/EaseaLex.l compiler/EaseaLex.cpp)
-BISON_TARGET(Parser compiler/EaseaParse.y compiler/EaseaParse.cpp COMPILE_FLAGS -d)
-
-#Easea compiler
-SET(easea_src 
+#Easena compiler
+SET(easena_src 
         compiler/EaseaLex.cpp
         compiler/EaseaParse.cpp
         compiler/EaseaSym.cpp
-        compiler/EaseaYTools.cpp)
+        compiler/EaseaYTools.cpp
+        compiler/easena.cpp
+        compiler/NeuralLex.cpp
+        compiler/NeuralParse.cpp
+)
 
+ADD_EXECUTABLE(easena ${easena_src})
+SET_TARGET_PROPERTIES(easena PROPERTIES COMPILE_FLAGS "-std=c++14 -w -Wno-deprecated -Wno-write-strings -fmessage-length=0")
+TARGET_LINK_LIBRARIES(easena libeasea libeasna)
+ADD_CUSTOM_COMMAND(TARGET easena POST_BUILD 
+        COMMAND $(CMAKE_COMMAND) -E copy libeasea.a libeasea/
+        COMMAND $(CMAKE_COMMAND) -E copy libeasna.a libeasna/
+)
 
-ADD_EXECUTABLE(easea ${easea_src})
-ADD_DEPENDENCIES(easea Lexer Parser)
-SET_TARGET_PROPERTIES(easea PROPERTIES COMPILE_FLAGS "")
-TARGET_LINK_LIBRARIES(easea libeasea program_options)
-ADD_CUSTOM_COMMAND(TARGET easea POST_BUILD 
-                    COMMAND $(CMAKE_COMMAND) -E copy libeasea.a libeasea/ 
-                    COMMAND $(CMAKE_COMMAND) -E copy program_options.a boost/
-                   )
+INSTALL(TARGETS easena DESTINATION /usr/local/easena/bin )
+INSTALL(TARGETS libeasea DESTINATION /usr/local/easena/libeasea )
+INSTALL(TARGETS libeasna DESTINATION /usr/local/easena/libeasna )
+INSTALL(DIRECTORY tpl DESTINATION /usr/local/easena )
+INSTALL(DIRECTORY "libeasea/include" DESTINATION "/usr/local/easena/libeasea")
+INSTALL(DIRECTORY "libeasna/include" DESTINATION "/usr/local/easena/libeasna")
+INSTALL(DIRECTORY "libeasna/src" DESTINATION "/usr/local/easena/libeasna")
+INSTALL(DIRECTORY examples DESTINATION /usr/local/easena/examples)
+INSTALL(FILES easeagrapher/EaseaGrapher.jar DESTINATION /usr/local/easena/easeagrapher )
 
-INSTALL(TARGETS easea DESTINATION /usr/local/easea/bin )
-INSTALL(TARGETS libeasea DESTINATION /usr/local/easea/libeasea )
-INSTALL(TARGETS program_options DESTINATION /usr/local/easea/boost )
-INSTALL(DIRECTORY tpl DESTINATION /usr/local/easea )
-INSTALL(DIRECTORY "libeasea/include" DESTINATION "/usr/local/easea/libeasea")
-INSTALL(DIRECTORY boost/boost DESTINATION /usr/local/easea/boost)
-INSTALL(DIRECTORY examples DESTINATION /usr/local/easea/examples)
-INSTALL(FILES easeagrapher/EaseaGrapher.jar DESTINATION /usr/local/easea/easeagrapher )
-
-SET(MAJOR_VERSION 0)
-SET(MINOR_VERSION 1)
+SET(MAJOR_VERSION 3)
+SET(MINOR_VERSION 0)
 SET(PATCH_VERSION 0)
- 
-IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
-INCLUDE(InstallRequiredSystemLibraries)
- 
-SET(CPACK_SET_DESTDIR "on")
-SET(CPACK_PACKAGING_INSTALL_PREFIX "/tmp")
-SET(CPACK_GENERATOR "DEB")
- 
-SET(CPACK_PACKAGE_DESCRIPTION "EASEA framework")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "EASEA: A distributed and massively parallel evolutionary engine")
-SET(CPACK_PACKAGE_VENDOR "University of Strasbourg")
-SET(CPACK_PACKAGE_CONTACT "Pallamidessi Joseph")
-SET(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR_VERSION}")
-SET(CPACK_PACKAGE_VERSION_MINOR "${MINOR_VERSION}")
-SET(CPACK_PACKAGE_VERSION_PATCH "${PATCH_VERSION}")
-SET(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
-SET(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
- 
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.1.3), libgcc1 (>= 1:4.1.1), libstdc++6 (>= 4.2.1), build-essential, openjdk-8-jre")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "postinst;prerm;")
-SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
-SET(CPACK_DEBIAN_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
- 
-SET(CPACK_COMPONENTS_ALL Libraries ApplicationData)
-INCLUDE(CPack)
- 
-ENDIF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
+
+ADD_SUBDIRECTORY(Test/xor_mnist)
+
+## OUTDATED !
+## IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
+## INCLUDE(InstallRequiredSystemLibraries)
+##  
+## SET(CPACK_SET_DESTDIR "on")
+## SET(CPACK_PACKAGING_INSTALL_PREFIX "/tmp")
+## SET(CPACK_GENERATOR "DEB")
+##  
+## SET(CPACK_PACKAGE_DESCRIPTION "EASEA framework")
+## SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "EASEA: A distributed and massively parallel evolutionary engine")
+## SET(CPACK_PACKAGE_VENDOR "University of Strasbourg")
+## SET(CPACK_PACKAGE_CONTACT "Pallamidessi Joseph")
+## SET(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR_VERSION}")
+## SET(CPACK_PACKAGE_VERSION_MINOR "${MINOR_VERSION}")
+## SET(CPACK_PACKAGE_VERSION_PATCH "${PATCH_VERSION}")
+## SET(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
+## SET(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
+##  
+## SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.1.3), libgcc1 (>= 1:4.1.1), libstdc++6 (>= 4.2.1), build-essential, openjdk-8-jre")
+## SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+## SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+## SET(CPACK_DEBIAN_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
+##  
+## SET(CPACK_COMPONENTS_ALL Libraries ApplicationData)
+## INCLUDE(CPack)
+##  
+## ENDIF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")

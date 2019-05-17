@@ -1,0 +1,12 @@
+{
+    "inertiaRate":0.4,
+    "learningRate":0.05000000074505806,
+    "numberLayers":3,
+    "biasByLayers":[false,false,false],
+    "neuronsByLayers":[3,8,1],
+    "activationFunctionByLayers":[null,"relu","identity"],
+    "seed":10,
+    "distribution":"normal",
+    "paramOfDist1":0.0,
+    "paramOfDist2":0.10000000149011612
+}

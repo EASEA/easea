@@ -2099,14 +2099,14 @@ std::string setVariable(const std::string optionName, std::string defaultValue);
 
 NVCC= nvcc
 CPPC= g++
-CXXFLAGS+=-g -Wall -O2
-LDFLAGS=-lboost_program_options -lboost_serialization
+CXXFLAGS+=-std=c++11 -g -Wall -O2
+LDFLAGS= 
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 CPPFLAGS+=
-NVCCFLAGS+=
+NVCCFLAGS+=-std=c++11
 
 
 EASEA_SRC= EASEATools.cpp EASEAIndividual.cpp

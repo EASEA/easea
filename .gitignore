@@ -1,8 +1,46 @@
+#Particular files and folders
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+install_manifest.txt
+Makefile
+
+compiler/EaseaParse.hpp
+compiler/EaseaParse.cpp
+compiler/EaseaLex.cpp
+
+compiler/NeuralParse.hpp
+compiler/NeuralParse.cpp
+compiler/NeuralLex.cpp
+compiler/NeuralLex.h
+
+easena
+libeasea.a
+libeasea/libeasea.a
+libeasna.a
+libeasna/libeasna.a
+
+.vscode
+
+easna_regression_test
+
+#data
+data/
+examples/ant/sortieEasea.txt
+
+# Prerequisites
+*.d
+
 # Compiled Object files
 *.slo
 *.lo
 *.o
 *.obj
+*.ko
+*.elf
 
 # Precompiled Headers
 *.gch
@@ -12,24 +50,32 @@
 *.so
 *.dylib
 *.dll
+*.so.*
 
 # Fortran module files
 *.mod
+*.smod
 
 # Compiled Static libraries
 *.lai
 *.la
 *.a
 *.lib
+*.lo
 
 # Executables
 *.exe
 *.out
 *.app
 
+# CUDA
 *.i
 *.ii
 *.gpu
 *.ptx
 *.cubin
 *.fatbin
+
+#Doxygen
+doxygen/html
+doxygen/man

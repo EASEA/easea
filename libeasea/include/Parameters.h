@@ -44,6 +44,7 @@ class Parameters {
     bool minimizing;
 
     unsigned int offspringReductionSize;
+    unsigned int archivePopulationSize;
     unsigned int parentReductionSize;
     bool offspringReduction;
     bool parentReduction ;
