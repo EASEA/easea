@@ -9,6 +9,21 @@ To use one of these platforms, you just have to use files with the correct file 
 
 The program will detect them and basculate in the correct mode.
 
+#### Requirements
+
+This project required you to have cmake, flex, bison, valgrind, gunzip and wget installed:
+```
+$ sudo apt-get install flex bison valgrind gunzip wget cmake
+```
+C++ compiler that supports at least C++14.
+
+#### Quick start
+
+- cmake **.**
+- make
+- (*Optionnal*) make install : sudo could be necessary
+- Export and setting EZ_PATH and PATH environment variables : for example, EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+
 # EASEA -- EAsy Specification of Evolutionnary Algorithms
 
 ## Overview
@@ -18,10 +33,6 @@ EASEA and EASEA-CLOUD are Free Open Source Software (under GNU Affero v3 General
 EASEA (EAsy Specification of Evolutionary Algorithms) is an Artificial Evolution platform that allows scientists with only basic skills in computer science to implement evolutionary algorithms and to exploit the massive parallelism of many-core architectures in order to optimize virtually any real-world problems (continous, discrete, combinatorial, mixed and more (with Genetic Programming)), typically allowing for speedups up to x500 on a $3,000 machine, depending on the complexity of the evaluation function of the inverse problem to be solved.
 
 Then, for very large problems, EASEA can also exploit computational ecosystems as it can parallelize (using an embedded island model) over loosely coupled heterogenous machines (Windows, Linux or Macintosh, with or without GPGPU cards, provided that they have internet access) a grid of computers or a Cloud.
-
-## Release versions
-
-easea_v2.0 is generally a work in progress.
 
 ## Changes
 
@@ -38,21 +49,6 @@ easea_v2.0 is generally a work in progress.
 - Added in libeasea dominance estimator and crowdind distance estimator
 - Added in libeasea crowding archive module
 - Added in libeasea simple logger
-
-## Requirements
-
-This project required you to have flex and bison installed:
-```
-$ sudo apt-get install flex bison
-```
-C++ compiler that supports C++14.
-
-## Quick start
-
-- cmake ./
-- make
-- make install
-- Export and setting evironent variables (EZ_PATH="/usr/local/easea/" and PATH="$PATH:/usr/local/easea/bin")
 
 ## New templates (MOEA)
 
@@ -109,11 +105,7 @@ where "pareto-true.dat" is a file with Pareto Otimal Front (which is in the same
 
 ## SYNOPSIS
 
-`./easena` [**--help**] [**--help.activation**] [**--help.combinaison**] [**--help.examples**] [**--help.randomDistribution**] [**--batch.size** int] [**--batch.error** (average|sum)] [**--compute** string] [**--learn.online** string] [**--learn.batch** string] [**--parse** string] [**--save.architecture** string] [**--save.weights** string] [**--term**] [**--update.weights** string]
-
-## DEPENDENCIES
-
-Pretty nothing to do : just make sure you have **g++** and **make** installed. Your version of g++ must fully support C++11.
+`./easena` [**--help**] [**--help.activation**] [**--help.cost**] [**--help.examples**] [**--help.randomDistribution**] [**--batch.error** (average|sum)] [**--batch.size** int] [**--compute** string] [**--learn.batch** string] [**--learn.online** string] [**--parse** string] [**--save.architecture** string] [**--save.weights** string] [**--term**] [**--update.weights** string] [**--verbose**]
 
 ## COMMAND-LINE PROGRAM IN DETAIL
 
@@ -122,8 +114,6 @@ Pretty nothing to do : just make sure you have **g++** and **make** installed. Y
   <dd>Display all possible options of the program.</dd>
   <dt><strong>--help.activation</strong></dt>
   <dd>Display all implemented activation functions.</dd>
-  <dt><strong>--help.combinaison</strong></dt>
-  <dd>Display all implemented combinaison funtions.</dd>
   <dt><strong>--help.cost</strong></dt>
   <dd>Display all implemented cost funtions.</dd>
   <dt><strong>--help.examples</strong></dt>
@@ -172,11 +162,11 @@ PCG has been used to manage the pseudo-random generator in this program. You can
 
 These two methods have been developed within the program under certain constraints. For now, the cross-entropy descent is only implemented with a softmax layer as an output layer. As a consequence, the mean squarred error is implemented for the other activation functions, in other words, all except softmax. This means you can for now choose your cost function by choosing the activation function on the output layer.
 
-The learning method uses for now the descent of the error gradient and therefore updates the weights in online or batch mode. The combination and activation functions are common to all neurons of the same layer.
+The learning method uses for now the descent of the error gradient and therefore updates the weights in online or batch mode. The activation functions are common to all neurons of the same layer.
 
 #### ARCHITECTURE DEFINITION CONSTRAINTS
 
-An important remark relates to the first element of the vectors associated with the functions of combination and activation. It is important the first element of these vectors to be **null** because the first configurable layer is in this case the input layer.
+An important remark relates to the first element of the vectors associated with the functions of activation. It is important the first element of these vectors to be **null** because the first configurable layer is in this case the input layer.
 
 Another remark concerned the definition of bias for the last layer of perceptron, which is the output layer. It must always be **false** otherwise it would imply a memory leak according a computing viewpoint and would involve adding a constant according a mathematical viewpoint (which is not desired...).
 
@@ -186,7 +176,7 @@ The expected csv file separator must be";". Moreover, your data should be pre-pr
 
 #### TESTS
 
-A script *easna_regression.sh* is available in the test folder and has been written in bash. Be sure the easena program has been compiled before executing this script. Moreover you will need **wget** and **gunzip** to run it successfully, so make sure you have both installed. Furthermore, an **internet connection is needed** to download the datasets : do not worry, the script cleans everything at the end.
+A script *easna_regression.sh* is available in the test folder and has been written in bash. Be sure the easena program has been compiled before executing this script. Moreover you will need **wget**, **valgrind** and **gunzip** to run it successfully, so make sure you have both installed. Furthermore, an **internet connection is needed** to download the datasets : do not worry, the script cleans everything at the end.
 
 The principle of this test is to learn on the Lecun's Mnist dataset and to compare the global accuracy given by the program with some values that have been tested and should be correct according the given architecture in the **.nz** file. If the tests are successfull, the floating values should be almost equal to the one already computed, else there is an error in the easna program.
 
@@ -202,7 +192,7 @@ This program is intended to be executed on the command line or with
 the input help received from the terminal. Here is an example of some
 orders and their effects:
 
-- ***./easena --help data/glob.nz***: Displays the help associated with the neural part of the program *easena*.
+- ***./easena --help glob.nz***: Displays the help associated with the neural part of the program *easena*. *glob.nz* is only present in order to switch on the easna part.
 
 - ***./easena --term --save.architecture data/architecture.nz***: Allows you to use the terminal to define an architecture for a perceptron and save it to a JSON file.
 
@@ -229,6 +219,5 @@ Finally, you can get here an example of such a json architecture file expected b
 }
 ```
 ## AUTHOR
-
 
 EASNA : Romain ORHAND : <rorhand@unistra.fr>
