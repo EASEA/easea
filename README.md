@@ -22,7 +22,7 @@ C++ compiler that supports at least C++14.
 - cmake **.**
 - make
 - (*Optionnal*) make install : sudo could be necessary
-- Export and setting EZ_PATH and PATH environment variables : for example, EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+- Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
 
 # EASEA -- EAsy Specification of Evolutionnary Algorithms
 
@@ -178,7 +178,7 @@ The expected csv file separator must be";". Moreover, your data should be pre-pr
 
 A script *easna_regression.sh* is available in the test folder and has been written in bash. Be sure the easena program has been compiled before executing this script. Moreover you will need **wget**, **valgrind** and **gunzip** to run it successfully, so make sure you have both installed. Furthermore, an **internet connection is needed** to download the datasets : do not worry, the script cleans everything at the end.
 
-The principle of this test is to learn on the Lecun's Mnist dataset and to compare the global accuracy given by the program with some values that have been tested and should be correct according the given architecture in the **.nz** file. If the tests are successfull, the floating values should be almost equal to the one already computed, else there is an error in the easna program.
+The principle of this test is to learn on the Lecun's Mnist dataset and to check the evolution of the global accuracy given by the program according the architecture in the **.nz** file.
 
 To run this test, if you are in the root folder of the project :
 ```

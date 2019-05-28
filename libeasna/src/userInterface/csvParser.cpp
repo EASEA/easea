@@ -76,7 +76,7 @@ void writeComputeCsvFile(const char * file, int numberOfInputs, float ** & input
         else 
             myFile << "output " << i << " ; ";
     }
-    //
+    // Set values
     for(int i = 0 ; i <numberOfInputs ; i++) {
         for(int j = 0 ; j < sizeOfInput; j++) {
             myFile << inputs[i][j] << " ; ";

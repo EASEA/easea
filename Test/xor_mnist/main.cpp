@@ -226,19 +226,20 @@ int main(int argc, char* argv[]) {
     float * mnistResults = NULL;
     mnistResults = static_cast<float*>(malloc(numberOfEpochs * sizeof(float)));
     learnAndScore( dataset,"./../../easena", "./architecture_mnist.nz", "./", numberOfEpochs, mnistResults);
-    float expectedMnistResults[numberOfEpochs];
-    expectedMnistResults[0] = 0.8511f; 
-    expectedMnistResults[1] = 0.8859f; 
-    expectedMnistResults[2] = 0.8999f; 
-    expectedMnistResults[3] = 0.9121f; 
-    expectedMnistResults[4] = 0.9148f; 
-    expectedMnistResults[5] = 0.9199f;
+    float expectedMnistResults[6];
+    expectedMnistResults[0] = 0.8482f ; 
+    expectedMnistResults[1] = 0.883f ; 
+    expectedMnistResults[2] = 0.894f ; 
+    expectedMnistResults[3] = 0.9023f ; 
+    expectedMnistResults[4] = 0.9135f ; 
+    expectedMnistResults[5] = 0.917f ;
     for(int i = 0; i < numberOfEpochs; i++) {
        if (almostEqual(expectedMnistResults[i],mnistResults[i])) mnistTestScore++;
     }
-    std::cout<< std::endl << "Mnist regression test score is " << std::to_string(mnistTestScore) << " / " << std::to_string(numberOfEpochs) << std::endl;
+    // For personal debug, do not use it
+    // std::cout<< std::endl << "Mnist regression test score is " << std::to_string(mnistTestScore) << " / " << std::to_string(numberOfEpochs) << std::endl;
 
-    // Testing memory leaks
+    // Testing memory leaks : openmp and valgrind have issues if used together
     system("valgrind --log-file='Testing_memory_leaks_mnist.txt' ./../../easena --parse ./architecture_xor3.nz --learn.online dataset_xor3.csv --save.weights weights.csv ");
     if (system("grep --silent 'All heap blocks were freed -- no leaks are possible' Testing_memory_leaks_mnist.txt") == 0 && system("grep --silent 'ERROR SUMMARY: 0 errors from 0 contexts' Testing_memory_leaks_mnist.txt") == 0) {
         std::cout << "No memory leaks or errors detected in online learning process !" << std::endl;

@@ -59,6 +59,8 @@ void learnOnlineFromFile(
 	const float &learningRate,
     network &neuronalNetwork
 ){
+	std::cout << std::endl << "Dataset online learning :" << std::endl;
+	clock_t tStart = clock();
 	// Number of inputs for reuse
 	int numberOfInputs = neuronalNetwork.neuronsByLayers[0];
 	// Number of outputs for reuse
@@ -71,6 +73,9 @@ void learnOnlineFromFile(
 	for(int i = 0; i<numberOfInputs; i++) inputLearningData[i] = 0.f;
 	float * expectedResultData = static_cast<float *>(malloc(numberOfOutputs * sizeof(float)));
 	for(int i = 0; i<numberOfOutputs; i++) expectedResultData[i] = 0.f;
+	printf("Memory allocation checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
+	// Start reading csv fille
+	tStart = clock();
 	// Variable to get each line read by the getline function
 	std::string line;
 	// To skip the first line of csv file in which the column are described
@@ -106,11 +111,14 @@ void learnOnlineFromFile(
 		// Update readLines variable
 		readLines++;
 	}
+	printf("Inputs read and learned checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
 	// Free memory allocation
+	tStart = clock();
 	free(inputLearningData);
 	free(expectedResultData);
 	// close file descriptor
 	myLearningDataset.close();
+	printf("Memory desallocation checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
 }
 
 void learnBatchFromFile(
@@ -121,6 +129,8 @@ void learnBatchFromFile(
 	const float &learningRate,
     network &neuronalNetwork
 ){
+	std::cout << std::endl << "Dataset batch learning :" << std::endl;
+	clock_t tStart = clock();
 	// batch increment
 	int batchIncrement = 0;
 	// Number of inputs for reuse
@@ -135,6 +145,9 @@ void learnBatchFromFile(
 	for(int i = 0; i<numberOfInputs; i++) inputLearningData[i] = 0.f;
 	float * expectedResultData = static_cast<float *>(malloc(numberOfOutputs * sizeof(float)));
 	for(int i = 0; i<numberOfOutputs; i++) expectedResultData[i] = 0.f;
+	printf("Memory allocation checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
+	// Start reading csv fille
+	tStart = clock();
 	// Variable to get each line read by the getline function
 	std::string line;
 	// To skip the first line of csv file in which the column are described
@@ -178,16 +191,19 @@ void learnBatchFromFile(
 		// Update readLines variable
 		readLines++;
 	}
-	// Free memory allocation
-	free(inputLearningData);
-	free(expectedResultData);
-	// close file descriptor
-	myLearningDataset.close();
 	// Check all batches have been used, if some data are unused, a retropropagation is forced
 	if (batchIncrement) {
 		retropropagateBatch(batchIncrement, batchErrorMethod, inertiaRate, learningRate, neuronalNetwork);
 		std::cout << "Warning : Batch Size is not a multiple of Dataset Size !" << std::endl;
 	}
+	printf("Inputs read and learned checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
+	// Free memory allocation
+	tStart = clock();
+	free(inputLearningData);
+	free(expectedResultData);
+	// close file descriptor
+	myLearningDataset.close();
+	printf("Memory desallocation checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
 }
 
 void computeUserInputFile(
@@ -195,6 +211,8 @@ void computeUserInputFile(
 	int numberOfInputs,
     network &neuronalNetwork
 ){
+	std::cout << std::endl << "Dataset evaluation :" << std::endl;
+	clock_t tStart = clock();
 	// Some precomputed value to help
 	int lastLayerId = neuronalNetwork.numberLayers - 1;
 	// Memory allocation of inputs and outputs
@@ -204,9 +222,13 @@ void computeUserInputFile(
 		inputsFromUser[i] = static_cast<float *>(malloc(neuronalNetwork.neuronsByLayers[0] * sizeof(float)));
 		outputsForUser[i] = static_cast<float *>(malloc(neuronalNetwork.neuronsByLayers[lastLayerId] * sizeof(float)));
 	}
+	printf("Memory allocation checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
 	// Read all inputs
+	tStart = clock();
 	readComputeCsvFile(csvCompute, inputsFromUser);
+	printf("Inputs reading checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
 	// For each input
+	tStart = clock();
 	for (int i = 0 ; i < numberOfInputs ; i ++) {
 		// Set the input array in neuronal network
 		setInputInNeuronalNetwork(inputsFromUser[i],neuronalNetwork);
@@ -216,12 +238,18 @@ void computeUserInputFile(
 		for (int j = 0 ; j < neuronalNetwork.neuronsByLayers[lastLayerId] ; j++)
 			outputsForUser[i][j] = neuronalNetwork.inputs[lastLayerId][j];
 	}
+	printf("Computation checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
+	// Write all results
+	tStart = clock();
 	writeComputeCsvFile(csvCompute, numberOfInputs, inputsFromUser, neuronalNetwork.neuronsByLayers[0], outputsForUser, neuronalNetwork.neuronsByLayers[lastLayerId]);
+	printf("Outputs writting checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
 	// Free memory
+	tStart = clock();
 	for (int i = 0; i < numberOfInputs; i++) {
 		free(inputsFromUser[i]);
 		free(outputsForUser[i]);
 	}
     free(inputsFromUser);
     free(outputsForUser);
+	printf("Memory desallocation checkpoint : %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
 }

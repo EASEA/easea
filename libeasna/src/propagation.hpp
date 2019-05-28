@@ -7,6 +7,10 @@
 #include <cstring>
 #include <sstream>
 
+#include <assert.h>
+#include <stdint.h>
+
+#include "simdConfig.hpp"
 #include "functions/activationFunctions.hpp"
 #include "functions/costFunctions.hpp"
 #include "functions/distributionFunctions.hpp"

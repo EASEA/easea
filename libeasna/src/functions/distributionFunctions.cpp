@@ -27,10 +27,8 @@ bool isImplementedDistributionFunction(const std::string dist) {
 pcg32 generateEngine(const int seed) {
     // Engine of the random generator
 	if (seed) {
-		// Seed with a real random value, if available
-		std::seed_seq ssq{seed};
 		// Make a random number engine
-    	pcg32 rng(ssq);
+    	pcg32 rng(seed);
 		return rng;
 	} else {
 		// Seed with a real random value, if available

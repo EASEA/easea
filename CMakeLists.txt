@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 PROJECT(EASENA)
 
@@ -8,6 +8,8 @@ INCLUDE_DIRECTORIES(libeasea/include cxxopts)
 INCLUDE_DIRECTORIES(libeasna/include)
 
 SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
+
+FIND_PACKAGE(OpenMP REQUIRED)
 
 # Creation of a static library for EASEA that will be linked to the main program easena
 FILE(GLOB libeasea_src libeasea/*.cpp )
@@ -21,7 +23,12 @@ SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPI
 # Program based on the one that can be found in https://git.unistra.fr/rorhand/perceptron/
 FILE(GLOB_RECURSE libeasna_src libeasna/*.cpp )
 ADD_LIBRARY(libeasna STATIC ${libeasna_src})
-SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "" COMPILE_FLAGS "-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op -std=c++11 -O3 -s -fopenmp")
+SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "" COMPILE_FLAGS "-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op -std=c++11 -O3 -march=native -mtune=native -s")
+#if(CMAKE_VERSION VERSION_GREATER 3.9.0)
+#        TARGET_LINK_LIBRARIES(libeasna PUBLIC OpenMP::OpenMP_CXX)
+#else ()
+#        TARGET_LINK_LIBRARIES(libeasna PUBLIC "${OpenMP_CXX_FLAGS}")
+#endif ()
 
 # FLEX and BISON management to create the easea language and soon the easna/neural language
 FIND_PACKAGE(FLEX)

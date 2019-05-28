@@ -193,8 +193,7 @@ int EASNAmain(int argc, char **argv)
 	freeNetwork(neuronalNetwork);
 
 	// Return execution time
-	std::cout << std::endl;
-	printf("Time taken: %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
+	printf("Total time taken: %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
 	return 0;
 }
 
