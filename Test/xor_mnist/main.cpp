@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
 
     system("valgrind --log-file='Testing_memory_leaks_mnist.txt' ./../../easena --parse ./architecture_xor3.nz --learn.batch dataset_xor3.csv --batch.size 1 --batch.error average ");
     if (system("grep --silent 'All heap blocks were freed -- no leaks are possible' Testing_memory_leaks_mnist.txt") == 0 && system("grep --silent 'ERROR SUMMARY: 0 errors from 0 contexts' Testing_memory_leaks_mnist.txt") == 0) {
-        std::cout << "No memory leaks or errors detected in batch learning process !" << std::endl;
+        std::cout << "No memory leaks or errors detected in batch learning process !" << std::endl << std::endl;
         system("rm Testing_memory_leaks_mnist.txt");
     } else {
         std::cout << "Warning : memory leaks or errors detected in batch learning process !" << std::endl;

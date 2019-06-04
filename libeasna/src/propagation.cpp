@@ -1,34 +1,32 @@
 #include "propagation.hpp"
 
-//float simple(float * &x, float * &weight, int length){
-//	float result = 0.f;
-//	for (int i = 0 ; i<length; i++) {
-//		result += x[i] * weight[i];
-//	}
-//	return result;
-//}
-
 float simple(const float * a, const float * b, int n)
 {
     float sum;
-    __m128 vsum = _mm_set1_ps(0.0f);
-    int rest = n % 4;
-    assert(((uintptr_t)a & 15) == 0);
-    for (int i = 0; i < n-rest; i += 4)
-    {
-        __m128 va = _mm_loadu_ps(&a[i]);
-        __m128 vb = _mm_loadu_ps(&b[i]);
-        vsum = _mm_add_ps(vsum, _mm_mul_ps(va,vb));
-    }
-	#if SSE_INSTR_SET >= 3
-        vsum= _mm_hadd_ps(vsum,vsum);
-        vsum = _mm_hadd_ps(vsum,vsum);
-    #else
-		vsum = _mm_add_ps(vsum,_mm_movehl_ps(vsum,vsum));
-		vsum = _mm_add_ss(vsum,_mm_shuffle_ps(vsum,vsum,1));
-    #endif
-    _mm_store_ss(&sum, vsum);
-    for (int i = 0; i < rest; i++)  sum += a[n - 1 - i] * b[n - 1 - i];
+	#if SSE_INSTR_SET > 0
+		__m128 vsum = _mm_set1_ps(0.0f);
+		int rest = n % 4;
+		assert(((uintptr_t)a & 15) == 0);
+		for (int i = 0; i < n-rest; i += 4)
+		{
+			__m128 va = _mm_loadu_ps(&a[i]);
+			__m128 vb = _mm_loadu_ps(&b[i]);
+			vsum = _mm_add_ps(vsum, _mm_mul_ps(va,vb));
+		}
+		#if SSE_INSTR_SET >= 3
+			vsum= _mm_hadd_ps(vsum,vsum);
+			vsum = _mm_hadd_ps(vsum,vsum);
+		#else
+			vsum = _mm_add_ps(vsum,_mm_movehl_ps(vsum,vsum));
+			vsum = _mm_add_ss(vsum,_mm_shuffle_ps(vsum,vsum,1));
+		#endif
+		_mm_store_ss(&sum, vsum);
+		for (int i = 0; i < rest; i++)  sum += a[n - 1 - i] * b[n - 1 - i];
+	#else
+		for (int i = 0 ; i<n; i++) {
+			sum += a[i] * b[i];
+		}
+	#endif
     return sum;
 }
 

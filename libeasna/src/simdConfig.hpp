@@ -21,8 +21,8 @@
         #define SSE_INSTR_SET 2
     #elif defined ( __SSE__ )
         #define SSE_INSTR_SET 1
-    #elif defined ( _M_IX86_FP )           // Defined in MS compiler on 32bits system. 1: SSE, 2: SSE2
-        #define SSE_INSTR_SET _M_IX86_FP
+    #elif defined ( _M_IX86_FP )
+        #define SSE_INSTR_SET 0
     #else
         #define SSE_INSTR_SET 0
     #endif // instruction set defines
