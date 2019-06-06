@@ -12,17 +12,35 @@ The program will detect them and basculate in the correct mode.
 #### Requirements
 
 This project required you to have cmake, flex, bison, valgrind, gunzip and wget installed:
+
+On linux :
 ```
 $ sudo apt-get install flex bison valgrind gunzip wget cmake
 ```
-C++ compiler that supports at least C++14.
 
-#### Quick start
+On mac osx, you have to install first **brew**  (that implies CLT of xcode and potentially xcode) and then, to install gcc, bison and wget through brew. Latest mac osx Mojave is not compliant with valgrind, that's why valgrind's tests are limited to linux operating systems.
+
+C++ compiler that supports at least C++14 such as **gcc** : EASENA has been developped with gcc and not tested with clang yet.
+
+#### Quick start on LINUX
 
 - cmake **.**
-- make
+- make (*Optionnal* -j 4) 
 - (*Optionnal*) make install : sudo could be necessary
 - Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+
+#### Quick start on MAC OSX
+
+On Mojave, gcc 9 is installed by default by brew. If another version of gcc is installed, version # for instance, you just have to modify the following part of the next cmake command : gcc@**#**/bin/gcc-**#**.
+
+- cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" **.** 
+- make (*Optionnal* -j 4)
+- (*Optionnal*) make install : sudo could be necessary
+- Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+
+Or simply, run the script *apple.sh* that will exactly launch the two first commands.
+
+Currently, only the easna part is functionnal under Apple's macosx.
 
 # EASEA -- EAsy Specification of Evolutionnary Algorithms
 
@@ -185,6 +203,8 @@ To run this test, if you are in the root folder of the project :
     cd Test
     ./easna_regression.sh
 ```
+
+*Tips* : If you want to keep the computed files such as the weights ones or the csv dataset, just add an argument, else everything is cleaned.
 
 ## EXAMPLES
 

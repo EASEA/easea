@@ -106,7 +106,7 @@ void getUserInputForNeuronalNetwork(
 			neuronalNetwork.activationFunctionByLayers[i] = NONE;
 			neuronalNetwork.activationFunctionDerivByLayers[i] = NONE_DERIV;
 		} else {
-			std::cout << "Which activation function do you need for the layer " << i+1 << " ? (default identity)" << std::endl;
+			std::cout << "Which activation function do you need for the layer " << i+1 << " ? (sigmoid / arctan / sinusoid / tanhyper / relu / gaussian / softmax {last layer only} - Default identity)" << std::endl;
 			if (std::cin.peek() == '\n') { 
 				activationFunctionEnumFromString("identity", i, neuronalNetwork.activationFunctionByLayers, neuronalNetwork.activationFunctionDerivByLayers);
 				std::cout << activationFunctionStringFromEnum(neuronalNetwork.activationFunctionByLayers[i]) << " chosen " << std::endl;

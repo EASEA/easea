@@ -9,8 +9,6 @@ INCLUDE_DIRECTORIES(libeasna/include)
 
 SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 
-FIND_PACKAGE(OpenMP REQUIRED)
-
 # Creation of a static library for EASEA that will be linked to the main program easena
 FILE(GLOB libeasea_src libeasea/*.cpp )
 if(WIN32)
@@ -32,6 +30,9 @@ SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "" COMPI
 
 # FLEX and BISON management to create the easea language and soon the easna/neural language
 FIND_PACKAGE(FLEX)
+if(APPLE)
+        SET(BISON_EXECUTABLE "/usr/local/opt/bison/bin/bison" CACHE PATH "Bison executable")
+endif(APPLE)
 FIND_PACKAGE(BISON)
 FLEX_TARGET( EaseaLexer 
         compiler/EaseaLex.l 

@@ -25,7 +25,7 @@ cd xor_mnist ;
 FILE_EASENA="./../../easena"
 if [ -f "$FILE_EASENA" ];
 then
-   ./easna_regression_test
+   ./easna_regression_test $1
 fi
 
 # Remove every files to keep the repository clean and back to the root test folder

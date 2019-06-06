@@ -190,19 +190,10 @@ int EASNAmain(int argc, char **argv)
 	}
 
 	// Free every malloc
-	freeNetwork(neuronalNetwork);
+	if (initComput)
+		freeNetwork(neuronalNetwork);
 
 	// Return execution time
 	printf("Total time taken: %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
 	return 0;
 }
-
-//  valgrind --leak-check=yes ./perceptron --parse data/architecture.json --learn.batch data/learn.csv --batch.size 32 --batch.error average --save.weights data/weights.csv
-
-//  valgrind --leak-check=yes ./perceptron --parse data/architecture.json --learn.online data/learn.csv --save.weights data/weights.csv
-
-//  valgrind --leak-check=yes ./perceptron --parse data/architecture.json --update.weights data/weights.csv --compute data/inputs.csv
-
-// ./perceptron --parse data/architecture.json  --update.weights data/mninst/weights_archi1_pass4.csv --learn.online data/mninst/TrainingImage.csv --save.weights data/mninst/weights_archi1_pass5.csv   
-
-//  ./perceptron --parse data/architecture.json --update.weights data/mninst/weights_archi1_pass1.csv  --compute data/mninst/TestImage_withoutLabel_archi1_pass1.csv
