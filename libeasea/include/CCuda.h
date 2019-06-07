@@ -14,8 +14,6 @@
 #include <cuda_runtime_api.h>
 //#include <cuda_runtime_api.h>
 
-
-
 #define CUDA_SAFE_CALL(f)				\
   {							\
   cudaError_t err;					\

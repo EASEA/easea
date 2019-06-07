@@ -599,14 +599,14 @@ public:
 NVCC= nvcc
 CPPC= g++
 LIBAESAE=\EZ_PATHlibeasea/
-CXXFLAGS+=-g -Wall -O2 -I$(LIBAESAE)include
-LDFLAGS=-lboost_program_options $(LIBAESAE)libeasea.a
+CXXFLAGS+= -std=c++11 -g -Wall -O2 -I$(LIBAESAE)include
+LDFLAGS=$(LIBAESAE)libeasea.a
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
 
 CPPFLAGS+= -I$(LIBAESAE)include
-NVCCFLAGS+=
+NVCCFLAGS+= -std=c++11
 
 
 EASEA_SRC= EASEAIndividual.cpp

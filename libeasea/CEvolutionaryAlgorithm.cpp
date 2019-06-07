@@ -28,9 +28,14 @@
 #include "include/global.h"
 #include "include/CComUDPLayer.h"
 #include "include/CRandomGenerator.h"
+#include <third_party/aixlog/aixlog.hpp>
 #include <stdio.h>
 #include <sstream>
+#include <iostream>
 #include <fstream>
+#include <sys/wait.h>
+#include <chrono>
+#include <ctime>
 
 //#define INSTRUMENTED
 #ifdef INSTRUMENTED
@@ -93,31 +98,66 @@ extern bool INSTEAD_EVAL_STEP;
 /*****
  * REAL CONSTRUCTOR
  */
+sig_atomic_t volatile done = 1;
+void childHandler(int signum)
+{
+        pid_t w;
+        int status;
+	ostringstream ss;
+
+        while((w=waitpid(-1, &status, WNOHANG))>0)
+        {
+            if(WIFEXITED(status)){
+                ss << "Display process catched exiting signal and was stopped" << std::endl;
+		LOG(WARNING) << AixLog::Color::yellow << ss.str() << std::endl;
+		//LOG_MSG(msgType::WARNING, ss.str());
+		done = 0;
+        }
+        else if (WIFSIGNALED(status)){
+                ss << "Display process catched terminating signal and was stopped" << std::endl;
+		LOG(WARNING) << AixLog::Color::yellow << ss.str() << std::endl; 
+		//LOG_MSG(msgType::WARNING, ss.str());
+                done = 0;
+        }
+        else if (WIFSTOPPED(status)){
+                 ss << "Display process catched stopping signal and was stopped" << std::endl;
+		 LOG(WARNING) << AixLog::Color::yellow << ss.str() << std::endl;
+		 //LOG_MSG(msgType::WARNING, ss.str());
+                 done = 0;
+        }
+
+}//!WIFEXITED(status) && !WIFSIGNALED(status));
+
+}
+
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
-  this->params = params;
-    this->cstats = new CStats();
+	
+	initLogger();
+	LOG(INFO) << COLOR(green) << "EASEA Starting...." << std::endl << COLOR(none);
 
-  CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
-      params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
+	this->params = params;
+	this->cstats = new CStats();
+	signal(SIGCHLD, childHandler);
+	CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
+        params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
-  this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
-      params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
+	this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
+        params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
 
-  this->currentGeneration = 0;
-
-  this->reduceParents = 0;
-  this->reduceOffsprings = 0;
-  this->grapher = NULL;
-  if(params->plotStats || params->generatePlotScript){
-    string fichier = params->outputFilename;
-    fichier.append(".dat");
-    remove(fichier.c_str());
-  }
-  if(params->generatePlotScript){
-    string fichier = params->outputFilename;
-    fichier.append(".plot");
-    remove(fichier.c_str());
-  }
+	this->currentGeneration = 0;
+	this->reduceParents = 0;
+	this->reduceOffsprings = 0;
+	this->grapher = NULL;
+	if(params->plotStats || params->generatePlotScript){
+		string fichier = params->outputFilename;
+		fichier.append(".dat");
+		remove(fichier.c_str());
+	}
+	if(params->generatePlotScript){
+		string fichier = params->outputFilename;
+		fichier.append(".plot");
+		remove(fichier.c_str());
+	}
   if(params->generateRScript || params->generateCSVFile){
     string fichier = params->outputFilename;
     fichier.append(".csv");
@@ -169,10 +209,12 @@ void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
 /* MAIN FUNCTION TO RUN THE EVOLUTIONARY LOOP */
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   CIndividual** elitistPopulation = NULL;
-
+    
 #ifdef WIN32
+
    clock_t begin(clock());
 #else
+
   struct timeval begin;
   gettimeofday(&begin,0);
 #endif
@@ -226,9 +268,15 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     elitistPopulation = (CIndividual**)malloc(params->elitSize*sizeof(CIndividual*)); 
 
   // EVOLUTIONARY LOOP
+ auto start = std::chrono::system_clock::now();
   while( this->allCriteria() == false){
 
     EASEABeginningGenerationFunction(this);
+    if (done == 0){
+        delete this->grapher;
+	this->params->plotStats = 0;
+	done = 1;
+    }
 
     // Sending individuals if remote island model
     if(params->remoteIslandModel && this->numberOfClients>0)
@@ -297,7 +345,13 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     //delete this->grapher;
   //}
 //#endif
-
+    auto end = std::chrono::system_clock::now();
+ 
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+ 
+    std::cout << "finished computation at " << std::ctime(&end_time)
+              << "elapsed time: " << elapsed_seconds.count() << "s\n";
   if(this->params->printFinalPopulation){
     population->sortParentPopulation();
     std::cout << *population << std::endl;
@@ -472,6 +526,42 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   this->cstats->resetCurrentStats();
 }
 
+  void CEvolutionaryAlgorithm::initLogger()
+  {
+    AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace, AixLog::Type::normal);
+    LOG(INFO) << "EASEA Logger starting..." << std::endl;
+    
+    AixLog::Log::init(
+    {
+      // Log fatals, errors, warnings and spacial info messages to easea.log
+      std::make_shared<AixLog::SinkFile>(AixLog::Severity::fatal, AixLog::Type::all, "easea.log"),
+   //   std::make_shared<AixLog::SinkFile>(AixLog::Severity::error, AixLog::Type::all, "easea.log"),
+  //  std::make_shared<AixLog::SinkFile>(AixLog::Severity::warning, AixLog::Type::all, "easea.log"),
+      std::make_shared<AixLog::SinkFile>(AixLog::Severity::info, AixLog::Type::special, "easea.log"),
+      // Log normal info logs to cout
+      std::make_shared<AixLog::SinkCout>(AixLog::Severity::trace, AixLog::Type::all, "EASEA: [%Y-%m-%d %H-%M-%S.#ms] [#severity] #message"),
+     // std::make_shared<AixLog::SinkCout>(AixLog::Severity::warning, AixLog::Type::all, "EASEA: [%Y-%m-%d %H-%M-%S.#ms] [#severity] #message"),
+      //std::make_shared<AixLog::SinkCout>(AixLog::Severity::debug, AixLog::Type::normal, "EASEA: [%Y-%m-%d %H-%M-%S.#ms] [#severity] #message"),
+      
+      // Callback log with cout logging in a lambda function
+      std::make_shared<AixLog::SinkCallback>(AixLog::Severity::error, AixLog::Type::all,
+                                             [](const AixLog::Metadata& metadata, const std::string& message)
+                                             {
+                                               std::cout << "EASEA: " << " [" << metadata.timestamp.to_string() << "] " << COLOR(red) << 
+                                                 "Error happened in file: " << metadata.function.file << " func: " <<  metadata.function.name << " [line: " <<  metadata.function.line << "]" << COLOR(none) << std::endl; 
+                                             }
+      ),
+      // Callback log with cout logging in a lambda function
+      std::make_shared<AixLog::SinkCallback>(AixLog::Severity::fatal, AixLog::Type::all,
+                                             [](const AixLog::Metadata& metadata, const std::string& message)
+                                             {
+                                               std::cout << "EASEA: " << " [" << metadata.timestamp.to_string() << "] " << COLOR(red) << AixLog::Log::to_string(metadata.severity)<<
+                                                 " in " <<  metadata.function.name << " [" <<  metadata.function.line << "] :" << message << COLOR(none) << std::endl; 
+                                             }
+      )
+    });
+  }  
+  
 //REMOTE ISLAND MODEL FUNCTIONS
 void CEvolutionaryAlgorithm::initializeClients(){
   /*int clientNumber=0;
@@ -610,7 +700,7 @@ bool CEvolutionaryAlgorithm::allCriteria(){
 
   for( unsigned i=0 ; i<stoppingCriteria.size(); i++ ){
     if( stoppingCriteria.at(i)->reached() ){
-      std::cout << "Stopping criterion reached" << std::endl;
+      //std::cout << "Stopping criterion reached" << std::endl;
       return true;
     }
   }

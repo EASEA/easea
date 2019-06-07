@@ -1687,8 +1687,8 @@ std::string setVariable(const std::string optionName, std::string defaultValue);
 
 NVCC= nvcc
 CPPC= g++
-CXXFLAGS+=-g -Wall -fopenmp
-LDFLAGS=-lboost_program_options -lboost_serialization -fopenmp
+CXXFLAGS+=-std=c++14 -g -Wall -fopenmp
+LDFLAGS=  -fopenmp
 
 #USER MAKEFILE OPTIONS :
 \INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
