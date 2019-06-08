@@ -31,11 +31,13 @@ _______________________________________________________________*/
 #define NB_VARIABLES 10
 #define NB_OBJECTIVES 3
 #define NB_CONSTRAINTS 0
-#define XOVER_PROB  0.9
-#define XOVER_DIST_ID 20.0 //0.5 //20.0
-#define MUT_PROB  1.0/NB_VARIABLES
+
+#define XOVER_DIST_ID 20.0
+
 #define MUT_DIST_ID 20.0
+
 #define QMETRICS 
+
 #define PARETO_TRUE_FILE "../pf/dtlz1/DTLZ1_3D.dat" 
 #define PBLM_NAME "DTLZ1"
 
@@ -46,64 +48,61 @@ typedef TP::TV TV;
 typedef TP::TO TO;
 typedef typename easea::Individual<TT, TV> TIndividual;
 typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
+
 typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
 typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
-//int populationSize = 100;
+
 TRandom m_generator;
 TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
-TCrossover crossover(m_generator, 1, m_problem.getBoundary(), 20);
+
+TCrossover crossover(m_generator, 1, m_problem.getBoundary(), XOVER_DIST_ID);
 easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
-TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), 20);
+
+TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), MUT_DIST_ID);
 
 
 \end
 
 \User functions:
+
+inline constexpr int getNumberOfObjectives()
+{
+	return NB_OBJECTIVES ;
+}
+inline constexpr int getNumberOfVariables()
+{
+	return NB_VARIABLES ;
+}
+
 template <typename TT, typename TIter>
 TT interval(TIter begin, TIter end)
 {
         TT sum = 0;
-        for (TIter i = begin; i != end; ++i)
-        {
+	for (TIter i = begin; i != end; ++i)
+	{
                 const TT temp = *i - .5;
                 sum += temp * temp - cos(20 * PI * temp);
         }
         return 100 * (std::distance(begin, end) + sum);
 }
-template <typename _TIteratorDecision, typename _TIteratorObjective, typename _TReal>
-void linear(_TIteratorDecision decisionBegin, _TIteratorDecision decisionEnd, _TIteratorObjective objectiveBegin, _TIteratorObjective objectiveEnd, const _TReal distance)
+template <typename TTtervar, typename TTterObjective, typename TT>
+void linear(TTtervar varBegin, TTtervar varEnd, TTterObjective objectiveBegin, TTterObjective objectiveEnd, const TT distance)
 {
-        assert(0 < std::distance(decisionBegin, decisionEnd) && std::distance(decisionBegin, decisionEnd) < std::distance(objectiveBegin, objectiveEnd));
-        *objectiveBegin = std::accumulate(decisionBegin, decisionEnd, distance, std::multiplies<_TReal>());
-        for (_TIteratorObjective objective = ++_TIteratorObjective(objectiveBegin); objective != objectiveEnd; ++objective)
-        {
-                const size_t nObjective = objective - objectiveBegin;
-                const size_t index = std::distance(decisionBegin, decisionEnd) - nObjective;
-                _TIteratorDecision _decisionEnd = decisionBegin + index;
-                *objective = std::accumulate(decisionBegin, _decisionEnd, distance, std::multiplies<_TReal>()) * (1 - *_decisionEnd);
-        }
-}
+        if (std::distance(varBegin, varEnd) < 0 && std::distance(varBegin, varEnd) > std::distance(objectiveBegin, objectiveEnd))
+	{
+		LOG(ERROR) << COLOR(red) << "Wrong size of decision variable" << std::endl << COLOR(none);
+		exit(-1);
+	}
+	*objectiveBegin = std::accumulate(varBegin, varEnd, distance, std::multiplies<TT>());
 
-inline constexpr double getCCrossoverProbability()  {
-  return XOVER_PROB;
-} 
-inline constexpr double getCMutationProbability()  {
-  return MUT_PROB;
-} 
-inline constexpr double getCCrossoverDistributionId() {
-  return XOVER_DIST_ID;
-} 
-inline constexpr double getCMutationDistributionId() {
-  return MUT_DIST_ID;
-} 
-inline constexpr int getNumberOfObjectives() {
-  return NB_OBJECTIVES ;
-}
-inline constexpr int getNumberOfVariables() {
-  return NB_VARIABLES ;
-}
-inline constexpr int getNumberOfConstraints(){
-  return NB_CONSTRAINTS ;
+	for (TTterObjective objective = ++TTterObjective(objectiveBegin); objective != objectiveEnd; ++objective)
+	{
+                const size_t nObjective = objective - objectiveBegin;
+		const size_t index = std::distance(varBegin, varEnd) - nObjective;
+
+		TTtervar ivarEnd = varBegin + index;
+                *objective = std::accumulate(varBegin, ivarEnd, distance, std::multiplies<TT>()) * (1 - *ivarEnd);
+        }
 }
 
 \end
