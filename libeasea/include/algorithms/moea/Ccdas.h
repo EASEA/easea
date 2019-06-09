@@ -86,7 +86,7 @@ Ccdas<TIndividual, TRandom>::Ccdas(TR random, TP &problem, const std::vector<TV>
         {
                 std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);
                 std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
-                easea::shared::functions::crowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
+                easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
         }
 }
 template <typename TIndividual, typename TRandom>
@@ -167,7 +167,7 @@ template <typename TIndividual, typename TRandom>
 template <typename TPtr, typename TIter> TIter Ccdas<TIndividual, TRandom>::selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end)
 {
         std::vector<TPtr> iFront(front.begin(), front.end());
-        easea::shared::functions::crowdingDistance<TO>(iFront.begin(), iFront.end());
+        easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
         if (iFront.size() > std::distance(begin, end))
 	{
 		LOG(ERROR) << COLOR(red) << "Wrong front size" << std::endl << COLOR(none);
@@ -183,7 +183,7 @@ template <typename TIndividual, typename TRandom>
 template <typename TPtr, typename TIter> TIter Ccdas<TIndividual, TRandom>::selectCrit(const std::list<TPtr> &front, TIter begin, TIter end)
 {
         std::vector<TPtr> iFront(front.begin(), front.end());
-        easea::shared::functions::crowdingDistance<TO>(iFront.begin(), iFront.end());
+        easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
         std::partial_sort(iFront.begin(), iFront.begin() + std::distance(begin, end), iFront.end(), [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;}
         );
         if (iFront.size() < std::distance(begin, end))
@@ -204,16 +204,9 @@ const typename Ccdas<TIndividual, TRandom>::TI *Ccdas<TIndividual, TRandom>::com
                 return comparator[0];
         else if (isDominated(*comparator[1], *comparator[0]))
                 return comparator[1];
-        if (comparator[0]->m_crowdingDistance < 0)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong crowding distance value" << std::endl << COLOR(none);
-		exit(1);
-	}
-        if (comparator[1]->m_crowdingDistance < 0)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong crowding distance value" << std::endl << COLOR(none);
-		exit(1);
-	}
+        if (comparator[0]->m_crowdingDistance < 0) LOG_FATAL("Wrong crowding distance value");
+        if (comparator[1]->m_crowdingDistance < 0) LOG_FATAL("Wrong crowding distance value");
+
         return comparator[0]->m_crowdingDistance > comparator[1]->m_crowdingDistance ? comparator[0] : comparator[1];
 }
 }

@@ -81,7 +81,7 @@ protected:
   template <typename TIter> std::vector<std::list<const TIndividual *> > getListIndividuals(TIter begin, TIter end) const;
   template <typename TIter> TIter nicher(std::list<TNiche> &niches, TIter begin, TIter end);
   template <typename TIter> TIter getSmallestNich(TIter begin, TIter end);
-  static const TI * comparer(const std::vector<const TI *> &competition);
+  static const TI * comparer(const std::vector<const TI *> &comparator);
   
 private:
   std::vector<TPoint> m_referenceSet;
@@ -288,13 +288,13 @@ template <typename TIter> TIter Cnsga_iii<TIndividual, TRandom>::getSmallestNich
 }
 
 template <typename TIndividual, typename TRandom>
-const typename Cnsga_iii<TIndividual, TRandom>::TI *Cnsga_iii<TIndividual, TRandom>::comparer(const std::vector<const TI *> &competition)
+const typename Cnsga_iii<TIndividual, TRandom>::TI *Cnsga_iii<TIndividual, TRandom>::comparer(const std::vector<const TI *> &comparator)
 {
-  if (isDominated(*competition[0], *competition[1]))
-    return competition[0];
-  else if (isDominated(*competition[1], *competition[0]))
-    return competition[1];
-  return competition[0];
+  if (isDominated(*comparator[0], *comparator[1]))
+    return comparator[0];
+  else if (isDominated(*comparator[1], *comparator[0]))
+    return comparator[1];
+  return comparator[0];
 }
 
 template <typename TIndividual, typename TRandom>

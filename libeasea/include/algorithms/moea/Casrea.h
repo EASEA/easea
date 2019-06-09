@@ -1,5 +1,5 @@
 /***********************************************************************
-| Cnsga-ii.h                                                            |
+| Casrea  .h                                                            |
 |                                                                       |
 | This file is part of Artificial Evolution plateform EASEA             |
 | (EAsy Specification of Evolutionary Algorithms)                       |
@@ -20,9 +20,11 @@
 #include <operators/crossover/wrapper/CWrapCrossover.h>
 #include <operators/mutation/wrapper/CWrapMutation.h>
 #include <operators/selection/nondominateSelection.h>
+#include <operators/selection/totalSelection.h>
 
 #include <shared/CRandom.h>
 #include <shared/CConstant.h>
+#include <shared/CArchive.h>
 #include <shared/functions/breeding.h>
 #include <shared/functions/crowdingDistance.h>
 #include <shared/functions/dominance.h>
@@ -33,10 +35,10 @@ namespace easea
 {
 namespace algorithms
 {
-namespace nsga_ii
+namespace asrea
 {
 template <typename TIndividual, typename TRandom>
-class Cnsga_ii : public CmoeaAlgorithm<std::vector< TIndividual >>, public easea::shared::CRandom<TRandom>, public easea::operators::crossover::CWrapCrossover<typename TIndividual::TO, typename TIndividual::TV>, public easea::operators::mutation::CWrapMutation<typename TIndividual::TO, typename TIndividual::TV>
+class Casrea : public CmoeaAlgorithm<std::vector< TIndividual >>, public easea::shared::CArchive<TIndividual>, public easea::shared::CRandom<TRandom>, public easea::operators::crossover::CWrapCrossover<typename TIndividual::TO, typename TIndividual::TV>, public easea::operators::mutation::CWrapMutation<typename TIndividual::TO, typename TIndividual::TV>
 {
 public:
         typedef TIndividual TI  ;
@@ -46,12 +48,13 @@ public:
 
         typedef std::vector<TI> TPopulation;
         typedef CmoeaAlgorithm<TPopulation> TBase;
+	typedef easea::shared::CArchive<TI> TBaseArchive;
         typedef typename TBase::TP TP;
         typedef typename easea::operators::crossover::CWrapCrossover<TO, TV>::TC TC;
         typedef typename easea::operators::mutation::CWrapMutation<TO, TV>::TM TM;
 
-        Cnsga_ii(TR random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation);
-        ~Cnsga_ii(void);
+        Casrea(TR random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, size_t maxArchSize);
+        ~Casrea(void);
         TPopulation runBreeding(const TPopulation &parent);
         static bool isDominated(const TIndividual &individual1, const TIndividual &individual2);
 
@@ -62,12 +65,15 @@ protected:
         template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
         static const TI *comparer(const std::vector<const TI *> &comparator);
+private:
+	std::uniform_real_distribution<TO> m_distribution;
 };
 
 template <typename TIndividual, typename TRandom>
-Cnsga_ii<TIndividual, TRandom>::Cnsga_ii(TR random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation)
-        : TBase(problem), easea::shared::CRandom<TR>(random)
+Casrea<TIndividual, TRandom>::Casrea(TR random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, size_t maxArchSize)
+        : TBase(problem), TBaseArchive(maxArchSize), easea::shared::CRandom<TR>(random)
         , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover), easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
+	, m_distribution(0,1)	
 {
         TBase::m_population.resize(initial.size());
         for (size_t i = 0; i < initial.size(); ++i)
@@ -90,12 +96,12 @@ Cnsga_ii<TIndividual, TRandom>::Cnsga_ii(TR random, TP &problem, const std::vect
 }
 
 template <typename TIndividual, typename TRandom>
-Cnsga_ii<TIndividual, TRandom>::~Cnsga_ii(void)
+Casrea<TIndividual, TRandom>::~Casrea(void)
 {
 }
 
 template <typename TIndividual, typename TRandom>
-typename Cnsga_ii<TIndividual, TRandom>::TPopulation Cnsga_ii<TIndividual, TRandom>::runBreeding(const TPopulation &parent)
+typename Casrea<TIndividual, TRandom>::TPopulation Casrea<TIndividual, TRandom>::runBreeding(const TPopulation &parent)
 {
         TPopulation offspring = easea::shared::functions::runBreeding(parent.size(), parent.begin(), parent.end(), this->getRandom(), &comparer, this->getCrossover());
         for (size_t i = 0; i < offspring.size(); ++i)
@@ -108,38 +114,85 @@ typename Cnsga_ii<TIndividual, TRandom>::TPopulation Cnsga_ii<TIndividual, TRand
 }
 
 template <typename TIndividual, typename TRandom>
-bool Cnsga_ii<TIndividual, TRandom>::isDominated(const TI &individual1, const TI &individual2)
+bool Casrea<TIndividual, TRandom>::isDominated(const TI &individual1, const TI &individual2)
 {
         return easea::shared::functions::isDominated(individual1.m_objective, individual2.m_objective);
 }
 
 template <typename TIndividual, typename TRandom>
-bool Cnsga_ii<TIndividual, TRandom>::Dominate(const TI *individual1, const TI *individual2)
+bool Casrea<TIndividual, TRandom>::Dominate(const TI *individual1, const TI *individual2)
 {
         return isDominated(*individual1, *individual2);
 }
 
+
+
 template <typename TIndividual, typename TRandom>
-void Cnsga_ii<TIndividual, TRandom>::makeOneGeneration(void)
+void Casrea<TIndividual, TRandom>::makeOneGeneration(void)
 {
         TPopulation parent = TBase::m_population;
         TPopulation offspring = runBreeding(parent);
         typedef typename TPopulation::pointer TPtr;
-        
-	std::list<TPtr> unionPop;
-        
-	for (size_t i = 0; i < parent.size(); ++i)
-                unionPop.push_back(&parent[i]);
-        for (size_t i = 0; i < offspring.size(); ++i)
-                unionPop.push_back(&offspring[i]);
-        
 	typedef typename TPopulation::iterator TIter;
-        easea::operators::selection::nondominateSelection(unionPop, TBase::m_population.begin(), TBase::m_population.end(), &Dominate, &selectNoncrit<TPtr, TIter>, &selectCrit<TPtr, TIter>);
+
+    
+	for (size_t i = 0; i < offspring.size(); ++i)
+		easea::shared::CArchive<TIndividual>::updateArchive(offspring[i]);
+	size_t szPopDiv2 = (offspring.size() - TBaseArchive::m_archive.size()) / 2;
+	size_t icounter = TBaseArchive::m_archive.size();
+
+	std::vector<TPtr> archPop;
+	for (size_t i = 0; i < TBaseArchive::m_archive.size(); ++i)
+    		archPop.push_back(&TBaseArchive::m_archive[i]);
+	easea::operators::selection::totalSelection(archPop, TBase::m_population.begin(), TBase::m_population.end());
+	
+	for( size_t i = icounter; i < szPopDiv2; ++i)
+	{
+		std::uniform_int_distribution<size_t> dist(0, TBaseArchive::m_archive.size() - 1);
+
+    		const TIndividual &individual1 = TBaseArchive::m_archive[dist(this->getRandom())];
+    		const TIndividual &individual2 = TBaseArchive::m_archive[dist(this->getRandom())];
+
+	    	if (individual1.m_crowdingDistance > individual2.m_crowdingDistance)
+            		TBase::m_population[i] = individual1;
+    		else if (individual2.m_crowdingDistance > individual1.m_crowdingDistance)
+            		TBase::m_population[i] = individual2;
+    		else if (m_distribution(this->getRandom()) < 0.5)
+            	    TBase::m_population[i] = individual1;
+    		else
+            		TBase::m_population[i] = individual2;
+	} 
+
+	for( size_t i = icounter + szPopDiv2; i < offspring.size(); ++i)
+	{
+		std::uniform_int_distribution<size_t> dist(0, offspring.size() - 1);
+    
+		const TIndividual &individual1 = offspring[dist(this->getRandom())];
+		const TIndividual &individual2 = offspring[dist(this->getRandom())];
+		
+		if (isDominated(individual1, individual2))
+                        TBase::m_population[i] = individual1;
+                else if (isDominated(individual2, individual1))
+                        TBase::m_population[i] = individual2;
+                else
+                {
+                        if (individual1.m_crowdingDistance > individual2.m_crowdingDistance)
+                                TBase::m_population[i] = individual1;
+                        else if (individual2.m_crowdingDistance > individual1.m_crowdingDistance)
+                                TBase::m_population[i] = individual2;
+                        else if (m_distribution(this->getRandom()) < 0.5)
+                                TBase::m_population[i] = individual1;
+                        else
+                                TBase::m_population[i] = individual2;
+                }
+	}
+
+
 }
 
 
 template <typename TIndividual, typename TRandom>
-template <typename TPtr, typename TIter> TIter Cnsga_ii<TIndividual, TRandom>::selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end)
+template <typename TPtr, typename TIter> TIter Casrea<TIndividual, TRandom>::selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end)
 {
         std::vector<TPtr> iFront(front.begin(), front.end());
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
@@ -151,7 +204,7 @@ template <typename TPtr, typename TIter> TIter Cnsga_ii<TIndividual, TRandom>::s
 }
 
 template <typename TIndividual, typename TRandom>
-template <typename TPtr, typename TIter> TIter Cnsga_ii<TIndividual, TRandom>::selectCrit(const std::list<TPtr> &front, TIter begin, TIter end)
+template <typename TPtr, typename TIter> TIter Casrea<TIndividual, TRandom>::selectCrit(const std::list<TPtr> &front, TIter begin, TIter end)
 {
         std::vector<TPtr> iFront(front.begin(), front.end());
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
@@ -165,15 +218,12 @@ template <typename TPtr, typename TIter> TIter Cnsga_ii<TIndividual, TRandom>::s
 }
 
 template <typename TIndividual, typename TRandom>
-const typename Cnsga_ii<TIndividual, TRandom>::TI *Cnsga_ii<TIndividual, TRandom>::comparer(const std::vector<const TI *> &comparator)
+const typename Casrea<TIndividual, TRandom>::TI *Casrea<TIndividual, TRandom>::comparer(const std::vector<const TI *> &comparator)
 {
         if (isDominated(*comparator[0], *comparator[1]))
                 return comparator[0];
         else if (isDominated(*comparator[1], *comparator[0]))
                 return comparator[1];
-        if (comparator[0]->m_crowdingDistance < 0) LOG_FATAL("Crowding distance < 0 ");
-        if (comparator[1]->m_crowdingDistance < 0) LOG_FATAL("Crowding distance < 0 ");
-
 
         return comparator[0]->m_crowdingDistance > comparator[1]->m_crowdingDistance ? comparator[0] : comparator[1];
 }

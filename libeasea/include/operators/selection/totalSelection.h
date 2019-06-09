@@ -1,5 +1,5 @@
 /***********************************************************************
-| randomSelection.h                                                     |
+| totalSelection.h                                                      |
 |                                                                       |
 | This file is part of Artificial Evolution plateform EASEA             |
 | (EAsy Specification of Evolutionary Algorithms)                       |
@@ -13,8 +13,9 @@
 #pragma once
 
 #include <list>
-#include <shared/functions/dominance.h>
 #include <shared/CConstant.h>
+#include <shared/functions/dominance.h>
+
 
 
 namespace easea
@@ -23,27 +24,28 @@ namespace operators
 {
 namespace selection
 {
-
 /*
- * \brief Random selection operator
- * \param[in] - random  - random generator
- * \param[in] - begin  -  pointer on the first individual in population
- * \param[in] - end    -  pointer on  the last individual in population
- * \retutn - Pointer to selected individual
+ * \brief Total selection operator - it copies donor populatio to recipient population
+ * \param[in] - donorPop  - donor population
+ * \retutn - Pointer to first individual in recipient population
  */
 
-template <typename TRandom, typename TIter>
-TIter randomSelection(TRandom &random, TIter begin, TIter end)
-{
-        if (begin == end) LOG_FATAL("Popultion is empty");
-    
-        std::uniform_int_distribution<size_t> uniform(0, std::distance(begin, end) - 1);
-        TIter selected = begin;
 
-        for (size_t count = uniform(random); count; --count)
-                ++selected; 
+template <typename TI, typename TIter>
+TIter totalSelection(std::vector<TI> &donorPop, TIter recipPopBegin, TIter recipPopEnd)
+{
+        if (donorPop.size() > std::distance(recipPopBegin, recipPopEnd)) 	LOG_FATAL("Donor populaton size must be smaller or the same as the recipient population!");
+
+        TIter selected = recipPopBegin;
+		if (std::distance(selected, recipPopEnd) > donorPop.size())
+		{
+			for (size_t i = 0; i < donorPop.size(); ++i, ++selected)
+                    	    *selected = *donorPop[i];
+
+		}
         return selected;
 }
+
 }
 }
 }

@@ -13,8 +13,9 @@
 #pragma once
 
 #include <list>
+#include <shared/CConstant.h>
 #include <shared/functions/dominance.h>
-#include <third_party/aixlog/aixlog.hpp>
+
 
 
 namespace easea
@@ -25,39 +26,28 @@ namespace selection
 {
 /*
  * \brief Nondominate selection operator
- * \param[in] - population  - current population
- * \retutn - Pointer to selected individual
+ * \param[in] - donorPop  - current population form here individuals will be selected to new population
+ * \retutn - Pointer to the first individual of recipient population (new population)
  */
 
 template <typename TI, typename TIter, typename TDom, typename TNonCritic, typename TCritic>
-TIter nondominateSelection(std::list<TI> &population, TIter begin, TIter end, TDom dominate, TNonCritic noncritical, TCritic critical)
+TIter nondominateSelection(std::list<TI> &donorPop, TIter recipPopBegin, TIter recipPopEnd, TDom dominate, TNonCritic noncritical, TCritic critical)
 {
-        if (population.size() < std::distance(begin, end))
-	{ 
-		LOG(ERROR) << COLOR(red) << "Wrong popultion size " << std::endl << COLOR(none);
-		exit(-1);
-	}
-        TIter selected = begin;
-        while (!population.empty())
+        if (donorPop.size() < std::distance(recipPopBegin, recipPopEnd)) 	LOG_FATAL("Wrong popultion size");
+
+        TIter selected = recipPopBegin;
+        while (!donorPop.empty())
         {
-                std::list<TI> nondominate = easea::shared::functions::getNondominated(population, dominate);
+                std::list<TI> nondominate = easea::shared::functions::getNondominated(donorPop, dominate);
                 
-		if(nondominate.empty())
-		{
-			LOG(ERROR) << COLOR(red) << "No nontominated solutions " << std::endl << COLOR(none);
-			exit(-1);
-		}
-                
-		if (std::distance(selected, end) > nondominate.size())
-                        selected = noncritical(nondominate, selected, end);
+		if(nondominate.empty()) 	LOG_FATAL("No nontominated solutions");
+
+		if (std::distance(selected, recipPopEnd) > nondominate.size())
+                        selected = noncritical(nondominate, selected, recipPopEnd);	/* Selecting nondominated solutions by crowding distance */
                 else
                 {
-                        selected = critical(nondominate, selected, end);
-                        if (selected != end)
-			{
-				LOG(ERROR) << COLOR(red) << "Critical selection error " << std::endl << COLOR(none);
-				exit(-1);
-			}
+                        selected = critical(nondominate, selected, recipPopEnd);
+                        if (selected != recipPopEnd)		LOG_FATAL("Critical selection error");
                         return selected;
                 }
         }

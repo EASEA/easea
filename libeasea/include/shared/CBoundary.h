@@ -1,5 +1,5 @@
 /***********************************************************************
-| CBoundary.h                                                       |
+| CBoundary.h	                                                        |
 |                                                                       |
 | This file is part of Artificial Evolution plateform EASEA             |
 | (EAsy Specification of Evolutionary Algorithms)                       |
@@ -14,7 +14,7 @@
 
 #include <cstddef>
 #include <vector>
-#include <third_party/aixlog/aixlog.hpp>
+#include <shared/CConstant.h>
 
 
 namespace easea
@@ -48,11 +48,7 @@ template <typename TType>
 CBoundary<TType>::CBoundary(const TBoundary &boundary)
         : m_boundary(boundary)
 {
-        if (!validate(boundary))
-	{
-		LOG(ERROR) << COLOR(red) << "Value of boundary is not valid" << std::endl << COLOR(none);
-		exit(-1);
-	}
+        if (!validate(boundary)) LOG_FATAL("Value of boundary is not valid"); 
 }
 
 template <typename TType>
@@ -64,10 +60,7 @@ template <typename TType>
 bool CBoundary<TType>::isInside(const std::vector<TType> &point) const
 {
         if (point.size() != m_boundary.size())
-	{ 
-		LOG(ERROR) << COLOR(red) << "Wrong number of variables: " << point.size() << " instead of " << m_boundary.size() << std::endl << COLOR(none);
-		exit(-1);
-	}
+		LOG_FATAL("Wrong number of variables");
         for (size_t i = 0; i < point.size(); ++i)
         {
                 const TType i_p = point[i];
