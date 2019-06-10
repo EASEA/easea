@@ -54,47 +54,79 @@ Then, for very large problems, EASEA can also exploit computational ecosystems a
 
 ## Changes
 
-- Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, ASREA, FastEMO
+- Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, NSGA-III, CDAS, ASREA
 - Deleted boost
 - Added the lightweight C++ command line option parser from opensource https://github.com/jarro2783/cxxopts
+- Added the lightweight C++ logger from opensource https://github.com/badaix/aixlog
 - Added event handler and fixed bug when the program is not responding after 1093 evaluations.
 - Fixed some bugs in template CUDA_GP.tpl for island model.
 - Added in libeasea three performance metrics: HV, GD, IGD 
-- Added in libeasea five 2-objective tests (ZDT) and seven 3-objective tests (DTLZ)
-- Added in libeasea three crossover operators: SBX, BLX-alpha, BLX-alpha-beta
-- Added in libeasea two mutation operators: Polynomial, Gaussian
-- Added in libeasea two selector operators: binary tournament (based on dominance comparison and crowding distance comparison), best individual selection
+- Added in libeasea 2-objective tests (ZDT) and 3-objective tests (DTLZ)
+- Added in libeasea following crossover operators: SBX
+- Added in libeasea following mutation operators: Polynomial
+- Added in libeasea following selector operators: binary tournament (based on dominance comparison and crowding distance comparison)
 - Added in libeasea dominance estimator and crowdind distance estimator
-- Added in libeasea crowding archive module
-- Added in libeasea simple logger
+- Added in libeasea crowding archive 
 
-## New templates (MOEA)
+## Implementation of the Evolutionary Multiobjective Optimization
 
-- NSGA-II 
+This is the list of defined MOEA templates currently provided by EASEA.
+
+- NSGA-II
 Nondominated Sorting genetic algorithm II (tpl/NSGAII.tpl).
+NSGA-II is a very poular MOEA in multi-objective optimization area. 
+This algorithm makes offspring by using a choosen crossover and mutation operators and
+selects individuals for a new generation by nondominated-sorting (NDS) and by crowding distance (CD) comarator.  
 ```
-$ easea -nsgaii any_benchmark.ez 
+$ easena -nsgaii any_benchmark.ez.
+```
+- NSGA-III 
+Nondominated Sorting genetic algorithm III (tpl/NSGAIII.tpl).
+NSGA-III extends NSGA-II to using reference points to handle many-objective problems.
+```
+$ easena -nsgaiii any_benchmark.ez 
 ```
 - ASREA
-Archived-Based Stcochastic Ranking Evolutionary Algorithm. (tpl/ASREA.tpl)
+Archived-Based Stcochastic Ranking Evolutionary Algorithm (tpl/ASREA.tpl).
+This MOEA ranks the population by comparing individuals with members of an archive, that breaks
+complexity into O(man) (m being the number of objectives, a the size of the archive and n the population size). 
 ```
-$ easea -asrea any_benchmark.ez 
+$ easena -asrea any_benchmark.ez 
 ```
-- FastEMO
-Fast Evolutionary Multi-objective Optimization Algorithm. (tpl/FastEMO.tpl)
+- CDAS
+Controlling Dominance Area of Solutions optimization algorithm (tpl/CDAS.tpl).
+CDAS control the degree of expansion or contraction of the dominance area of solutions using a user-defined parameter S
+in order to induce appropriate ranking of solutions for the problem at hand and improve the performance. 
 ```
-$ easea -fastemo any_benchmark.ez 
+$ easena -cdas any_benchmark.ez 
 ```
 
 ## Benchmark Suite
 
-- Zitzler-Deb-Thiele's Test Problems ZDT(1, 2, 3, 4, 6) : 2-objective tests (see examples/zdt)
-- Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3, 4, 5, 6, 7) : 3-objective tests (see examples/dtlz)
+- Zitzler-Deb-Thiele's Test Problems ZDT(4, 6) : 2-objective tests (examples/zdt)
+All problems are scalable, originating from a well thought combination of functions.
 
-An example to compile zdt1 test with algorithm FastEMO:
+- Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3) : 2/3-objective tests (examples/dtlz)
+All problems are box-constrained continuous n-dimensional multi-objective problems, scalable in fitness dimension. 
+
+- Bi-objective COCO 2018 BBOB benchmark problems (examples/coco2018)
+The bbob-biobj test suite provides 55 2-objective functions in six dimensions (2, 3, 5, 10, 20, and 40) with a large number of possible instances.//
+The 55 functions are derived from combining a subset of the 24 well-known single-objective functions of the bbob test suite,//
+which has been used since 2009 in the BBOB workshop series. 
+
+## A simple example
+
 ```
-$ cd examples/zdt1/
-$ easea -fastemo zdt1.ez 
+$ cd examples/dtlz1/
+$ export EZ_PATH="your_path_to_easena"
+You can select MOEA (possible options: -nsgaii, -nsgaiii, -asrea, -cdas) by changing script compile.sh.
+Then   
+$ ./compile.sh
+Then 
+by modifing file .prm, you can set a number of generation (nbGen) and a population size (popSize and nbOffspring must be the same).
+Then run MOEA by script
+$ ./launch.sh 
+ 
 ```
 ## Performance Metrics
 
@@ -118,6 +150,29 @@ where "pareto-true.dat" is a file with Pareto Otimal Front (which is in the same
 - Distribution can be done locally on the same machine or over the internet (using a embedded island model).
 - Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
 - C++ description language.
+
+## References
+1. Deb K., Jain H. An evolutionary many-objective optimization algorithm using reference-point-based nondominated sorting approach, //
+part I: solving problems with box constraints //
+IEEE transactions on evolutionary computation. – 2013. – Т. 18. – №. 4. – С. 577-601.
+
+2. Deb K., Jain H. An evolutionary many-objective optimization algorithm using reference-point-based nondominated sorting approach, //
+part I: solving problems with box constraints //
+IEEE transactions on evolutionary computation. – 2013. – Т. 18. – №. 4. – С. 577-601.
+
+3. Sharma D., Collet P. An archived-based stochastic ranking evolutionary algorithm (ASREA) for multi-objective optimization //
+Proceedings of the 12th annual conference on Genetic and evolutionary computation. – ACM, 2010. – С. 479-486.
+
+4. Sato H., Aguirre H. E., Tanaka K. Controlling dominance area of solutions and its impact on the performance of MOEAs //
+International conference on evolutionary multi-criterion optimization. – Springer, Berlin, Heidelberg, 2007. – С. 5-20.
+
+5. Zitzler, Eckart, Deb K., and Thiele L.. “Comparison of multiobjective evolutionary algorithms: //
+Empirical results.” Evolutionary computation 8.2 (2000): 173-195. doi: 10.1.1.30.5848
+
+6. Deb K., Thiele L., Laumanns M., Zitzler E., Scalable test problems for evolutionary multiobjective optimization 
+
+7. COCO: The Bi-objective Black-Box Optimization Benchmarcking Test Suite.
+https://numbbo.github.io/coco-doc/bbob-boobj/functions
 
 # EASNA -- EAsy Specification of Neural Algorithms -- Work in progress !
 
