@@ -220,7 +220,7 @@ Then run script:
 $ ./compile.sh
 ```
 If you have successfully compiled you .ez file you can find .cpp, .h, Makefile, executable and .prm files. 
-By modifing file .prm, you can set a number of generation (nbGen) and a population size (popSize and nbOffspring must be the same).
+By modifying file .prm, you can set a number of generation (nbGen) and a population size (popSize and nbOffspring must be the same).
 
 Now you can run selected MOEA for resolving your problem :
 ```
