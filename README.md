@@ -209,9 +209,9 @@ TP m_problem(NB_OBJECTIVES, NB_VARIABLES, m_boundary);
 ```
 Important to know:
 m_variable - decision variable of every individual ,
-m_objective - value of objective functions for every individual 
+m_objective - value of objective functions for every individual.
 
-After following instructions above the problem is defined and you will be able to compile and run you programm:
+After following instructions above, the problem is defined. Now you will be able to compile and run your program:
 
 You select MOEA (possible options: -nsgaii, -nsgaiii, -asrea, -cdas) by changing script compile.sh.
 
