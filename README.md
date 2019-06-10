@@ -83,9 +83,9 @@ This is the list of defined MOEA templates currently provided by EASEA.
 
 - NSGA-II
 Nondominated Sorting genetic algorithm II (tpl/NSGAII.tpl).
-NSGA-II is a very poular MOEA in multi-objective optimization area. 
-This algorithm makes offspring by using a choosen crossover and mutation operators and
-selects individuals for a new generation by nondominated-sorting (NDS) and by crowding distance (CD) comarator.  
+NSGA-II is a very popular MOEA in multi-objective optimization area. 
+This algorithm makes offspring by using chosen crossover and mutation operators and
+selects individuals for a new generation by nondominated-sorting (NDS) and by crowding distance (CD) comparator.  
 ```
 $ easena -nsgaii any_benchmark.ez.
 ```
@@ -104,8 +104,8 @@ $ easena -asrea any_benchmark.ez
 ```
 - CDAS
 Controlling Dominance Area of Solutions optimization algorithm (tpl/CDAS.tpl).
-CDAS control the degree of expansion or contraction of the dominance area of solutions using a user-defined parameter S
-in order to induce appropriate ranking of solutions for the problem at hand and improve the performance. 
+CDAS controls the degree of expansion or contraction of the dominance area of solutions using a user-defined parameter
+in order to induce appropriate ranking of solutions and improve the performance. 
 ```
 $ easena -cdas any_benchmark.ez 
 ```
@@ -113,14 +113,14 @@ $ easena -cdas any_benchmark.ez
 ## Benchmark Suite
 
 - Zitzler-Deb-Thiele's Test Problems ZDT(4, 6) : 2-objective tests (examples/zdt)
-All problems are scalable, originating from a well thought combination of functions.
+All problems are continous, n-dimensional and originating from a well thought combination of functions.
 
 - Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3) : 2/3-objective tests (examples/dtlz)
-All problems are box-constrained continuous n-dimensional multi-objective problems, scalable in fitness dimension. 
+All problems are continuous n-dimensional multi-objective problems, scalable in fitness dimension. 
 
 - Bi-objective COCO 2018 BBOB benchmark problems (examples/coco2018)
-The bbob-biobj test suite provides 55 2-objective functions in six dimensions (2, 3, 5, 10, 20, and 40) with a large number of possible instances.//
-The 55 functions are derived from combining a subset of the 24 well-known single-objective functions of the bbob test suite,//
+The bbob-biobj test suite provides 55 2-objective functions in six dimensions (2, 3, 5, 10, 20, and 40) with a large number of possible instances.
+The 55 functions are derived from combining a subset of the 24 well-known single-objective functions of the bbob test suite,
 which has been used since 2009 in the BBOB workshop series. 
 
 ## A simple example
@@ -145,7 +145,7 @@ TRandom m_generator					// random generator
 TBoundary m_boundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)) 
 ```
 
-- In order to define a number of decision veriable and a number of onjectives :
+- In order to define a number of decision veriable and a number of objectives :
 ```
 #define NB_VARIABLES 10  //  here we set 10 variables
 #define NB_OBJECTIVES 3  //  here we set 3 objectives
@@ -192,7 +192,24 @@ TP m_problem(NB_OBJECTIVES, NB_VARIABLES, m_boundary);
 ```
 - In order to define some additional finctions, section \User functions has to be used.
 
-- In order to define problem evaluation function, section \GenomeClass::evaluator has to be used. 
+- In order to define problem evaluation function, section \GenomeClass::evaluator has to be used. For example, like below:
+```
+\GenomeClass::evaluator : 
+  // uses Genome to evaluate the quality of the individual
+
+        const size_t pVariables = getNumberOfObjectives() - 1;
+
+        const TT g = (1 + userFunction1<TT>(TI::m_variable.begin() + pVariables, TI::m_variable.end())) * 0.5;
+        userFunction2(TI::m_variable.begin(), TI::m_variable.begin() + pVariables, TI::m_objective.begin(), TI::m_objective.end(), g);
+
+        return 1;
+
+\end
+
+```
+Important to know:
+m_variable - decision variable of every individual ,
+m_objective - value of objective functions for every individual 
 
 After following instructions above the problem is defined and you will be able to compile and run you programm:
 
@@ -205,7 +222,7 @@ $ ./compile.sh
 If you have successfully compiled you .ez file you can find .cpp, .h, Makefile, executable and .prm files. 
 By modifing file .prm, you can set a number of generation (nbGen) and a population size (popSize and nbOffspring must be the same).
 
-Now you can run selected MOEA for resolving your problem by script :
+Now you can run selected MOEA for resolving your problem :
 ```
 $ ./launch.sh 
  
