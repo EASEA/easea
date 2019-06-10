@@ -52,6 +52,15 @@ EASEA (EAsy Specification of Evolutionary Algorithms) is an Artificial Evolution
 
 Then, for very large problems, EASEA can also exploit computational ecosystems as it can parallelize (using an embedded island model) over loosely coupled heterogenous machines (Windows, Linux or Macintosh, with or without GPGPU cards, provided that they have internet access) a grid of computers or a Cloud.
 
+
+## Features
+
+- Runs can be distributed over cluster of homogeneous AND heterogeneous machines.
+- Distribution can be done locally on the same machine or over the internet (using a embedded island model).
+- Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
+- C++ description language.
+
+
 ## Changes
 
 - Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, NSGA-III, CDAS, ASREA
@@ -115,19 +124,97 @@ The 55 functions are derived from combining a subset of the 24 well-known single
 which has been used since 2009 in the BBOB workshop series. 
 
 ## A simple example
-
+As a simple example, we will show, how to define the 3-objective DTLZ1 problem using the NSGA-II algorithm.
+First of all, we select a test folder and set environment variables EZ_PATH:
 ```
 $ cd examples/dtlz1/
 $ export EZ_PATH="your_path_to_easena"
-You can select MOEA (possible options: -nsgaii, -nsgaiii, -asrea, -cdas) by changing script compile.sh.
-Then   
+```
+The problem has to be defined in dtlz1.ez file as follow:
+
+- In order to define initial settings (normally they are the same) :
+```
+typedef double TT;                                      // Type of decision variablse (here it is double, could be float or int)
+typedef std::mt19937 TRandom;                           // Random generator
+typedef easea::problem::CProblem<TT> TP;                // Common problem type with selected type if decision variable
+typedef TP::TV TV;                                      // don't change
+typedef TP::TO TO;                                      // don't change
+typedef typename easea::Individual<TO, TV> TIndividual; // Individual type : TO - type of objective, TV - type of decision variable
+typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;     // Boundary for decision variable
+TRandom m_generator					// random generator
+TBoundary m_boundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)) 
+```
+
+- In order to define a number of decision veriable and a number of onjectives :
+```
+#define NB_VARIABLES 10  //  here we set 10 variables
+#define NB_OBJECTIVES 3  //  here we set 3 objectives
+```
+- In order to define a genetic operator parameters :
+```
+#define XOVER_DIST_ID 20  //  crossover distribution index
+#define MUT_DIST_ID 20    //  mutation distribution index
+```
+- In order to define genetic operators
+```
+typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;    //Type of crossover
+typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation; //Type of mutation
+/*
+ * To define crossover operator parameters
+ * param[in 1] - random generator
+ * param[in 2] - probability
+ * param[in 3] - problem boundary
+ * param[in 4] - distibution index
+ *
+ */
+TCrossover crossover(m_generator, 1, m_boundary, XOVER_DIST_ID);
+
+easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
+/*
+ * To define mutation operator parameters
+ * param[in 1] - random generator
+ * param[in 2] - probability 
+ * param[in 3] - problem boundary
+ * param[in 4] - distribution index
+ */
+TMutation m_mutation(m_generator, 1 / m_boundary.size(), m_boundary, MUT_DIST_ID);
+```
+- In order to define problem 
+
+```
+/*
+ * param[in 1] - number of objectives
+ * param[in 2] - number of decision variables
+ * param[in 3] - problem boundary
+ *
+ */
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, m_boundary);
+```
+- In order to define some additional finctions, section \User functions has to be used.
+
+- In order to define problem evaluation function, section \GenomeClass::evaluator has to be used. 
+
+After following instructions above the problem is defined and you will be able to compile and run you programm:
+
+You select MOEA (possible options: -nsgaii, -nsgaiii, -asrea, -cdas) by changing script compile.sh.
+
+Then run script:
+```
 $ ./compile.sh
-Then 
-by modifing file .prm, you can set a number of generation (nbGen) and a population size (popSize and nbOffspring must be the same).
-Then run MOEA by script
+```
+If you have successfully compiled you .ez file you can find .cpp, .h, Makefile, executable and .prm files. 
+By modifing file .prm, you can set a number of generation (nbGen) and a population size (popSize and nbOffspring must be the same).
+
+Now you can run selected MOEA for resolving your problem by script :
+```
 $ ./launch.sh 
  
 ```
+After execution, you can find in the same folder following files: 
+- easea.log with metrics values and run time
+- .png - a figure of obtained Pareto Front
+- objectives - values of objectives functions
+
 ## Performance Metrics
 
 - Hypervolume (HV) maximisation: it provides the volume of the objective space that is dominated by a Pareto Front (PF), therefore, it shows the convergence quality towards the PF and the diversity in the obtained solutions set.
@@ -137,19 +224,12 @@ obtained by algorithm and those in the Pareto Optimal Front.
 
 To use these performance metrics: 
 
-in your ez-file
+in your ez-file:
 ```
- #define QMETRICS 
- #define PARETO_TRUE_FILE "pareto-true.dat"
+#define QMETRICS 
+#define PARETO_TRUE_FILE "pareto-true.dat"
 ```
-where "pareto-true.dat" is a file with Pareto Otimal Front (which is in the same folder as ez-file). See examples in examples/zdt(1-6).ez and examples/dtlz(1-7).ez.
-
-## Features
-
-- Runs can be distributed over cluster of homogeneous AND heterogeneous machines.
-- Distribution can be done locally on the same machine or over the internet (using a embedded island model).
-- Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
-- C++ description language.
+where "pareto-true.dat" is a file with Pareto Otimal Front (which is in the same folder as ez-file). See examples in examples/zdt(4,6).ez and examples/dtlz(1-3).ez.
 
 ## References
 1. Deb K., Jain H. An evolutionary many-objective optimization algorithm using reference-point-based nondominated sorting approach, //
