@@ -47,8 +47,8 @@ Or simply, run the script *apple.sh* that will exactly launch the two first comm
 
 Currently, only the easna part is functional under Apple's macosx.
 
-# Congratulations, you can now use EASENA
-======
+# ----- Congratulations, you can now use EASENA -----
+----
 
 # EASEA -- EAsy Specification of Evolutionary Algorithms
 
