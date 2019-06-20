@@ -25,8 +25,8 @@ C++ compiler that supports at least C++14 such as **gcc** : EASENA has been deve
 ## Quick start on LINUX
 
 - cmake **.**
-- make (*Optionnal* -j 4) 
-- (*Optionnal*) make install : sudo could be necessary
+- make (*Optional* -j 4) 
+- (*Optional*) make install : sudo could be necessary
 - Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
 
 ## Quick start on MAC OSX
