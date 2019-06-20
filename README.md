@@ -1,7 +1,7 @@
 EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 ===============================================
 
-In this beta version, EASENA contains two compilers within one program: EASEA and EASNA.
+In this beta version, EASENA platform contains two engines within one program: EASEA and EASNA.
 - The EASEA compiler (for artificial evolution) is automatically used on files using extension .ez
 - The EASNA platform (for neural networks) is automatically used on files using extension .nz
 
