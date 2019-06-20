@@ -10,7 +10,7 @@
 #include <shared/CProbability.h>
 #include <shared/functions/helper.h>
 #include <operators/mutation/base/CMutation.h>
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 
 namespace easea
 {
@@ -59,10 +59,7 @@ CPolynomialMutation<TObjective, TRandom>::CPolynomialMutation(TR random, const T
   , m_distribution(0, 1)
 {
 	if (distributionIndex < 0)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong vqlue of distribution index: " << distributionIndex << std::endl << COLOR(none);
-		exit(-1);
-	}
+		LOG_ERROR(errorCode::value, "Wrong vqlue of distribution index");
 	m_distributionIndex = distributionIndex;
 }
 
@@ -73,25 +70,15 @@ template <typename TObjective, typename TRandom> CPolynomialMutation<TObjective,
 template <typename TObjective, typename TRandom>
 typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjective, TRandom>::calcMutFactor(const TObjective distributionIndex, const TObjective lMutFactor, const TObjective uMutFactor, const TObjective random01)
 {
-	if (lMutFactor < -1 && lMutFactor > 0)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong value of lower mutation factor: " << lMutFactor << std::endl << COLOR(none);
-		exit(-1); 
-	}
+	if (lMutFactor < -1 && lMutFactor > 0)	LOG_ERROR(errorCode::value, "Wrong value of lower mutation facto");
 	if (uMutFactor < 0 && uMutFactor > 1)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong value of upper mutation factor: " << uMutFactor << std::endl << COLOR(none); 
-		exit(-1);
-	}
+		LOG_ERROR(errorCode::value, "Wrong value of upper mutation factor"); 
 	if (random01 < 0.5)
 	{
 		const TObjective temp = pow(1 + lMutFactor, distributionIndex + 1);
 		const TObjective mutFactor = pow(2 * random01 + (1 - 2 * random01) * temp, 1 / (distributionIndex + 1)) - 1;
 		if (mutFactor > 0)
-		{
-			LOG(ERROR) << COLOR(red) << "Wrong value of mutation factor: " << mutFactor << std::endl << COLOR(none);
-			exit(-1);
-		}
+			LOG_ERROR(errorCode::value, "Wrong value of mutation factor");
 		return mutFactor;
 	}
 	else
@@ -99,10 +86,7 @@ typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjec
 		const TObjective temp = pow(1 - uMutFactor, distributionIndex + 1);
 		const TObjective mutFactor = 1 - pow(2 * (1 - random01) + (2 * random01 - 1) * temp, 1 / (distributionIndex + 1));
 		if (mutFactor < 0)
-		{
-			LOG(ERROR) << COLOR(red) << "Wrong value of mutation factor: " << mutFactor << std::endl << COLOR(none);
-    			exit(-1);
-		}
+			LOG_ERROR(errorCode::value, "Wrong value of mutation factor");
 		return mutFactor;
 	}
 }
@@ -110,16 +94,9 @@ typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjec
 template <typename TObjective, typename TRandom>
 typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjective, TRandom>::calcAmplifL(const TObjective distributionIndex, const TObjective mutFactor)
 {
-	if (distributionIndex < 0)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong value of distribution index: " << distributionIndex << std::endl << COLOR(none);
-    		exit(-1);
-	}
+	if (distributionIndex < 0)	LOG_ERROR(errorCode::value, "Wrong value of distribution index");
 	if (mutFactor < -1 && mutFactor > 0)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong value of mutation factor: " << mutFactor << std::endl << COLOR(none);
-    		exit(-1);
-	}
+		LOG_ERROR(errorCode::value, "Wrong value of mutation factor");
 	
 	return 2 / (1 - pow(1 + mutFactor, distributionIndex + 1));
 }
@@ -128,15 +105,9 @@ template <typename TObjective, typename TRandom>
 typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjective, TRandom>::calcAmplifU(const TObjective distributionIndex, const TObjective mutFactor)
 {
 	if (distributionIndex < 0)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong value of distribution index: " << distributionIndex << std::endl << COLOR(none);
-		exit(-1);
-	}
+		LOG_ERROR(errorCode::value, "Wrong value of distribution index");
 	if (0 <= mutFactor && mutFactor <= 1);
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong value of mutation factor: " << mutFactor << std::endl << COLOR(none);
-		exit(-1);
-	}
+		LOG_ERROR(errorCode::value, "Wrong value of mutation factor");
 	
 	return 2 / (1 - pow(1 - mutFactor, distributionIndex + 1));
 }
@@ -146,20 +117,14 @@ typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjec
 {
 	static std::uniform_real_distribution<TObjective> dist(0, 1);
 	if (lower >= upper)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong boundary mutation values: lower = " << lower << " upper = " << upper << std::endl << COLOR(none);
-		exit(-1);
-	}
+		LOG_ERROR(errorCode::value, "Wrong boundary mutation values");
 	const TObjective maxDistance = upper - lower;
 	const TObjective lMutFactor = (lower - coding) / maxDistance;
 	const TObjective uMutFactor = (upper - coding) / maxDistance;
 	const TObjective random01 = dist(random);
  
 	if (random01 < 0 && random01 > 1)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong random value " << random01 << std::endl << COLOR(none);
-		exit(-1);
-	}
+		LOG_ERROR(errorCode::value, "Wrong random value");
 	const TObjective mutFactor = calcMutFactor(distributionIndex, lMutFactor, uMutFactor, random01);
 
 	return easea::shared::functions::helper::checkBoundary(coding + mutFactor * maxDistance, lower, upper);

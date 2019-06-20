@@ -13,6 +13,7 @@
 #pragma once
 
 #include <vector>
+#include <CLogger.h>
 #include <shared/CConstant.h>
 #include <shared/CRandom.h>
 #include <shared/functions/dominance.h>
@@ -32,20 +33,20 @@ namespace algorithms
 namespace cdas
 {
 template <typename TIndividual, typename TRandom>
-class Ccdas : public CmoeaAlgorithm<std::vector<TIndividual>>, public easea::shared::CRandom<TRandom>, public easea::operators::crossover::CWrapCrossover<typename TIndividual::TO,typename  TIndividual::TV>, public easea::operators::mutation::CWrapMutation<typename TIndividual::TO,typename  TIndividual::TV>
+class Ccdas : public CmoeaAlgorithm<std::vector<TIndividual>, TRandom>, public easea::operators::crossover::CWrapCrossover<typename TIndividual::TO,typename  TIndividual::TV>, public easea::operators::mutation::CWrapMutation<typename TIndividual::TO,typename  TIndividual::TV>
 {
 public:
         typedef TIndividual TI;
         typedef typename TI::TO TO;
         typedef typename TI::TV TV;
-        typedef TRandom TR;
+    //    typedef TRandom TR;
         typedef std::vector<TI> TPopulation;
-        typedef CmoeaAlgorithm<TPopulation> TBase;
+        typedef CmoeaAlgorithm<TPopulation, TRandom> TBase;
         typedef typename TBase::TP TP;
         typedef typename easea::operators::crossover::CWrapCrossover<TO, TV>::TC TC;
         typedef typename easea::operators::mutation::CWrapMutation<TO, TV>::TM TM;
 
-        Ccdas(TR random, TP &problem, const std::vector<TV> &initPop, TC &crossover, TM &mutation, const std::vector<TO> &angle);
+        Ccdas(TRandom random, TP &problem, const std::vector<TV> &initPop, TC &crossover, TM &mutation, const std::vector<TO> &angle);
         ~Ccdas(void);
         const std::vector<double> &getAngle(void) const;
         TPopulation runBreeding(const TPopulation &parent);
@@ -65,16 +66,14 @@ private:
 };
 
 template <typename TIndividual, typename TRandom>
-Ccdas<TIndividual, TRandom>::Ccdas(TR random, TP &problem, const std::vector<TV> &initPop, TC &crossover, TM &mutation, const std::vector<TO> &angle)
-        : TBase(problem), easea::shared::CRandom<TR>(random), easea::operators::crossover::CWrapCrossover<TO, TV>(crossover)
+Ccdas<TIndividual, TRandom>::Ccdas(TRandom random, TP &problem, const std::vector<TV> &initPop, TC &crossover, TM &mutation, const std::vector<TO> &angle)
+        : TBase(random, problem, initPop), easea::operators::crossover::CWrapCrossover<TO, TV>(crossover)
         , easea::operators::mutation::CWrapMutation<TO, TV>(mutation), m_angle(angle)
 {
-        TBase::m_population.resize(initPop.size());
         for (size_t i = 0; i < initPop.size(); ++i)
         {
                 TIndividual &individual = TBase::m_population[i];
-                individual.m_variable = initPop[i];
-                TBase::getProblem()(individual);
+
                 convertObjective(m_angle, individual.m_objective, individual.m_convertedObjective);
         }
 
@@ -108,6 +107,7 @@ typename Ccdas<TIndividual, TRandom>::TPopulation Ccdas<TIndividual, TRandom>::r
         {
                 TIndividual &child = offspring[i];
                 this->getMutation()(child);
+
                 TBase::getProblem()(child);
                 convertObjective(m_angle, child.m_objective, child.m_convertedObjective);
         }
@@ -130,17 +130,13 @@ bool Ccdas<TIndividual, TRandom>::Dominate(const TIndividual *individual1, const
 template <typename TIndividual, typename TRandom>
 void Ccdas<TIndividual, TRandom>::convertObjective(const std::vector<TO> &angle, const std::vector<TO> &objective, std::vector<TO> &convertedObjective)
 {
-        assert(objective.size() == angle.size());
+        if (objective.size() != angle.size()) LOG_ERROR(errorCode::value,"Wrong objective size");
         convertedObjective.resize(objective.size());
         const TO radius = sqrt(std::inner_product(objective.begin(), objective.end(), objective.begin(), (TO)0));
 
         for (size_t i = 0; i < objective.size(); ++i)
         {
-                if (angle[i] < 0 && angle[i] > PI)
-		{
-			LOG(ERROR) << COLOR(red) << "Wrong angle value" << std::endl << COLOR(none);
-			exit(1);
-		}
+                if (angle[i] < 0 && angle[i] > PI)	LOG_ERROR(errorCode::value, "Wrong angle value");
                 convertedObjective[i] = radius * sin(acos(objective[i] / radius) + angle[i]) / sin(angle[i]);
         }
 }
@@ -168,11 +164,7 @@ template <typename TPtr, typename TIter> TIter Ccdas<TIndividual, TRandom>::sele
 {
         std::vector<TPtr> iFront(front.begin(), front.end());
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
-        if (iFront.size() > std::distance(begin, end))
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong front size" << std::endl << COLOR(none);
-		exit(1);
-	}	
+        if (iFront.size() > std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
         TIter dest = begin;
         for (size_t i = 0; i < iFront.size(); ++i, ++dest)
                 *dest = *iFront[i];
@@ -186,11 +178,7 @@ template <typename TPtr, typename TIter> TIter Ccdas<TIndividual, TRandom>::sele
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
         std::partial_sort(iFront.begin(), iFront.begin() + std::distance(begin, end), iFront.end(), [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;}
         );
-        if (iFront.size() < std::distance(begin, end))
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong front size" << std::endl << COLOR(none);
-		exit(1);
-	}		
+        if (iFront.size() < std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
         TIter dest = begin;
         for (size_t i = 0; dest != end; ++i, ++dest)
                 *dest = *iFront[i];
@@ -204,8 +192,8 @@ const typename Ccdas<TIndividual, TRandom>::TI *Ccdas<TIndividual, TRandom>::com
                 return comparator[0];
         else if (isDominated(*comparator[1], *comparator[0]))
                 return comparator[1];
-        if (comparator[0]->m_crowdingDistance < 0) LOG_FATAL("Wrong crowding distance value");
-        if (comparator[1]->m_crowdingDistance < 0) LOG_FATAL("Wrong crowding distance value");
+        if (comparator[0]->m_crowdingDistance < 0) LOG_ERROR(errorCode::value, "Wrong crowding distance value");
+        if (comparator[1]->m_crowdingDistance < 0) LOG_ERROR(errorCode::value, "Wrong crowding distance value");
 
         return comparator[0]->m_crowdingDistance > comparator[1]->m_crowdingDistance ? comparator[0] : comparator[1];
 }

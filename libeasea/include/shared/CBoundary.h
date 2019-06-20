@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <vector>
 #include <shared/CConstant.h>
+#include <CLogger.h>
 
 
 namespace easea
@@ -48,7 +49,8 @@ template <typename TType>
 CBoundary<TType>::CBoundary(const TBoundary &boundary)
         : m_boundary(boundary)
 {
-        if (!validate(boundary)) LOG_FATAL("Value of boundary is not valid"); 
+        if (!validate(boundary)) LOG_ERROR(errorCode::value, "Value of boundary is not valid");
+ 
 }
 
 template <typename TType>
@@ -60,7 +62,8 @@ template <typename TType>
 bool CBoundary<TType>::isInside(const std::vector<TType> &point) const
 {
         if (point.size() != m_boundary.size())
-		LOG_FATAL("Wrong number of variables");
+		LOG_ERROR(errorCode::value, "Wrong number of variables");
+
         for (size_t i = 0; i < point.size(); ++i)
         {
                 const TType i_p = point[i];

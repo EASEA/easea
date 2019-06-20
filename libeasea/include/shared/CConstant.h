@@ -12,9 +12,7 @@
  ***********************************************************************/
 
 #pragma once
-#include <third_party/aixlog/aixlog.hpp>
 
 #define PI 3.14159265358979323846
 
-#define LOG_FATAL(message) { std::ostringstream what; what << message; LOG(FATAL) << COLOR(red) << what.str() << std::endl << COLOR(none); exit(1); } 
 

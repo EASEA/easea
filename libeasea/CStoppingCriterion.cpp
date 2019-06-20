@@ -12,7 +12,7 @@
 
 #include <signal.h>
 #include <stdio.h>
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 
 #include "include/CEvolutionaryAlgorithm.h"
 
@@ -29,7 +29,7 @@ void CGenerationalCriterion::setCounterEa(unsigned* ea_counter){
 
 bool CGenerationalCriterion::reached(){
   if( generationalLimit <= *currentGenerationPtr ){
-	LOG(INFO) << COLOR(green) << "Stop criterion is reached: " << *currentGenerationPtr << std::endl;
+	LOG_MSG(msgType::INFO, "Stop criterion is reached ");// << *currentGenerationPtr);
 //    std::cout << "Current generation " << *currentGenerationPtr << " Generational limit : " <<
 //      generationalLimit << std::endl;
     return true;
@@ -89,7 +89,7 @@ CControlCStopingCriterion::CControlCStopingCriterion(){
 
 bool CControlCStopingCriterion::reached(){
   if(ARRET_DEMANDE)
-	LOG(WARNING) << COLOR(yellow) << "Algorithm stopped on user demand" << std::endl << COLOR(none);
+	LOG_MSG(msgType::WARNING, "Algorithm stopped on user demand");
   //std::cout << "Algorithm stopped on user demand" << std::endl; 
   return ARRET_DEMANDE;
 }
@@ -102,7 +102,7 @@ void signal_handler(int sig){
   signal(SIGQUIT, SIG_DFL);
 #endif
 //  printf("Ctrl C entered ... closing down\nNext Ctrl C will kill the Program !!!\n");
-    LOG(WARNING) << COLOR(yellow) << "Ctrl C entered ... closing down\n Next Ctrl C will kill the Program !!!" << std::endl << COLOR(none);
+    LOG_MSG(msgType::WARNING, "Ctrl C entered ... closing down\n Next Ctrl C will kill the Program !!!");
     ARRET_DEMANDE=true;
 }
 

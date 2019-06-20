@@ -14,8 +14,8 @@
 
 #include <cstddef>
 #include <vector>
+#include <CLogger.h>
 #include <shared/CConstant.h>
-
 #include <shared/functions/crowdingDistance.h>
 #include <shared/functions/dominance.h>
 namespace easea
@@ -55,7 +55,7 @@ template <typename TIndividual>
 CArchive<TIndividual>::CArchive(const size_t size)
 	: m_maxSize(size)
 {
-        if (size <= 0 ) LOG_FATAL("Wrong size of archive! Pleace, check it");
+        if (size <= 0 ) LOG_ERROR(errorCode::value, "Wrong size of archive! Pleace, check it");
 }
         
 template <typename TIndividual>
@@ -66,7 +66,7 @@ CArchive<TIndividual>::~CArchive(void)
 template <typename TIndividual>
 bool CArchive<TIndividual>::isEmpty()
 {
-	if (m_archive.size() < 0) LOG_FATAL("Size of archive < 0!");
+	if (m_archive.size() < 0) LOG_ERROR(errorCode::value, "Size of archive < 0!");
 	
 	return m_archive.empty();
 }
@@ -86,7 +86,7 @@ bool CArchive<TIndividual>::isDominated(const TI *individual1, const TI *individ
 template <typename TIndividual>
 void CArchive<TIndividual>::updateArchive(const TI candidate) 
 { 
-	if (m_archive.size() < 0) LOG_FATAL("Size of archive < 0!");
+	if (m_archive.size() < 0) LOG_ERROR(errorCode::value, "Size of archive < 0!");
 
 	for (auto it = m_archive.begin(); it != m_archive.end();)
 	{

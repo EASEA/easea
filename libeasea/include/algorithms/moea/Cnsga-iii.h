@@ -38,22 +38,22 @@ namespace algorithms
 namespace nsga_iii
 {
 template <typename TIndividual, typename TRandom>
-class Cnsga_iii : public CmoeaAlgorithm<std::vector<TIndividual>>, public easea::shared::CRandom<TRandom>, public easea::operators::crossover::CWrapCrossover<typename TIndividual::TO,typename TIndividual::TV>, public easea::operators::mutation::CWrapMutation<typename TIndividual::TO,typename  TIndividual::TV>
+class Cnsga_iii : public CmoeaAlgorithm<std::vector<TIndividual>, TRandom>, public easea::operators::crossover::CWrapCrossover<typename TIndividual::TO,typename TIndividual::TV>, public easea::operators::mutation::CWrapMutation<typename TIndividual::TO,typename  TIndividual::TV>
 {
 public:
   typedef TIndividual TI;
   typedef typename TI::TO TO;
   typedef typename TI::TV TV;
-  typedef TRandom TR;
+  
   typedef std::vector<TI> TPopulation;
-  typedef CmoeaAlgorithm<TPopulation> TBase;
+  typedef CmoeaAlgorithm<TPopulation, TRandom> TBase;
   typedef typename TBase::TP TP;
   typedef typename easea::operators::crossover::CWrapCrossover<TO, TV>::TC TC;
   typedef typename easea::operators::mutation::CWrapMutation<TO, TV>::TM TM;
   typedef std::vector<TO> TPoint;
   typedef std::pair<size_t, std::list<const TI *> > TNiche;
   
-  Cnsga_iii(TR random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, const std::vector<TPoint> &m_referenceSet, const TO epsilon = 1e-6);
+  Cnsga_iii(TRandom random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, const std::vector<TPoint> &m_referenceSet, const TO epsilon = 1e-6);
   ~Cnsga_iii(void);
   const std::vector<TPoint> &getReferenceSet(void) const;
   double getEpsilon(void) const;
@@ -89,18 +89,22 @@ private:
 };
 
 template <typename TIndividual, typename TRandom>
-Cnsga_iii<TIndividual, TRandom>::Cnsga_iii(TR random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, const std::vector<TPoint> &referenceSet, const TO epsilon)
-  : TBase(problem)
-  , easea::shared::CRandom<TR>(random), easea::operators::crossover::CWrapCrossover<TO, TV>(crossover)
+Cnsga_iii<TIndividual, TRandom>::Cnsga_iii(TRandom random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, const std::vector<TPoint> &referenceSet, const TO epsilon)
+  : TBase(random, problem, initial)
+  , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover)
   , easea::operators::mutation::CWrapMutation<TO, TV>(mutation), m_referenceSet(referenceSet), m_epsilon(epsilon)
   {
-    TBase::m_population.resize(initial.size());
+/*    TBase::m_population.resize(initial.size());
     for (size_t i = 0; i < initial.size(); ++i)
     {
       TIndividual &individual = TBase::m_population[i];
       individual.m_variable= initial[i];
+      individual.m_mutStep.resize(individual.m_variable.size());
+      for(size_t j = 0; j < individual.m_variable.size(); j++)
+            TBase::m_population[i].m_mutStep[j] = 1.;
+
       TBase::getProblem()(individual);
-    }
+    }*/
   }
 
 template <typename TIndividual, typename TRandom>

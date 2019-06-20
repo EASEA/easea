@@ -1,9 +1,8 @@
 
 
 
-//#ifndef CLOGGER_H
-//#define CLOGGER_H
 #pragma once
+
 #include <cstdio>
 #include <stdexcept>
 #include <string>
@@ -103,5 +102,4 @@ inline string formatString(const string &format) {
     return format;
 
 }
-//#endif
 

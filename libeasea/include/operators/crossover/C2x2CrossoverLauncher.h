@@ -79,6 +79,14 @@ void C2x2CrossoverLauncher<TObjective, TVariable, TRandom>::runCrossover(std::ve
                         (*this)(*parent[parent1], *parent[parent2], *offspring[offspring1], *offspring[offspring2]);
                 }
         }
+/*	offspring[0]->m_mutStep.resize(parent[0]->m_mutStep.size());
+        offspring[1]->m_mutStep.resize(parent[1]->m_mutStep.size());
+        for (size_t i = 0; i < parent[0]->m_variable.size(); ++i)
+        {
+                offspring[0]->m_mutStep[i] = parent[0]->m_mutStep[i];
+                offspring[1]->m_mutStep[i] = parent[1]->m_mutStep[i];
+        }*/
+
 }
 }
 }

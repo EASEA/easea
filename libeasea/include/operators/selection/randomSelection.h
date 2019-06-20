@@ -12,6 +12,7 @@
  ***********************************************************************/
 #pragma once
 
+#include <CLogger.h>
 #include <list>
 #include <shared/functions/dominance.h>
 #include <shared/CConstant.h>
@@ -35,7 +36,7 @@ namespace selection
 template <typename TRandom, typename TIter>
 TIter randomSelection(TRandom &random, TIter begin, TIter end)
 {
-        if (begin == end) LOG_FATAL("Popultion is empty");
+        if (begin == end) LOG_ERROR(errorCode::value, "Popultion is empty");
     
         std::uniform_int_distribution<size_t> uniform(0, std::distance(begin, end) - 1);
         TIter selected = begin;

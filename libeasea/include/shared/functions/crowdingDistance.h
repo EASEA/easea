@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <CLogger.h>
 #include <limits>
 #include <algorithm>
 #include <iterator>
@@ -37,8 +38,8 @@ namespace functions
 template <typename TIter, typename TObjective>
 void crowdingDistance(TIter begin, TIter end, const TObjective extValue)
 {
-        if (extValue < 0) LOG_FATAL("Wrong extrem value");
-        if (begin == end) LOG_FATAL("Wrong size of population");
+        if (extValue < 0) LOG_ERROR(errorCode::value, "Wrong extrem value");
+        if (begin == end) LOG_ERROR(errorCode::value, "Wrong size of population");
 
         for (TIter i = begin; i != end; ++i)
                 (**i).m_crowdingDistance = 0;
@@ -54,7 +55,7 @@ void crowdingDistance(TIter begin, TIter end, const TObjective extValue)
                         for (TIter i = begin + 1; i != last; ++i)
                         {
                			 if ((**(i - 1)).m_objective[objective] > (**i).m_objective[objective] && (**i).m_objective[objective] > (**(i + 1)).m_objective[objective])
-					 LOG_FATAL("Wrong location by crowding distance");
+					 LOG_ERROR(errorCode::value, "Wrong location by crowding distance");
           			 (**i).m_crowdingDistance += ((**(i + 1)).m_objective[objective] - (**(i - 1)).m_objective[objective]) / range;
                         }
                         (**begin).m_crowdingDistance = extValue;

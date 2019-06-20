@@ -13,9 +13,8 @@
 
 #pragma once
 
-#include <cassert>
 #include <list>
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 
 
 
@@ -59,17 +58,13 @@ template <typename TIndividual, typename TDominate>
 std::list<TIndividual> getNondominated(std::list<TIndividual> &population, TDominate dominate)
 {
         typedef typename std::list<TIndividual>::iterator TIterator;
-        if (population.empty())
-	{
-		LOG(ERROR) << COLOR(red) << "Population is empty" << std::endl << COLOR(none);
-		exit(-1);
-	}
+        if (population.empty())		LOG_ERROR(errorCode::value,  "Population is empty");
         std::list<TIndividual> lstNondominated;
 
 	lstNondominated.splice(lstNondominated.end(), population, population.begin());
         for (TIterator individual = population.begin(); individual != population.end();)
         {
-                assert(!lstNondominated.empty());
+                if (lstNondominated.empty()) LOG_ERROR(errorCode::value,"The is no nondominated solutions");
                 if (isNondominated(individual, population, lstNondominated, dominate))
                 {
                         typename std::list<TIndividual>::iterator move = individual;
@@ -85,11 +80,7 @@ std::list<TIndividual> getNondominated(std::list<TIndividual> &population, TDomi
 template <typename TObjective>
 bool isDominated(const std::vector<TObjective> &point1, const std::vector<TObjective> &point2)
 {
-        if (point1.size() != point2.size())
-	{
-		LOG(ERROR) << COLOR(red) << "individuals have different size: " << point1.size() << " " << point2.size() << std::endl << COLOR(none);
-		exit(-1);
-	}
+        if (point1.size() != point2.size())	LOG_ERROR(errorCode::value, "individuals have different size");
         bool dominated = false;
         for (size_t i = 0; i < point1.size(); ++i)
         {

@@ -13,11 +13,9 @@ _______________________________________________________________*/
 
 \User declarations : // This section is copied on top of the output file
 
-#include <problems/CProblem.h> 
-#include <operators/crossover/C2x2CrossoverLauncher.h>
 #include <operators/crossover/continuous/CsbxCrossover.h>
 #include <operators/mutation/continuous/CPolynomialMutation.h>
-
+#include <CLogger.h>
 #include <shared/CConstant.h>
 
 #include <numeric>
@@ -37,20 +35,11 @@ _______________________________________________________________*/
 #define PARETO_TRUE_FILE "../pf/dtlz2/DTLZ2_3D.dat"
 #define PBLM_NAME "DTLZ2"
 
-typedef std::mt19937 TRandom;
-typedef double TT;
-typedef easea::problem::CProblem<TT> TP;
-typedef TP::TV TV;
-typedef TP::TO TO;
-typedef typename easea::Individual<TT, TV> TIndividual;
-typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
 typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
-//int populationSize = 100;
 TRandom m_generator;
 TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
 TCrossover crossover(m_generator, 1, m_problem.getBoundary(), 20);
-easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
 TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), 20);
 
 
@@ -74,11 +63,7 @@ void convert(TIter begin, TIter end)
 {
 	for (TIter i = begin; i != end; ++i)
 	{
-		if (0 > *i && *i > 1)
-		{
-			LOG(ERROR) << COLOR(red) << "Convert angles error" << std::endl << COLOR(none);
-			exit(-1); 
-		}    
+		if (0 > *i && *i > 1)	LOG_ERROR(errorCode::value,"Convert angles error");
                 *i = *i * PI * 0.5;
         }
 }
@@ -91,11 +76,7 @@ void concave(TIterAngle angleBegin, TIterAngle angleEnd, TIterObjective objectiv
 		TT temp = radius;
                 for (TIterAngle angle = angleBegin; angle != angleEnd; ++angle)
                 {
-			if (*angle < 0 && *angle > PI * 0.5)
-			{
-				LOG(ERROR) << COLOR(red) << "Wring value of angle" << std::endl << COLOR(none);
-				exit(-1);
-			}
+			if (*angle < 0 && *angle > PI * 0.5) 	LOG_ERROR(errorCode::value,"Wring value of angle");
                         temp *= cos(*angle);
                 }
                 *objectiveBegin = temp;

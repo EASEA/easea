@@ -15,6 +15,7 @@
 #include <vector>
 #include <list>
 
+#include <CLogger.h>
 #include <algorithms/moea/CmoeaAlgorithm.h>
 
 #include <operators/crossover/wrapper/CWrapCrossover.h>
@@ -38,22 +39,21 @@ namespace algorithms
 namespace asrea
 {
 template <typename TIndividual, typename TRandom>
-class Casrea : public CmoeaAlgorithm<std::vector< TIndividual >>, public easea::shared::CArchive<TIndividual>, public easea::shared::CRandom<TRandom>, public easea::operators::crossover::CWrapCrossover<typename TIndividual::TO, typename TIndividual::TV>, public easea::operators::mutation::CWrapMutation<typename TIndividual::TO, typename TIndividual::TV>
+class Casrea : public CmoeaAlgorithm<std::vector< TIndividual >, TRandom>, public easea::shared::CArchive<TIndividual>, public easea::operators::crossover::CWrapCrossover<typename TIndividual::TO, typename TIndividual::TV>, public easea::operators::mutation::CWrapMutation<typename TIndividual::TO, typename TIndividual::TV>
 {
 public:
         typedef TIndividual TI  ;
         typedef typename TI::TO TO;
         typedef typename TI::TV TV;
-        typedef TRandom TR;
 
         typedef std::vector<TI> TPopulation;
-        typedef CmoeaAlgorithm<TPopulation> TBase;
+        typedef CmoeaAlgorithm<TPopulation, TRandom> TBase;
 	typedef easea::shared::CArchive<TI> TBaseArchive;
         typedef typename TBase::TP TP;
         typedef typename easea::operators::crossover::CWrapCrossover<TO, TV>::TC TC;
         typedef typename easea::operators::mutation::CWrapMutation<TO, TV>::TM TM;
 
-        Casrea(TR random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, size_t maxArchSize);
+        Casrea(TRandom random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, size_t maxArchSize);
         ~Casrea(void);
         TPopulation runBreeding(const TPopulation &parent);
         static bool isDominated(const TIndividual &individual1, const TIndividual &individual2);
@@ -70,19 +70,11 @@ private:
 };
 
 template <typename TIndividual, typename TRandom>
-Casrea<TIndividual, TRandom>::Casrea(TR random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, size_t maxArchSize)
-        : TBase(problem), TBaseArchive(maxArchSize), easea::shared::CRandom<TR>(random)
+Casrea<TIndividual, TRandom>::Casrea(TRandom random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation, size_t maxArchSize)
+        : TBase(random, problem, initial), TBaseArchive(maxArchSize)
         , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover), easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
 	, m_distribution(0,1)	
 {
-        TBase::m_population.resize(initial.size());
-        for (size_t i = 0; i < initial.size(); ++i)
-        {
-                TIndividual &individual = TBase::m_population[i];
-                individual.m_variable = initial[i];
-                TBase::getProblem()(individual);
-        }
-
         typedef typename TPopulation::pointer TPtr;
         std::list<TPtr> population;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
@@ -196,7 +188,7 @@ template <typename TPtr, typename TIter> TIter Casrea<TIndividual, TRandom>::sel
 {
         std::vector<TPtr> iFront(front.begin(), front.end());
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
-        if (iFront.size() > std::distance(begin, end)) LOG_FATAL("Select Noncritical : Error of front size");
+        if (iFront.size() > std::distance(begin, end)) LOG_ERROR(errorCode::value, "Select Noncritical : Error of front size");
         TIter dest = begin;
         for (size_t i = 0; i < iFront.size(); ++i, ++dest)
                 *dest = *iFront[i];
@@ -210,7 +202,7 @@ template <typename TPtr, typename TIter> TIter Casrea<TIndividual, TRandom>::sel
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
         std::partial_sort(iFront.begin(), iFront.begin() + std::distance(begin, end), iFront.end()
                 , [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;});
-        if (iFront.size() < std::distance(begin, end)) LOG_FATAL("Select critical : Error of front size!");
+        if (iFront.size() < std::distance(begin, end)) LOG_ERROR(errorCode::value, "Select critical : Error of front size!");
         TIter dest = begin;
         for (size_t i = 0; dest != end; ++i, ++dest)
                 *dest = *iFront[i];

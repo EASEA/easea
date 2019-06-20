@@ -13,13 +13,14 @@
 #pragma once
 
 #include <algorithms/CAlgorithm.h>
+#include <shared/CRandom.h>
 
 namespace easea
 {
 namespace algorithms
 {
-template <typename TPopulation>
-class CmoeaAlgorithm : public CAlgorithm<typename TPopulation::value_type::TO, typename TPopulation::value_type::TV>
+template <typename TPopulation, typename TRandom>
+class CmoeaAlgorithm : public CAlgorithm<typename TPopulation::value_type::TO, typename TPopulation::value_type::TV>,  public easea::shared::CRandom<TRandom>
 {
 public:
         typedef TPopulation TPop;
@@ -28,8 +29,10 @@ public:
         typedef typename TI::TV TV;
         typedef CAlgorithm<TO, TV> TA;
         typedef typename TA::TP TP;
+	typedef TRandom TR;
 
-        CmoeaAlgorithm(TP &problem);
+
+        CmoeaAlgorithm(TR random, TP &problem, const std::vector<TV> &initial);
         virtual ~CmoeaAlgorithm(void);
         const TPop &getPopulation(void) const;
 
@@ -37,18 +40,34 @@ protected:
         TPop m_population;
 };
 
-template <typename TPopulation>
-CmoeaAlgorithm<TPopulation>::CmoeaAlgorithm(TP &problem) : TA(problem)
+template <typename TPopulation, typename TRandom>
+CmoeaAlgorithm<TPopulation, TRandom>::CmoeaAlgorithm(TR random, TP &problem, const std::vector<TV> &initial) : TA(problem)
+											 , easea::shared::CRandom<TR>(random)    
+{
+        m_population.resize(initial.size());
+        static std::uniform_real_distribution<TO> dist(0, 0.99);
+        
+	for (size_t i = 0; i < initial.size(); ++i)
+        {
+                TI &individual = m_population[i];
+                individual.m_variable = initial[i];
+                individual.m_mutStep.resize(individual.m_variable.size());
+                for(size_t j = 0; j < individual.m_variable.size(); j++)
+                        individual.m_mutStep[j] = dist(random);
+
+                TA::getProblem()(individual);
+        }
+        
+
+}
+
+template <typename TPopulation, typename TRandom>
+CmoeaAlgorithm<TPopulation, TRandom>::~CmoeaAlgorithm(void)
 {
 }
 
-template <typename TPopulation>
-CmoeaAlgorithm<TPopulation>::~CmoeaAlgorithm(void)
-{
-}
-
-template <typename TPopulation>
-const TPopulation &CmoeaAlgorithm<TPopulation>::getPopulation(void) const
+template <typename TPopulation, typename TRandom>
+const TPopulation &CmoeaAlgorithm<TPopulation, TRandom>::getPopulation(void) const
 {
         return m_population;
 }

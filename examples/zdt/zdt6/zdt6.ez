@@ -13,8 +13,6 @@ _______________________________________________________________*/
 
 \User declarations : // This section is copied on top of the output file
 
-#include <problems/CProblem.h> 
-#include <operators/crossover/C2x2CrossoverLauncher.h>
 #include <operators/crossover/continuous/CsbxCrossover.h>
 #include <operators/mutation/continuous/CPolynomialMutation.h>
 
@@ -34,24 +32,15 @@ _______________________________________________________________*/
 #define MUT_PROB  1.0/NB_VARIABLES
 #define MUT_DIST_ID 20.0
 #define QMETRICS 
-#define PARETO_TRUE_FILE "../pf/zdt4/paretoZDT4.dat " 
-#define PBLM_NAME "DTLZ4"
+#define PARETO_TRUE_FILE "../pf/zdt6/paretoZDT6M.dat" 
+#define PBLM_NAME "ZDT6"
 
-typedef std::mt19937 TRandom;
-typedef double TT;
-typedef easea::problem::CProblem<TT> TP;
-typedef TP::TV TV;
-typedef TP::TO TO;
-typedef typename easea::Individual<TT, TV> TIndividual;
-typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
 typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
-//int populationSize = 100;
 TRandom m_generator;
 TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
-TCrossover crossover(m_generator, 1, m_problem.getBoundary(), 20);
-easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
-TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), 20);
+TCrossover crossover(m_generator, 1, m_problem.getBoundary(), XOVER_DIST_ID);
+TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), MUT_DIST_ID);
 
 
 \end

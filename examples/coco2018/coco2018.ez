@@ -13,11 +13,9 @@ _______________________________________________________________*/
 
 \User declarations : // This section is copied on top of the output file
 
-#include <problems/CProblem.h> 
-#include <operators/crossover/C2x2CrossoverLauncher.h>
 #include <operators/crossover/continuous/CsbxCrossover.h>
-#include <operators/mutation/continuous/CPolynomialMutation.h>
-
+#include <operators/mutation/continuous/CSelfGaussianMutation.h>
+#include <CLogger.h>
 #include <shared/CConstant.h>
 
 
@@ -40,24 +38,15 @@ _______________________________________________________________*/
 
 #define PBLM_NAME "COCO2018"
 
-typedef std::mt19937 TRandom;
-typedef double TT;
-typedef easea::problem::CProblem<TT> TP;
-typedef TP::TV TV;
-typedef TP::TO TO;
-
-typedef typename easea::Individual<TT, TV> TIndividual;
-typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
 typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
-typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
+typedef easea::operators::mutation::continuous::pm::CSelfGaussianMutation<TT, TRandom &> TMutation;
 
 TRandom m_generator;
 
 TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
 
 TCrossover crossover(m_generator, 1, m_problem.getBoundary(), XOVER_DIST_ID);
-easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
 TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), MUT_DIST_ID);
 
 
@@ -214,7 +203,7 @@ GenomeClass {
 	coco_set_log_level("info");
         std::ostringstream ss;
         ss <<  "Running the COCO2018 experiment... (might take time, be patient)" << std::endl;
-        LOG(INFO) << ss.str() << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
 
 
         /* Set some options for the observer. See documentation for other options. */
@@ -229,26 +218,26 @@ GenomeClass {
         /* Initialize timing */
         timing_data = timing_data_initialize(suite);
 
-	LOG(INFO) << "TEST INFO:" << std::endl;
+	LOG_MSG(msgType::INFO, "TEST INFO:\n");
         /* Get the problem of the suite defined by problem_index */
         const size_t problem_index = 0;
         
         PROBLEM = coco_suite_get_next_problem(suite, observer );
         ss <<  "Problem name: " << coco_problem_get_name(PROBLEM) << std::endl;
-        LOG(INFO) <<  ss.str() << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
 
         size_t dimention = coco_problem_get_dimension(PROBLEM);
         ss <<  "Dimention: " << dimention << std::endl;
-        LOG(INFO) << ss.str() << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
 
 
         int nbObj = coco_problem_get_number_of_objectives(PROBLEM);
         ss <<  "Number of objectives: " << nbObj << std::endl;
-        LOG(INFO) << ss.str() << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
 
         int nbConst = coco_problem_get_number_of_constraints(PROBLEM);
         ss <<  "Number of constraints: " << nbConst << std::endl;
-        LOG(INFO) << ss.str() << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
 	
 	/*
 
@@ -281,7 +270,7 @@ GenomeClass {
   
 	std::ostringstream ss;
 	ss <<  "TEST DONE" << std::endl;
-	LOG(INFO) << COLOR(green) << ss.str() << std::endl << COLOR(none);
+	LOG_MSG(msgType::INFO, ss.str());
 
 
 \end

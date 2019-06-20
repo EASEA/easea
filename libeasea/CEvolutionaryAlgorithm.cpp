@@ -28,7 +28,6 @@
 #include "include/global.h"
 #include "include/CComUDPLayer.h"
 #include "include/CRandomGenerator.h"
-#include <third_party/aixlog/aixlog.hpp>
 #include <stdio.h>
 #include <sstream>
 #include <iostream>
@@ -109,20 +108,17 @@ void childHandler(int signum)
         {
             if(WIFEXITED(status)){
                 ss << "Display process catched exiting signal and was stopped" << std::endl;
-		LOG(WARNING) << AixLog::Color::yellow << ss.str() << std::endl;
-		//LOG_MSG(msgType::WARNING, ss.str());
+		LOG_MSG(msgType::WARNING, ss.str());
 		done = 0;
         }
         else if (WIFSIGNALED(status)){
                 ss << "Display process catched terminating signal and was stopped" << std::endl;
-		LOG(WARNING) << AixLog::Color::yellow << ss.str() << std::endl; 
-		//LOG_MSG(msgType::WARNING, ss.str());
+		LOG_MSG(msgType::WARNING, ss.str());
                 done = 0;
         }
         else if (WIFSTOPPED(status)){
                  ss << "Display process catched stopping signal and was stopped" << std::endl;
-		 LOG(WARNING) << AixLog::Color::yellow << ss.str() << std::endl;
-		 //LOG_MSG(msgType::WARNING, ss.str());
+		 LOG_MSG(msgType::WARNING, ss.str());
                  done = 0;
         }
 
@@ -132,8 +128,9 @@ void childHandler(int signum)
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	
-	initLogger();
-	LOG(INFO) << COLOR(green) << "EASEA Starting...." << std::endl << COLOR(none);
+	ostringstream ss;
+	ss << "EASEA Starting...."<< std::endl;
+	LOG_MSG(msgType::WARNING, ss.str());
 
 	this->params = params;
 	this->cstats = new CStats();
@@ -526,41 +523,6 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   this->cstats->resetCurrentStats();
 }
 
-  void CEvolutionaryAlgorithm::initLogger()
-  {
-    AixLog::Log::init<AixLog::SinkCout>(AixLog::Severity::trace, AixLog::Type::normal);
-    LOG(INFO) << "EASEA Logger starting..." << std::endl;
-    
-    AixLog::Log::init(
-    {
-      // Log fatals, errors, warnings and spacial info messages to easea.log
-      std::make_shared<AixLog::SinkFile>(AixLog::Severity::fatal, AixLog::Type::all, "easea.log"),
-   //   std::make_shared<AixLog::SinkFile>(AixLog::Severity::error, AixLog::Type::all, "easea.log"),
-  //  std::make_shared<AixLog::SinkFile>(AixLog::Severity::warning, AixLog::Type::all, "easea.log"),
-      std::make_shared<AixLog::SinkFile>(AixLog::Severity::info, AixLog::Type::special, "easea.log"),
-      // Log normal info logs to cout
-      std::make_shared<AixLog::SinkCout>(AixLog::Severity::trace, AixLog::Type::all, "EASEA: [%Y-%m-%d %H-%M-%S.#ms] [#severity] #message"),
-     // std::make_shared<AixLog::SinkCout>(AixLog::Severity::warning, AixLog::Type::all, "EASEA: [%Y-%m-%d %H-%M-%S.#ms] [#severity] #message"),
-      //std::make_shared<AixLog::SinkCout>(AixLog::Severity::debug, AixLog::Type::normal, "EASEA: [%Y-%m-%d %H-%M-%S.#ms] [#severity] #message"),
-      
-      // Callback log with cout logging in a lambda function
-      std::make_shared<AixLog::SinkCallback>(AixLog::Severity::error, AixLog::Type::all,
-                                             [](const AixLog::Metadata& metadata, const std::string& message)
-                                             {
-                                               std::cout << "EASEA: " << " [" << metadata.timestamp.to_string() << "] " << COLOR(red) << 
-                                                 "Error happened in file: " << metadata.function.file << " func: " <<  metadata.function.name << " [line: " <<  metadata.function.line << "]" << COLOR(none) << std::endl; 
-                                             }
-      ),
-      // Callback log with cout logging in a lambda function
-      std::make_shared<AixLog::SinkCallback>(AixLog::Severity::fatal, AixLog::Type::all,
-                                             [](const AixLog::Metadata& metadata, const std::string& message)
-                                             {
-                                               std::cout << "EASEA: " << " [" << metadata.timestamp.to_string() << "] " << COLOR(red) << AixLog::Log::to_string(metadata.severity)<<
-                                                 " in " <<  metadata.function.name << " [" <<  metadata.function.line << "] :" << message << COLOR(none) << std::endl; 
-                                             }
-      )
-    });
-  }  
   
 //REMOTE ISLAND MODEL FUNCTIONS
 void CEvolutionaryAlgorithm::initializeClients(){

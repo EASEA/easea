@@ -16,7 +16,7 @@
 #include <vector>
 #include <list>
 #include <numeric>
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 
 
 namespace easea
@@ -33,11 +33,7 @@ namespace function
 template <typename TType>
 void ndi(const size_t component, const size_t division, std::vector<TType> &point, std::list<std::vector<TType> > &points)
 {
-        if (component <= 0 && component >= point.size()) 
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong component size " << component  << std::endl << COLOR(none);
-		exit(-1);
-	}
+        if (component <= 0 && component >= point.size()) LOG_ERROR(errorCode::value, "Wrong component size");
         if (component == point.size() - 1)
         {
                 point[component] = 1 - std::accumulate(point.begin(), --point.end(), (TType)0);
@@ -45,11 +41,7 @@ void ndi(const size_t component, const size_t division, std::vector<TType> &poin
         }
         else
         {
-                if (division <= 1)
-		{
-			LOG(ERROR) << COLOR(red) << "Wrong division value: " << division  << std::endl << COLOR(none);
-			exit(-1);
-		}
+                if (division <= 1) LOG_ERROR(errorCode::value, "Wrong division value");
                 for (size_t i = 0; i <= division; ++i)
                 {
                         point[component] = (TType)i / division;
@@ -63,11 +55,7 @@ void ndi(const size_t component, const size_t division, std::vector<TType> &poin
 template <typename TType>
 std::list<std::vector<TType> > runNbi(const size_t nbObjectives, const size_t division)
 {
-        if (nbObjectives <= 1)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong number of objectives: " << nbObjectives << std::endl << COLOR(none);
-		exit(-1);
-	}
+        if (nbObjectives <= 1)	LOG_ERROR(errorCode::value, "Wrong number of objectives");
 
         std::list<std::vector<TType> > points;
         std::vector<TType> point(nbObjectives);

@@ -15,7 +15,7 @@
 #include <random>
 #include <utility>
 #include <vector>
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 
 
 namespace easea
@@ -32,10 +32,7 @@ std::vector<TType> getUniform(TRandom &random, const std::vector<std::pair<TType
         for (size_t i = 0; i < individual.size(); ++i)
         {
                 if (boundary[i].first >= boundary[i].second)
-                {
-                        LOG(ERROR) << COLOR(red) << "Wrong boundary values: " << boundary[i].first << " " << " " << boundary[i].second << std::endl;
-                        exit(-1);
-                }
+                LOG_ERROR(errorCode::value,  "Wrong boundary values");
                 std::uniform_real_distribution<TType> dist(boundary[i].first, boundary[i].second);
                 individual[i] = dist(random);
         }

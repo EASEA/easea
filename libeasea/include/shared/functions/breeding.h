@@ -34,7 +34,7 @@ std::vector<typename std::iterator_traits<TIter>::pointer> runSelection(const si
         {
                 TIter src = begin;
                 for (size_t i = 0; i < parent.size(); ++i, ++src)
-                        parent[i] = &*src;
+                        parent[i] = &*src; 
         }
 
         std::vector<TPtr> selected(offspringSize);
@@ -61,17 +61,15 @@ void runCrossover(std::vector<TI> &offspring, const std::vector<TPtr> &parent, e
                 i_offspring[i] = &offspring[i];
         
 	crossover(i_parent,i_offspring);
+
 }
 
 template <typename TIter, typename TRandom, typename TComparator>
 std::vector<typename std::iterator_traits<TIter>::value_type> runBreeding(const size_t offspringSize, TIter begin, TIter end, TRandom &random, TComparator comparator, easea::operators::crossover::CCrossover<typename std::iterator_traits<TIter>::value_type::TO, typename std::iterator_traits<TIter>::value_type::TV> &crossover)
 {
         typedef typename std::iterator_traits<TIter>::value_type TI;
-
         const auto selected = runSelection(offspringSize, begin, end, random, comparator);
-
         std::vector<TI> offspring(selected.size());
-
         runCrossover(offspring, selected, crossover);
 
         return offspring;

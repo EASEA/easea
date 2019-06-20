@@ -17,7 +17,7 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 #include <core/CmoIndividual.h>
 #include <shared/CBoundary.h>
 
@@ -65,15 +65,15 @@ private:
 template <typename TType>
 CProblem<TType>::CProblem(const size_t nObjectives, const size_t nVariables, const TBoundary &boundary) : easea::shared::CBoundary<TO>(boundary)
 {
-        if (nObjectives < 0){
-		LOG(ERROR) << COLOR(red) << "Wrong number of objectives: " << nObjectives << std::endl << COLOR(none);
-    		exit(-1);
-	}
+        if (nObjectives < 0)
+		LOG_ERROR(errorCode::value, "Wrong number of objectives");
+
+	
 	m_nObjectives = nObjectives;
 	
-	if (nVariables < 1){
-		LOG(ERROR) << COLOR(red) << "Wrong number of variables: " << nVariables << std::endl << COLOR(none);
-	}
+	if (nVariables < 1)
+		LOG_ERROR(errorCode::value, "Wrong number of variables");
+
 	m_nVariables = nObjectives - 1 + nVariables;
 
         m_nEvaluations = 0;
@@ -126,16 +126,14 @@ size_t CProblem<TType>::getNumberOfEvaluations(void) const
 template <typename TType>
 void CProblem<TType>::operator ()(TI &individual)
 {	
-        if (!this->isInside(individual.m_variable)){
-		LOG(ERROR) << COLOR(red) << "Value of variable is out of bounds " << std::endl << COLOR(none);
-		exit(-1);
-	}
+        if (!this->isInside(individual.m_variable))
+		LOG_ERROR(errorCode::value, "Value of variable is out of bounds");
+
 	const size_t i_nEvaluation = individual.evaluate(); 
 
-	if (i_nEvaluation < 0){
-		LOG(ERROR) << COLOR(red) << "Number of evaluations < 0 " << std::endl << COLOR(none);
-		exit(-1);
-	}
+	if (i_nEvaluation < 0)
+		LOG_ERROR(errorCode::value, "Number of evaluations < 0");
+
         m_nEvaluations += i_nEvaluation;
 }
 }

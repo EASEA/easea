@@ -12,7 +12,7 @@
  ***********************************************************************/
 #pragma once
 
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 
 
 namespace easea
@@ -26,11 +26,7 @@ namespace helper
 template <typename TType>
 TType checkBoundary(const TType value, const TType lower, const TType upper)
 {
-        if (lower > upper)
-	{
-		LOG(ERROR) << COLOR(red) << "Wrong boundary value: lower = " << lower << " upper = " << upper << std::endl << COLOR(none);
-		exit(-1);
-	}
+        if (lower > upper)	LOG_ERROR(errorCode::value, "Wrong boundary value");
 	if (value < lower)
 		return lower;
 	else if (value > upper)

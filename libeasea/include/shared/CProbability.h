@@ -12,7 +12,7 @@
  ***********************************************************************/
 #pragma once
 
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 
 
 namespace easea
@@ -36,11 +36,7 @@ private:
 template <typename TType>
 CProbability<TType>::CProbability(const TT probability)
 {
-        if (probability < 0 && probability > 1)
-	{
-	    LOG(ERROR) << COLOR(red) << "Wrong probability value: " << probability << std::endl << COLOR(none);
-	    exit(-1);
-	}
+        if (probability < 0 && probability > 1) LOG_ERROR(errorCode::value, "Wrong probability value");
 	m_probability = probability;
 }
 

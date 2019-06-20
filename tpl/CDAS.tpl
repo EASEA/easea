@@ -68,18 +68,22 @@ int main(int argc, char** argv){
 #include <time.h>
 #include <cstring>
 #include <sstream>
+#include <chrono>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
 #include "CStoppingCriterion.h"
 #include "CEvolutionaryAlgorithm.h"
 #include "global.h"
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 
 #include <CQMetrics.h>
 #include <CQMetricsHV.h>
 #include <CQMetricsGD.h>
 #include <CQMetricsIGD.h>
+
+#include <problems/CProblem.h>
+#include <operators/crossover/C2x2CrossoverLauncher.h>
 
 #include <variables/continuous/uniform.h>
 #include <shared/CConstant.h>
@@ -96,8 +100,18 @@ bool INSTEAD_EVAL_STEP = false;
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 #define STD_TPL
+typedef std::mt19937 TRandom;
+typedef double TT;
+typedef easea::problem::CProblem<TT> TP;
+typedef TP::TV TV;
+typedef TP::TO TO;
+
+typedef typename easea::Individual<TT, TV> TIndividual;
+typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
 \INSERT_USER_DECLARATIONS
+easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
+
 \ANALYSE_USER_CLASSES
 
 
@@ -118,7 +132,7 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
-    if (m_popSize <= 0){ LOG(ERROR) << "Wrong size of parent population: " << m_popSize << std::endl; exit(-1); };
+    if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
     const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
     const size_t nbObjectives = m_problem.getNumberOfObjectives();
     const std::vector<TO> angle(nbObjectives, PI / 2);
@@ -133,7 +147,7 @@ void EASEAFinal(CPopulation* pop){
         string file = "objectives";
         std::ofstream out(file.c_str());
         cout.setf(ios::fixed);
-	LOG(INFO) << "Saving Pareto Front in "<< COLOR(green) << "file objectives" << COLOR(none) << std::endl;
+	LOG_MSG(msgType::INFO, "Saving Pareto Front in file objectives");
 
         const auto &population = m_algorithm->getPopulation();
         for (size_t i = 0; i < population.size(); ++i)
@@ -144,11 +158,11 @@ void EASEAFinal(CPopulation* pop){
     	    out << endl;
         }
         out.close();
-        LOG(INFO) << COLOR(green) << "Pareto Front is saved " << COLOR(none) << std::endl;
+        LOG_MSG(msgType::INFO, "Pareto Front is saved ");
 
 #ifdef QMETRICS
-        LOG(INFO) << "Calculating performance metrics " << std::endl;
-        LOG(INFO) << COLOR(green) << "Statistic begin" << std::endl << COLOR(none);
+        LOG_MSG(msgType::INFO, "Calculating performance metrics ");
+        LOG_MSG(msgType::INFO, "Statistic begin");
         auto metrics = make_unique<CQMetrics>("objectives", PARETO_TRUE_FILE, m_problem.getNumberOfObjectives());
         auto hv = metrics->getMetric<CQMetricsHV>();
         auto gd = metrics->getMetric<CQMetricsGD>();
@@ -159,14 +173,13 @@ void EASEAFinal(CPopulation* pop){
         << "Generational distance = " << gd << std::endl
         << "Inverted generational distance  = " << igd << std::endl;
         auto statistics = (statInfo.str());
-	LOG(INFO) << statistics << std::endl;
-        LOG(INFO) << COLOR(green) << "Statistic end" << std::endl << COLOR(none);
-
+        LOG_MSG(msgType::INFO, statistics);
+        LOG_MSG(msgType::INFO, "Statistic end");
 
 #endif
 
         delete(m_algorithm);
-	LOG(INFO) << COLOR(green) << "CDAS finished" << std::endl << COLOR(none);
+	LOG_MSG(msgType::INFO, "CDAS finished");
 }
 
 void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
@@ -271,7 +284,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	//EZ_POP_SIZE = parentPopulationSize;
 	//OFFSPRING_SIZE = offspringPopulationSize;
 //	int m_popSize = *(int *)getInputParameter("parentPopulationSize");
-	LOG(INFO) << "Parent population size: " << m_popSize << endl;
+//	LOG(INFO) << "Parent population size: " << m_popSize << endl;
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
 	ea->addStoppingCriterion(generationalCriterion);
@@ -284,19 +297,23 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	return ea;
 }
 void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
-    
-	LOG(INFO) << SPECIAL << COLOR(green) << "CDAS starting...." << COLOR(none) << std::endl;
+        LOG_MSG(msgType::INFO, "CDAS starting....");
+
 	auto tmStart = std::chrono::system_clock::now();
 
 	while( this->allCriteria() == false){
-		LOG(INFO) <<"Gen: " << currentGeneration << std::endl;
+		ostringstream ss;
+                ss << "Generation: " << currentGeneration << std::endl;
+                LOG_MSG(msgType::INFO, ss.str());
   
     		m_algorithm->run();
 		currentGeneration += 1;
 	}	
+	ostringstream ss;
 	std::chrono::duration<double> tmDur = std::chrono::system_clock::now() - tmStart;
+        ss << "Total execution time (in sec.): " << tmDur.count() << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
 
-	LOG(INFO) << SPECIAL << COLOR(green) << "Total execution time (in sec.): " << tmDur.count() << std::endl << COLOR(none);
 }
 
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){

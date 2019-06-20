@@ -1,6 +1,6 @@
 \TEMPLATE_START
 /***********************************************************************
-| NSGA-II Multi Objective Algorithm Template                            |
+| IBEA Multi Objective Algorithm Template (Epsilon)                     |
 |                                                                       |
 | This file is part of Artificial Evolution plateform EASEA             |
 | (EAsy Specification of Evolutionary Algorithms)                       |
@@ -77,15 +77,16 @@ int main(int argc, char** argv){
 #include "global.h"
 #include <CLogger.h>
 
-
 #include <CQMetrics.h>
 #include <CQMetricsHV.h>
 #include <CQMetricsGD.h>
 #include <CQMetricsIGD.h>
 #include <problems/CProblem.h>
 #include <operators/crossover/C2x2CrossoverLauncher.h>
+
 #include <variables/continuous/uniform.h>
-#include <algorithms/moea/Cnsga-ii.h>
+#include <shared/CConstant.h>
+#include <algorithms/moea/Cibea.h>
 
 
 
@@ -107,7 +108,6 @@ typedef TP::TO TO;
 typedef typename easea::Individual<TT, TV> TIndividual;
 typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
-
 \INSERT_USER_DECLARATIONS
 easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
 
@@ -119,9 +119,9 @@ easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossove
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
-typedef easea::algorithms::nsga_ii::Cnsga_ii< TIndividual, TRandom &> TAlgorithm;
-TAlgorithm *m_algorithm;
+typedef easea::algorithms::ibea::Cibea< TIndividual, TRandom &> TAlgorithm;
 size_t m_popSize = -1;
+TAlgorithm *m_algorithm;
 
 
 
@@ -131,53 +131,56 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
-    if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population");  };
+    if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
     const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
+    const size_t nbObjectives = m_problem.getNumberOfObjectives();
+    const std::vector<TO> angle(nbObjectives, PI / 2);
 
-    m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation);
+    m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation,0.05);
 
 }
 
 void EASEAFinal(CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
 /*EASEAFinalization(pop);*/
-    	string file = "objectives";
+        string file = "objectives";
         std::ofstream out(file.c_str());
         cout.setf(ios::fixed);
+	
 	LOG_MSG(msgType::INFO, "Saving Pareto Front in file objectives");
 
         const auto &population = m_algorithm->getPopulation();
         for (size_t i = 0; i < population.size(); ++i)
         {
-        	const auto &objective = population[i].m_objective;
-    		for (size_t j = 0; j < objective.size(); ++j)
-        	out << objective[j] << ' ';
-    		out << endl;
+    	    const auto &objective = population[i].m_objective;
+    	    for (size_t j = 0; j < objective.size(); ++j)
+        	    out << objective[j] << ' ';
+    	    out << endl;
         }
+        out.close();
 	LOG_MSG(msgType::INFO, "Pareto Front is saved ");
 
 #ifdef QMETRICS
         LOG_MSG(msgType::INFO, "Calculating performance metrics ");
         LOG_MSG(msgType::INFO, "Statistic begin");
-
-	auto metrics = make_unique<CQMetrics>("objectives", PARETO_TRUE_FILE, m_problem.getNumberOfObjectives());
-	auto hv = metrics->getMetric<CQMetricsHV>();
-	auto gd = metrics->getMetric<CQMetricsGD>();
-	auto igd = metrics->getMetric<CQMetricsIGD>();
-	std::ostringstream statInfo;
-	statInfo << "Quality Metrics: " << std::endl
-	<< "HyperVolume = " << hv << std::endl
-	<< "Generational distance = " << gd << std::endl
-	<< "Inverted generational distance  = " << igd << std::endl;
-	auto statistics = (statInfo.str());
+        auto metrics = make_unique<CQMetrics>("objectives", PARETO_TRUE_FILE, m_problem.getNumberOfObjectives());
+        auto hv = metrics->getMetric<CQMetricsHV>();
+        auto gd = metrics->getMetric<CQMetricsGD>();
+        auto igd = metrics->getMetric<CQMetricsIGD>();
+        std::ostringstream statInfo;
+        statInfo << "Quality Metrics: " << std::endl
+        << "HyperVolume = " << hv << std::endl
+        << "Generational distance = " << gd << std::endl
+        << "Inverted generational distance  = " << igd << std::endl;
+        auto statistics = (statInfo.str());
         LOG_MSG(msgType::INFO, statistics);
         LOG_MSG(msgType::INFO, "Statistic end");
 
-	
+
 #endif
-        out.close();
+
         delete(m_algorithm);
-	 LOG_MSG(msgType::INFO, "NSGAII finished");
+	LOG_MSG(msgType::INFO, "IBEA finished");
 
 }
 
@@ -198,7 +201,7 @@ void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 template <typename TO, typename TV>
 easea::Individual<TO, TV>::Individual(void)
 {
-        m_crowdingDistance = -1;
+        m_fitness = -std::numeric_limits<TO>::infinity();
 }
 
 template <typename TO, typename TV>
@@ -225,8 +228,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 
-        parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
-        offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
+	seed = setVariable("seed",(int)time(0));
+	globalRandomGenerator = new CRandomGenerator(seed);
+	this->randomGenerator = globalRandomGenerator;
 
 	pCrossover = \XOVER_PROB;
 	pMutation = \MUT_PROB;
@@ -279,9 +283,10 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	pEZ_XOVER_PROB = &pCrossover;
 	//EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
 	EZ_current_generation=0;
-  EZ_POP_SIZE = parentPopulationSize;
-  OFFSPRING_SIZE = offspringPopulationSize;
-
+	//EZ_POP_SIZE = parentPopulationSize;
+	//OFFSPRING_SIZE = offspringPopulationSize;
+//	int m_popSize = *(int *)getInputParameter("parentPopulationSize");
+//	LOG(INFO) << "Parent population size: " << m_popSize << endl;
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
 	ea->addStoppingCriterion(generationalCriterion);
@@ -291,28 +296,26 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
 	EZ_current_generation=&(ea->currentGeneration);
 
-	 return ea;
+	return ea;
 }
 void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
-	LOG_MSG(msgType::INFO, "NSGAII starting....");
+        LOG_MSG(msgType::INFO, "IBEA starting....");
 
 	auto tmStart = std::chrono::system_clock::now();
 
 	while( this->allCriteria() == false){
                 ostringstream ss;
                 ss << "Generation: " << currentGeneration << std::endl;
-                LOG_MSG(msgType::INFO, ss.str());
-
-	        m_algorithm->run();
-    		currentGeneration += 1;
-	}
+                LOG_MSG(msgType::INFO, ss.str());  
+    		m_algorithm->run();
+		currentGeneration += 1;
+	}	
         ostringstream ss;
         std::chrono::duration<double> tmDur = std::chrono::system_clock::now() - tmStart;
         ss << "Total execution time (in sec.): " << tmDur.count() << std::endl;
         LOG_MSG(msgType::INFO, ss.str());
 
 }
-
 
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 /*const std::vector<TV> initial = easea::variables::continuous::uniform(generator, problem.getBoundary(), \POP_SIZE);
@@ -414,6 +417,7 @@ public:
         typedef CmoIndividual<TO, TV> TI;
 
         TO m_crowdingDistance;
+	TO m_fitness;
 	float fitness; 		// this is variable for return the value 1 from function evaluate()
 
 

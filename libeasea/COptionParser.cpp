@@ -12,7 +12,7 @@
 #include <sstream>
 #include "include/COptionParser.h"
 #include <third_party/cxxopts/cxxopts.hpp>
-#include <third_party/aixlog/aixlog.hpp>
+#include <CLogger.h>
 #include "include/define.h"
 
 
@@ -36,12 +36,10 @@ TypeVariable setVariable(const std::string argumentName, TypeVariable defaultVal
     if (vm->count(argumentName)){
         auto ptr = *vm;
         ret = ptr[argumentName].as<TypeVariable>();
-        //LOG(INFO) << argumentName << " is declared in user command line as " << ret << std::endl;
         return ret;
     }else if( vm_file->count(argumentName) ){
         auto ptr = *vm_file;
         ret = ptr[argumentName].as<TypeVariable>();
-        //LOG(INFO) << argumentName << " is declared in configuration file as " << ret << std::endl;
         return ret;
      }else {
         ret = defaultValue;
@@ -147,7 +145,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         vm = std::make_unique<cxxopts::ParseResult>(move(vm_value));
         if (vm->count("help")) {
             ostringstream msg;
-            LOG(INFO) << options.help({""}) << std::endl;
+            LOG_MSG(msgType::INFO,options.help({""}));
 	    exit(1);
         }
         if(parametersFileName){
@@ -157,8 +155,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
     }
     catch(const cxxopts::OptionException& e){
         ostringstream msg;
-        LOG(ERROR)  << e.what() << std::endl;
-        //LOG_ERROR(errorCode::value, msg.str());
+        LOG_ERROR(errorCode::value, msg.str());
   }
 
     for(auto i = 0 ; i<argc ; i++)

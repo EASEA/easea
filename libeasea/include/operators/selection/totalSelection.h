@@ -13,6 +13,7 @@
 #pragma once
 
 #include <list>
+#include <CLogger.h>
 #include <shared/CConstant.h>
 #include <shared/functions/dominance.h>
 
@@ -34,7 +35,7 @@ namespace selection
 template <typename TI, typename TIter>
 TIter totalSelection(std::vector<TI> &donorPop, TIter recipPopBegin, TIter recipPopEnd)
 {
-        if (donorPop.size() > std::distance(recipPopBegin, recipPopEnd)) 	LOG_FATAL("Donor populaton size must be smaller or the same as the recipient population!");
+        if (donorPop.size() > std::distance(recipPopBegin, recipPopEnd)) 	LOG_ERROR(errorCode::value, "Donor populaton size must be smaller or the same as the recipient population!");
 
         TIter selected = recipPopBegin;
 		if (std::distance(selected, recipPopEnd) > donorPop.size())

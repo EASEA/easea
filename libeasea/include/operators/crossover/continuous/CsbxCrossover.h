@@ -146,6 +146,14 @@ template <typename TType, typename TRandom>
 void CsbxCrossover<TType, TRandom>::runCrossover(const TI &parent1, const TI &parent2, TI &offspring1, TI &offspring2)
 {
 	launch(parent1.m_variable, parent2.m_variable, offspring1.m_variable, offspring2.m_variable);
+        offspring1.m_mutStep.resize(parent1.m_mutStep.size());
+        offspring2.m_mutStep.resize(parent2.m_mutStep.size());
+        for (size_t i = 0; i < this->getBoundary().size(); ++i)
+        {
+                offspring1.m_mutStep[i] = parent1.m_mutStep[i];
+                offspring2.m_mutStep[i] = parent2.m_mutStep[i];
+        }
+
 }
         
 template <typename TType, typename TRandom>
