@@ -9,7 +9,7 @@ To use one of these platforms, you just have to use files with the correct file 
 
 The program will detect them and basculate in the correct mode.
 
-#### Requirements
+## Requirements
 
 This project required you to have cmake, flex, bison, valgrind, gunzip and wget installed:
 
@@ -22,14 +22,14 @@ On mac osx, you have to install first **brew**  (that implies CLT of xcode and p
 
 C++ compiler that supports at least C++14 such as **gcc** : EASENA has been developped with gcc and not tested with clang yet.
 
-#### Quick start on LINUX
+## Quick start on LINUX
 
 - cmake **.**
 - make (*Optionnal* -j 4) 
 - (*Optionnal*) make install : sudo could be necessary
 - Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
 
-#### Quick start on MAC OSX
+## Quick start on MAC OSX
 
 On Mojave, gcc 9 is installed by default by brew. If another version of gcc is installed, version # for instance, you just have to modify the following part of the next cmake command : gcc@**#**/bin/gcc-**#**.
 
