@@ -5,7 +5,7 @@ In this beta version, EASENA platform contains two engines within one program: E
 - The EASEA compiler (for artificial evolution) is automatically used on files using extension .ez
 - The EASNA platform (for neural networks) is automatically used on files using extension .nz
 
-## Requirements
+## Requirements for using EASENA without GPU cards
 
 EASENA requires at least a g++ 5.0 version (or later).
 
@@ -21,7 +21,11 @@ On MacOSX, type :
 $ brew install flex bison gunzip wget cmake
 ```
 
-Latest MacOSX Mojave is not compliant with valgrind, that is why valgrind tests are limited to linux operating systems.
+The latest MacOSX Mojave system is not compliant with valgrind, which is why valgrind tests are limited to linux operating systems.
+
+## Requirements for using EASENA with GPU cards
+
+Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone
 
 ## Quick start on LINUX
 
@@ -41,7 +45,10 @@ On Mojave, gcc 9 is installed by default by brew. If another version of gcc is i
 
 Or simply, run the script *apple.sh* that will exactly launch the two first commands.
 
-Currently, only the easna part is functionnal under Apple's macosx.
+Currently, only the easna part is functional under Apple's macosx.
+
+# Congratulations, you can now use EASENA
+======
 
 # EASEA -- EAsy Specification of Evolutionary Algorithms
 
