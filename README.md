@@ -14,12 +14,12 @@ EASENA requires at least:
 
 Then, on linux (ubuntu), type :
 ```
-$ sudo apt-get install flex bison valgrind gunzip wget cmake
+sudo apt-get install flex bison valgrind gunzip wget cmake
 ```
 
 On MacOSX, type :
 ```
-$ brew install flex bison gunzip wget cmake
+brew install flex bison gunzip wget cmake
 ```
 
 The latest MacOSX Mojave system is not compliant with valgrind, which is why valgrind tests are limited to linux operating systems.
