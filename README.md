@@ -30,28 +30,45 @@ Please install CUDA using the following link: https://developer.nvidia.com/cuda-
 
 ## Quick start on LINUX
 
-- cmake **.**
-- make -j 4 
+First, run in terminal from the download directory :
+```
+cmake .
+make -j 4
+```
 
-For a local installation:
-- Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+For a system installation, run also, else skip this step :
+```
+sudo make install
+```
 
-For a system installation:
-- make install  // sudo could be necessary
-- EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+Finally, set EZ_PATH variables and update your PATH. If you use bash, update .bashrc in your home :
+```
+export EZ_PATH="/usr/local/easena/"
+export PATH="$PATH:/usr/local/easena/bin"
+```
 
 ## Quick start on MAC OSX
 
 On Mojave, gcc 9 is installed by default by brew. If another version of gcc is installed, version # for instance, you just have to modify the following part of the next cmake command : gcc@**#**/bin/gcc-**#**.
 
-- cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" **.** 
-- make (*Optional* -j 4)
-- (*Optional*) make install : sudo could be necessary
-- Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+First, run in terminal from the download directory :
+```
+cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" **.** 
+make -j 4
+```
+
+For a system installation, run also, else skip this step :
+```
+sudo make install
+```
+
+Finally, set EZ_PATH variables and update your PATH. If you use bash, update .bashrc in your home :
+```
+export EZ_PATH="/usr/local/easena/"
+export PATH="$PATH:/usr/local/easena/bin"
+```
 
 Or simply, run the script *apple.sh* that will exactly launch the two first commands.
-
-Currently, only the easna part is functional under Apple's macosx.
 
 # ----- Congratulations, you can now use EASENA -----
 ----
