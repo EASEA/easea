@@ -43,7 +43,7 @@ Or simply, run the script *apple.sh* that will exactly launch the two first comm
 
 Currently, only the easna part is functionnal under Apple's macosx.
 
-# EASEA -- EAsy Specification of Evolutionnary Algorithms
+# EASEA -- EAsy Specification of Evolutionary Algorithms
 
 ## Overview
 
