@@ -7,9 +7,8 @@ In this beta version, EASENA platform contains two engines within one program: E
 
 ## Requirements
 
-EASENA requires at least a g++ 5.0 version (or later). For MacOSX users, first install **brew** in order to install gcc with brew.
-
-This project requires you to have cmake, flex, bison, valgrind, gunzip and wget installed:
+EASENA requires at least a g++ 5.0 version (or later).
++++ For MacOSX users, first install **brew** in order to install gcc with brew. +++
 
 On linux :
 ```
