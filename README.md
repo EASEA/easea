@@ -8,21 +8,20 @@ In this beta version, EASENA platform contains two engines within one program: E
 ## Requirements
 
 EASENA requires at least a g++ 5.0 version (or later).
-+++ For MacOSX users, first install **brew** in order to install gcc with brew. +++
 
-On linux (ubuntu) :
+* For MacOSX users, first install **brew** in order to install gcc with brew. *
+
+On linux (ubuntu), type :
 ```
 $ sudo apt-get install flex bison valgrind gunzip wget cmake
 ```
 
-On MacOSX :
+On MacOSX, type :
 ```
 $ brew install flex bison gunzip wget cmake
 ```
 
-On mac osx, you have to install first **brew**  (that implies CLT of xcode and potentially xcode) and then, to install gcc, bison and wget through brew. Latest mac osx Mojave is not compliant with valgrind, that's why valgrind's tests are limited to linux operating systems.
-
-C++ compiler that supports at least C++14 such as **gcc** : EASENA has been developped with gcc and not tested with clang yet.
+Latest MacOSX Mojave is not compliant with valgrind, that is why valgrind tests are limited to linux operating systems.
 
 ## Quick start on LINUX
 
