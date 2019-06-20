@@ -1,17 +1,15 @@
 EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 ===============================================
 
-Below, EASEA and EASNA are presented as two platforms in development within one program. For further details, go in the corresponding part of this README.
-
-To use one of these platforms, you just have to use files with the correct file extension :
-- **.ez**, in order to use EASEA ;
-- **.nz**, in order to use EASNA.
-
-The program will detect them and basculate in the correct mode.
+In this beta version, EASENA contains two compilers within one program: EASEA and EASNA.
+- The EASEA compiler (for artificial evolution) is automatically used on files with extension .ez
+- The EASNA compiler (for neural networks) is automatically used on files with a .nz extension.
 
 ## Requirements
 
-This project required you to have cmake, flex, bison, valgrind, gunzip and wget installed:
+EASENA requires at least a g++ 5.0 version (or later).
+
+This project requires you to have cmake, flex, bison, valgrind, gunzip and wget installed:
 
 On linux :
 ```
