@@ -39,8 +39,8 @@ Please install CUDA using the following link: https://developer.nvidia.com/cuda-
 On Mojave, gcc 9 is installed by default by brew. If another version of gcc is installed, version # for instance, you just have to modify the following part of the next cmake command : gcc@**#**/bin/gcc-**#**.
 
 - cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" **.** 
-- make (*Optionnal* -j 4)
-- (*Optionnal*) make install : sudo could be necessary
+- make (*Optional* -j 4)
+- (*Optional*) make install : sudo could be necessary
 - Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
 
 Or simply, run the script *apple.sh* that will exactly launch the two first commands.
