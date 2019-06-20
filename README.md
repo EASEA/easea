@@ -1,4 +1,4 @@
-EASENA -- EAsy Specification of Evolutionnary and Neural Algorithms
+EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 ===============================================
 
 Below, EASEA and EASNA are presented as two platforms in development within one program. For further details, go in the corresponding part of this README.
