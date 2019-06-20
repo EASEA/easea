@@ -8,7 +8,7 @@ In this beta version, EASENA platform contains two engines within one program: E
 ## Requirements for using EASENA without GPU cards
 
 - EASENA requires at least a g++ 5.0 version (or later).
-  - * For MacOSX users, first install **brew** in order to install gcc with brew. *
+  - For MacOSX users, first install **brew** in order to install gcc with brew.
 - java jre 1.6 (or later) for graph results visualisation of single objective evolutionary runs
 
 Then, on linux (ubuntu), type :
