@@ -1,48 +1,79 @@
-EASENA -- EAsy Specification of Evolutionnary and Neural Algorithms
+EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 ===============================================
 
-Below, EASEA and EASNA are presented as two platforms in development within one program. For further details, go in the corresponding part of this README.
+In this beta version, EASENA platform contains two engines within one program: EASEA and EASNA.
+- The EASEA compiler (for artificial evolution) is automatically used on files using extension .ez
+- The EASNA platform (for neural networks) is automatically used on files using extension .nz
 
-To use one of these platforms, you just have to use files with the correct file extension :
-- **.ez**, in order to use EASEA ;
-- **.nz**, in order to use EASNA.
+## Requirements for using EASENA without GPU cards
 
-The program will detect them and basculate in the correct mode.
+EASENA requires at least:
+- g++ 5.0 version (or later).
+  - For MacOSX users, first install **brew** in order to install gcc with brew.
+- java jre 1.6 (or later) for graph results visualisation of single objective evolutionary runs. You can get it here: https://www.java.com/download/
 
-#### Requirements
-
-This project required you to have cmake, flex, bison, valgrind, gunzip and wget installed:
-
-On linux :
+Then, on linux (ubuntu), type :
 ```
-$ sudo apt-get install flex bison valgrind gunzip wget cmake
+sudo apt-get install flex bison valgrind gunzip wget cmake
 ```
 
-On mac osx, you have to install first **brew**  (that implies CLT of xcode and potentially xcode) and then, to install gcc, bison and wget through brew. Latest mac osx Mojave is not compliant with valgrind, that's why valgrind's tests are limited to linux operating systems.
+On MacOSX, type :
+```
+brew install flex bison gunzip wget cmake
+```
 
-C++ compiler that supports at least C++14 such as **gcc** : EASENA has been developped with gcc and not tested with clang yet.
+The latest MacOSX Mojave system is not compliant with valgrind, which is why valgrind tests are limited to linux operating systems.
 
-#### Quick start on LINUX
+## Requirements for using EASENA with GPU cards
 
-- cmake **.**
-- make (*Optionnal* -j 4) 
-- (*Optionnal*) make install : sudo could be necessary
-- Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone
 
-#### Quick start on MAC OSX
+## Quick start on LINUX
+
+First, run in terminal from the download directory :
+```
+cmake .
+make -j 4
+```
+
+For a system installation, run also, else skip this step :
+```
+sudo make install
+```
+
+Finally, set EZ_PATH variables and update your PATH. If you use bash, update .bashrc in your home :
+```
+export EZ_PATH="/usr/local/easena/"
+export PATH="$PATH:/usr/local/easena/bin"
+```
+
+## Quick start on MAC OSX
 
 On Mojave, gcc 9 is installed by default by brew. If another version of gcc is installed, version # for instance, you just have to modify the following part of the next cmake command : gcc@**#**/bin/gcc-**#**.
 
-- cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" **.** 
-- make (*Optionnal* -j 4)
-- (*Optionnal*) make install : sudo could be necessary
-- Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+First, run in terminal from the download directory :
+```
+cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" **.** 
+make -j 4
+```
+
+For a system installation, run also, else skip this step :
+```
+sudo make install
+```
+
+Finally, set EZ_PATH variables and update your PATH. If you use bash, update .bashrc in your home :
+```
+export EZ_PATH="/usr/local/easena/"
+export PATH="$PATH:/usr/local/easena/bin"
+```
 
 Or simply, run the script *apple.sh* that will exactly launch the two first commands.
 
-Currently, only the easna part is functionnal under Apple's macosx.
+# ----- Congratulations, you can now use EASENA -----
+----
 
-# EASEA -- EAsy Specification of Evolutionnary Algorithms
+# EASEA -- EAsy Specification of Evolutionary Algorithms
 
 ## Overview
 
