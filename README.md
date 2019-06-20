@@ -31,9 +31,14 @@ Please install CUDA using the following link: https://developer.nvidia.com/cuda-
 ## Quick start on LINUX
 
 - cmake **.**
-- make (*Optional* -j 4) 
-- (*Optional*) make install : sudo could be necessary
+- make -j 4 
+
+For a local installation:
 - Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+
+For a system installation:
+- make install  // sudo could be necessary
+- EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
 
 ## Quick start on MAC OSX
 
