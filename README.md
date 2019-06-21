@@ -14,13 +14,16 @@ EASENA requires at least:
 
 Then, on linux (ubuntu), type :
 ```
-sudo apt-get install flex bison valgrind gunzip wget cmake
+sudo apt-get install flex bison valgrind gunzip wget cmake r-base
 ```
+Install scatterplot3d in R shell: install.packages("scatterplot3d")
+
 
 On MacOSX, type :
 ```
-brew install flex bison gunzip wget cmake
+brew install flex bison gunzip wget cmake r
 ```
+Install scatterplot3d in R shell: install.packages("scatterplot3d")
 
 The latest MacOSX Mojave system is not compliant with valgrind, which is why valgrind tests are limited to linux operating systems.
 
@@ -94,16 +97,16 @@ Then, for very large problems, EASEA can also exploit computational ecosystems a
 
 ## Changes
 
-- Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, NSGA-III, CDAS, ASREA
+- Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, NSGA-III, CDAS, ASREA, IBEA
 - Deleted boost
 - Added the lightweight C++ command line option parser from opensource https://github.com/jarro2783/cxxopts
-- Added the lightweight C++ logger from opensource https://github.com/badaix/aixlog
+- Added a simple logger 
 - Added event handler and fixed bug when the program is not responding after 1093 evaluations.
 - Fixed some bugs in template CUDA_GP.tpl for island model.
 - Added in libeasea three performance metrics: HV, GD, IGD 
 - Added in libeasea 2-objective tests (ZDT) and 3-objective tests (DTLZ)
 - Added in libeasea following crossover operators: SBX
-- Added in libeasea following mutation operators: Polynomial
+- Added in libeasea following mutation operators: Polynomial, Gaussian
 - Added in libeasea following selector operators: binary tournament (based on dominance comparison and crowding distance comparison)
 - Added in libeasea dominance estimator and crowdind distance estimator
 - Added in libeasea crowding archive 
@@ -140,6 +143,13 @@ in order to induce appropriate ranking of solutions and improve the performance.
 ```
 $ easena -cdas any_benchmark.ez 
 ```
+- IBEA
+Indicator based evolutionary algorithm (tpl/IBEA.tpl).
+IBEA is based on progressively improvement the indicator function.
+In current template the IBEA is based of the epsilon indicator. 
+```
+$ easena -ibea any_benchmark.ez
+```
 
 ## Benchmark Suite
 
@@ -165,15 +175,7 @@ The problem has to be defined in dtlz1.ez file as follow:
 
 - In order to define initial settings (normally they are the same) :
 ```
-typedef double TT;                                      // Type of decision variablse (here it is double, could be float or int)
-typedef std::mt19937 TRandom;                           // Random generator
-typedef easea::problem::CProblem<TT> TP;                // Common problem type with selected type if decision variable
-typedef TP::TV TV;                                      // don't change
-typedef TP::TO TO;                                      // don't change
-typedef typename easea::Individual<TO, TV> TIndividual; // Individual type : TO - type of objective, TV - type of decision variable
-typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;     // Boundary for decision variable
 TRandom m_generator					// random generator
-TBoundary m_boundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)) 
 ```
 
 - In order to define a number of decision veriable and a number of objectives :
@@ -200,7 +202,6 @@ typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRan
  */
 TCrossover crossover(m_generator, 1, m_boundary, XOVER_DIST_ID);
 
-easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
 /*
  * To define mutation operator parameters
  * param[in 1] - random generator
@@ -219,7 +220,8 @@ TMutation m_mutation(m_generator, 1 / m_boundary.size(), m_boundary, MUT_DIST_ID
  * param[in 3] - problem boundary
  *
  */
-TP m_problem(NB_OBJECTIVES, NB_VARIABLES, m_boundary);
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
+
 ```
 - In order to define some additional finctions, section \User functions has to be used.
 
@@ -239,8 +241,8 @@ TP m_problem(NB_OBJECTIVES, NB_VARIABLES, m_boundary);
 
 ```
 Important to know:
-m_variable - decision variable of every individual ,
-m_objective - value of objective functions for every individual.
+m_variable - vector of decision variable of every individual ,
+m_objective - vector of objective functions for every individual.
 
 After following instructions above, the problem is defined. Now you will be able to compile and run your program:
 
