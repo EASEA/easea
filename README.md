@@ -24,7 +24,7 @@ EASEA requires at least:
     - r-package scatterplot3d is required. To install scatterplot3d in R shell : <br>
        - you can run R shell by type in command line : <tt>$ r</tt>
        - then in R shell, type following : <tt>install.packages("scatterplot3d")</tt>
- - For using EASENA with GPU cards :
+  - For using EASENA with GPU cards :
     - CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing.
 
 
