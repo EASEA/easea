@@ -12,8 +12,8 @@ For installation EASENA and package dependencies, you will need administrator pr
  
 EASEA requires at least:
 - For linux users MUST be installed :
--- g++ 5.0 version (or later)
--- package dependencies : cmake, flex, bison, valgrind, gunzip, wget, r-base
+* g++ 5.0 version (or later)
+* package dependencies : cmake, flex, bison, valgrind, gunzip, wget, r-base
 - For MacOSX users MUST be installed :
 -- gcc 9 must be installed
 -- package dependencies : xcode, Command Tools, llvm, libomp, r
