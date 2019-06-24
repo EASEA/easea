@@ -37,7 +37,7 @@ EASEA requires at least:
 <tt>$ git clone https://github.com/EASEA/easea.git</tt>
 - If EASENA was downloaded, in the same terminal window, cd to the directory where zip file was downloaded and expand the zip file :<br>
 <tt>$ unzip downloaded_file_name.zip</tt> 
-- Go to unziped direcory : <tt>cd easea</tt>
+- Go to unziped direcory : <tt>cd easea</tt> or <tt>cd easea-master</tt>
 - To configure EASENA platform for the architecture of your computer, type in command line (from current directory):<br>
 <tt> $ cmake ./</tt> 
 - To compile the EASENA platform, type :<br>
@@ -63,8 +63,10 @@ First, open a terminal window and install dependencies in the command line of th
 - Install other package dependencies : <tt>$ brew install flex bison gunzip wget cmake</tt>
 - If you need, install optional dependencies as it was shown in section Requirements
 
+The latest MacOSX Mojave system is not compliant with valgrind, which is why valgrind tests are limited to linux operating systems.
 Then configure, compile and install EASENA.
-From easea direcotry run in the terminal command line following commands :
+Make sure that you are in easea or easea-master directory.<br>
+From current direcotry run in the terminal command line following commands :
 - <tt>$ cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" .</tt>
 - <tt>$ make</tt>
 - <tt>$ sudo make install</tt>
@@ -76,53 +78,15 @@ export LDFLAGS="-L/usr/local/opt/llvm/lib -L/usr/local/opt/libomp/lib"
 export CXX="/usr/local/opt/gcc@9/bin/g++-9"
 </pre>
 
-The latest MacOSX Mojave system is not compliant with valgrind, which is why valgrind tests are limited to linux operating systems.
+## Testing you installation
+
+If typing <tt>$ easena</tt> in the command line of terminal does not start the EASENA compiler, please check out the value of these variables and make sure they point to the good directories.
+If the <tt>Usage</tt> tool appears, it means the installation was successful.
 
 
-## Quick start on LINUX
+## ----- Congratulations, you can now use EASENA -----
+Thanks for downloading and installing EASEA/EASENA. We hope it will be useful in your work!
 
-First, run in terminal from the download directory :
-```
-cmake .
-make -j 4
-```
-
-For a system installation, run also, else skip this step :
-```
-sudo make install
-```
-
-Finally, set EZ_PATH variables and update your PATH. If you use bash, update .bashrc in your home :
-```
-export EZ_PATH="/usr/local/easena/"
-export PATH="$PATH:/usr/local/easena/bin"
-```
-
-## Quick start on MAC OSX
-
-On Mojave, gcc 9 is installed by default by brew. If another version of gcc is installed, version # for instance, you just have to modify the following part of the next cmake command : gcc@**#**/bin/gcc-**#**.
-
-First, run in terminal from the easea directory :
-```
-cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" .
-make -j 4
-```
-
-For a system installation, run also, else skip this step :
-```
-sudo make install
-```
-
-Finally, set EZ_PATH variables and update your PATH. If you use bash, update .bashrc in your home :
-```
-export EZ_PATH="/usr/local/easena/"
-export PATH="$PATH:/usr/local/easena/bin"
-```
-
-Or simply, run the script *apple.sh* that will exactly launch the two first commands.
-
-# ----- Congratulations, you can now use EASENA -----
-----
 
 # EASEA -- EAsy Specification of Evolutionary Algorithms
 
