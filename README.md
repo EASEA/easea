@@ -32,10 +32,10 @@ EASEA requires at least:
 - Open a terminal window and install all required dependencies :<br>
 <tt>$ sudo apt-get install flex bison valgrind gunzip unzip wget cmake r-base</tt>
 - If you need, install optional dependencies as it was shown above
-- Then download zip archive with the latest version from the [https://github.com/EASEA/easea Master branch]
+- Then download zip archive with the latest version from the github Master branch : https://github.com/EASEA/easea 
 - Or clone the github repository by the following command in a command line of the terminal :<br> 
 <tt>$ git clone https://github.com/EASEA/easea.git</tt>
-- In the same terminal window, cd to the directory where zip file was downloaded and expand the zip file :<br>
+- If EASENA was downloaded, in the same terminal window, cd to the directory where zip file was downloaded and expand the zip file :<br>
 <tt>$ unzip downloaded_file_name.zip</tt>
 - To configure EASENA platform for the architecture of your computer, type :<br>
 <tt> $ cmake ./</tt> 
