@@ -28,7 +28,7 @@ EASEA requires at least:
     - CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing.
 
 
-## Linux installation:
+## Linux installation
 - Open a terminal window and install all required dependencies :<br>
 <tt>$ sudo apt-get install flex bison valgrind gunzip unzip wget cmake r-base</tt>
 - If you need, install optional dependencies as it was shown above
@@ -53,7 +53,7 @@ export PATH=$PATH:/usr/local/easena/bin
 
 
 
-## MacOSX installation :
+## MacOSX installation 
 First, open a terminal window and install dependencies in the command line of the terminal :
 - Install Command Tools : <tt>$ xcode-select --install </tt>
 - Install gcc by the following command : <tt>$ brew install gcc</tt>
