@@ -28,20 +28,20 @@ EASEA requires at least:
     - CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing.
 
 
-##Linux installation:
-- Open a terminal window and install all required dependencies :
+## Linux installation:
+- Open a terminal window and install all required dependencies :<br>
 <tt>$ sudo apt-get install flex bison valgrind gunzip unzip wget cmake r-base</tt>
 - If you need, install optional dependencies as it was shown above
 - Then download zip archive with the latest version from the [https://github.com/EASEA/easea Master branch]
-- Or clone the github repository by the following command in a command line of the terminal: 
+- Or clone the github repository by the following command in a command line of the terminal :<br> 
 <tt>$ git clone https://github.com/EASEA/easea.git</tt>
-- In the same terminal window, cd to the directory where zip file was downloaded and expand the zip file :
+- In the same terminal window, cd to the directory where zip file was downloaded and expand the zip file :<br>
 <tt>$ unzip downloaded_file_name.zip</tt>
-- To configure EASENA platform for the architecture of your computer, type 
+- To configure EASENA platform for the architecture of your computer, type :<br>
 <tt> $ cmake ./</tt> 
-- To compile the EASENA platform, type
+- To compile the EASENA platform, type :<br>
 <tt>$ make</tt> 
-- To move the files around, type
+- To move the files around, type :<br>
 <tt>$ sudo make install</tt><br> 
 Typically, it will create a directory called <tt>/usr/local/easea</tt> that will contain a directory called <tt>bin</tt> and a directory called <tt>tpl</tt> 
 - Once this is done, you can modify your personal .bashrc file in your Home for saving EASEA paths for compiler and library. In order to do it, you have to add the two following lines at the end of .bashrc file :<br>
@@ -49,13 +49,10 @@ Typically, it will create a directory called <tt>/usr/local/easea</tt> that will
 export EZ_PATH=/usr/local/easena/
 export PATH=$PATH:/usr/local/easena/bin
 </pre>
-```
-sudo apt-get install flex bison valgrind gunzip wget cmake r-base
-```
-Install scatterplot3d in R shell: install.packages("scatterplot3d")
 
 
-On MacOSX, type :
+
+## MacOSX installation :
 ```
 brew install flex bison gunzip wget cmake r
 ```
