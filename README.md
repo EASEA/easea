@@ -53,16 +53,29 @@ export PATH=$PATH:/usr/local/easena/bin
 
 
 ## MacOSX installation :
-```
-brew install flex bison gunzip wget cmake r
-```
-Install scatterplot3d in R shell: install.packages("scatterplot3d")
+First, open a terminal window and install dependencies in the command line of the terminal :
+- Install Command Tools : <tt>$ xcode-select --install </tt>
+- Install gcc by the following command : <tt>$ brew install gcc</tt>
+- Install Low Level Virtual Machine library by the following command : <tt>$ brew install llvm</tt>
+- Install libomp library by the following command : <tt>$ brew install libomp</tt>
+- Install R by the following command : <tt>$ brew install r</tt>
+- Install other package dependencies : <tt>$ brew install flex bison gunzip wget cmake</tt>
+- If you need, install optional dependencies as it was shown in section Requirements
+
+Then configure, compile and install EASENA  by running in the terminal command line following commands :
+- <tt>$ cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" .</tt>
+- <tt>$ make</tt>
+- <tt>$ sudo make install</tt>
+Once this is done, you can modify your personal .bash_profile in your Home for saving EASEA paths for compiler and library. In order to do it, you have to add the two following lines at the end of .bash_profile file :<br>
+<pre>
+export EZ_PATH=/usr/local/easena/
+export PATH=$PATH:/usr/local/easena/bin
+export LDFLAGS="-L/usr/local/opt/llvm/lib -L/usr/local/opt/libomp/lib"
+export CXX="/usr/local/opt/gcc@9/bin/g++-9"
+</pre>
 
 The latest MacOSX Mojave system is not compliant with valgrind, which is why valgrind tests are limited to linux operating systems.
 
-## Requirements for using EASENA with GPU cards
-
-Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone
 
 ## Quick start on LINUX
 
