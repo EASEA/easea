@@ -28,11 +28,27 @@ EASEA requires at least:
     - CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing.
 
 
-- g++ 5.0 version (or later).
-  - For MacOSX users, first install **brew** in order to install gcc with brew.
-- java jre 1.6 (or later) for graph results visualisation of single objective evolutionary runs. You can get it here: https://www.java.com/download/
-
-Then, on linux (ubuntu), type :
+Linux installation:
+# Open a terminal window and install all required dependencies :
+<tt>$ sudo apt-get install flex bison valgrind gunzip unzip wget cmake r-base</tt>
+# If you need, install optional dependencies as it was shown above
+# Then download zip archive with the latest version from the [https://github.com/EASEA/easea Master branch]
+# Or clone the github repository by the following command in a command line of the terminal: 
+<tt>$ git clone https://github.com/EASEA/easea.git</tt>
+# In the same terminal window, cd to the directory where zip file was downloaded and expand the zip file :
+<tt>$ unzip downloaded_file_name.zip</tt>
+# To configure EASENA platform for the architecture of your computer, type 
+<tt> $ cmake ./</tt> 
+# To compile the EASENA platform, type
+<tt>$ make</tt> 
+# To move the files around, type
+<tt>$ sudo make install</tt><br> 
+Typically, it will create a directory called <tt>/usr/local/easea</tt> that will contain a directory called <tt>bin</tt> and a directory called <tt>tpl</tt> 
+# Once this is done, you can modify your personal .bashrc file in your Home for saving EASEA paths for compiler and library. In order to do it, you have to add the two following lines at the end of .bashrc file :<br>
+<pre>
+export EZ_PATH=/usr/local/easena/
+export PATH=$PATH:/usr/local/easena/bin
+</pre>
 ```
 sudo apt-get install flex bison valgrind gunzip wget cmake r-base
 ```
