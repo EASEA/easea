@@ -157,8 +157,7 @@ $ easena -cdas any_benchmark.ez
 ```
 - IBEA
 Indicator based evolutionary algorithm (tpl/IBEA.tpl).
-IBEA is based on progressively improvement the indicator function.
-In current template the IBEA is based of the epsilon indicator. 
+In current template the IBEA is based on progressively improvement the epsilon indicator function.
 ```
 $ easena -ibea any_benchmark.ez
 ```
