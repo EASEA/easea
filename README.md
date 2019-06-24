@@ -12,14 +12,14 @@ For installation EASENA and package dependencies, you will need administrator pr
  
 EASEA requires at least:
 * For linux users MUST be installed :
-** g++ 5.0 version (or later)
-** package dependencies : cmake, flex, bison, valgrind, gunzip, wget, r-base
+  - g++ 5.0 version (or later)
+  - package dependencies : cmake, flex, bison, valgrind, gunzip, wget, r-base
 * For MacOSX users MUST be installed :
-** gcc 9 must be installed
-** package dependencies : xcode, Command Tools, llvm, libomp, r
+  - gcc 9 must be installed
+  - package dependencies : xcode, Command Tools, llvm, libomp, r
 * Optional (Recommended) for linux and MasOSX : 
-** For graph results visualisation of single objective evolutionary runs :
-*** java jre 1.6 (or later) is required. You can get it here: https://www.java.com/download/.<br> Without it, an error appears at the start of easea's compiled programs but can be safely ignored.
+  - For graph results visualisation of single objective evolutionary runs :
+    - java jre 1.6 (or later) is required. You can get it here: https://www.java.com/download/.<br> Without it, an error appears at the start of easea's compiled programs but can be safely ignored.
 ** For graph results visualisation of multi-objective algorithms:
 *** r-package scatterplot3d is required. To install scatterplot3d in R shell : <br>
 **** you can run R shell by type in command line : <tt>$ r</tt>
@@ -281,7 +281,6 @@ $ ./launch.sh
  
 ```
 After execution, you can find in the same folder following files: 
-- easea.log with metrics values and run time
 - .png - a figure of obtained Pareto Front
 - objectives - values of objectives functions
 
