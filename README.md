@@ -5,7 +5,7 @@ In this beta version, EASENA platform contains two engines within one program: E
 - The EASEA compiler (for artificial evolution) is automatically used on files using extension .ez
 - The EASNA platform (for neural networks) is automatically used on files using extension .nz
 
-## Requirements for using EASENA without GPU cards
+## Requirements for using EASENA 
 
 EASENA requires at least:
 For installation EASENA and package dependencies, you will need administrator priviledges, so make sure your login is in the <tt>/etc/sudoers</tt>  or ask a system administrator to do it for you.
@@ -22,8 +22,8 @@ EASEA requires at least:
     - java jre 1.6 (or later) is required. You can get it here: https://www.java.com/download/.<br> Without it, an error appears at the start of easea's compiled programs but can be safely ignored.
   - For graph results visualisation of multi-objective algorithms:
     - r-package scatterplot3d is required. To install scatterplot3d in R shell : <br>
-      - you can run R shell by type in command line : <tt>$ r</tt>
-      - then in R shell, type following : <tt>install.packages("scatterplot3d")</tt>
+       - you can run R shell by type in command line : <tt>$ r</tt>
+       - then in R shell, type following : <tt>install.packages("scatterplot3d")</tt>
  - For using EASENA with GPU cards :
     - CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing.
 
