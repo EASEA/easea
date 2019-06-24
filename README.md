@@ -8,6 +8,26 @@ In this beta version, EASENA platform contains two engines within one program: E
 ## Requirements for using EASENA without GPU cards
 
 EASENA requires at least:
+For installation EASENA and package dependencies, you will need administrator priviledges, so make sure your login is in the <tt>/etc/sudoers</tt>  or ask a system administrator to do it for you.
+ 
+EASEA requires at least:
+- For linux users MUST be installed :
+-- g++ 5.0 version (or later)
+-- package dependencies : cmake, flex, bison, valgrind, gunzip, wget, r-base
+- For MacOSX users MUST be installed :
+-- gcc 9 must be installed
+-- package dependencies : xcode, Command Tools, llvm, libomp, r
+- Optional (Recommended) for linux and MasOSX : 
+-- For graph results visualisation of single objective evolutionary runs :
+--- java jre 1.6 (or later) is required. You can get it here: https://www.java.com/download/.<br> Without it, an error appears at the start of easea's compiled programs but can be safely ignored.
+-- For graph results visualisation of multi-objective algorithms:
+--- r-package scatterplot3d is required. To install scatterplot3d in R shell : <br>
+---- you can run R shell by type in command line : <tt>$ r</tt>
+---- then in R shell, type following : <tt>install.packages("scatterplot3d")</tt>
+-- For using EASENA with GPU cards :
+--- CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing.
+
+
 - g++ 5.0 version (or later).
   - For MacOSX users, first install **brew** in order to install gcc with brew.
 - java jre 1.6 (or later) for graph results visualisation of single objective evolutionary runs. You can get it here: https://www.java.com/download/
