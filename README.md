@@ -36,8 +36,9 @@ EASEA requires at least:
 - Or clone the github repository by the following command in a command line of the terminal :<br> 
 <tt>$ git clone https://github.com/EASEA/easea.git</tt>
 - If EASENA was downloaded, in the same terminal window, cd to the directory where zip file was downloaded and expand the zip file :<br>
-<tt>$ unzip downloaded_file_name.zip</tt>
-- To configure EASENA platform for the architecture of your computer, type :<br>
+<tt>$ unzip downloaded_file_name.zip</tt> 
+- Go to unziped direcory : <tt>cd easea</tt>
+- To configure EASENA platform for the architecture of your computer, type in command line (from current directory):<br>
 <tt> $ cmake ./</tt> 
 - To compile the EASENA platform, type :<br>
 <tt>$ make</tt> 
@@ -62,7 +63,8 @@ First, open a terminal window and install dependencies in the command line of th
 - Install other package dependencies : <tt>$ brew install flex bison gunzip wget cmake</tt>
 - If you need, install optional dependencies as it was shown in section Requirements
 
-Then configure, compile and install EASENA  by running in the terminal command line following commands :
+Then configure, compile and install EASENA.
+From easea direcotry run in the terminal command line following commands :
 - <tt>$ cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" .</tt>
 - <tt>$ make</tt>
 - <tt>$ sudo make install</tt>
