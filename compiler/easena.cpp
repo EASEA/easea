@@ -14,7 +14,11 @@ enum Mode {ERROR, EVOLUTIONNARY_ALGORITHM, NEURAL_ALGORITHM, MIXED};
 
 void usage() {
 	std::cout << "EASEA : ./easena [-asrea | -cmaes | -cuda | -cuda_mo | -cuda_gp | -fastemo | -gp | -memetic | -nsgaii | -std | -std_mo | -v] file.ez" << std::endl;
+<<<<<<< HEAD
+	std::cout << "EASNA : ./easena [--help] [--help.activation] [--help.examples] [--help.randomDistribution] [--batch.size int] [--batch.error (average|sum)] [--compute string] [--learn.online string] [--learn.batch string] [--parse stringfile.nz] [--save.architecture stringfile.nz] [--save.weights string] [--term] [--update.weights string]" << std::endl;
+=======
 	std::cout << "EASNA : ./easena [--help] [--help.activation] [--help.combinaison] [--help.examples] [--help.randomDistribution] [--batch.size int] [--batch.error (average|sum)] [--compute string] [--learn.online string] [--learn.batch string] [--parse stringfile.nz] [--save.architecture stringfile.nz] [--save.weights string] [--term] [--update.weights string]" << std::endl;
+>>>>>>> master
 }
 
 Mode detectModeUsed(int argc, char** argv) {
