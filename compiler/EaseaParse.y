@@ -762,6 +762,22 @@ int easeaParse(int argc, char *argv[]){
     else if (!mystricmp(sTemp,"fastemo"))  {
       TARGET_FLAVOR = FASTEMO;
     }
+        else if (!mystricmp(sTemp,"fastemoii"))  {
+           TARGET_FLAVOR = FASTEMOII;
+     }
+    else if (!mystricmp(sTemp,"nsgaiii"))  {
+           TARGET_FLAVOR = NSGAIII;
+         }
+    else if (!mystricmp(sTemp,"ibea"))  {
+            TARGET_FLAVOR = IBEA;
+     }
+    else if (!mystricmp(sTemp,"moead"))  {
+                TARGET_FLAVOR = MOEAD;
+     }
+    else if (!mystricmp(sTemp,"cdas"))  {
+             TARGET_FLAVOR = CDAS;
+    }
+
 
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
     else if (!mystricmp(sTemp,"tl")){

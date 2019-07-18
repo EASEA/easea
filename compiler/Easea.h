@@ -31,9 +31,15 @@ Centre de Math?matiques Appliqu?es
 #define CUDA_FLAVOR_SO 0
 #define CUDA_FLAVOR_MO 1
 #define FLAVOR_GP 2
-#define NSGAII 11 
+#define NSGAII 11
 #define ASREA  12
 #define FASTEMO 15
+#define FASTEMOII 16
+#define NSGAIII 17
+#define MOEAD 18
+#define IBEA 19
+#define CDAS 20
+
 
 
 #define UNIX 1

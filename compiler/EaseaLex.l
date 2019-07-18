@@ -2611,6 +2611,21 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
     else if (TARGET_FLAVOR == FASTEMO){
 	strcat(sTemp, "FastEMO.tpl");
     }
+    else if (TARGET_FLAVOR ==  FASTEMOII){    
+		strcat(sTemp, "FASTEMOII.tpl");
+    }
+    else  if  (TARGET_FLAVOR  ==  NSGAIII){
+	        strcat(sTemp, "NSGAIII.tpl");
+    }
+    else  if  (TARGET_FLAVOR  ==   IBEA){ 
+	        strcat(sTemp, "IBEA.tpl");
+     }
+    else   if  (TARGET_FLAVOR  ==  MOEAD){
+	        strcat(sTemp, "MOEAD.tpl");
+    }
+    else  if  (TARGET_FLAVOR  ==   CDAS){  
+	        strcat(sTemp, "CDAS.tpl");
+     }
     else if (TARGET_FLAVOR == MEMETIC )
       strcat(sTemp,"STD_MEM.tpl");
     //else if (TARGET_FLAVOR == STD_FLAVOR_GP )

@@ -28,7 +28,6 @@
 #include "include/global.h"
 #include "include/CComUDPLayer.h"
 #include "include/CRandomGenerator.h"
-#include "include/CLogger.h"
 #include <stdio.h>
 #include <sstream>
 #include <iostream>
@@ -36,6 +35,7 @@
 #include <sys/wait.h>
 #include <chrono>
 #include <ctime>
+
 //#define INSTRUMENTED
 #ifdef INSTRUMENTED
 #define TIMING
@@ -127,30 +127,34 @@ void childHandler(int signum)
 }
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
-  this->params = params;
-    this->cstats = new CStats();
-signal(SIGCHLD, childHandler);
-  CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
-      params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
+	
+	ostringstream ss;
+	ss << "EASEA Starting...."<< std::endl;
+	LOG_MSG(msgType::WARNING, ss.str());
 
-  this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
-      params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
+	this->params = params;
+	this->cstats = new CStats();
+	signal(SIGCHLD, childHandler);
+	CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
+        params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
-  this->currentGeneration = 0;
+	this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
+        params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
 
-  this->reduceParents = 0;
-  this->reduceOffsprings = 0;
-  this->grapher = NULL;
-  if(params->plotStats || params->generatePlotScript){
-    string fichier = params->outputFilename;
-    fichier.append(".dat");
-    remove(fichier.c_str());
-  }
-  if(params->generatePlotScript){
-    string fichier = params->outputFilename;
-    fichier.append(".plot");
-    remove(fichier.c_str());
-  }
+	this->currentGeneration = 0;
+	this->reduceParents = 0;
+	this->reduceOffsprings = 0;
+	this->grapher = NULL;
+	if(params->plotStats || params->generatePlotScript){
+		string fichier = params->outputFilename;
+		fichier.append(".dat");
+		remove(fichier.c_str());
+	}
+	if(params->generatePlotScript){
+		string fichier = params->outputFilename;
+		fichier.append(".plot");
+		remove(fichier.c_str());
+	}
   if(params->generateRScript || params->generateCSVFile){
     string fichier = params->outputFilename;
     fichier.append(".csv");
@@ -519,6 +523,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   this->cstats->resetCurrentStats();
 }
 
+  
 //REMOTE ISLAND MODEL FUNCTIONS
 void CEvolutionaryAlgorithm::initializeClients(){
   /*int clientNumber=0;
@@ -657,7 +662,7 @@ bool CEvolutionaryAlgorithm::allCriteria(){
 
   for( unsigned i=0 ; i<stoppingCriteria.size(); i++ ){
     if( stoppingCriteria.at(i)->reached() ){
-      std::cout << "Stopping criterion reached" << std::endl;
+      //std::cout << "Stopping criterion reached" << std::endl;
       return true;
     }
   }

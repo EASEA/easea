@@ -1,48 +1,94 @@
-EASENA -- EAsy Specification of Evolutionnary and Neural Algorithms
+EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 ===============================================
 
-Below, EASEA and EASNA are presented as two platforms in development within one program. For further details, go in the corresponding part of this README.
+In this beta version, EASENA platform contains two engines within one program: EASEA and EASNA.
+- The EASEA compiler (for artificial evolution) is automatically used on files using extension .ez
+- The EASNA platform (for neural networks) is automatically used on files using extension .nz
 
-To use one of these platforms, you just have to use files with the correct file extension :
-- **.ez**, in order to use EASEA ;
-- **.nz**, in order to use EASNA.
+## Requirements for using EASENA 
 
-The program will detect them and basculate in the correct mode.
+EASENA requires at least:
+For installation EASENA and package dependencies, you will need administrator priviledges, so make sure your login is in the <tt>/etc/sudoers</tt>  or ask a system administrator to do it for you.
+ 
+EASEA requires at least:
+* For linux users MUST be installed :
+  - g++ 5.0 version (or later)
+  - package dependencies : cmake, flex, bison, valgrind, gunzip, wget, r-base
+* For MacOSX users MUST be installed :
+  - gcc 9 must be installed
+  - package dependencies : xcode, Command Tools, llvm, libomp, r
+* Optional (Recommended) for linux and MasOSX : 
+  - For graph results visualisation of single objective evolutionary runs :
+    - java jre 1.6 (or later) is required. You can get it here: https://www.java.com/download/.<br> Without it, an error appears at the start of easea's compiled programs but can be safely ignored.
+  - For graph results visualisation of multi-objective algorithms:
+    - r-package scatterplot3d is required. To install scatterplot3d in R shell : <br>
+       - you can run R shell by type in command line : <tt>$ r</tt>
+       - then in R shell, type following : <tt>install.packages("scatterplot3d")</tt>
+  - For using EASENA with GPU cards :
+    - CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing.
 
-#### Requirements
 
-This project required you to have cmake, flex, bison, valgrind, gunzip and wget installed:
+## Linux installation
+- Open a terminal window and install all required dependencies :<br>
+<tt>$ sudo apt-get install flex bison valgrind gunzip unzip wget cmake r-base</tt>
+- If you need, install optional dependencies as it was shown above
+- Then download zip archive with the latest version from the github Master branch : https://github.com/EASEA/easea 
+- Or clone the github repository by the following command in a command line of the terminal :<br> 
+<tt>$ git clone https://github.com/EASEA/easea.git</tt>
+- If EASENA was downloaded, in the same terminal window, cd to the directory where zip file was downloaded and expand the zip file :<br>
+<tt>$ unzip downloaded_file_name.zip</tt> 
+- Go to unziped direcory : <tt>cd easea</tt> or <tt>cd easea-master</tt>
+- To configure EASENA platform for the architecture of your computer, type in command line (from current directory):<br>
+<tt> $ cmake ./</tt> 
+- To compile the EASENA platform, type :<br>
+<tt>$ make</tt> 
+- To move the files around, type :<br>
+<tt>$ sudo make install</tt><br> 
+Typically, it will create a directory called <tt>/usr/local/easea</tt> that will contain a directory called <tt>bin</tt> and a directory called <tt>tpl</tt> 
+- Once this is done, you can modify your personal .bashrc file in your Home for saving EASEA paths for compiler and library. In order to do it, you have to add the two following lines at the end of .bashrc file :<br>
+<pre>
+export EZ_PATH=/usr/local/easena/
+export PATH=$PATH:/usr/local/easena/bin
+</pre>
 
-On linux :
-```
-$ sudo apt-get install flex bison valgrind gunzip wget cmake
-```
 
-On mac osx, you have to install first **brew**  (that implies CLT of xcode and potentially xcode) and then, to install gcc, bison and wget through brew. Latest mac osx Mojave is not compliant with valgrind, that's why valgrind's tests are limited to linux operating systems.
 
-C++ compiler that supports at least C++14 such as **gcc** : EASENA has been developped with gcc and not tested with clang yet.
+## MacOSX installation 
+First, open a terminal window and install dependencies in the command line of the terminal :
+- Install Command Tools : <tt>$ xcode-select --install </tt>
+- Install gcc by the following command : <tt>$ brew install gcc</tt>
+- Install Low Level Virtual Machine library by the following command : <tt>$ brew install llvm</tt>
+- Install libomp library by the following command : <tt>$ brew install libomp</tt>
+- Install R by the following command : <tt>$ brew install r</tt>
+- Install other package dependencies : <tt>$ brew install flex bison gunzip wget cmake</tt>
+- If you need, install optional dependencies as it was shown in section Requirements
 
-#### Quick start on LINUX
+The latest MacOSX Mojave system is not compliant with valgrind, which is why valgrind tests are limited to linux operating systems.
+Then configure, compile and install EASENA.
+Make sure that you are in easea or easea-master directory.<br>
+From current direcotry run in the terminal command line following commands :
+- <tt>$ cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" .</tt>
+- <tt>$ make</tt>
+- <tt>$ sudo make install</tt>
+Once this is done, you can modify your personal .bash_profile in your Home for saving EASEA paths for compiler and library. In order to do it, you have to add the two following lines at the end of .bash_profile file :<br>
+<pre>
+export EZ_PATH=/usr/local/easena/
+export PATH=$PATH:/usr/local/easena/bin
+export LDFLAGS="-L/usr/local/opt/llvm/lib -L/usr/local/opt/libomp/lib"
+export CXX="/usr/local/opt/gcc@9/bin/g++-9"
+</pre>
 
-- cmake **.**
-- make (*Optionnal* -j 4) 
-- (*Optionnal*) make install : sudo could be necessary
-- Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+## Testing you installation
 
-#### Quick start on MAC OSX
+If typing <tt>$ easena</tt> in the command line of terminal does not start the EASENA compiler, please check out the value of these variables and make sure they point to the good directories.
+If the <tt>Usage</tt> tool appears, it means the installation was successful.
 
-On Mojave, gcc 9 is installed by default by brew. If another version of gcc is installed, version # for instance, you just have to modify the following part of the next cmake command : gcc@**#**/bin/gcc-**#**.
 
-- cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" **.** 
-- make (*Optionnal* -j 4)
-- (*Optionnal*) make install : sudo could be necessary
-- Export and setting EZ_PATH and PATH environment variables : for example, set in your .bashrc file EZ_PATH="/usr/local/easena/", PATH="$PATH:/usr/local/easena/bin"
+## ----- Congratulations, you can now use EASENA -----
+Thanks for downloading and installing EASEA/EASENA. We hope it will be useful in your work!
 
-Or simply, run the script *apple.sh* that will exactly launch the two first commands.
 
-Currently, only the easna part is functionnal under Apple's macosx.
-
-# EASEA -- EAsy Specification of Evolutionnary Algorithms
+# EASEA -- EAsy Specification of Evolutionary Algorithms
 
 ## Overview
 
@@ -52,50 +98,183 @@ EASEA (EAsy Specification of Evolutionary Algorithms) is an Artificial Evolution
 
 Then, for very large problems, EASEA can also exploit computational ecosystems as it can parallelize (using an embedded island model) over loosely coupled heterogenous machines (Windows, Linux or Macintosh, with or without GPGPU cards, provided that they have internet access) a grid of computers or a Cloud.
 
+
+## Features
+
+- Runs can be distributed over cluster of homogeneous AND heterogeneous machines.
+- Distribution can be done locally on the same machine or over the internet (using a embedded island model).
+- Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
+- C++ description language.
+
+
 ## Changes
 
-- Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, ASREA, FastEMO
+- Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, NSGA-III, CDAS, ASREA, IBEA
 - Deleted boost
 - Added the lightweight C++ command line option parser from opensource https://github.com/jarro2783/cxxopts
+- Added a simple logger 
 - Added event handler and fixed bug when the program is not responding after 1093 evaluations.
 - Fixed some bugs in template CUDA_GP.tpl for island model.
 - Added in libeasea three performance metrics: HV, GD, IGD 
-- Added in libeasea five 2-objective tests (ZDT) and seven 3-objective tests (DTLZ)
-- Added in libeasea three crossover operators: SBX, BLX-alpha, BLX-alpha-beta
-- Added in libeasea two mutation operators: Polynomial, Gaussian
-- Added in libeasea two selector operators: binary tournament (based on dominance comparison and crowding distance comparison), best individual selection
+- Added in libeasea 2-objective tests (ZDT) and 3-objective tests (DTLZ)
+- Added in libeasea following crossover operators: SBX
+- Added in libeasea following mutation operators: Polynomial, Gaussian
+- Added in libeasea following selector operators: binary tournament (based on dominance comparison and crowding distance comparison)
 - Added in libeasea dominance estimator and crowdind distance estimator
-- Added in libeasea crowding archive module
-- Added in libeasea simple logger
+- Added in libeasea crowding archive 
 
-## New templates (MOEA)
+## Implementation of the Evolutionary Multiobjective Optimization
 
-- NSGA-II 
+This is the list of defined MOEA templates currently provided by EASEA.
+
+- NSGA-II
 Nondominated Sorting genetic algorithm II (tpl/NSGAII.tpl).
+NSGA-II is a very popular MOEA in multi-objective optimization area. 
+This algorithm makes offspring by using chosen crossover and mutation operators and
+selects individuals for a new generation by nondominated-sorting (NDS) and by crowding distance (CD) comparator.  
 ```
-$ easea -nsgaii any_benchmark.ez 
+$ easena -nsgaii any_benchmark.ez.
+```
+- NSGA-III 
+Nondominated Sorting genetic algorithm III (tpl/NSGAIII.tpl).
+NSGA-III extends NSGA-II to using reference points to handle many-objective problems.
+```
+$ easena -nsgaiii any_benchmark.ez 
 ```
 - ASREA
-Archived-Based Stcochastic Ranking Evolutionary Algorithm. (tpl/ASREA.tpl)
+Archived-Based Stcochastic Ranking Evolutionary Algorithm (tpl/ASREA.tpl).
+This MOEA ranks the population by comparing individuals with members of an archive, that breaks
+complexity into O(man) (m being the number of objectives, a the size of the archive and n the population size). 
 ```
-$ easea -asrea any_benchmark.ez 
+$ easena -asrea any_benchmark.ez 
 ```
-- FastEMO
-Fast Evolutionary Multi-objective Optimization Algorithm. (tpl/FastEMO.tpl)
+- CDAS
+Controlling Dominance Area of Solutions optimization algorithm (tpl/CDAS.tpl).
+CDAS controls the degree of expansion or contraction of the dominance area of solutions using a user-defined parameter
+in order to induce appropriate ranking of solutions and improve the performance. 
 ```
-$ easea -fastemo any_benchmark.ez 
+$ easena -cdas any_benchmark.ez 
+```
+- IBEA
+Indicator based evolutionary algorithm (tpl/IBEA.tpl).
+In current template the IBEA is based on progressively improvement the epsilon indicator function.
+```
+$ easena -ibea any_benchmark.ez
 ```
 
 ## Benchmark Suite
 
-- Zitzler-Deb-Thiele's Test Problems ZDT(1, 2, 3, 4, 6) : 2-objective tests (see examples/zdt)
-- Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3, 4, 5, 6, 7) : 3-objective tests (see examples/dtlz)
+- Zitzler-Deb-Thiele's Test Problems ZDT(4, 6) : 2-objective tests (examples/zdt)
+All problems are continous, n-dimensional and originating from a well thought combination of functions.
 
-An example to compile zdt1 test with algorithm FastEMO:
+- Deb-Thiele-Laumanns-Zitzler's Test Problems DTLZ(1, 2, 3) : 2/3-objective tests (examples/dtlz)
+All problems are continuous n-dimensional multi-objective problems, scalable in fitness dimension. 
+
+- Bi-objective COCO 2018 BBOB benchmark problems (examples/coco2018)
+The bbob-biobj test suite provides 55 2-objective functions in six dimensions (2, 3, 5, 10, 20, and 40) with a large number of possible instances.
+The 55 functions are derived from combining a subset of the 24 well-known single-objective functions of the bbob test suite,
+which has been used since 2009 in the BBOB workshop series. 
+
+## A simple example
+As a simple example, we will show, how to define the 3-objective DTLZ1 problem using the NSGA-II algorithm.
+First of all, we select a test folder and set environment variables EZ_PATH:
 ```
-$ cd examples/zdt1/
-$ easea -fastemo zdt1.ez 
+$ cd examples/dtlz1/
+$ export EZ_PATH="your_path_to_easena"
 ```
+The problem has to be defined in dtlz1.ez file as follow:
+
+- In order to define initial settings (normally they are the same) :
+```
+TRandom m_generator					// random generator
+```
+
+- In order to define a number of decision veriable and a number of objectives :
+```
+#define NB_VARIABLES 10  //  here we set 10 variables
+#define NB_OBJECTIVES 3  //  here we set 3 objectives
+```
+- In order to define a genetic operator parameters :
+```
+#define XOVER_DIST_ID 20  //  crossover distribution index
+#define MUT_DIST_ID 20    //  mutation distribution index
+```
+- In order to define genetic operators
+```
+typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;    //Type of crossover
+typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation; //Type of mutation
+/*
+ * To define crossover operator parameters
+ * param[in 1] - random generator
+ * param[in 2] - probability
+ * param[in 3] - problem boundary
+ * param[in 4] - distibution index
+ *
+ */
+TCrossover crossover(m_generator, 1, m_boundary, XOVER_DIST_ID);
+
+/*
+ * To define mutation operator parameters
+ * param[in 1] - random generator
+ * param[in 2] - probability 
+ * param[in 3] - problem boundary
+ * param[in 4] - distribution index
+ */
+TMutation m_mutation(m_generator, 1 / m_boundary.size(), m_boundary, MUT_DIST_ID);
+```
+- In order to define problem 
+
+```
+/*
+ * param[in 1] - number of objectives
+ * param[in 2] - number of decision variables
+ * param[in 3] - problem boundary
+ *
+ */
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
+
+```
+- In order to define some additional finctions, section \User functions has to be used.
+
+- In order to define problem evaluation function, section \GenomeClass::evaluator has to be used. For example, like below:
+```
+\GenomeClass::evaluator : 
+  // uses Genome to evaluate the quality of the individual
+
+        const size_t pVariables = getNumberOfObjectives() - 1;
+
+        const TT g = (1 + userFunction1<TT>(TI::m_variable.begin() + pVariables, TI::m_variable.end())) * 0.5;
+        userFunction2(TI::m_variable.begin(), TI::m_variable.begin() + pVariables, TI::m_objective.begin(), TI::m_objective.end(), g);
+
+        return 1;
+
+\end
+
+```
+Important to know:
+m_variable - vector of decision variable of every individual ,
+m_objective - vector of objective functions for every individual.
+
+After following instructions above, the problem is defined. Now you will be able to compile and run your program:
+
+You select MOEA (possible options: -nsgaii, -nsgaiii, -asrea, -cdas) by changing script compile.sh.
+
+Then run script:
+```
+$ ./compile.sh
+```
+If you have successfully compiled you .ez file you can find .cpp, .h, Makefile, executable and .prm files. 
+By modifying file .prm, you can set a number of generation (nbGen) and a population size (popSize and nbOffspring must be the same).
+
+Now you can run selected MOEA for resolving your problem :
+```
+$ ./launch.sh 
+ 
+```
+After execution, you can find in the same folder following files: 
+- .png - a figure of obtained Pareto Front
+- objectives - values of objectives functions
+
 ## Performance Metrics
 
 - Hypervolume (HV) maximisation: it provides the volume of the objective space that is dominated by a Pareto Front (PF), therefore, it shows the convergence quality towards the PF and the diversity in the obtained solutions set.
@@ -105,19 +284,35 @@ obtained by algorithm and those in the Pareto Optimal Front.
 
 To use these performance metrics: 
 
-in your ez-file
+in your ez-file:
 ```
- #define QMETRICS 
- #define PARETO_TRUE_FILE "pareto-true.dat"
+#define QMETRICS 
+#define PARETO_TRUE_FILE "pareto-true.dat"
 ```
-where "pareto-true.dat" is a file with Pareto Otimal Front (which is in the same folder as ez-file). See examples in examples/zdt(1-6).ez and examples/dtlz(1-7).ez.
+where "pareto-true.dat" is a file with Pareto Otimal Front (which is in the same folder as ez-file). See examples in examples/zdt(4,6).ez and examples/dtlz(1-3).ez.
 
-## Features
+## References
+1. Deb K., Jain H. An evolutionary many-objective optimization algorithm using reference-point-based nondominated sorting approach, //
+part I: solving problems with box constraints //
+IEEE transactions on evolutionary computation. – 2013. – Т. 18. – №. 4. – С. 577-601.
 
-- Runs can be distributed over cluster of homogeneous AND heterogeneous machines.
-- Distribution can be done locally on the same machine or over the internet (using a embedded island model).
-- Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
-- C++ description language.
+2. Deb K., Jain H. An evolutionary many-objective optimization algorithm using reference-point-based nondominated sorting approach, //
+part I: solving problems with box constraints //
+IEEE transactions on evolutionary computation. – 2013. – Т. 18. – №. 4. – С. 577-601.
+
+3. Sharma D., Collet P. An archived-based stochastic ranking evolutionary algorithm (ASREA) for multi-objective optimization //
+Proceedings of the 12th annual conference on Genetic and evolutionary computation. – ACM, 2010. – С. 479-486.
+
+4. Sato H., Aguirre H. E., Tanaka K. Controlling dominance area of solutions and its impact on the performance of MOEAs //
+International conference on evolutionary multi-criterion optimization. – Springer, Berlin, Heidelberg, 2007. – С. 5-20.
+
+5. Zitzler, Eckart, Deb K., and Thiele L.. “Comparison of multiobjective evolutionary algorithms: //
+Empirical results.” Evolutionary computation 8.2 (2000): 173-195. doi: 10.1.1.30.5848
+
+6. Deb K., Thiele L., Laumanns M., Zitzler E., Scalable test problems for evolutionary multiobjective optimization 
+
+7. COCO: The Bi-objective Black-Box Optimization Benchmarcking Test Suite.
+https://numbbo.github.io/coco-doc/bbob-boobj/functions
 
 # EASNA -- EAsy Specification of Neural Algorithms -- Work in progress !
 

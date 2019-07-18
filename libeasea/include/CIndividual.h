@@ -16,18 +16,22 @@ class CRandomGenerator;
 
 /* Class of individual's (solution) implementation */
 
-class CIndividual {
 
-//protected :
+class CIndividual 
+{
+
 /*  Parametres for multi-objectives algorithmes  */
 public:
+    
     int nbVar_;           // Number of variables
     int nbObj_;           // Number of objectives
     int nbConstraints_;   // Number of constraints
-    double * objective_;      // objecives
+    double *objective_;      // objecives
     CVariable **variable_;    //  variables
     double * upperBound_;     // upper bound of variable
     double * lowerBound_;     // lower bound of variable
+    double * mstep_;
+    double * cstep_;
     double constraint_;       // constraints
     int rank_;                // rank value
     double crowdingDistance_; // croawding distance

@@ -1,0 +1,369 @@
+/*_____________________________________________________________
+
+Template for an EASEA evolutionary algorithm for easea v1.0.3
+
+This file contains template of DTLZ1 problem.
+
+COCO2018 : 
+COCO2018 function contains 2 objectives.
+
+Reference: 
+_______________________________________________________________*/
+
+
+\User declarations : // This section is copied on top of the output file
+
+#include <operators/crossover/continuous/CsbxCrossover.h>
+#include <operators/mutation/continuous/CSelfGaussianMutation.h>
+#include <CLogger.h>
+#include <shared/CConstant.h>
+
+
+#include <cassert>
+#include <numeric>
+
+#include <math.h>
+
+
+
+#define NB_VARIABLES 2
+#define NB_OBJECTIVES 2
+#define NB_CONSTRAINTS 0
+
+#define XOVER_PROB  0.9
+#define XOVER_DIST_ID 20.0 
+
+#define MUT_PROB  1.0/NB_VARIABLES
+#define MUT_DIST_ID 20.0
+
+#define PBLM_NAME "COCO2018"
+
+
+typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
+typedef easea::operators::mutation::continuous::pm::CSelfGaussianMutation<TT, TRandom &> TMutation;
+
+TRandom m_generator;
+
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
+
+TCrossover crossover(m_generator, 1, m_problem.getBoundary(), XOVER_DIST_ID);
+TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), MUT_DIST_ID);
+
+
+\end
+
+\User functions:
+#include "coco.h"
+static const unsigned int BUDGET_MULTIPLIER = 100;
+static const long INDEPENDENT_RESTARTS = 1e5;
+static const double RANDOM_SEED = 0.6;
+static coco_problem_t *PROBLEM;
+size_t run;
+coco_suite_t *suite;
+coco_observer_t *observer;
+
+
+/* Structure and functions needed for timing the experiment */
+typedef struct {
+        size_t number_of_dimensions;
+        size_t current_idx;
+        char **output;
+        size_t previous_dimension;
+        size_t cumulative_evaluations;
+        time_t start_time;
+        time_t overall_start_time;
+} timing_data_t;
+ timing_data_t *timing_data;
+static timing_data_t *timing_data_initialize(coco_suite_t *suite);
+static void timing_data_time_problem(timing_data_t *timing_data, coco_problem_t *problem);
+static void timing_data_finalize(timing_data_t *timing_data);
+
+
+#include <math.h>
+     extern "C" {
+     #include "coco.h"
+}
+static timing_data_t *timing_data_initialize(coco_suite_t *suite)
+{
+
+        timing_data_t *timing_data = (timing_data_t *) coco_allocate_memory(sizeof(*timing_data));
+        size_t function_idx, dimension_idx, instance_idx, i;
+
+        /* Find out the number of all dimensions */
+        coco_suite_decode_problem_index(suite, coco_suite_get_number_of_problems(suite) - 1, &function_idx, &dimension_idx, &instance_idx);
+        timing_data->number_of_dimensions = dimension_idx + 1;
+        timing_data->current_idx = 0;
+        timing_data->output = (char **) coco_allocate_memory(timing_data->number_of_dimensions * sizeof(char *));
+        for (i = 0; i < timing_data->number_of_dimensions; i++)
+	{
+                timing_data->output[i] = NULL;
+        }
+        timing_data->previous_dimension = 0;
+        timing_data->cumulative_evaluations = 0;
+        time(&timing_data->start_time);
+        time(&timing_data->overall_start_time);
+
+        return timing_data;
+}
+
+static void timing_data_time_problem(timing_data_t *timing_data, coco_problem_t *problem)
+{
+
+        double elapsed_seconds = 0;
+
+        if ((problem == NULL) || (timing_data->previous_dimension != coco_problem_get_dimension(problem)))
+	{
+
+                /* Output existing timing information */
+                if (timing_data->cumulative_evaluations > 0)
+		 {
+                        time_t now;
+                        time(&now);
+                        elapsed_seconds = difftime(now, timing_data->start_time) / (double) timing_data->cumulative_evaluations;
+                        timing_data->output[timing_data->current_idx++] = coco_strdupf("d=%lu done in %.2e seconds/evaluation\n",
+                                        timing_data->previous_dimension, elapsed_seconds);
+                }
+
+                if (problem != NULL)
+		{
+                        /* Re-initialize the timing_data */
+                        timing_data->previous_dimension = coco_problem_get_dimension(problem);
+                        timing_data->cumulative_evaluations = coco_problem_get_evaluations(problem);
+                        time(&timing_data->start_time);
+                }
+
+        } else {
+                timing_data->cumulative_evaluations += coco_problem_get_evaluations(problem);
+        }
+}
+static void timing_data_finalize(timing_data_t *timing_data)
+{
+        /* Record the last problem */
+        timing_data_time_problem(timing_data, NULL);
+
+	if (timing_data)
+	{
+    		size_t i;
+    		double elapsed_seconds;
+                time_t now;
+                int hours, minutes, seconds;
+
+                time(&now);
+                elapsed_seconds = difftime(now, timing_data->overall_start_time);
+
+    		printf("\n");
+    		for (i = 0; i < timing_data->number_of_dimensions; i++)
+		{
+    			if (timing_data->output[i])
+			{
+                                printf("%s", timing_data->output[i]);
+                                coco_free_memory(timing_data->output[i]);
+    			}
+		}
+    		hours = (int) elapsed_seconds / 3600;
+    		minutes = ((int) elapsed_seconds % 3600) / 60;
+    		seconds = (int)elapsed_seconds - (hours * 3600) - (minutes * 60);
+    		printf("Total elapsed time: %dh%02dm%02ds\n", hours, minutes, seconds);
+
+		coco_free_memory(timing_data->output);
+		coco_free_memory(timing_data);
+	}
+}
+
+inline double coco_eval( const double *x, double *y)
+{
+	coco_evaluate_function(PROBLEM, x, y);
+	return 0.;
+}
+
+
+
+inline constexpr int getNumberOfObjectives()
+{
+	return NB_OBJECTIVES;
+}
+
+\end
+
+\User CUDA:
+//Transfert some variables to GPU here (cudaMalloc, MemCpy)
+\end
+
+\User classes :
+
+GenomeClass { 
+  // need to declare the genome here
+ int x;
+}
+\end
+
+\Before everything else function:
+//cout<<"Before everything else function called "<<endl;
+
+	coco_set_log_level("info");
+        std::ostringstream ss;
+        ss <<  "Running the COCO2018 experiment... (might take time, be patient)" << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
+
+
+        /* Set some options for the observer. See documentation for other options. */
+        char *observer_options = coco_strdupf("result_folder: _on_%s "
+                   "algorithm_name:  "
+                   "algorithm_info: \"TestAlgo\"", "bbob-biobj");
+         /* Initialize the suite and observer.*/
+        suite = coco_suite("bbob-biobj", "instances:1-10","dimensions:2");
+        observer = coco_observer("bbob-biobj", observer_options);
+        coco_free_memory(observer_options);
+        
+        /* Initialize timing */
+        timing_data = timing_data_initialize(suite);
+
+	LOG_MSG(msgType::INFO, "TEST INFO:\n");
+        /* Get the problem of the suite defined by problem_index */
+        const size_t problem_index = 0;
+        
+        PROBLEM = coco_suite_get_next_problem(suite, observer );
+        ss <<  "Problem name: " << coco_problem_get_name(PROBLEM) << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
+
+        size_t dimention = coco_problem_get_dimension(PROBLEM);
+        ss <<  "Dimention: " << dimention << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
+
+
+        int nbObj = coco_problem_get_number_of_objectives(PROBLEM);
+        ss <<  "Number of objectives: " << nbObj << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
+
+        int nbConst = coco_problem_get_number_of_constraints(PROBLEM);
+        ss <<  "Number of constraints: " << nbConst << std::endl;
+        LOG_MSG(msgType::INFO, ss.str());
+	
+	/*
+
+	for (int i = 0; i < NB_VARIABLES; i++) {
+    owerBound_[i] = coco_problem_get_smallest_values_of_interest(PROBLEM)[i];
+         upperBound_[i] = coco_problem_get_largest_values_of_interest(PROBLEM)[i];
+
+	TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
+        
+         TCrossover crossover(m_generator, 1, m_problem.getBoundary(), XOVER_DIST_ID);
+         easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
+         TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), MUT_DIST_ID);
+
+*/
+
+
+\end
+
+\After everything else function:
+//cout << "After everything else function called" << endl;
+
+	timing_data_time_problem(timing_data, PROBLEM);
+ 
+	/* Output and finalize the timing data */
+	timing_data_finalize(timing_data);
+  
+	coco_observer_free(observer);
+	coco_suite_free(suite);
+
+  
+	std::ostringstream ss;
+	ss <<  "TEST DONE" << std::endl;
+	LOG_MSG(msgType::INFO, ss.str());
+
+
+\end
+
+\At the beginning of each generation function:
+//cout << "At the beginning of each generation function called" << endl;
+\end
+
+\At the end of each generation function:
+//cout << "At the end of each generation function called" << endl;
+\end
+
+\At each generation before reduce function:
+//cout << "At each generation before replacement function called" << endl;
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser : // "initializer" is also accepted
+  // the genome to initialise is known as "Genome"
+
+
+\end
+/*
+\GenomeClass::crossover : 
+  // must create "child" out of "parent1" and "parent2"
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+  // must mutate "Genome"
+  return 0;
+\end
+*/
+\GenomeClass::evaluator : // Returns the score as a real value
+// uses Genome to evaluate the quality of the individual
+	int i;
+	double *var = coco_allocate_vector(NB_VARIABLES);
+	double *obj = coco_allocate_vector(NB_OBJECTIVES);
+
+	TI::m_objective.resize(getNumberOfObjectives());
+
+	for( i= 0; i < NB_VARIABLES; i++)
+        	var[i] = TI::m_variable[i];
+
+        coco_eval(var, obj);
+	for( i= 0; i < NB_OBJECTIVES; i++)
+		TI::m_objective[i] = obj[i];
+
+        coco_free_memory(var);
+	coco_free_memory(obj);
+
+	return 1;
+
+\end
+
+\User Makefile options: 
+LDFLAGS+=
+OBJS+= coco.o
+
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 500    // NB_GEN
+  Time limit: 0 			           // In seconds, 0 to deactivate
+  Population size : 1000 			   //POP_SIZE
+  Offspring size : 1000           // or a xx%
+//  CMutation probability : 1.0      // MUT_PROB
+//  CCrossover probability : 0.9      // XOVER_PROB
+  Evaluator goal : maximize      // maximise
+  Selection operator: Tournament 2.0
+/*  Surviving parents: 100%        // Percentage or absolute  
+  Surviving offspring: 100%      // Percentage or absolute  */
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+/*  Final reduce operator: Tournament 2 */
+
+  Elitism: Strong			           // Weak or Strong
+  Elite: 1
+  Print stats: true				       // Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats: false				         // Default: 0
+  Save population: false
+
+/*  Remote island model: false
+  IP file: ip.txt 			         // List of IP:PORT of islands to send individuals to
+  Migration probability: 0.33    // Probability of sending an individual per generation
+  Server port : 2929
+
+  Save population: true
+  Start from file:false 
+*/
+\end
+

@@ -35,12 +35,13 @@ public:
 			 float pCrossover, float pMutation,
 			 float pMutationPerGene);*/
 
+    void initLogger();
   CEvolutionaryAlgorithm( Parameters* params );
   virtual void initializeParentPopulation() = 0;
 
   unsigned int *getCurrentGenerationPtr(){ return &currentGeneration;}
   void addStoppingCriterion(CStoppingCriterion* sc);
-  void runEvolutionaryLoop();
+  virtual void runEvolutionaryLoop();
   bool allCriteria();
   CPopulation* getPopulation(){ return population;}
   unsigned getCurrentGeneration() { return currentGeneration;}

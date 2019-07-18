@@ -7,7 +7,7 @@
 
 #include "CIndividual.h"
 #include "CDoubleType.h"
-#include "CLogger.h"
+#include <CLogger.h>
 
 CIndividual::CIndividual() : upperBound_(nullptr),
                             lowerBound_(nullptr),
@@ -27,7 +27,7 @@ CIndividual::~CIndividual() {
 
 void CIndividual::setObjective(int index, double val) {
     if (index < 0 || index >= nbObj_)
-        LOG_ERROR(errorCode::value, "index of CIndividual is out of range");
+	LOG_ERROR(errorCode::value, "Index of CIndividual is out range");
 
     objective_[index] = val;
 }

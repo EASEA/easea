@@ -11,8 +11,8 @@
 #include <memory>
 #include <sstream>
 #include "include/COptionParser.h"
-#include "cxxopts.hpp"
-#include "CLogger.h"
+#include <third_party/cxxopts/cxxopts.hpp>
+#include <CLogger.h>
 #include "include/define.h"
 
 
@@ -32,23 +32,19 @@ template<typename TypeVariable>
 TypeVariable setVariable(const std::string argumentName, TypeVariable defaultValue, std::unique_ptr<cxxopts::ParseResult> &vm,  std::unique_ptr<cxxopts::ParseResult>& vm_file){
 
     TypeVariable ret;
-    ostringstream msg;
+
     if (vm->count(argumentName)){
         auto ptr = *vm;
         ret = ptr[argumentName].as<TypeVariable>();
-        msg << argumentName << " is declared in user command line as " << ret;
-        LOG_MSG(msgType::INFO, msg.str());
         return ret;
     }else if( vm_file->count(argumentName) ){
         auto ptr = *vm_file;
         ret = ptr[argumentName].as<TypeVariable>();
-        msg << argumentName << " is declared in configuration file as " << ret;
-        LOG_MSG(msgType::INFO, msg.str());
         return ret;
      }else {
         ret = defaultValue;
-        msg << argumentName <<" is not declared, default value is  " << ret;
-        LOG_MSG(msgType::INFO, msg.str());
+    //    msg << argumentName <<" is not declared, default value is  " << ret;
+    //    LOG_MSG(msgType::INFO, msg.str());
         return ret;
     }
 }
@@ -149,9 +145,8 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         vm = std::make_unique<cxxopts::ParseResult>(move(vm_value));
         if (vm->count("help")) {
             ostringstream msg;
-            msg << options.help({""}) << std::endl;
-            LOG_MSG(msgType::INFO, msg.str());
-	        exit(1);
+            LOG_MSG(msgType::INFO,options.help({""}));
+	    exit(1);
         }
         if(parametersFileName){
             auto vm_file_value = options.parse(argc, argv);
@@ -160,7 +155,6 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
     }
     catch(const cxxopts::OptionException& e){
         ostringstream msg;
-        msg  << e.what() << std::endl;
         LOG_ERROR(errorCode::value, msg.str());
   }
 

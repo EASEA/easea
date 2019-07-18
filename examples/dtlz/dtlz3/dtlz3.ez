@@ -4,42 +4,119 @@ Template for an EASEA evolutionary algorithm for easea v1.0.3
 
 This file contains template of DTLZ3 problem.
 
-DTLZ3 :  Test Problem n3.
-DTLZ3 function contains 3 objectives.
+DTLZ3 :  Test CProblem n1.
+DTLZ3 function contains 2/3 objectives.
 
 Reference: 
 _______________________________________________________________*/
 
+
 \User declarations : // This section is copied on top of the output file
+
+#include <operators/crossover/continuous/CsbxCrossover.h>
+#include <operators/mutation/continuous/CPolynomialMutation.h>
+#include <CLogger.h>
+#include <shared/CConstant.h>
+
+
+#include <numeric>
 
 #include <math.h>
 
 
-#define NB_VARIABLES 30
+
+#define NB_VARIABLES 10
 #define NB_OBJECTIVES 3
 #define NB_CONSTRAINTS 0
 #define XOVER_PROB  0.9
-#define XOVER_DIST_ID 0.5
+#define XOVER_DIST_ID 20.0 //0.5 //20.0
 #define MUT_PROB  1.0/NB_VARIABLES
 #define MUT_DIST_ID 20.0
 #define QMETRICS 
-#define PARETO_TRUE_FILE "DTLZ3_3D.dat" 
+#define PARETO_TRUE_FILE "../pf/dtlz3/DTLZ3_3D.dat" 
 #define PBLM_NAME "DTLZ3"
 
-#define PI 3.141592653589793
+typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
+typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
+TRandom m_generator;
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
+TCrossover crossover(m_generator, 1, m_problem.getBoundary(), 20);
+TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), 20);
+
+
 \end
 
 \User functions:
-inline constexpr double getCrossoverProbability()  {
+
+template <typename TT, typename TIter>
+TT interval(TIter begin, TIter end)
+{
+        TT sum = 0;
+        for (TIter i = begin; i != end; ++i)
+        {
+                const TT temp = *i - .5;
+                sum += temp * temp - cos(20 * PI * temp);
+        }
+        return 100 * (std::distance(begin, end) + sum);
+}
+
+
+template <typename TT, typename TIter>
+void convert(TIter begin, TIter end)
+{
+	for (TIter i = begin; i != end; ++i)
+	{
+		if (0 > *i && *i > 1)
+		{
+			LOG_ERROR(errorCode::value,"Convert angles error");
+			exit(-1); 
+		}    
+                *i = *i * PI * 0.5;
+        }
+}
+
+template <typename TIterAngle, typename TIterObjective, typename TT>
+void concave(TIterAngle angleBegin, TIterAngle angleEnd, TIterObjective objectiveBegin, TIterObjective objectiveEnd, const TT radius)
+{
+        assert(std::distance(objectiveBegin, objectiveEnd) > 0);
+        {
+		TT temp = radius;
+                for (TIterAngle angle = angleBegin; angle != angleEnd; ++angle)
+                {
+			if (*angle < 0 && *angle > PI * 0.5)
+			{
+				LOG_ERROR(errorCode::value, "Wring value of angle");
+				exit(-1);
+			}
+                        temp *= cos(*angle);
+                }
+                *objectiveBegin = temp;
+        }
+
+	for (TIterObjective objective = ++TIterObjective(objectiveBegin); objective != objectiveEnd; ++objective)
+        {
+		const size_t nObjective = objective - objectiveBegin;
+		const size_t index = std::distance(angleBegin, angleEnd) - nObjective;
+		TIterAngle _angleEnd = angleBegin + index;
+		TT temp = radius;
+                for (TIterAngle angle = angleBegin; angle != _angleEnd; ++angle)
+                        temp *= cos(*angle);
+                *objective = temp * sin(*_angleEnd);
+        }
+}
+
+
+
+inline constexpr double getCCrossoverProbability()  {
   return XOVER_PROB;
 } 
-inline constexpr double getMutationProbability()  {
+inline constexpr double getCMutationProbability()  {
   return MUT_PROB;
 } 
-inline constexpr double getCrossoverDistributionId() {
+inline constexpr double getCCrossoverDistributionId() {
   return XOVER_DIST_ID;
 } 
-inline constexpr double getMutationDistributionId() {
+inline constexpr double getCMutationDistributionId() {
   return MUT_DIST_ID;
 } 
 inline constexpr int getNumberOfObjectives() {
@@ -91,23 +168,9 @@ GenomeClass {
 
 \GenomeClass::initialiser : // "initializer" is also accepted
   // the genome to initialise is known as "Genome"
-  setNumberOfVariables(NB_VARIABLES);
-  setNumberOfObjectives(NB_OBJECTIVES);
-  setNumberOfConstraints(NB_CONSTRAINTS);
-  
-  lowerBound_ = new double[nbVar_];
-  if (lowerBound_ == nullptr) 
-    LOG_ERROR(errorCode::memory, "memory wasn't allocated for lower bounds");
-  upperBound_ = new double[nbVar_];
-  if (upperBound_ == nullptr) 
-    LOG_ERROR(errorCode::memory, "memory wasn't allocated for upper bounds");
-  for (int i = 0; i < nbVar_; i++) {
-    lowerBound_[i] = 0.0;
-    upperBound_[i] = 1.0;
-  }
 
 \end
-
+/*
 \GenomeClass::crossover : 
   // must create "child" out of "parent1" and "parent2"
 \end
@@ -116,42 +179,32 @@ GenomeClass {
   // must mutate "Genome"
   return 0;
 \end
-
+*/
 \GenomeClass::evaluator : // Returns the score as a real value
   // uses Genome to evaluate the quality of the individual
-  if (objective_ == nullptr)
-	  objective_ = new double[getNumberOfObjectives()];
-    int k = NB_VARIABLES - NB_OBJECTIVES + 1;
 
-    double g = 0.0;
-    for ( int i = NB_VARIABLES - k; i < NB_VARIABLES; i++)
-	g += (getIndividualVariables()[i]->getValue() - 0.5)*(getIndividualVariables()[i]->getValue() - 0.5)-cos(20.0*PI*(getIndividualVariables()[i]->getValue() - 0.5));
-    g = 100.0 * (k + g);
-    for (int i = 0; i < NB_OBJECTIVES; i++)
-	objective_[i] = 1.0 + g;
+        TI::m_objective.resize(getNumberOfObjectives());
+        const size_t pVariables = getNumberOfObjectives() - 1;
+	
+        const TT g = (1 + interval<TT>(TI::m_variable.begin() + pVariables, TI::m_variable.end()));
+        TV angle(TI::m_variable.begin(), TI::m_variable.begin() + pVariables);
+        convert<TT>(angle.begin(), angle.end());
+        concave(angle.begin(), angle.end(), TI::m_objective.begin(), TI::m_objective.end(), g);
 
-    for ( int i = 0; i < NB_OBJECTIVES; i++){
-	for ( int j = 0; j < NB_OBJECTIVES - (i + 1); j++)
-	    objective_[i] *= cos(getIndividualVariables()[j]->getValue()*0.5*PI);
-        if (i!=0){
-	    int aux = NB_OBJECTIVES - (i + 1);
-	    objective_[i] *= sin(getIndividualVariables()[aux]->getValue()*0.5*PI);
-	}
-    }
-    
-  return 0.0;
+	return 1;
+
 \end
 
 \User Makefile options: 
 \end
 
 \Default run parameters :        // Please let the parameters appear in this order
-  Number of generations : 50000    // NB_GEN
+  Number of generations : 500    // NB_GEN
   Time limit: 0 			           // In seconds, 0 to deactivate
-  Population size : 10000 			   //POP_SIZE
-  Offspring size : 10000           // or a xx%
-//  Mutation probability : 1.0      // MUT_PROB
-//  Crossover probability : 0.9      // XOVER_PROB
+  Population size : 1000 			   //POP_SIZE
+  Offspring size : 1000           // or a xx%
+//  CMutation probability : 1.0      // MUT_PROB
+//  CCrossover probability : 0.9      // XOVER_PROB
   Evaluator goal : maximize      // maximise
   Selection operator: Tournament 2.0
 /*  Surviving parents: 100%        // Percentage or absolute  
