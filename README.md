@@ -15,7 +15,7 @@ EASEA requires at least:
   - g++ 5.0 version (or later)
   - package dependencies : cmake, flex, bison, valgrind, gunzip, wget, r-base
 * For MacOSX users MUST be installed :
-  - gcc 9 must be installed
+  - g++ 5.0 version (or later)
   - package dependencies : xcode, Command Tools, llvm, libomp, r
 * Optional (Recommended) for linux and MasOSX : 
   - For graph results visualisation of single objective evolutionary runs :
@@ -25,7 +25,7 @@ EASEA requires at least:
        - you can run R shell by type in command line : <tt>$ r</tt>
        - then in R shell, type following : <tt>install.packages("scatterplot3d")</tt>
   - For using EASENA with GPU cards :
-    - CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing.
+    - CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing. Be carefull about the compability of your CUDA toolkit and your GCC compiler !
 
 
 ## Linux installation
