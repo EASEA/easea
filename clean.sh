@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/sh
 
 rm -rf CMakeCache.txt CMakeFiles cmake_install.cmake Makefile build install_manifest.txt
 
