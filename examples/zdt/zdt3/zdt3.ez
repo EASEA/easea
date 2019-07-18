@@ -1,0 +1,197 @@
+/*_____________________________________________________________
+
+Template for an EASEA evolutionary algorithm for easea v1.0.3
+This file contains template of ZDT3 problem.
+
+ZDT3 : Zitzler-Deb-Thiele's Test Problem n3.
+ZDT3 function contains 2 objectives. It adds a discreteness feature
+to the front, so its Pareto-optimal front consists of several
+noncontiguous convex parts. The introduction of a sine function in
+this objective function causes discontinuities in the Pareto-
+optimal front, but not in the parameter space.
+
+Reference: 
+Zitzler, E., Deb, K., Thieler, L. Comparison of multiobjective
+evolutionary algorithms: Empirical results. IEEE Trans. on Evol.
+Computation 8 (2000) 173-195. 
+_______________________________________________________________*/
+
+\User declarations : // This section is copied on top of the output file
+
+#include <math.h>
+
+
+#define NB_VARIABLES 30              // Number of variables
+#define NB_OBJECTIVES 2             // Number of objectives
+#define NB_CONSTRAINTS 0            // Number of constraints
+#define XOVER_PROB  0.9             // Crossover probability
+#define XOVER_DIST_ID  20.0         // Crossover distribution index
+#define MUT_PROB  1.0/NB_VARIABLES  // Mutation probability
+#define MUT_DIST_ID 20.0            // Mutation distribution index
+#define QMETRICS                    // Switch on quality indicator
+#define PARETO_TRUE_FILE "paretoZDT3.dat" // File name of pareto optimal (used only in case when QMETRICS is defined)
+#define PBLM_NAME "ZDT3"            // Problem name
+const double PI = 3.141592653589793;
+
+\end
+
+\User functions:
+
+inline constexpr double getCrossoverProbability()  {
+  return XOVER_PROB;
+} 
+inline constexpr double getMutationProbability()  {
+  return MUT_PROB;
+} 
+inline constexpr double getCrossoverDistributionId() {
+  return XOVER_DIST_ID;
+} 
+inline constexpr double getMutationDistributionId() {
+  return MUT_DIST_ID;
+} 
+inline constexpr int getNumberOfObjectives() {
+  return NB_OBJECTIVES ;
+}
+inline constexpr int getNumberOfVariables() {
+  return NB_VARIABLES ;
+}
+inline constexpr int getNumberOfConstraints(){
+  return NB_CONSTRAINTS ;
+}
+
+
+
+double evalG(int nbVar, CVariable **var) {
+  double g = 0.0 ;
+  for (int i = 1; i < nbVar; i++)
+    g += var[i]->getValue();
+
+  double c = 9.0/(nbVar - 1) ;
+  g = c * g ;
+  g = g + 1.0 ;
+  return g;
+}
+
+double evalH(double f, double g) {
+  double h = 0.0 ;
+  h = 1.0 - sqrt(f/g) - (f/g)*sin(10.0*PI*f) ;
+  return h ;
+}
+\end
+
+\User CUDA:
+//Transfert some variables to GPU here (cudaMalloc, MemCpy)
+\end
+
+\User classes :
+
+GenomeClass { 
+  // need to declare the genome here
+ int x;
+}
+\end
+
+\Before everything else function:
+//cout<<"Before everything else function called "<<endl;
+\end
+
+\After everything else function:
+//cout << "After everything else function called" << endl;
+\end
+
+\At the beginning of each generation function:
+//cout << "At the beginning of each generation function called" << endl;
+\end
+
+\At the end of each generation function:
+//cout << "At the end of each generation function called" << endl;
+\end
+
+\At each generation before reduce function:
+//cout << "At each generation before replacement function called" << endl;
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser : // "initializer" is also accepted
+  // the genome to initialise is known as "Genome"
+
+  setNumberOfVariables(NB_VARIABLES);
+  setNumberOfObjectives(NB_OBJECTIVES);
+  setNumberOfConstraints(NB_CONSTRAINTS);
+  
+  lowerBound_ = new double[nbVar_];
+  if (lowerBound_ == nullptr) 
+    LOG_ERROR(errorCode::memory, "memory wasn't allocated for lower bounds");
+  upperBound_ = new double[nbVar_];
+  if (upperBound_ == nullptr) 
+    LOG_ERROR(errorCode::memory, "memory wasn't allocated for upper bounds");
+  for (int i = 0; i < nbVar_; i++) {
+    lowerBound_[i] = 0.0;
+    upperBound_[i] = 1.0;
+  }
+
+\end
+
+\GenomeClass::crossover : 
+  // must create "child" out of "parent1" and "parent2"
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+  // must mutate "Genome"
+  return 0;
+\end
+
+\GenomeClass::evaluator : // Returns the score as a real value
+  // uses Genome to evaluate the quality of the individual
+ 
+  if (objective_ == nullptr)
+	  objective_ = new double[getNumberOfObjectives()];
+	  
+  objective_[0] =  getIndividualVariables()[0]->getValue(); 
+  
+  double g = evalG(getNumberOfVariables(), getIndividualVariables());
+  double h = evalH(objective_[0], g); 
+  objective_[1] = h * g ;
+
+  return 0.0;
+
+\end
+
+\User Makefile options: 
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 25000    // NB_GEN
+  Time limit: 0 			           // In seconds, 0 to deactivate
+  Population size : 100  			   //POP_SIZE
+  Offspring size : 100           // or a xx%
+  Mutation probability : 1.0      // MUT_PROB
+// Crossover probability : 0.9      // XOVER_PROB
+//  Evaluator goal : maximize      // maximise
+  Selection operator: Tournament 2.0
+/*  Surviving parents: 100%        // Percentage or absolute  
+  Surviving offspring: 100%      // Percentage or absolute  */
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+/*  Final reduce operator: Tournament 2 */
+
+  Elitism: Strong			           // Weak or Strong
+  Elite: 1
+  Print stats: true				       // Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats: false				         // Default: 0
+  Save population: false
+/*
+  Remote island model: false
+  IP file: ip.txt 			         // List of IP:PORT of islands to send individuals to
+  Migration probability: 0.33    // Probability of sending an individual per generation
+  Server port : 2929
+
+  Save population: true
+  Start from file:false */
+\end
+

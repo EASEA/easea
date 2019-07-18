@@ -101,10 +101,21 @@ Then, for very large problems, EASEA can also exploit computational ecosystems a
 
 ## Features
 
-- Runs can be distributed over cluster of homogeneous AND heterogeneous machines.
-- Distribution can be done locally on the same machine or over the internet (using a embedded island model).
-- Parallelization over GPGPU cards leading to massive speedup (x100 to x1000).
-- C++ description language.
+Changes
+--------------
+- Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, ASREA, FastEMO
+- Deleted boost
+- Added the lightweight C++ command line option parser from opensource https://github.com/jarro2783/cxxopts
+- Added event handler and fixed bug when the program is not responding after 1093 evaluations.
+- Fixed some bugs in template CUDA_GP.tpl for island model.
+- Added in libeasea three performance metrics: HV, GD, IGD 
+- Added in libeasea five 2-objective tests (ZDT) and seven 3-objective tests (DTLZ)
+- Added in libeasea three crossover operators: SBX, BLX-alpha, BLX-alpha-beta
+- Added in libeasea two mutation operators: Polynomial, Gaussian
+- Added in libeasea two selector operators: binary tournament (based on dominance comparison and crowding distance comparison), best individual selection
+- Added in libeasea dominance estimator and crowdind distance estimator
+- Added in libeasea crowding archive module
+- Added in libeasea simple logger
 
 
 ## Changes
@@ -397,6 +408,32 @@ To run this test, if you are in the root folder of the project :
 ```
     cd Test
     ./easna_regression.sh
+```
+C++ compiler that supports C++14.
+
+Quick start
+-------------
+- cmake ./
+- make
+- make install
+- Export and setting evironent variables (EZ_PATH="/usr/local/easea/" and PATH="$PATH:/usr/local/easea/bin")
+
+New templates (MOEA)
+-------------
+- NSGA-II 
+Nondominated Sorting genetic algorithm II (tpl/NSGAII.tpl).
+```
+$ easea -nsgaii any_benchmark.ez 
+```
+- ASREA
+Archived-Based Stcochastic Ranking Evolutionary Algorithm. (tpl/ASREA.tpl)
+```
+$ easea -asrea any_benchmark.ez 
+```
+- FastEMO
+Fast Evolutionary Multi-objective Optimization Algorithm. (tpl/FastEMO.tpl)
+```
+$ easea -fastemo any_benchmark.ez 
 ```
 
 *Tips* : If you want to keep the computed files such as the weights ones or the csv dataset, just add an argument, else everything is cleaned.

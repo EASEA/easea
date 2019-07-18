@@ -28,6 +28,7 @@
 #include "include/global.h"
 #include "include/CComUDPLayer.h"
 #include "include/CRandomGenerator.h"
+#include "include/CLogger.h"
 #include <stdio.h>
 #include <sstream>
 #include <iostream>
@@ -35,7 +36,6 @@
 #include <sys/wait.h>
 #include <chrono>
 #include <ctime>
-
 //#define INSTRUMENTED
 #ifdef INSTRUMENTED
 #define TIMING
