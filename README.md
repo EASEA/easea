@@ -70,7 +70,7 @@ From current direcotry run in the terminal command line following commands :
 - <tt>$ cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" .</tt>
 - <tt>$ make</tt>
 - <tt>$ sudo make install</tt>
-Once this is done, you can modify your personal .bash_profile in your Home for saving EASEA paths for compiler and library. In order to do it, you have to add the two following lines at the end of .bash_profile file :<br>
+Once this is done, you can modify your personal .bash_profile in your Home for saving EASEA paths for compiler and library. In order to do it, you have to add the four following lines at the end of .bash_profile file :<br>
 <pre>
 export EZ_PATH=/usr/local/easena/
 export PATH=$PATH:/usr/local/easena/bin
