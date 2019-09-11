@@ -409,32 +409,6 @@ To run this test, if you are in the root folder of the project :
     cd Test
     ./easna_regression.sh
 ```
-C++ compiler that supports C++14.
-
-Quick start
--------------
-- cmake ./
-- make
-- make install
-- Export and setting evironent variables (EZ_PATH="/usr/local/easea/" and PATH="$PATH:/usr/local/easea/bin")
-
-New templates (MOEA)
--------------
-- NSGA-II 
-Nondominated Sorting genetic algorithm II (tpl/NSGAII.tpl).
-```
-$ easea -nsgaii any_benchmark.ez 
-```
-- ASREA
-Archived-Based Stcochastic Ranking Evolutionary Algorithm. (tpl/ASREA.tpl)
-```
-$ easea -asrea any_benchmark.ez 
-```
-- FastEMO
-Fast Evolutionary Multi-objective Optimization Algorithm. (tpl/FastEMO.tpl)
-```
-$ easea -fastemo any_benchmark.ez 
-```
 
 *Tips* : If you want to keep the computed files such as the weights ones or the csv dataset, just add an argument, else everything is cleaned.
 
@@ -470,6 +444,3 @@ Finally, you can get here an example of such a json architecture file expected b
     "paramOfDist2":0.1
 }
 ```
-## AUTHOR
-
-EASNA : Romain ORHAND : <rorhand@unistra.fr>
