@@ -12,6 +12,8 @@ using std::string;
 using std::snprintf;
 using std::vector;
 
+//#define CANCEL() {raise(SIGINT);}
+
 /* Simple logger for printing different kinds of messages to console */
 
 #define LOG_MSG(type, msg, ...)  Output(type, formatString(msg, ##__VA_ARGS__), __func__, __FILE__, __LINE__);
@@ -103,3 +105,4 @@ inline string formatString(const string &format) {
 
 }
 
+#define CANCEL() {LOG_MSG(msgType::INFO, "FORCE CANCEL from %s",  __builtin_FUNCTION()); raise(SIGINT);}

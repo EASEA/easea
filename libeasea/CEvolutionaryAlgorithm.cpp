@@ -235,8 +235,8 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
 #endif
 
-  std::cout << "Population initialisation (Generation 0)... "<< std::endl;
-
+  std::cout << "Population initialisation (Generation 0)... "<< std::endl; 
+  auto start = std::chrono::system_clock::now();
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
 
   TIME_ST(eval);
@@ -265,7 +265,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     elitistPopulation = (CIndividual**)malloc(params->elitSize*sizeof(CIndividual*)); 
 
   // EVOLUTIONARY LOOP
- auto start = std::chrono::system_clock::now();
+// auto start = std::chrono::system_clock::now();
   while( this->allCriteria() == false){
 
     EASEABeginningGenerationFunction(this);
