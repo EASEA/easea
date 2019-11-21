@@ -105,4 +105,4 @@ inline string formatString(const string &format) {
 
 }
 
-#define CANCEL() {LOG_MSG(msgType::INFO, "FORCE CANCEL from %s",  __builtin_FUNCTION()); raise(SIGINT);}
+#define STOP() {LOG_MSG(msgType::INFO, "FORCE STOP from %s",  __builtin_FUNCTION()); raise(SIGINT);}
