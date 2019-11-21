@@ -82,7 +82,7 @@ int main(int argc, char** argv){
 
 
 using namespace std;
-extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses);
+extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses, int offset);
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
@@ -189,9 +189,9 @@ __device__ float cudaEvaluate(void* devBuffer, unsigned id){
   
 
 extern "C" 
-__global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses){
+__global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses, int offset){
 
-        unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x;  // id of the individual computed by this thread
+        unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x + offset;  // id of the individual computed by this thread
 
   	// escaping for the last block
         if( id >= popSize ) return;
@@ -263,12 +263,33 @@ void* gpuThreadMain(void* arg){
 				   (sizeof(IndividualImpl)*localGpuData->sh_pop_size),cudaMemcpyHostToDevice);
 
 	    CUDA_SAFE_CALL(lastError);
+/********************************************************************/
+/* This part of code is added to avoid a force terminating kernel by timeout */
+/* It could happend when execution time of kernel > 10s  */
+/* For this we launch each kernel for one block          */
+/* And use sreames to avoid lost of time                 */
+int x_offset = 0;
+cudaStream_t stream[localGpuData->dimGrid];
+
+for (int u=0; u != localGpuData->dimGrid; u+=1)
+{
+    cudaStreamCreate(&stream[u]);
+    x_offset = u*localGpuData->dimBlock;
+    cudaEvaluatePopulation<<< 1, localGpuData->dimBlock, 0, stream[u]>>>(localGpuData->d_population, localGpuData->sh_pop_size, localGpuData->d_fitness, x_offset);
+}
+for (int u = 0; u != localGpuData->dimGrid; u+=1)
+{
+    cudaStreamSynchronize(stream[u]);
+    cudaStreamDestroy(stream[u]);
+}
 	    
-	    
-	    //std::cout << localGpuData->sh_pop_size << ";" << localGpuData->dimGrid << ";"<<  localGpuData->dimBlock << std::endl;
-				      
+/********************************************************************/	    	    
+	    //std::cout << localGpuData->sh_pop_size << ";" << localGpuData->dimGrid << ";"<<  localGpuData->dimBlock << std::endl;				      
 	    // the real GPU computation (kernel launch)
-	    cudaEvaluatePopulation<<< localGpuData->dimGrid, localGpuData->dimBlock>>>(localGpuData->d_population, localGpuData->sh_pop_size, localGpuData->d_fitness);
+
+/***********************************************************************/
+/* This part of code is replaced by the code above */ 
+/*	    cudaEvaluatePopulation<<< localGpuData->dimGrid, localGpuData->dimBlock>>>(localGpuData->d_population, localGpuData->sh_pop_size, localGpuData->d_fitness);
 	    lastError = cudaGetLastError();
 	    CUDA_SAFE_CALL(lastError);
 
@@ -277,6 +298,7 @@ void* gpuThreadMain(void* arg){
 	    // be sure the GPU has finished computing evaluations, and get results to CPU
 	    lastError = cudaThreadSynchronize();
 	    if( lastError!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
+*/	
 	    lastError = cudaMemcpy(fitnessTemp + localGpuData->indiv_start, localGpuData->d_fitness, localGpuData->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
 	    
 	    // this thread has finished its phase, so lets tell it to the main thread
