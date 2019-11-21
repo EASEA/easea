@@ -80,6 +80,7 @@ int main(int argc, char** argv){
 #include "CCuda.h"
 #include <vector_types.h>
 
+#define __CUDA_ARCH__
 using namespace std;
 
 #include "EASEAIndividual.hpp"

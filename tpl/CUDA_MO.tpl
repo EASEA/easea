@@ -68,7 +68,7 @@ int main(int argc, char** argv){
 #include <fstream>
 #include <sys/time.h>
 #include "EASEATools.hpp"
-
+#define __CUDA_ARCH__
 #define CUDA_TPL
 
 extern RandomGenerator* globalRandomGenerator;
