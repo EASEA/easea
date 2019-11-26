@@ -443,7 +443,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
     printf("%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
       //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
-      printf("%u\t%ld.%d\t\t%u\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+      printf("%u\t%ld.%02d\t\t%u\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #endif
   }
 
