@@ -2,49 +2,79 @@
 
 Template for an EASEA evolutionary algorithm for easea v1.0.3
 
-This file contains template of ZDT1 problem.
+This file contains template of ZDT2 problem.
 
-ZDT2 : Zitzler-Deb-Thiele's Test Problem n2.
-ZDT2 function contains 2 objectives. It has a non-convex Pareto
--optimal front.
+ZDT2 
+ZDT2 function contains 2 objectives.
 
 Reference: 
-Zitzler, E., Deb, K., Thieler, L. Comparison of multiobjective
-evolutionary algorithms: Empirical results. IEEE Trans. on Evol.
-Computation 8 (2000) 173-195. Zitzler, E., Deb, K., Thieler, L.
-Comparison of multiobjective evolutionary algorithms: Empirical
-results. IEEE Trans. on Evol. Computation 8 (2000) 173-195.
 _______________________________________________________________*/
 
+
 \User declarations : // This section is copied on top of the output file
+
+#include <operators/crossover/continuous/CsbxCrossover.h>
+#include <operators/mutation/continuous/CPolynomialMutation.h>
+
+#include <shared/CConstant.h>
+
+#include <numeric>
 
 #include <math.h>
 
 
-#define NB_VARIABLES 30              // Number of variables
-#define NB_OBJECTIVES 2             // Number of objectives
-#define NB_CONSTRAINTS 0            // Number of constraints
-#define XOVER_PROB  0.9             // Crossover probability
-#define XOVER_DIST_ID  20.0         // Crossover distribution index
-#define MUT_PROB  1.0/NB_VARIABLES  // Mutation probability
-#define MUT_DIST_ID 20.0            // Mutation distribution index
-#define QMETRICS                    // Switch on quality indicator
-#define PARETO_TRUE_FILE "paretoZDT2.dat" // File name of pareto optimal
-#define PBLM_NAME "ZDT2"            // Problem name
+
+#define NB_VARIABLES 10
+#define NB_OBJECTIVES 2
+#define NB_CONSTRAINTS 0
+#define XOVER_PROB  0.9
+#define XOVER_DIST_ID 20.0 //0.5 //20.0
+#define MUT_PROB  1.0/NB_VARIABLES
+#define MUT_DIST_ID 20.0
+#define QMETRICS 
+#define PARETO_TRUE_FILE "../pf/zdt2/paretoZDT2.dat" 
+#define PBLM_NAME "ZDT2"
+
+typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
+typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
+TRandom m_generator;
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
+TCrossover crossover(m_generator, 1, m_problem.getBoundary(), XOVER_DIST_ID);
+TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), MUT_DIST_ID);
+
 
 \end
 
 \User functions:
-inline constexpr double getCrossoverProbability()  {
+template <typename TT, typename TIter>
+TT interval(TIter begin, TIter end)
+{
+        const size_t nDecisions = std::distance(begin, end);
+        if (nDecisions)
+                return std::accumulate(begin, end, (TT)0) / nDecisions;
+        else
+                return 0;
+
+}
+
+template <typename TT>
+TT surface(const TT x)
+{
+	return 1 - x * x;
+}
+
+
+
+inline constexpr double getCCrossoverProbability()  {
   return XOVER_PROB;
 } 
-inline constexpr double getMutationProbability()  {
+inline constexpr double getCMutationProbability()  {
   return MUT_PROB;
 } 
-inline constexpr double getCrossoverDistributionId() {
+inline constexpr double getCCrossoverDistributionId() {
   return XOVER_DIST_ID;
 } 
-inline constexpr double getMutationDistributionId() {
+inline constexpr double getCMutationDistributionId() {
   return MUT_DIST_ID;
 } 
 inline constexpr int getNumberOfObjectives() {
@@ -57,22 +87,6 @@ inline constexpr int getNumberOfConstraints(){
   return NB_CONSTRAINTS ;
 }
 
-double evalG(int nbVar, CVariable **var) {
-  double g = 0.0 ;
-  for (int i = 1; i < nbVar; i++)
-    g += var[i]->getValue();
-
-  double c = 9.0/(nbVar - 1) ;
-  g = c * g ;
-  g = g + 1.0 ;
-  return g;
-}
-
-double evalH(double f, double g) {
-  double h = 0.0 ;
-  h = 1.0 - power<2>(f/g) ;
-  return h ;
-}
 \end
 
 \User CUDA:
@@ -83,10 +97,7 @@ double evalH(double f, double g) {
 
 GenomeClass { 
   // need to declare the genome here
-  int x;
-
-
- 
+ int x;
 }
 \end
 
@@ -116,24 +127,8 @@ GenomeClass {
 \GenomeClass::initialiser : // "initializer" is also accepted
   // the genome to initialise is known as "Genome"
 
-  setNumberOfVariables(NB_VARIABLES);
-  setNumberOfObjectives(NB_OBJECTIVES);
-  setNumberOfConstraints(NB_CONSTRAINTS);
-  
-  lowerBound_ = new double[nbVar_];
-  if (lowerBound_ == nullptr) 
-    LOG_ERROR(errorCode::memory, "memory wasn't allocated for lower bounds");
-  upperBound_ = new double[nbVar_];
-  if (upperBound_ == nullptr) 
-    LOG_ERROR(errorCode::memory, "memory wasn't allocated for upper bounds");
-  for (int i = 0; i < nbVar_; i++) {
-    lowerBound_[i] = 0.0;
-    upperBound_[i] = 1.0;
-  }
-
-
 \end
-
+/*
 \GenomeClass::crossover : 
   // must create "child" out of "parent1" and "parent2"
 \end
@@ -142,32 +137,30 @@ GenomeClass {
   // must mutate "Genome"
   return 0;
 \end
-
+*/
 \GenomeClass::evaluator : // Returns the score as a real value
   // uses Genome to evaluate the quality of the individual
 
-  if (objective_ == nullptr)
-	  objective_ = new double[getNumberOfObjectives()];
-	  
-  objective_[0] =  getIndividualVariables()[0]->getValue(); 
-  
-  double g = evalG(getNumberOfVariables(), getIndividualVariables());
-  double h = evalH(objective_[0], g); 
-  objective_[1] = h * g ;
+        TI::m_objective.resize(getNumberOfObjectives());
 
-  return 0.0;
+        const TT g = 1 + 9 * interval<TT>(TI::m_variable.begin() + 1, TI::m_variable.end());
+
+        TI::m_objective[0] = TI::m_variable[0];
+        TI::m_objective[1] = g * surface(TI::m_objective[0] / g);
+
+	return 1;
 \end
 
 \User Makefile options: 
 \end
 
 \Default run parameters :        // Please let the parameters appear in this order
-  Number of generations : 25000    // NB_GEN
+  Number of generations : 500    // NB_GEN
   Time limit: 0 			           // In seconds, 0 to deactivate
-  Population size : 100  			   //POP_SIZE
-  Offspring size : 100           // or a xx%
-  Mutation probability : 1.0      // MUT_PROB
-  Crossover probability : 0.9      // XOVER_PROB
+  Population size : 1000 			   //POP_SIZE
+  Offspring size : 1000           // or a xx%
+//  CMutation probability : 1.0      // MUT_PROB
+//  CCrossover probability : 0.9      // XOVER_PROB
   Evaluator goal : maximize      // maximise
   Selection operator: Tournament 2.0
 /*  Surviving parents: 100%        // Percentage or absolute  
@@ -184,13 +177,14 @@ GenomeClass {
   Generate R script:false
   Plot stats: false				         // Default: 0
   Save population: false
-/*
-  Remote island model: false
+
+/*  Remote island model: false
   IP file: ip.txt 			         // List of IP:PORT of islands to send individuals to
   Migration probability: 0.33    // Probability of sending an individual per generation
   Server port : 2929
 
   Save population: true
-  Start from file:false */
+  Start from file:false 
+*/
 \end
 

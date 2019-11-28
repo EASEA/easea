@@ -25,7 +25,7 @@ _______________________________________________________________*/
 
 
 #define NB_VARIABLES 10
-#define NB_OBJECTIVES 3
+#define NB_OBJECTIVES 2
 #define NB_CONSTRAINTS 0
 #define XOVER_PROB  0.9
 #define XOVER_DIST_ID 20.0 //0.5 //20.0
@@ -148,7 +148,6 @@ GenomeClass {
   // uses Genome to evaluate the quality of the individual
 
         TI::m_objective.resize(getNumberOfObjectives());
-        const size_t pVariables = getNumberOfObjectives() - 1;
 
         const TT g = 1 + 9 * pow(interval<TT>(TI::m_variable.begin() + 1, TI::m_variable.end()), 0.25);
 

@@ -25,7 +25,7 @@ _______________________________________________________________*/
 
 
 #define NB_VARIABLES 10
-#define NB_OBJECTIVES 3
+#define NB_OBJECTIVES 2
 #define NB_CONSTRAINTS 0
 #define XOVER_PROB  0.9
 #define XOVER_DIST_ID 20.0 //0.5 //20.0
