@@ -81,7 +81,6 @@ int main(int argc, char** argv){
 #include "CIndividual.h"
 #include <vector_types.h>
 #include "CCuda.h"
-#define __CUDA_ARCH__
 
 
 using namespace std;

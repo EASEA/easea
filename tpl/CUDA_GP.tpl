@@ -80,7 +80,6 @@ int main(int argc, char** argv){
 #include <vector_types.h>
 #include "CCuda.h"
 #include "CGPNode.h"
-#define __CUDA_ARCH__
 using namespace std;
 
 extern "C"
