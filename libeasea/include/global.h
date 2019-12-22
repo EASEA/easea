@@ -9,6 +9,7 @@
 #define GLOBAL_H_
 
 #include <stdlib.h>
+#include <vector>
 #include "define.h"
 
 //#define true 1;
@@ -21,7 +22,7 @@ extern float* pEZ_MUT_PROB;
 extern float* pEZ_XOVER_PROB;
 extern unsigned *EZ_NB_GEN;
 extern unsigned *EZ_current_generation;
-
+extern std::vector<char *> vArgv;
 extern CRandomGenerator* globalRandomGenerator;
 
 #ifdef WIN32
