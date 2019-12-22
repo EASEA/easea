@@ -25,11 +25,18 @@ unsigned *EZ_NB_GEN;
 unsigned *EZ_current_generation;
 int EZ_POP_SIZE;
 int OFFSPRING_SIZE;
+std::vector<char *> vArgv;
 
 CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
-
+	if (argc > 1){
+    	    for (int i = 1; i < argc; i++){
+        	if ((argv[i][0]=='-')&&(argv[i][1]=='-')) break;
+            	    vArgv.push_back(argv[i]);
+    	    }
+    	}
+       
 
 	parseArguments("EASEA.prm",argc,argv);
 
