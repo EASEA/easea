@@ -74,7 +74,6 @@ void cross(GenomeClass *pChild, GenomeClass *pParent, int locus){
     }
     p=p->pNext;
   }
-  return NbMut;
 \end
 
 \GenomeClass::evaluator:

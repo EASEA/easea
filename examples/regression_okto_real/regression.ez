@@ -300,10 +300,10 @@ GenomeClass {
 \GenomeClass::mutator : // Must return the number of mutations
 {
 #ifdef MUTATOR // See mutator.add
-    return mutator(&Genome, pMutationPerGene);
+    mutator(&Genome, pMutationPerGene);
 #else
     simple_mutator(&Genome);
-    return 1;
+    
 #endif
 }
 \end

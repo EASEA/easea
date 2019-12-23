@@ -54,7 +54,7 @@ GenomeClass {
 \GenomeClass::mutator : // Must return a value (for historical reasons)
   for (int i=0;i<SIZE;i++)
     if (tossCoin(pMutPerGene)) Genome.x[i]=(Genome.x[i]+1)%2;
-  return 3;
+ 
 \end
 
 \GenomeClass::evaluator : // Returns the score

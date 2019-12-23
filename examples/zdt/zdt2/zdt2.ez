@@ -135,7 +135,7 @@ GenomeClass {
 
 \GenomeClass::mutator : // Must return the number of mutations
   // must mutate "Genome"
-  return 0;
+  
 \end
 */
 \GenomeClass::evaluator : // Returns the score as a real value

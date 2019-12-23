@@ -138,7 +138,7 @@ GenomeClass {
        	Genome.x[i] = MIN(X_MAX,Genome.x[i]);              // pour eviter les depassements
        	Genome.x[i] = MAX(X_MIN,Genome.x[i]);
     	}
-return NbMut;
+
 \end
 
 \GenomeClass::evaluator : // Returns the score
