@@ -1384,7 +1384,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   else{
     //DEBUG_PRT_PRT("file name : %s",sFileName);
 #ifndef WIN32
-//    if( symlink(sFileName,"Makefile") ) perror("Symlink creation error ");
+    if( symlink(sFileName,"Makefile") ) perror("");
 #endif
   }
   if (bVERBOSE){
