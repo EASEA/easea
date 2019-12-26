@@ -9,11 +9,12 @@
 #include <iostream>
 #include <regex>
 #include <string>
+#include <CLogger.h>
 
 enum Mode {ERROR, EVOLUTIONNARY_ALGORITHM, NEURAL_ALGORITHM, MIXED, END};
 
 void usage() {
-	std::cout << "EASEA : ./easena [-asrea | -cmaes | -cuda | -cuda_mo | -cuda_gp | -fastemo | -gp | -memetic | -nsgaii | -std | -std_mo | -v ] file.ez | [--version]" << std::endl;
+	std::cout << "EASEA : ./easena [-asrea | -cmaes | -cuda | -cuda_mo | -cuda_gp | -fastemo | -gp | -memetic | -nsgaii | nsgaiii | cdas | -std | -std_mo | -v ] file.ez | [--version]" << std::endl;
 	std::cout << "EASNA : ./easena [--help] [--help.activation] [--help.examples] [--help.randomDistribution] [--batch.size int] [--batch.error (average|sum)] [--compute string] [--learn.online string] [--learn.batch string] [--parse stringfile.nz] [--save.architecture stringfile.nz] [--save.weights string] [--term] [--update.weights string]" << std::endl;
 }
 
@@ -24,15 +25,21 @@ Mode detectModeUsed(int argc, char** argv) {
 	const std::regex NEZregex(".+\\.nez(\"\')?");
 
 	char *sTemp;
-
+	if (argc == 1){
+	    LOG_ERROR(errorCode::io, "Expected argument following");
+	    return result;
+	}
         if ((argv[1][0]=='-')&&(argv[1][1]=='-')){
             sTemp=&(argv[1][2]);
             if (!mystricmp(sTemp,"version")){
              std::cout << "EASENA version: " << easea::version::as_string() << std::endl;
              result = END;
-            }else std::cout <<"Wrong option: " << sTemp << std::endl;
-        }else{
-
+            }else{ 
+		 LOG_ERROR(errorCode::io, std::string("Unrecognised input option: ")+ std::string(sTemp));
+		 result = ERROR;
+	    }
+	    return result;
+	}    
 	for(int i = 0; i < argc; i++)
 	{
 		if (result == ERROR) {
@@ -51,12 +58,13 @@ Mode detectModeUsed(int argc, char** argv) {
 			}
 		}
 	}
-	}
+	
 	return result;
 }
 
 int main(int argc, char** argv)
 {
+	try{
 	switch (detectModeUsed(argc, argv)) {
 		case EVOLUTIONNARY_ALGORITHM:
 			easeaParse(argc, argv);
@@ -81,6 +89,13 @@ int main(int argc, char** argv)
 		default:
 			std::cout << "This shouldn't have happened !!!" << std::endl;
 			break;
-	}
+		}
+		}
+		catch(Exception& e)
+		{
+		    printf("%s\n",e.what());
+		    return 0;
+		}
+	
 	return 0;
 }
