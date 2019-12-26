@@ -5,15 +5,15 @@
 #include "EaseaParse.hpp"
 #include "NeuralParse.hpp"
 #include "../libeasna/src/perceptron.hpp"
-
+#include <version.h>
 #include <iostream>
 #include <regex>
 #include <string>
 
-enum Mode {ERROR, EVOLUTIONNARY_ALGORITHM, NEURAL_ALGORITHM, MIXED};
+enum Mode {ERROR, EVOLUTIONNARY_ALGORITHM, NEURAL_ALGORITHM, MIXED, END};
 
 void usage() {
-	std::cout << "EASEA : ./easena [-asrea | -cmaes | -cuda | -cuda_mo | -cuda_gp | -fastemo | -gp | -memetic | -nsgaii | -std | -std_mo | -v] file.ez" << std::endl;
+	std::cout << "EASEA : ./easena [-asrea | -cmaes | -cuda | -cuda_mo | -cuda_gp | -fastemo | -gp | -memetic | -nsgaii | -std | -std_mo | -v ] file.ez | [--version]" << std::endl;
 	std::cout << "EASNA : ./easena [--help] [--help.activation] [--help.examples] [--help.randomDistribution] [--batch.size int] [--batch.error (average|sum)] [--compute string] [--learn.online string] [--learn.batch string] [--parse stringfile.nz] [--save.architecture stringfile.nz] [--save.weights string] [--term] [--update.weights string]" << std::endl;
 }
 
@@ -22,6 +22,17 @@ Mode detectModeUsed(int argc, char** argv) {
 	const std::regex EZregex(".+\\.ez(\"\')?");
 	const std::regex NZregex(".+\\.nz(\"\')?");
 	const std::regex NEZregex(".+\\.nez(\"\')?");
+
+	char *sTemp;
+
+        if ((argv[1][0]=='-')&&(argv[1][1]=='-')){
+            sTemp=&(argv[1][2]);
+            if (!mystricmp(sTemp,"version")){
+             std::cout << "EASENA version: " << easea::version::as_string() << std::endl;
+             result = END;
+            }else std::cout <<"Wrong option: " << sTemp << std::endl;
+        }else{
+
 	for(int i = 0; i < argc; i++)
 	{
 		if (result == ERROR) {
@@ -39,6 +50,7 @@ Mode detectModeUsed(int argc, char** argv) {
 				break;
 			}
 		}
+	}
 	}
 	return result;
 }
@@ -62,6 +74,8 @@ int main(int argc, char** argv)
 		case ERROR:
 			std::cout << "Usage :" << std::endl;
 			usage();
+			break;
+		case END:
 			break;
 	
 		default:

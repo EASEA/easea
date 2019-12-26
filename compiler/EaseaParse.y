@@ -777,8 +777,6 @@ int easeaParse(int argc, char *argv[]){
     else if (!mystricmp(sTemp,"cdas"))  {
              TARGET_FLAVOR = CDAS;
     }
-
-
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
     else if (!mystricmp(sTemp,"tl")){
       bLINE_NUM_EZ_FILE=false;
