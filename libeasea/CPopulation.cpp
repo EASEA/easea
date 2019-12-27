@@ -10,7 +10,8 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
-#ifdef _OPENMP
+#include <config.h>
+#ifdef USE_OPENMP
 #include <omp.h>
 #endif
 #include "include/CRandomGenerator.h"
@@ -18,6 +19,8 @@
 #include "include/Parameters.h"
 #include "include/CStats.h"
 #include <CLogger.h>
+
+
 using namespace std;
 
 CSelectionOperator* CPopulation::selectionOperator;
@@ -115,11 +118,13 @@ void CPopulation::initPopulation(CSelectionOperator* selectionOperator,
 
 
 void CPopulation::evaluatePopulation(CIndividual** population, unsigned populationSize){
-  #pragma omp parallel for schedule(runtime)
+#ifdef USE_OPENMP
+    EASEA_PRAGMA_OMP_PARALLEL
+#endif
   for( unsigned i=0 ; i < populationSize ; i++ )
     population[i]->evaluate();
-}
 
+}
 void CPopulation::optimisePopulation(CIndividual** population, unsigned populationSize){
 }
 

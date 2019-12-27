@@ -1,7 +1,17 @@
-
+#pragma once
 
 #cmakedefine PROJECT_NAME "@PROJECT_NAME@"
 #cmakedefine PROJECT_VER  "@PROJECT_VER@"
 #cmakedefine PROJECT_VER_MAJOR @PROJECT_VER_MAJOR@
 #cmakedefine PROJECT_VER_MINOR @PROJECT_VER_MINOR@
 #cmakedefine PROJECT_VER_PATCH @PROJECT_VER_PATCH@
+
+#cmakedefine OMP_NUM_THREADS @OMP_NUM_THREADS@
+
+
+#cmakedefine USE_OPENMP
+
+#ifdef USE_OPENMP
+  #define EASEA_PRAGMA_OMP_PARALLEL _Pragma("omp parallel for schedule(runtime)")
+  #define EASEA_PRAGMA_OMP_ATOMIC   _Pragma("omp atomic")
+#endif

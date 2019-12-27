@@ -6,8 +6,8 @@ set(PROJECT_VER  "PRE")
 set(PROJECT_VER_MAJOR 2)
 set(PROJECT_VER_MINOR 15)
 set(PROJECT_VER_PATCH 0)
-CONFIGURE_FILE(config.h.in libeasea/include/config.h)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_DIR})
+#CONFIGURE_FILE(config.h.in libeasea/include/config.h)
+#INCLUDE_DIRECTORIES(${CMAKE_CURRENT_DIR})
 
 message("-- PROJECT NAME: ${PROJECT_NAME}")
 message("-- PROJECT VERSION: ${PROJECT_VER}")
@@ -19,6 +19,24 @@ INCLUDE_DIRECTORIES(${PROJECT_BINARY_BIN})
 INCLUDE_DIRECTORIES(libeasea/include cxxopts)
 INCLUDE_DIRECTORIES(libeasna/include)
 
+set(OMP_NUM_THREADS 1)
+
+option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
+
+if (USE_OPENMP)
+  find_package(OpenMP)
+endif ()
+if (OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+else ()
+  # Disable warnings for all the unknown OpenMP pragmas.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
+endif ()
+
+CONFIGURE_FILE(config.h.in libeasea/include/config.h)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_DIR})
+
 SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 
 # Creation of a static library for EASEA that will be linked to the main program easena
@@ -27,7 +45,8 @@ if(WIN32)
         FILE(GLOB libeasea_src_win  "libeasea/win32/*.cpp" )
 endif(WIN32)
 ADD_LIBRARY( libeasea STATIC ${libeasea_src} ${libeasea_src_win})
-SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-std=c++14 -O3 -fopenmp")
+SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-std=c++14 -O3")
+# -fopenmp")
 
 # Creation of a static library for EASNA that will be linked to the main program easena 
 # Program based on the one that can be found in https://git.unistra.fr/rorhand/perceptron/

@@ -6,6 +6,7 @@
 #include "NeuralParse.hpp"
 #include "../libeasna/src/perceptron.hpp"
 #include <version.h>
+#include <config.h>
 #include <iostream>
 #include <regex>
 #include <string>
@@ -23,10 +24,11 @@ Mode detectModeUsed(int argc, char** argv) {
 	const std::regex EZregex(".+\\.ez(\"\')?");
 	const std::regex NZregex(".+\\.nz(\"\')?");
 	const std::regex NEZregex(".+\\.nez(\"\')?");
+	
 
 	char *sTemp;
 	if (argc == 1){
-	    LOG_ERROR(errorCode::io, "Expected argument following");
+	    LOG_ERROR(errorCode::io, "Expected argument following easena");
 	    return result;
 	}
         if ((argv[1][0]=='-')&&(argv[1][1]=='-')){
@@ -39,6 +41,7 @@ Mode detectModeUsed(int argc, char** argv) {
 		 result = ERROR;
 	    }
 	    return result;
+	    
 	}    
 	for(int i = 0; i < argc; i++)
 	{
@@ -65,6 +68,7 @@ Mode detectModeUsed(int argc, char** argv) {
 int main(int argc, char** argv)
 {
 	try{
+
 	switch (detectModeUsed(argc, argv)) {
 		case EVOLUTIONNARY_ALGORITHM:
 			easeaParse(argc, argv);
