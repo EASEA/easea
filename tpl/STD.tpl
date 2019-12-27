@@ -233,7 +233,8 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
-
+	int nbThreads = setVariable("nbThreads", 1);
+	omp_set_num_threads(nbThreads);
 	seed = setVariable("seed",(int)time(0));
 	globalRandomGenerator = new CRandomGenerator(seed);
 	this->randomGenerator = globalRandomGenerator;

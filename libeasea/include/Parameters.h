@@ -25,6 +25,7 @@ class Parameters {
     CTimeCriterion* timeCriterion;
 
     int nbGen;
+    int nbThreads;
 
     float selectionPressure;
     float replacementPressure;
