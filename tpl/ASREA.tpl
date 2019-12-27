@@ -224,8 +224,8 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
-	int nbThreads = setVariable("nbThreads", 1);
-	omp_set_num_threads(nbThreads);
+	int nbCPUThreads = setVariable("nbCPUThreads", 1);
+	omp_set_num_threads(nbCPUThreads);
 
         parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
         offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
