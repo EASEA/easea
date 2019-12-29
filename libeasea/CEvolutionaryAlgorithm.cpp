@@ -611,8 +611,8 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       string line = this->server->parm->data->back().data;
       this->server->parm->data->pop_back();
       this->population->parents[index]->deserialize(line);
-      // Reevaluate individaul if the flag isEvaluateIndividual == 1	
-      if (params->isEvaluateImmigrant == 1){
+      // Reevaluate individaul if the flag reevaluateImmigrants == 1	
+      if (params->reevaluateImmigrants == 1){
 	    this->population->parents[index]->evaluate();
       }
 

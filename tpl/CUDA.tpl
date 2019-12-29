@@ -572,7 +572,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 	int nbCPUThreads = setVariable("nbCPUThreads", 1);
 	omp_set_num_threads(nbCPUThreads);
-	this->isEvaluateImmigrant = setVariable("isEvaluateImmigrant", 0);
+	this->reevaluateImmigrants = setVariable("reevaluateImmigrants", 0);
         seed = setVariable("seed",(int)time(0));
         globalRandomGenerator = new CRandomGenerator(seed);
         this->randomGenerator = globalRandomGenerator;
