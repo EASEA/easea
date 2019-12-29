@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
+#include >CLogger.h>
 #include "COptionParser.h"
 #include "CRandomGenerator.h"
 #include "CEvolutionaryAlgorithm.h"
@@ -56,6 +57,10 @@ int main(int argc, char** argv){
 	ea->runEvolutionaryLoop();
 
 	EASEAFinal(pop);
+
+	std::stringstream stream;
+        stream << "Seed: " << p.seed;
+        LOG_MSG(msgType::INFO, stream.str());
 
 	delete pop;
 

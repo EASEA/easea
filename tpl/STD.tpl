@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
+#include <CLogger.h>
 #include "COptionParser.h"
 #include "CRandomGenerator.h"
 #include "CEvolutionaryAlgorithm.h"
@@ -31,6 +32,8 @@ std::vector<char *> vArgv;
 CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
+
+	/* Let's give an access to varible argv for users and put it to vArgv */
 	if (argc > 1){
     	    for (int i = 1; i < argc; i++){
         	if ((argv[i][0]=='-')&&(argv[i][1]=='-')) break;
@@ -54,6 +57,10 @@ int main(int argc, char** argv){
 	ea->runEvolutionaryLoop();
 
 	EASEAFinal(pop);
+
+	std::stringstream stream;
+        stream << "Seed: " << p.seed;
+        LOG_MSG(msgType::INFO, stream.str());
 
 	delete pop;
 
