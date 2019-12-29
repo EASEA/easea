@@ -105,6 +105,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         ("elite","Nb of elite parents (absolute), 0 for no elite",cxxopts::value<int>())
         ("eliteType","Strong (1) or weak (0)",cxxopts::value<int>())
 	("nbCPUThreads","Set the number of threads", cxxopts::value<int>())
+	("isEvaluateImmigrant","Set 1 if you want evaluate immigrant", cxxopts::value<int>())
         ("nbGen","Set the number of generation", cxxopts::value<int>())
         ("timeLimit","Set the timeLimit, (0) to deactivate",cxxopts::value<int>())
         ("selectionOperator","Set the Selection Operator (default : Tournament)",cxxopts::value<string>())

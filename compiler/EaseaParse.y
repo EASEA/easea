@@ -707,6 +707,7 @@ Expr
                        
 /////////////////////////////////////////////////////////////////////////////
 // main
+#include <version.h>
 
 int easeaParse(int argc, char *argv[]){
   int n = YYEXIT_FAILURE;
@@ -717,6 +718,8 @@ int easeaParse(int argc, char *argv[]){
   TARGET=STD;
   bVERBOSE=0;
   sRAW_PROJECT_NAME[0]=0; // used to ask for a filename if no filename is found on the command line.
+    
+    std::cout << "EASENA version: " << easea::version::as_string() << std::endl;
 
   while ((++nParamNb) < argc) {
     sTemp=&(argv[nParamNb][0]);
@@ -774,6 +777,9 @@ int easeaParse(int argc, char *argv[]){
     else if (!mystricmp(sTemp,"moead"))  {
                 TARGET_FLAVOR = MOEAD;
      }
+     else if (!mystricmp(sTemp,"qiea"))  {
+                 TARGET_FLAVOR = QIEA;
+      }
     else if (!mystricmp(sTemp,"cdas"))  {
              TARGET_FLAVOR = CDAS;
     }

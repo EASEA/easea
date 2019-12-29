@@ -579,7 +579,7 @@ void CEvolutionaryAlgorithm::sendIndividual(){
     //selecting a client randomly
     int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
     //for(int client=0; client<this->numberOfClients; client++){
-    cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to machine " 
+    cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to " 
     << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() <<endl;
     //cout << "Sending individual " << index << " to client " << client << " now" << endl;
     //cout << this->population->parents[index]->serialize() << endl;
@@ -588,11 +588,13 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 }
 
 void CEvolutionaryAlgorithm::receiveIndividuals(){
+
   //Checking every generation for received individuals
   if(this->server->parm->data->size() != 0){
     //cout << "number of received individuals :" << this->server->nb_data << endl;
     //cout << "number of treated individuals :" << this->treatedIndividuals << endl;
     CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);   
+
 
     //Treating all the individuals before continuing
     while(this->server->parm->data->size() != 0){
@@ -609,6 +611,11 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       string line = this->server->parm->data->back().data;
       this->server->parm->data->pop_back();
       this->population->parents[index]->deserialize(line);
+      // Reevaluate individaul if the flag isEvaluateIndividual == 1	
+      if (params->isEvaluateImmigrant == 1){
+	    this->population->parents[index]->evaluate();
+      }
+
       //TAG THE INDIVIDUAL AS IMMIGRANT
       this->population->parents[index]->isImmigrant = true;
 

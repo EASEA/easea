@@ -39,6 +39,7 @@ Centre de Math?matiques Appliqu?es
 #define MOEAD 18
 #define IBEA 19
 #define CDAS 20
+#define QIEA 22
 
 
 

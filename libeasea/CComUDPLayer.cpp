@@ -12,6 +12,8 @@
 #include <string>
 #include <string.h>
 #include <iostream>
+
+#include <sstream>
 #include <fstream>
 #ifndef WIN32
 #include <ifaddrs.h>
@@ -51,7 +53,13 @@ void * CComUDPServer::UDP_server_thread(void *parm) {
         printf("%s\n",buffer);
         printf("%d\n",(int)strlen(buffer));
       }
-      printf("    Received individual from %s:%d\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+     
+	istringstream iss(buffer);
+	string data ,fit;
+	while ( getline( iss, data, ' ' ) ) { fit = data; }
+
+      printf("    Received individual (fitness = %s ) from %s:%d\n", fit.c_str(), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+    
       pthread_mutex_lock(&server_mutex);
       /*process received data */
       recv_data buffer_copy;

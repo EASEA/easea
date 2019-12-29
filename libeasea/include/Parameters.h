@@ -26,6 +26,7 @@ class Parameters {
 
     int nbGen;
     int nbCPUThreads;
+    int isEvaluateImmigrant;
 
     float selectionPressure;
     float replacementPressure;
