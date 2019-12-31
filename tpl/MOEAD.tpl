@@ -1,6 +1,6 @@
 \TEMPLATE_START
 /***********************************************************************
-| SIGMA   Multi Objective Algorithm Template                            |
+| MOEAD Multi objective algorithm template                              |
 |                                                                       |
 | This file is part of Artificial Evolution plateform EASEA             |
 | (EAsy Specification of Evolutionary Algorithms)                       |
@@ -64,19 +64,23 @@ int main(int argc, char** argv){
 
 \START_CUDA_GENOME_CU_TPL
 
+#include <chrono>
 #include <fstream>
 #include <time.h>
 #include <cstring>
 #include <sstream>
-#include <chrono>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
 #include "CStoppingCriterion.h"
 #include "CEvolutionaryAlgorithm.h"
 #include "global.h"
-#include <CLogger.h>
 
+#include <CLogger.h>
+#include <variables/continuous/uniform.h>
+#include <shared/functions/nbi.h>
+#include <shared/functions/weight.h>
+#include <algorithms/moea/Cmoead.h>
 
 #include <CQMetrics.h>
 #include <CQMetricsHV.h>
@@ -84,13 +88,6 @@ int main(int argc, char** argv){
 #include <CQMetricsIGD.h>
 #include <problems/CProblem.h>
 #include <operators/crossover/C2x2CrossoverLauncher.h>
-
-
-#include <variables/continuous/uniform.h>
-#include <algorithms/moea/Csigma.h>
-
-
-
 
 using namespace std;
 
@@ -110,18 +107,42 @@ typedef typename easea::Individual<TT, TV> TIndividual;
 typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
 \INSERT_USER_DECLARATIONS
-easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
-
+TCrossover m_crossover = crossover;
+//easea::operators::crossover::CWrap2x2Crossover<TT, TV>(crossover);
+//easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
 
 \ANALYSE_USER_CLASSES
 
 
 \INSERT_USER_FUNCTIONS
+/*
+ * \brief Set number of reference point division
+    
+ */ 
+
+size_t setNumberOfReferencePointDiv( const int nbObjectives)
+{
+    size_t division;
+
+    if (nbObjectives == 1) division = 100;
+    else if (nbObjectives == 2) division = 99;
+    else if (nbObjectives == 3) division = 12;
+    else if (nbObjectives == 4) division = 8;
+    else if (nbObjectives == 5) division = 6;
+    else if (nbObjectives == 6) division = 5;
+    else if (nbObjectives == 7) division = 3;
+    else if (nbObjectives == 8) division = 3;
+    else if (nbObjectives == 9) division = 3;
+    else if (nbObjectives == 10) division = 3;
+    else division = 2;
+
+    return division;
+}
 
 \INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
-typedef easea::algorithms::sigma::Csigma< TIndividual, TRandom &> TAlgorithm;
+typedef easea::algorithms::moead::Cmoead< TIndividual, TRandom &> TAlgorithm;
 TAlgorithm *m_algorithm;
 size_t m_popSize = -1;
 
@@ -133,19 +154,41 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
-    if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population");  };
-    const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
+/*	if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
+        const size_t nbObjectives = m_problem.getNumberOfObjectives();
+	size_t division = setNumberOfReferencePointDiv(nbObjectives);
+	std::list<std::vector<TO>> points = easea::shared::function::runNbi<TO>(nbObjectives, division);
+	std::vector<std::vector<TO>> m_reference(points.begin(), points.end());
+	const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
 
-    m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, 15*NB_OBJECTIVES);
+	m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, m_reference);
+*/
+        if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
+        const size_t nbObjectives = m_problem.getNumberOfObjectives();
+
+        size_t division = setNumberOfReferencePointDiv(nbObjectives);
+
+//
+        auto weight = easea::shared::function::runNbi<TO>(nbObjectives, 43/*division*/);
+//	std::vector<TV> weight =  easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(),  m_popSize);
+
+        std::vector<std::vector<TO>> tmp_weight(weight.begin(), weight.end());
+        for (size_t i = 0; i < tmp_weight.size(); ++i){
+                easea::shared::function::adjustWeight(tmp_weight[i], 0.00001);
+printf("WEIGHT: %i\n",tmp_weight.size());}
+        const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), tmp_weight.size()/* m_popSize*/);
+
+        m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, tmp_weight, initPop.size() / 10);
 
 }
 
 void EASEAFinal(CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
 /*EASEAFinalization(pop);*/
-    	string file = "objectives";
+        string file = "objectives";
         std::ofstream out(file.c_str());
         cout.setf(ios::fixed);
+	
 	LOG_MSG(msgType::INFO, "Saving Pareto Front in file objectives");
 
         const auto &population = m_algorithm->getPopulation();
@@ -153,34 +196,35 @@ void EASEAFinal(CPopulation* pop){
         {
         	const auto &objective = population[i].m_objective;
     		for (size_t j = 0; j < objective.size(); ++j)
-        	out << objective[j] << ' ';
-    		out << endl;
-        }
-        LOG_MSG(msgType::INFO, "Pareto Front is saved ");
+        		out << objective[j] << ' ';
+    			out << endl;
+    		}
+    	out.close();
+	LOG_MSG(msgType::INFO, "Pareto Front is saved ");
+
 
 #ifdef QMETRICS
         LOG_MSG(msgType::INFO, "Calculating performance metrics ");
-        LOG_MSG(msgType::INFO, "Statistic begin");
+	LOG_MSG(msgType::INFO, "Statistic begin");
 
-	auto metrics = make_unique<CQMetrics>("objectives", PARETO_TRUE_FILE, m_problem.getNumberOfObjectives());
-	auto hv = metrics->getMetric<CQMetricsHV>();
-	auto gd = metrics->getMetric<CQMetricsGD>();
-	auto igd = metrics->getMetric<CQMetricsIGD>();
-	std::ostringstream statInfo;
-	statInfo << "Quality Metrics: " << std::endl
-	<< "HyperVolume = " << hv << std::endl
-	<< "Generational distance = " << gd << std::endl
-	<< "Inverted generational distance  = " << igd << std::endl;
-	auto statistics = (statInfo.str());
-
+        auto metrics = make_unique<CQMetrics>("objectives", PARETO_TRUE_FILE, m_problem.getNumberOfObjectives());
+        auto hv = metrics->getMetric<CQMetricsHV>();
+        auto gd = metrics->getMetric<CQMetricsGD>();
+        auto igd = metrics->getMetric<CQMetricsIGD>();
+        std::ostringstream statInfo;
+        statInfo << "Quality Metrics: " << std::endl
+        << "HyperVolume = " << hv << std::endl
+        << "Generational distance = " << gd << std::endl
+        << "Inverted generational distance  = " << igd << std::endl;
+        auto statistics = (statInfo.str());
         LOG_MSG(msgType::INFO, statistics);
-        LOG_MSG(msgType::INFO, "Statistic end");
-	
-#endif
-        out.close();
-        delete(m_algorithm);
-        LOG_MSG(msgType::INFO, "SIGMA finished");
+	LOG_MSG(msgType::INFO, "Statistic end");
 
+
+#endif
+
+     delete(m_algorithm);
+     LOG_MSG(msgType::INFO, "MOEAD finished");
 
 }
 
@@ -201,8 +245,7 @@ void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 template <typename TO, typename TV>
 easea::Individual<TO, TV>::Individual(void)
 {
-        m_crowdingDistance = -1;
-	m_fitness = -std::numeric_limits<TO>::infinity();
+        m_minDistance = -1;
 }
 
 template <typename TO, typename TV>
@@ -229,16 +272,53 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 
-        parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
-        offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
+	seed = setVariable("seed",(int)time(0));
+	globalRandomGenerator = new CRandomGenerator(seed);
+	this->randomGenerator = globalRandomGenerator;
 
-	pCrossover = \XOVER_PROB;
+
+/*	selectionOperator = getSelectionOperator(setVariable("selectionOperator","\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
+	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
+	parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator","\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
+	offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator","\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
+	selectionPressure = setVariable("selectionPressure",(float)\SELECT_PRM);
+	replacementPressure = setVariable("reduceFinalPressure",(float)\RED_FINAL_PRM);
+	parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
+	offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
+*/	pCrossover = \XOVER_PROB;
 	pMutation = \MUT_PROB;
 	pMutationPerGene = 0.05;
 
 	parentPopulationSize = setVariable("popSize",(int)\POP_SIZE);
 	offspringPopulationSize = setVariable("nbOffspring",(int)\OFF_SIZE);
 	m_popSize = parentPopulationSize;
+
+	/*parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents",(float)\SURV_PAR_SIZE));
+	offspringReductionSize = setReductionSizes(offspringPopulationSize, setVariable("survivingOffspring",(float)\SURV_OFF_SIZE));
+
+	this->elitSize = setVariable("elite",(int)\ELITE_SIZE);
+	this->strongElitism = setVariable("eliteType",(int)\ELITISM);
+
+	if((this->parentReductionSize + this->offspringReductionSize) < this->parentPopulationSize){
+		printf("*WARNING* parentReductionSize + offspringReductionSize < parentPopulationSize\n");
+		printf("*WARNING* change Sizes in .prm or .ez\n");
+		printf("EXITING\n");
+		exit(1);	
+	} 
+	if((this->parentPopulationSize-this->parentReductionSize)>this->parentPopulationSize-this->elitSize){
+		printf("*WARNING* parentPopulationSize - parentReductionSize > parentPopulationSize - elitSize\n");
+		printf("*WARNING* change Sizes in .prm or .ez\n");
+		printf("EXITING\n");
+		exit(1);	
+	} 
+	if(!this->strongElitism && ((this->offspringPopulationSize - this->offspringReductionSize)>this->offspringPopulationSize-this->elitSize)){
+		printf("*WARNING* offspringPopulationSize - offspringReductionSize > offspringPopulationSize - elitSize\n");
+		printf("*WARNING* change Sizes in .prm or .ez\n");
+		printf("EXITING\n");
+		exit(1);	
+	} 
+	*/
+
 	/*
 	 * The reduction is set to true if reductionSize (parent or offspring) is set to a size less than the
 	 * populationSize. The reduction size is set to populationSize by default
@@ -295,22 +375,20 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
 	EZ_current_generation=&(ea->currentGeneration);
 
-	 return ea;
+	return ea;
 }
 void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
-	LOG_MSG(msgType::INFO, "SIGMA starting....");
+	LOG_MSG(msgType::INFO, "MOEAD starting....");
 	auto tmStart = std::chrono::system_clock::now();
 	size_t limitGen = EZ_NB_GEN[0];
-
 	m_algorithm->setLimitGeneration(limitGen);
+
 	while( this->allCriteria() == false){
-                ostringstream ss;
-                ss << "Generation: " << currentGeneration << std::endl;
-                LOG_MSG(msgType::INFO, ss.str());
-		m_algorithm->setCurrentGeneration(currentGeneration);
-	        if ((limitGen - currentGeneration) == 2) m_algorithm->trueIsLast();
-		m_algorithm->run();
-    		currentGeneration += 1;
+            ostringstream ss;
+            ss << "Generation: " << currentGeneration << std::endl;
+            LOG_MSG(msgType::INFO, ss.str());
+    	    m_algorithm->run();
+    	    currentGeneration += 1;
 	}
         ostringstream ss;
         std::chrono::duration<double> tmDur = std::chrono::system_clock::now() - tmStart;
@@ -419,10 +497,9 @@ public:
         typedef TVariable TV;
         typedef CmoIndividual<TO, TV> TI;
 
-        TO m_crowdingDistance;
+        TO m_minDistance;
+	std::vector<TO> m_trObjective;
 	float fitness; 		// this is variable for return the value 1 from function evaluate()
-	TO m_fitness;
-
 
         Individual(void);
         ~Individual(void);

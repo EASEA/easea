@@ -82,6 +82,7 @@ bool isDominated(const std::vector<TObjective> &point1, const std::vector<TObjec
 {
         if (point1.size() != point2.size())	LOG_ERROR(errorCode::value, "individuals have different size");
         bool dominated = false;
+        
         for (size_t i = 0; i < point1.size(); ++i)
         {
                 if (point2[i] < point1[i])
@@ -92,6 +93,19 @@ bool isDominated(const std::vector<TObjective> &point1, const std::vector<TObjec
         return dominated;
 }
 
+template <typename TObjective>
+bool isEqual(const std::vector<TObjective> &point1, const std::vector<TObjective> &point2)
+{
+	if (point1.size() != point2.size())	LOG_ERROR(errorCode::value, "individuals have different size");
+	bool equal = true;
+
+	for (size_t i = 0; i < point1.size(); ++i)
+	{
+	    if (point2[i] != point1[i])
+		    equal = false;
+	}
+	return equal;
+}
 
 }
 }

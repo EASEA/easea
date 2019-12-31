@@ -49,6 +49,7 @@ public:
 	CSelfGaussianMutation(TR random, const TO probability, const TBoundary &boundary, const TO distributionIndex);
 	~CSelfGaussianMutation(void);
 	TO getDistributionIndex(void) const;
+	
 
 protected:
 	void runMutation(TI &decision);
@@ -57,6 +58,8 @@ protected:
 	TO getGaussian(TRandom &random);
 	TO valueMutate(TRandom &random, TO step);
 	TO stepMutate(TO step, const TO u);
+size_t getCurrentGen(){ return TBase::getCurrentGen();};
+size_t getLimitGen(){ return TBase::getLimitGen();};
 
 	TO nextGaussian(TRandom &random, TO mean, TO deviation);
 	TO boundedMutate(TRandom &random, const TObjective distributionIndex, const TObjective idecision, const TObjective u, TObjective &istep, const TObjective lower, const TObjective upper);
@@ -65,6 +68,7 @@ private:
 	std::uniform_real_distribution<TO> m_distribution;	// uniform distribution
 	TO m_distributionIndex;					// distribution index
 	TO m_tau;
+	TO m_tau_1;
 };
 
 template <typename TObjective, typename TRandom>
@@ -76,6 +80,7 @@ CSelfGaussianMutation<TObjective, TRandom>::CSelfGaussianMutation(TR random, con
 		LOG_ERROR(errorCode::value, "Wrong vqlue of distribution index");
 	m_distributionIndex = distributionIndex;
 	m_tau = 0.;
+	m_tau_1 = 0;
 }
 template <typename TObjective, typename TRandom> CSelfGaussianMutation<TObjective, TRandom>::~CSelfGaussianMutation(void)
 {
@@ -148,14 +153,23 @@ void CSelfGaussianMutation<TObjective, TRandom>::launch(TV &variables, TV &step)
 	assert(!this->getBoundary().empty());
 	assert(variables.size() == this->getBoundary().size());
 
-	m_tau = (log((TO)variables.size())/(TO)variables.size());   //1./(TO)variables.size();
+	m_tau_1 = (log((TO)variables.size())/((TO)variables.size())); /* 1./sqrt(2*(TO)variables.size());*/
 	const TO u = getGaussian(this->getRandom());
-
+	double k =1.;
 	for (size_t i = 0; i < this->getBoundary().size(); ++i)
 	{
 		const TRange &range = this->getBoundary()[i];
-		if (m_distribution(this->getRandom()) < this->getProbability())
+
+		if (m_distribution(this->getRandom()) < this->getProbability()){
+k = 1*fabs(variables[i]);
+if (k < 1.) k = 1;
+//if (this->getCurrentGen() > this->getLimitGen()/2.)
+//if (m_distribution(this->getRandom()) <0.5)
+m_tau = k*log((TO)variables.size())/((TO)variables.size());
+//else
+// m_tau = m_tau_1;
     			variables[i] = boundedMutate(this->getRandom(), getDistributionIndex(), variables[i], u, step[i], range.first, range.second);
+		}
 	}
 }
 }

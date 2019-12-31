@@ -17,6 +17,8 @@
 #include <CLogger.h>
 #include <algorithms/moea/CmoeaAlgorithm.h>
 
+#include <operators/crossover/base/C2x2Crossover.h>
+
 #include <operators/crossover/wrapper/CWrapCrossover.h>
 #include <operators/mutation/wrapper/CWrapMutation.h>
 #include <operators/selection/nondominateSelection.h>
@@ -58,17 +60,21 @@ public:
         TPopulation runBreeding(const TPopulation &parent);
         static bool isDominated(const TIndividual &individual1, const TIndividual &individual2);
 
+	TO calcIndicator(const TIndividual &individual1, const TIndividual &individual2);
+	template <typename TIter, typename TF> void setFitness(TIter begin, TIter end, TF f);
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(){};
-	void makeOneGeneration(bool stop);
-        template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
-        template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
+        void makeOneGeneration();
         static const TI *comparer(const std::vector<const TI *> &comparator);
+
+	TO runCalcIndicator(const TIndividual &individual1, const TIndividual &individual2);
+        static TO calcIndicator(const std::vector<TO> &objective1, const std::vector<TO> &objective2);
+
 private:
 	std::uniform_real_distribution<TO> m_distribution;
 	size_t m_size;
+	TO m_scale;
 };
 
 template <typename TIndividual, typename TRandom>
@@ -81,6 +87,8 @@ Csigma<TIndividual, TRandom>::Csigma(TRandom random, TP &problem, const std::vec
         std::list<TPtr> population;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
                 population.push_back(&TBase::m_population[i]);
+	m_size = TBase::m_population.size();
+	m_scale =  0.05;
         while (!population.empty())
         {
                 std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);
@@ -97,7 +105,13 @@ Csigma<TIndividual, TRandom>::~Csigma(void)
 template <typename TIndividual, typename TRandom>
 typename Csigma<TIndividual, TRandom>::TPopulation Csigma<TIndividual, TRandom>::runBreeding(const TPopulation &parent)
 {
-        TPopulation offspring = easea::shared::functions::runBreeding(m_size, parent.begin(), parent.end(), this->getRandom(), &comparer, this->getCrossover());
+	this->getCrossover().setLimitGen(this->getLimitGeneration());
+	this->getCrossover().setCurrentGen(this->getCurrentGeneration());
+	this->getMutation().setLimitGen(this->getLimitGeneration());
+	this->getMutation().setCurrentGen(this->getCurrentGeneration());
+	
+
+        TPopulation offspring = easea::shared::functions::runBreeding(m_size,  parent.begin(), parent.end(), this->getRandom(), &comparer, this->getCrossover());
 
         for (size_t i = 0; i < offspring.size(); ++i)
         {
@@ -121,60 +135,96 @@ bool Csigma<TIndividual, TRandom>::Dominate(const TI *individual1, const TI *ind
         return isDominated(*individual1, *individual2);
 }
 
+template <typename TIndividual, typename TRandom>
+typename Csigma<TIndividual, TRandom>::TO Csigma<TIndividual, TRandom>::runCalcIndicator(const TIndividual &individual1, const TIndividual &individual2)
+{
+        return calcIndicator(individual1.m_objective, individual2.m_objective);
+}
+template <typename TIndividual, typename TRandom>
+typename Csigma<TIndividual, TRandom>::TO Csigma<TIndividual, TRandom>::calcIndicator(const std::vector<TO> &objective1, const std::vector<TO> &objective2)
+{
+        if (objective1.size() <=  0) LOG_ERROR(errorCode::value, "Wrong number of objective");
+        if (objective1.size() != objective2.size()) LOG_ERROR(errorCode::value, "Wrong number of objective");
+        TO maxEpsilon = objective2[0] - objective1[0];
+        for (size_t i = 1; i < objective1.size(); ++i)
+        {
+                const TO epsilon = objective2[i] -objective1[i];
+                if (epsilon > maxEpsilon)
+                        maxEpsilon = epsilon;
+        }
+        return maxEpsilon;
+}
+template <typename TIndividual, typename TRandom>
+typename TIndividual::TO Csigma<TIndividual, TRandom>::calcIndicator(const TIndividual &individual1, const TIndividual &individual2)
+{
+        if (individual1.m_objective.size() != individual2.m_objective.size()) LOG_ERROR(errorCode::value,"Wrong number of objective");
+        return runCalcIndicator(individual1, individual2);
+}
+template <typename TIndividual, typename TRandom>
+template <typename TIter, typename TF> void Csigma<TIndividual, TRandom>::setFitness(TIter begin, TIter end, TF f)
+{
+        for (TIter individual = begin; individual != end; ++individual)
+        {
+                TIndividual &iindividual = *individual;//f(*individual);
+                iindividual.m_fitness= 0;
+                for (TIter remaining = begin; remaining != end; ++remaining)
+                {
+                        if (remaining != individual)
+                        {
+                                const TIndividual &iremaining = *remaining;//f(*remaining);
+                                const TO indicator = calcIndicator(iindividual, iremaining);
+                                iindividual.m_fitness -= exp(-indicator /m_scale);
+
+                        }
+                }
+        }
+}
 
 
 template <typename TIndividual, typename TRandom>
-void Csigma<TIndividual, TRandom>::makeOneGeneration(bool stop)
+void Csigma<TIndividual, TRandom>::makeOneGeneration()
 {
         TPopulation parent = TBase::m_population;
+
         TPopulation offspring = runBreeding(parent);
         typedef typename TPopulation::pointer TPtr;
 	typedef typename TPopulation::iterator TIter;
+	bool epsilon = false;
 	
-	if (stop == true){
+	if (TBase::checkIsLast() == true){
 		easea::shared::CArchive<TIndividual>::setMaxSize(offspring.size());
+		epsilon = false;
 	}
-	for (size_t i = 0; i < offspring.size(); ++i)
-		easea::shared::CArchive<TIndividual>::updateArchive(offspring[i]);
+	else{
+		if (TBase::getCurrentGeneration() > 1){
+		    setFitness(TBaseArchive::m_archive.begin(), TBaseArchive::m_archive.end(), [](TPtr individual)->TIndividual &{return *individual;});
+		    epsilon = true;
+		}
+	}
+	for (size_t i = 0; i < offspring.size(); ++i){
+		easea::shared::CArchive<TIndividual>::updateArchiveEpsilon(offspring[i], epsilon);
+		//if (TBaseArchive::m_same == true) cc++;
+	}
 	size_t szPopDiv2 = (offspring.size() - TBaseArchive::m_archive.size()) / 2;
 	size_t icounter = TBaseArchive::m_archive.size();
+	TBase::m_population.resize(icounter);
 
-	std::vector<TPtr> archPop;
+
 	for (size_t i = 0; i < TBaseArchive::m_archive.size(); ++i)
-    		archPop.push_back(&TBaseArchive::m_archive[i]);
+	{
+		
+		TBase::m_population[i] = TBaseArchive::m_archive[i];
+		TBase::m_population[i].m_fitness = TBaseArchive::m_archive[i].m_fitness;
 
+/*		if (i > 0){
+		    if ((TBase::m_population[i].m_crowdingDistance-TBase::m_population[i-1].m_crowdingDistance)<0.001)
+			cc++;
+		}*/
+	}
 	
-	TBase::m_population.resize(archPop.size());
-	
-	easea::operators::selection::totalSelection(archPop, TBase::m_population.begin(), TBase::m_population.end());
+//	easea::operators::selection::totalSelection(archPop, TBase::m_population.begin(), TBase::m_population.end());
 }
 
-
-template <typename TIndividual, typename TRandom>
-template <typename TPtr, typename TIter> TIter Csigma<TIndividual, TRandom>::selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end)
-{
-        std::vector<TPtr> iFront(front.begin(), front.end());
-        easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
-        if (iFront.size() > std::distance(begin, end)) LOG_ERROR(errorCode::value, "Select Noncritical : Error of front size");
-        TIter dest = begin;
-        for (size_t i = 0; i < iFront.size(); ++i, ++dest)
-                *dest = *iFront[i];
-        return dest;
-}
-
-template <typename TIndividual, typename TRandom>
-template <typename TPtr, typename TIter> TIter Csigma<TIndividual, TRandom>::selectCrit(const std::list<TPtr> &front, TIter begin, TIter end)
-{
-        std::vector<TPtr> iFront(front.begin(), front.end());
-        easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
-        std::partial_sort(iFront.begin(), iFront.begin() + std::distance(begin, end), iFront.end()
-                , [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;});
-        if (iFront.size() < std::distance(begin, end)) LOG_ERROR(errorCode::value, "Select critical : Error of front size!");
-        TIter dest = begin;
-        for (size_t i = 0; dest != end; ++i, ++dest)
-                *dest = *iFront[i];
-        return dest;
-}
 
 template <typename TIndividual, typename TRandom>
 const typename Csigma<TIndividual, TRandom>::TI *Csigma<TIndividual, TRandom>::comparer(const std::vector<const TI *> &comparator)
@@ -183,8 +233,10 @@ const typename Csigma<TIndividual, TRandom>::TI *Csigma<TIndividual, TRandom>::c
                 return comparator[0];
         else if (isDominated(*comparator[1], *comparator[0]))
                 return comparator[1];
+return comparator[0]->m_fitness > comparator[1]->m_fitness ? comparator[0] : comparator[1];
+///        return comparator[0]->m_crowdingDistance > comparator[1]->m_crowdingDistance ? comparator[0] : comparator[1];
 
-        return comparator[0]->m_crowdingDistance > comparator[1]->m_crowdingDistance ? comparator[0] : comparator[1];
+
 }
 }
 }

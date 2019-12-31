@@ -77,8 +77,9 @@ typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjec
 	{
 		const TObjective temp = pow(1 + lMutFactor, distributionIndex + 1);
 		const TObjective mutFactor = pow(2 * random01 + (1 - 2 * random01) * temp, 1 / (distributionIndex + 1)) - 1;
-		if (mutFactor > 0)
+		if (mutFactor > 0){
 			LOG_ERROR(errorCode::value, "Wrong value of mutation factor");
+		}
 		return mutFactor;
 	}
 	else

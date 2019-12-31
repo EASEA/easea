@@ -33,17 +33,31 @@ public:
         virtual ~CAlgorithm(void);
         TP &getProblem() const;
         void run();
+	bool checkIsLast();
+	void trueIsLast();
+	void setLimitGeneration(size_t nbGen);
+	void setCurrentGeneration(size_t iGen);
+	size_t getLimitGeneration();
+	size_t getCurrentGeneration();
+
+
 
 protected:
         virtual void makeOneGeneration(void) = 0;
 
 private:
         TP &m_problem;
+	bool m_isLast;
+	size_t m_nbGen;
+	size_t m_iGen;
 };
 
 template <typename TObjective, typename TVariable>
 CAlgorithm<TObjective, TVariable>::CAlgorithm(TP &problem) : m_problem(problem)
 {
+	m_isLast = false;
+	m_nbGen = 0;
+	m_iGen = 0;
 }
 
 template <typename TObjective, typename TVariable>
@@ -56,6 +70,43 @@ typename CAlgorithm<TObjective, TVariable>::TP &CAlgorithm<TObjective, TVariable
 {
         return m_problem;
 }
+
+template <typename TObjective, typename TVariable>
+bool CAlgorithm<TObjective, TVariable>::checkIsLast()
+{
+	return m_isLast;
+}
+
+template <typename TObjective, typename TVariable>
+void CAlgorithm<TObjective, TVariable>::trueIsLast()
+{
+	m_isLast = true;    
+}
+
+template <typename TObjective, typename TVariable>
+void CAlgorithm<TObjective, TVariable>::setLimitGeneration(size_t nbGen)
+{
+	m_nbGen = nbGen;
+}
+
+template <typename TObjective, typename TVariable>
+void CAlgorithm<TObjective, TVariable>::setCurrentGeneration(size_t iGen)
+{
+	m_iGen = iGen;
+}
+template <typename TObjective, typename TVariable>
+size_t CAlgorithm<TObjective, TVariable>::getLimitGeneration()
+{
+	return m_nbGen;
+}
+
+template <typename TObjective, typename TVariable>
+size_t CAlgorithm<TObjective, TVariable>::getCurrentGeneration()
+{
+	return m_iGen;
+}
+
+
 
 template <typename TObjective, typename TVariable>
 void CAlgorithm<TObjective, TVariable>::run()

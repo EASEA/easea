@@ -69,6 +69,9 @@ void C2x2CrossoverLauncher<TObjective, TVariable, TRandom>::operator ()(const TI
 template <typename TObjective, typename TVariable, typename TRandom>
 void C2x2CrossoverLauncher<TObjective, TVariable, TRandom>::runCrossover(std::vector<const TI *> &parent, std::vector<TI *> &offspring)
 {
+	this->getCrossover().setLimitGen(TBase::getLimitGen());
+	this->getCrossover().setCurrentGen(TBase::getCurrentGen());
+
         for (size_t offspring1 = 0; offspring1 < offspring.size();)
         {
                 std::random_shuffle(parent.begin(), parent.end(), [this](const size_t n)-> size_t{return std::uniform_int_distribution<size_t> (0, n - 1)(this->getRandom());});

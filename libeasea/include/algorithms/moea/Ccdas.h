@@ -102,6 +102,9 @@ const std::vector<double> &Ccdas<TIndividual, TRandom>::getAngle(void) const
 template <typename TIndividual, typename TRandom>
 typename Ccdas<TIndividual, TRandom>::TPopulation Ccdas<TIndividual, TRandom>::runBreeding(const TPopulation &parent)
 {
+	this->getCrossover().setLimitGen(this->getLimitGeneration());
+	this->getCrossover().setCurrentGen(this->getCurrentGeneration());
+
         TPopulation offspring = easea::shared::functions::runBreeding(parent.size(), parent.begin(), parent.end(), this->getRandom(), &comparer, this->getCrossover());
         for (size_t i = 0; i < offspring.size(); ++i)
         {
