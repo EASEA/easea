@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
-#include >CLogger.h>
+#include <CLogger.h>
 #include "COptionParser.h"
 #include "CRandomGenerator.h"
 #include "CEvolutionaryAlgorithm.h"
