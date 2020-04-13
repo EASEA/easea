@@ -286,8 +286,10 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     TIME_ACC(breeding);
 
     TIME_ST(eval);
-    if(!INSTEAD_EVAL_STEP)
+    if(!INSTEAD_EVAL_STEP){
+     population->evaluateParentPopulation();
       population->evaluateOffspringPopulation();
+    }
     else
       evale_pop_chunk(population->offsprings, population->offspringPopulationSize);
     population->currentEvaluationNb += this->params->offspringPopulationSize;
