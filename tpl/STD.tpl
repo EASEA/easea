@@ -83,7 +83,7 @@ int main(int argc, char** argv){
 #include "CIndividual.h"
 
 using namespace std;
-
+bool bReevaluate = false;
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
