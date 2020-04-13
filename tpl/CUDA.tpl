@@ -33,6 +33,7 @@ unsigned *EZ_current_generation;
 CEvolutionaryAlgorithm* EA;
 std::vector<char *> vArgv;
 
+
 int main(int argc, char** argv){
 	if (argc > 1){
     	    for (int i = 1; i < argc; i++){
@@ -93,6 +94,7 @@ int main(int argc, char** argv){
 #include "CIndividual.h"
 #include <vector_types.h>
 #include "CCuda.h"
+bool bReevaluate = false;
 
 
 using namespace std;

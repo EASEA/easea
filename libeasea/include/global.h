@@ -16,6 +16,7 @@
 //#define false 0;
 class CIndividual;
 
+extern bool bReevaluate;
 extern CIndividual** pPopulation;
 extern CIndividual* bBest;
 extern float* pEZ_MUT_PROB;

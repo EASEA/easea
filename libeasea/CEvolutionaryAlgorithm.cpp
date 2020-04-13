@@ -56,6 +56,7 @@ void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 
 extern void evale_pop_chunk(CIndividual** pop, int popSize);
 extern bool INSTEAD_EVAL_STEP;
+extern bool bReevaluate;
 
 /**
  * @DEPRECATED the next contructor has to be used instead of this one.
@@ -274,6 +275,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 	this->params->plotStats = 0;
 	done = 1;
     }
+
 
     // Sending individuals if remote island model
     if(params->remoteIslandModel && this->numberOfClients>0)
@@ -612,6 +614,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       this->server->parm->data->pop_back();
       this->population->parents[index]->deserialize(line);
       // Reevaluate individaul if the flag reevaluateImmigrants == 1	
+      if (bReevaluate == true){ params->reevaluateImmigrants == 1;}
       if (params->reevaluateImmigrants == 1){
 	    this->population->parents[index]->evaluate();
       }
