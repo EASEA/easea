@@ -275,8 +275,14 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 	this->params->plotStats = 0;
 	done = 1;
     }
-
-
+int tmpElitSize =  params->elitSize;
+int tmpPrntReduceSize =  this->params->parentReductionSize;
+int tmpPrntReduct = params->parentReduction; 
+if (bReevaluate == true){
+params->elitSize = 0;
+this->params->parentReductionSize = 0;
+params->parentReduction = 1;
+}
     // Sending individuals if remote island model
     if(params->remoteIslandModel && this->numberOfClients>0)
       this->sendIndividual();
@@ -287,7 +293,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     TIME_ST(eval);
     if(!INSTEAD_EVAL_STEP){
-     population->evaluateParentPopulation();
+//     population->evaluateParentPopulation();
       population->evaluateOffspringPopulation();
     }
     else
@@ -302,6 +308,8 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
     EASEAGenerationFunctionBeforeReplacement(this);
 
+printf("Settings: %i %i %i\n", params->elitSize,this->params->parentReductionSize,params->parentReduction ); 
+
     /* ELITISM */
     if(params->elitSize && this->params->parentPopulationSize>=params->elitSize){
   /* STRONG ELITISM */
@@ -313,10 +321,12 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   else{
     population->weakElitism(params->elitSize, population->parents, population->offsprings, &(population->actualParentPopulationSize), &(population->actualOffspringPopulationSize), elitistPopulation, params->elitSize);
   }
-  
-    }
+  }
+    
 
     TIME_ST(reduction);
+//if (bReevaluate == true)
+//population->reduceParentPopulation(0);//params->parentReductionSize);
     if( params->parentReduction )
       population->reduceParentPopulation(params->parentReductionSize);
 
@@ -324,11 +334,13 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
       population->reduceOffspringPopulation( params->offspringReductionSize );
 
     population->reduceTotalPopulation(elitistPopulation);
+
     TIME_END(reduction);
     TIME_ACC(reduction);
 
     population->sortParentPopulation();
     //if( this->params->printStats  || this->params->generateCSVFile )
+if (bReevaluate == false)
     showPopulationStats(begin); // (always calculate stats)
     bBest = population->Best;
     EASEAEndGenerationFunction(this);
@@ -339,6 +351,9 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     }
 
     currentGeneration += 1;
+  params->elitSize = tmpElitSize ;
+  this->params->parentReductionSize = tmpPrntReduceSize;
+ params->parentReduction = tmpPrntReduct ;
   }
 //#ifdef __linux__
   //if(this->params->plotStats && this->grapher->valid){
