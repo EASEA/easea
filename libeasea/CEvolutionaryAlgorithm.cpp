@@ -340,7 +340,7 @@ printf("Settings: %i %i %i\n", params->elitSize,this->params->parentReductionSiz
 
     population->sortParentPopulation();
     //if( this->params->printStats  || this->params->generateCSVFile )
-if (bReevaluate == false)
+//if (bReevaluate == false)
     showPopulationStats(begin); // (always calculate stats)
     bBest = population->Best;
     EASEAEndGenerationFunction(this);
