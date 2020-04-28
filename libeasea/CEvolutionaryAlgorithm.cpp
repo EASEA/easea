@@ -308,8 +308,6 @@ params->parentReduction = 1;
 
     EASEAGenerationFunctionBeforeReplacement(this);
 
-printf("Settings: %i %i %i\n", params->elitSize,this->params->parentReductionSize,params->parentReduction ); 
-
     /* ELITISM */
     if(params->elitSize && this->params->parentPopulationSize>=params->elitSize){
   /* STRONG ELITISM */
@@ -340,7 +338,6 @@ printf("Settings: %i %i %i\n", params->elitSize,this->params->parentReductionSiz
 
     population->sortParentPopulation();
     //if( this->params->printStats  || this->params->generateCSVFile )
-//if (bReevaluate == false)
     showPopulationStats(begin); // (always calculate stats)
     bBest = population->Best;
     EASEAEndGenerationFunction(this);
