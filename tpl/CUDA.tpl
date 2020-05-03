@@ -266,11 +266,12 @@ void* gpuThreadMain(void* arg){
 	      }
 	      nbr_cudaPreliminaryProcess--;
 
-	      if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
-		// due to lack of individuals, the population distribution is not optimial according to core organisation
+        // to understand better
+	      //if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
+		// due to lack of individuals, the population distribution is not optimal according to core organisation
 		// warn the user and propose a proper configuration
-		std::cerr << "Warning, population distribution is not optimial, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
-			  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
+		//std::cerr << "Warning, population distribution is not optimal, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
+			  //<< " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
 	      }
             }
 	    

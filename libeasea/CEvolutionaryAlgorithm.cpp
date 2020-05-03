@@ -108,17 +108,17 @@ void childHandler(int signum)
         while((w=waitpid(-1, &status, WNOHANG))>0)
         {
             if(WIFEXITED(status)){
-                ss << "Display process catched exiting signal and was stopped" << std::endl;
+                ss << "Display process stopped normally" << std::endl;
 		LOG_MSG(msgType::WARNING, ss.str());
 		done = 0;
         }
         else if (WIFSIGNALED(status)){
-                ss << "Display process catched terminating signal and was stopped" << std::endl;
+                ss << "Display process stopped by a signal" << std::endl;
 		LOG_MSG(msgType::WARNING, ss.str());
                 done = 0;
         }
         else if (WIFSTOPPED(status)){
-                 ss << "Display process catched stopping signal and was stopped" << std::endl;
+                 ss << "Display process stopped by a signal" << std::endl;
 		 LOG_MSG(msgType::WARNING, ss.str());
                  done = 0;
         }
@@ -129,9 +129,9 @@ void childHandler(int signum)
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	
-	ostringstream ss;
-	ss << "EASEA Starting...."<< std::endl;
-	LOG_MSG(msgType::WARNING, ss.str());
+	//ostringstream ss;
+	//ss << "EASEA Starting...."<< std::endl;
+	//LOG_MSG(msgType::WARNING, ss.str());
 
 	this->params = params;
 	this->cstats = new CStats();
@@ -236,7 +236,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
 #endif
 
-  std::cout << "Population initialisation (Generation 0)... "<< std::endl; 
+  //std::cout << "Population initialisation (Generation 0)... "<< std::endl; 
   auto start = std::chrono::system_clock::now();
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
 
@@ -453,13 +453,16 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
   //Affichage
   if(params->printStats){
-    if(currentGeneration==0)
-      printf("GEN\tTIME\t\tEVAL\t\tBEST      AVG       STDDEV    WORST\n\n");
+    if(currentGeneration==0){
+      printf("------------------------------------------------------------------------------------------------\n");
+      printf("|GENER.|    ELAPSED    |    PLANNED    |     ACTUAL    |BEST INDIVIDUAL|  AVG  | WORST | STAND |\n");
+      printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|FITNESS|  DEV  |\n");
+      printf("------------------------------------------------------------------------------------------------\n");
+    }
 #ifdef WIN32
-    printf("%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+    printf("%7u\t%10.3f\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,duration,(int)population->currentEvaluationNb,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
-      //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
-      printf("%u\t%ld.%02d\t\t%u\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+      printf("%7u\t%10ld.%03ds\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/1000,(int)population->currentEvaluationNb,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #endif
   }
 
@@ -472,7 +475,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
     if(currentGeneration==0)
       fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDDEV\t\tWORST\n\n");
 #ifdef WIN32
-    fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+    fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,population->Worst->getFitness(),this->cstats->currentStdDev);
 #else
       //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
       fprintf(f,"%u\t%ld.%d\t\t%u\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());

@@ -412,10 +412,9 @@ void* gpuThreadMain(void* arg){
       }
       nbr_cudaPreliminaryProcess--;
 	
-      if( localGpuData->sh_pop_size%localGpuData->num_MP!=0 ){
-
-	std::cerr << "Warning, population distribution is not optimial, consider adding " << ceilf(((float)localGpuData->sh_pop_size)/localGpuData->num_MP)*localGpuData->num_MP-localGpuData->sh_pop_size  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
-      }
+      //if( localGpuData->sh_pop_size%localGpuData->num_MP!=0 ){
+	//std::cerr << "Warning, population distribution is not optimial, consider adding " << ceilf(((float)localGpuData->sh_pop_size)/localGpuData->num_MP)*localGpuData->num_MP-localGpuData->sh_pop_size  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
+      //}
     }
 
 
