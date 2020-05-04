@@ -59,10 +59,6 @@ int main(int argc, char** argv){
 
 	EASEAFinal(pop);
 
-	std::stringstream stream;
-        stream << "Seed: " << p.seed;
-        LOG_MSG(msgType::INFO, stream.str());
-
 	delete pop;
 
 #ifdef WIN32

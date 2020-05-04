@@ -71,6 +71,7 @@ int main(int argc, char** argv){
 #include "CCmaes.h"
 
 using namespace std;
+bool bReevaluate = false;
 
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;

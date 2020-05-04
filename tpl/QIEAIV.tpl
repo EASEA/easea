@@ -84,6 +84,7 @@ int main(int argc, char** argv){
 
 using namespace std;
 #define EASENA
+bool bReevaluate = false;
 
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
@@ -1166,7 +1167,7 @@ endif
 --plotStats=\PLOT_STATS #plot Stats
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---generateCSV=\GENERATE_CSV_FILE
+--generateCSVFile=\GENERATE_CSV_FILE
 --generatePlotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 

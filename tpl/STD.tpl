@@ -58,10 +58,6 @@ int main(int argc, char** argv){
 
 	EASEAFinal(pop);
 
-	std::stringstream stream;
-        stream << "Seed: " << p.seed;
-        LOG_MSG(msgType::INFO, stream.str());
-
 	delete pop;
 
 
@@ -546,7 +542,7 @@ endif
 --plotStats=\PLOT_STATS #plot Stats
 --printInitialPopulation=0 #Print initial population
 --printFinalPopulation=0 #Print final population
---generateCSV=\GENERATE_CSV_FILE
+--generateCSVFile=\GENERATE_CSV_FILE
 --generatePlotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT
 

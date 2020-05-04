@@ -29,7 +29,7 @@ void CGenerationalCriterion::setCounterEa(unsigned* ea_counter){
 
 bool CGenerationalCriterion::reached(){
   if( generationalLimit <= *currentGenerationPtr ){
-	LOG_MSG(msgType::INFO, "Stopping criterion is reached ");// << *currentGenerationPtr);
+//	LOG_MSG(msgType::INFO, "Stopping criterion is reached ");// << *currentGenerationPtr);
 //    std::cout << "Current generation " << *currentGenerationPtr << " Generational limit : " <<
 //      generationalLimit << std::endl;
     return true;

@@ -29,6 +29,7 @@
 #include "include/CComUDPLayer.h"
 #include "include/CRandomGenerator.h"
 #include "include/CLogger.h"
+#include "include/CProgressBar.h"
 #include <stdio.h>
 #include <sstream>
 #include <iostream>
@@ -267,8 +268,17 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
   // EVOLUTIONARY LOOP
 // auto start = std::chrono::system_clock::now();
+  const int pbCounts = this->params->nbGen-1;
+  const int pbWidth = 100;
+  const char pbComplited = '|';
+  const char pbIncomplited = '-';
+  easena::CProgressBar pb(pbCounts, pbWidth, pbComplited, pbIncomplited);
   while( this->allCriteria() == false){
-
+    
+    if (this->params->printStats == 0)
+	if(currentGeneration % 1 == 0)
+	    pb.display();
+    ++pb;
     EASEABeginningGenerationFunction(this);
     if (done == 0){
         delete this->grapher;
@@ -362,9 +372,25 @@ params->parentReduction = 1;
  
     std::chrono::duration<double> elapsed_seconds = end-start;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    
+    pb.complited();
+    LOG_MSG(msgType::INFO, "Stopping criterion is reached ");
+    /* Logging out the results */
+    std::stringstream stream;
+    stream << "Seed: " << params->seed; 
+    LOG_MSG(msgType::INFO, stream.str());
+    stream.str("");
+    stream << "Best fitness: " << population->Best->getFitness();
+    LOG_MSG(msgType::INFO, stream.str());
+    stream.str("");
+    stream << "Elapsed time: " << elapsed_seconds.count();
+    LOG_MSG(msgType::INFO, stream.str());
+
  
-    std::cout << "finished computation at " << std::ctime(&end_time)
-              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+/*    std::cout << "finished computation at " << std::ctime(&end_time)
+              << "elapsed time: " << elapsed_seconds.count() << "s\n";*/
+
   if(this->params->printFinalPopulation){
     population->sortParentPopulation();
     std::cout << *population << std::endl;
@@ -452,6 +478,8 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #endif
 
   //Affichage
+  
+
   if(params->printStats){
     if(currentGeneration==0){
       printf("------------------------------------------------------------------------------------------------\n");
@@ -485,6 +513,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   }
   if(params->generateCSVFile || params->generateRScript){ //Generation du fichier CSV;
   FILE *f;
+
   string fichier = params->outputFilename;
   fichier.append(".csv");
   f = fopen(fichier.c_str(),"a"); //ajouter .csv
