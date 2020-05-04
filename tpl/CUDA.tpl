@@ -59,6 +59,7 @@ int main(int argc, char** argv){
 
 	EASEAFinal(pop);
 
+
 	delete pop;
 
 #ifdef WIN32
@@ -262,12 +263,11 @@ void* gpuThreadMain(void* arg){
 	      }
 	      nbr_cudaPreliminaryProcess--;
 
-        // to understand better
-	      //if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
+	      if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
 		// due to lack of individuals, the population distribution is not optimal according to core organisation
 		// warn the user and propose a proper configuration
-		//std::cerr << "Warning, population distribution is not optimal, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
-			  //<< " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
+		std::cerr << "Warning, population distribution is not optimal, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
+			  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
 	      }
             }
 	    
