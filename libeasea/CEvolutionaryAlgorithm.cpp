@@ -269,16 +269,21 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   // EVOLUTIONARY LOOP
 // auto start = std::chrono::system_clock::now();
   const int pbCounts = this->params->nbGen-1;
-  const int pbWidth = 100;
-  const char pbComplited = '|';
+
+  const char pbComplited = '#';
   const char pbIncomplited = '-';
-  easena::CProgressBar pb(pbCounts, pbWidth, pbComplited, pbIncomplited);
+  easena::CProgressBar pb(pbCounts, pbComplited, pbIncomplited);
+
+  if (this->params->printStats == 0)
+      pb.init();
   while( this->allCriteria() == false){
     
-    if (this->params->printStats == 0)
+    if (this->params->printStats == 0){
 	if(currentGeneration % 1 == 0)
 	    pb.display();
-    ++pb;
+	++pb;
+    }
+
     EASEABeginningGenerationFunction(this);
     if (done == 0){
         delete this->grapher;
@@ -372,20 +377,26 @@ params->parentReduction = 1;
  
     std::chrono::duration<double> elapsed_seconds = end-start;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-    
-    pb.complited();
-    LOG_MSG(msgType::INFO, "Stopping criterion is reached ");
-    /* Logging out the results */
-    std::stringstream stream;
-    stream << "Seed: " << params->seed; 
-    LOG_MSG(msgType::INFO, stream.str());
-    stream.str("");
-    stream << "Best fitness: " << population->Best->getFitness();
-    LOG_MSG(msgType::INFO, stream.str());
-    stream.str("");
-    stream << "Elapsed time: " << elapsed_seconds.count();
-    LOG_MSG(msgType::INFO, stream.str());
-
+    if (this->params->printStats == 0){
+	pb.complited();
+	std::cout << "Stopping criterion is reached " << std::endl;
+	std::cout << "Best fitness: " << population->Best->getFitness() << std::endl;
+	std::cout << "Best individual: " << std::endl;
+	 population->Best->printOn(std::cout);
+    }
+    else{
+	LOG_MSG(msgType::INFO, "Stopping criterion is reached ");
+	/* Logging out the results */
+	std::stringstream stream;
+	stream << "Seed: " << params->seed; 
+	LOG_MSG(msgType::INFO, stream.str());
+	stream.str("");
+	stream << "Best fitness: " << population->Best->getFitness();
+	LOG_MSG(msgType::INFO, stream.str());
+	stream.str("");
+	stream << "Elapsed time: " << elapsed_seconds.count();
+	LOG_MSG(msgType::INFO, stream.str());
+    }
  
 
 /*    std::cout << "finished computation at " << std::ctime(&end_time)
