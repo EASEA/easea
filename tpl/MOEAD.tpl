@@ -277,6 +277,8 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	globalRandomGenerator = new CRandomGenerator(seed);
 	this->randomGenerator = globalRandomGenerator;
 
+	int nbCPUThreads = setVariable("nbCPUThreads", 1);
+	omp_set_num_threads(nbCPUThreads);
 
 /*	selectionOperator = getSelectionOperator(setVariable("selectionOperator","\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
 	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
