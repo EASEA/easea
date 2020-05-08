@@ -23,7 +23,7 @@
 #include <operators/crossover/wrapper/CWrapCrossover.h>
 #include <operators/mutation/wrapper/CWrapMutation.h>
 #include <operators/selection/nondominateSelection.h>
-
+#include <config.h>
 
 
 namespace easea
@@ -106,6 +106,10 @@ typename Ccdas<TIndividual, TRandom>::TPopulation Ccdas<TIndividual, TRandom>::r
 	this->getCrossover().setCurrentGen(this->getCurrentGeneration());
 
         TPopulation offspring = easea::shared::functions::runBreeding(parent.size(), parent.begin(), parent.end(), this->getRandom(), &comparer, this->getCrossover());
+
+#ifdef USE_OPENMP
+    EASEA_PRAGMA_OMP_PARALLEL
+#endif
         for (size_t i = 0; i < offspring.size(); ++i)
         {
                 TIndividual &child = offspring[i];

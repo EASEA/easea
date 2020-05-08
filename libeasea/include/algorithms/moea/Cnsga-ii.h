@@ -26,7 +26,7 @@
 #include <shared/functions/breeding.h>
 #include <shared/functions/crowdingDistance.h>
 #include <shared/functions/dominance.h>
-
+#include <config.h>
 
 
 namespace easea
@@ -92,8 +92,11 @@ typename Cnsga_ii<TIndividual, TRandom>::TPopulation Cnsga_ii<TIndividual, TRand
 	this->getCrossover().setLimitGen(this->getLimitGeneration());
         this->getCrossover().setCurrentGen(this->getCurrentGeneration());
 
-
         TPopulation offspring = easea::shared::functions::runBreeding(parent.size(), parent.begin(), parent.end(), this->getRandom(), &comparer, this->getCrossover());
+
+#ifdef USE_OPENMP
+    EASEA_PRAGMA_OMP_PARALLEL
+#endif
         for (size_t i = 0; i < offspring.size(); ++i)
         {
                 TI &child = offspring[i];

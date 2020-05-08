@@ -27,7 +27,7 @@
 #include <shared/functions/dominance.h>
 #include <operators/selection/nondominateSelection.h>
 #include <operators/selection/randomSelection.h>
-
+#include <config.h>
 
 
 
@@ -129,16 +129,19 @@ typename Cnsga_iii<TIndividual, TRandom>::TPopulation Cnsga_iii<TIndividual, TRa
 {
     this->getCrossover().setLimitGen(this->getLimitGeneration());
     this->getCrossover().setCurrentGen(this->getCurrentGeneration());
+    
+    TPopulation offspring = easea::shared::functions::runBreeding(parent.size(), parent.begin(), parent.end(), this->getRandom(), &comparer, this->getCrossover());
 
-
-  TPopulation offspring = easea::shared::functions::runBreeding(parent.size(), parent.begin(), parent.end(), this->getRandom(), &comparer, this->getCrossover());
-  for (size_t i = 0; i < offspring.size(); ++i)
-  {
-    TIndividual &child = offspring[i];
-    this->getMutation()(child);
-    TBase::getProblem()(child);
-  }
-  return offspring;
+#ifdef USE_OPENMP
+    EASEA_PRAGMA_OMP_PARALLEL
+#endif
+    for (size_t i = 0; i < offspring.size(); ++i)
+    {
+	TIndividual &child = offspring[i];
+	this->getMutation()(child);
+	TBase::getProblem()(child);
+    }
+    return offspring;
 }
 
 template <typename TIndividual, typename TRandom>

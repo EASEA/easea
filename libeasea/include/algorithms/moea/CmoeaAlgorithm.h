@@ -14,6 +14,7 @@
 
 #include <algorithms/CAlgorithm.h>
 #include <shared/CRandom.h>
+#include <config.h>
 
 namespace easea
 {
@@ -46,7 +47,10 @@ CmoeaAlgorithm<TPopulation, TRandom>::CmoeaAlgorithm(TR random, TP &problem, con
 {
         m_population.resize(initial.size());
         static std::uniform_real_distribution<TO> dist(0, 0.99);
-        
+
+#ifdef USE_OPENMP
+EASEA_PRAGMA_OMP_PARALLEL
+#endif
 	for (size_t i = 0; i < initial.size(); ++i)
         {
                 TI &individual = m_population[i];

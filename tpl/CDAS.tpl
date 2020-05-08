@@ -471,7 +471,7 @@ endif
 
 EASEALIB_PATH=$(EZ_PATH)/libeasea/
 
-CXXFLAGS =  -std=c++14 -O3 -DNDEBUG  -w -Wno-deprecated -Wno-write-strings -fmessage-length=0 -I$(EASEALIB_PATH)include
+CXXFLAGS =  -std=c++14 -O3 -DNDEBUG -fopenmp -w -Wno-deprecated -Wno-write-strings -fmessage-length=0 -I$(EASEALIB_PATH)include
 
 OBJS = EASEA.o EASEAIndividual.o 
 

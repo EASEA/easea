@@ -30,8 +30,7 @@
 #include <shared/functions/breeding.h>
 #include <shared/functions/crowdingDistance.h>
 #include <shared/functions/dominance.h>
-
-
+#include <config.h>
 
 namespace easea
 {
@@ -109,10 +108,12 @@ typename Csigma<TIndividual, TRandom>::TPopulation Csigma<TIndividual, TRandom>:
 	this->getCrossover().setCurrentGen(this->getCurrentGeneration());
 	this->getMutation().setLimitGen(this->getLimitGeneration());
 	this->getMutation().setCurrentGen(this->getCurrentGeneration());
-	
 
         TPopulation offspring = easea::shared::functions::runBreeding(m_size,  parent.begin(), parent.end(), this->getRandom(), &comparer, this->getCrossover());
 
+#ifdef USE_OPENMP
+    EASEA_PRAGMA_OMP_PARALLEL
+#endif
         for (size_t i = 0; i < offspring.size(); ++i)
         {
                 TI &child = offspring[i];

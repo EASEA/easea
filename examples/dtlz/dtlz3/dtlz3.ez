@@ -13,8 +13,11 @@ _______________________________________________________________*/
 
 \User declarations : // This section is copied on top of the output file
 
+#include <operators/crossover/continuous/CbetaCrossover.h>
+#include <operators/mutation/continuous/CSelfGaussianMutation.h>
 #include <operators/crossover/continuous/CsbxCrossover.h>
 #include <operators/mutation/continuous/CPolynomialMutation.h>
+
 #include <CLogger.h>
 #include <shared/CConstant.h>
 
@@ -33,11 +36,14 @@ _______________________________________________________________*/
 #define MUT_PROB  1.0/NB_VARIABLES
 #define MUT_DIST_ID 20.0
 #define QMETRICS 
-#define PARETO_TRUE_FILE "../pf/dtlz3/DTLZ3_3D.dat" 
+#define PARETO_TRUE_FILE "../pf/dtlz3/3D/DTLZ3.3D.pf" 
 #define PBLM_NAME "DTLZ3"
 
+//typedef easea::operators::crossover::continuous::beta::CbetaCrossover<TT, TRandom &> TCrossover;
+//typedef easea::operators::mutation::continuous::pm::CSelfGaussianMutation<TT, TRandom &> TMutation;
 typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
 typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
+
 TRandom m_generator;
 TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
 TCrossover crossover(m_generator, 1, m_problem.getBoundary(), 20);
@@ -177,7 +183,7 @@ GenomeClass {
 
 \GenomeClass::mutator : // Must return the number of mutations
   // must mutate "Genome"
- 
+  return 0;
 \end
 */
 \GenomeClass::evaluator : // Returns the score as a real value

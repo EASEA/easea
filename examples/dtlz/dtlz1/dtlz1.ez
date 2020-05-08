@@ -14,6 +14,8 @@ _______________________________________________________________*/
 \User declarations : // This section is copied on top of the output file
 
 #include <problems/CProblem.h> 
+#include <operators/crossover/continuous/CbetaCrossover.h>
+#include <operators/mutation/continuous/CSelfGaussianMutation.h>
 #include <operators/crossover/continuous/CsbxCrossover.h>
 #include <operators/mutation/continuous/CPolynomialMutation.h>
 
@@ -37,11 +39,14 @@ _______________________________________________________________*/
 
 #define QMETRICS 
 
-#define PARETO_TRUE_FILE "../pf/dtlz1/DTLZ1_3D.dat" 
+#define PARETO_TRUE_FILE "../pf/dtlz1/3D/DTLZ1.3D.pf" 
 #define PBLM_NAME "DTLZ1"
 
-typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
-typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
+typedef easea::operators::crossover::continuous::beta::CbetaCrossover<TT, TRandom &> TCrossover;
+typedef easea::operators::mutation::continuous::pm::CSelfGaussianMutation<TT, TRandom &> TMutation;
+//typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
+//typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
+
 
 TRandom m_generator;
 TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
@@ -138,7 +143,7 @@ GenomeClass {
 
 \GenomeClass::mutator : // Must return the number of mutations
   // must mutate "Genome"
-  
+  return 0;
 \end
 */
 \GenomeClass::evaluator : // Returns the score as a real value
@@ -149,7 +154,6 @@ GenomeClass {
 	
         const TT g = (1 + interval<TT>(TI::m_variable.begin() + pVariables, TI::m_variable.end())) * 0.5;
         linear(TI::m_variable.begin(), TI::m_variable.begin() + pVariables, TI::m_objective.begin(), TI::m_objective.end(), g);
-
 	return 1;
 
 \end

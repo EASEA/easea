@@ -29,7 +29,7 @@
 #include <shared/functions/weight.h>
 #include <shared/functions/dominance.h>
 
-
+#include <config.h>
 
 namespace easea
 {
@@ -144,7 +144,9 @@ void Cmoead<TIndividual, TRandom>::makeOneGeneration(void)
     this->getCrossover().setLimitGen(this->getLimitGeneration());
     this->getCrossover().setCurrentGen(this->getCurrentGeneration());
 
-
+#ifdef USE_OPENMP
+    EASEA_PRAGMA_OMP_PARALLEL
+#endif
     for (size_t i = 0; i < TBase::m_population.size(); ++i)
     {
 	const std::vector<size_t> &neighbors = m_neighbors[i];
