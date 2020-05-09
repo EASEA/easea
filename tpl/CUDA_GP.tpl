@@ -88,7 +88,7 @@ int main(int argc, char** argv){
 #include "CCuda.h"
 #include "CGPNode.h"
 using namespace std;
-
+bool bReevaluate = false;
 extern "C"
 __global__ void 
 EvaluatePostFixIndividuals( const float * k_progs, const int maxprogssize,  const int popsize, const float * k_inputs, const float * outputs, const int trainingSetSize, float * k_results,  int* k_indexes );
@@ -914,7 +914,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
+//	EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);

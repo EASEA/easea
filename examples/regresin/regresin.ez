@@ -202,5 +202,5 @@ LDFLAGS+=
 
   max tree depth : 8
 
-  size of prog buffer : 200000000
+  size of prog buffer : 100000000
 \end
