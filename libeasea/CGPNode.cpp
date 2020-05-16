@@ -207,9 +207,9 @@ void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity ,
   (*oss) << '(';
   if (opArity[(int)root->opCode] == 2) {
     toString_r(oss,root->children[0],opArity,opCodeName,OP_ERC);
-    (*oss) << ' ';
+//    (*oss) << ' ';
     (*oss) << opCodeName[(int)root->opCode];
-    (*oss) << ' ';
+//    (*oss) << ' ';
     toString_r(oss,root->children[1],opArity,opCodeName,OP_ERC);
   } else {
     if (root->opCode == OP_ERC) {
@@ -221,7 +221,7 @@ void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity ,
       if (root->children[i]) {
   toString_r(oss,root->children[i],opArity,opCodeName,OP_ERC);
   if (i < opArity[(int)root->opCode] - 1) {
-    (*oss) << ' ';
+//    (*oss) << ' ';
   }
       }
     }
