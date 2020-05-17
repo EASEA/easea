@@ -68,6 +68,7 @@ CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopula
   this->rg = rg;
 
   this->currentEvaluationNb = 0;
+  this->realEvaluationNb = 0;
   this->params = params;
   this->cstats = cstats;
 }
@@ -121,8 +122,12 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-  for( unsigned i=0 ; i < populationSize ; i++ )
+  for( unsigned i=0 ; i < populationSize ; i++ ){
+    if (population[i]->valid == false)
+    realEvaluationNb++;
+    
     population[i]->evaluate();
+}
 
 }
 void CPopulation::optimisePopulation(CIndividual** population, unsigned populationSize){
@@ -395,6 +400,7 @@ void CPopulation::strongElitism(unsigned elitismSize, CIndividual** population, 
       }
     }
     outPopulation[i] = population[bestCIndividual];
+
     population[bestCIndividual] = population[populationSize-(i+1)];
     population[populationSize-(i+1)] = NULL;
   }

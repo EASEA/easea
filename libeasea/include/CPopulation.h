@@ -59,6 +59,7 @@ public:
 
     std::vector<CIndividual*> pop_vect;
     unsigned currentEvaluationNb;
+    unsigned realEvaluationNb;
     CRandomGenerator* rg;
     Parameters* params;
     CStats* cstats;

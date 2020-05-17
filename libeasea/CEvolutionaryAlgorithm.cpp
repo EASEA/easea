@@ -254,6 +254,8 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   TIME_ACC(eval);
 
   this->population->currentEvaluationNb += this->params->parentPopulationSize;
+
+
   if(this->params->printInitialPopulation){
     std::cout << *population << std::endl;
   }
@@ -293,6 +295,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 int tmpElitSize =  params->elitSize;
 int tmpPrntReduceSize =  this->params->parentReductionSize;
 int tmpPrntReduct = params->parentReduction; 
+
 if (bReevaluate == true){
 params->elitSize = 0;
 this->params->parentReductionSize = 0;
@@ -308,7 +311,7 @@ params->parentReduction = 1;
 
     TIME_ST(eval);
     if(!INSTEAD_EVAL_STEP){
-//     population->evaluateParentPopulation();
+//      population->evaluateParentPopulation();
       population->evaluateOffspringPopulation();
     }
     else
@@ -340,9 +343,10 @@ params->parentReduction = 1;
     TIME_ST(reduction);
 //if (bReevaluate == true)
 //population->reduceParentPopulation(0);//params->parentReductionSize);
-    if( params->parentReduction )
+    if( params->parentReduction ){
+printf("PP: %i %i\n", params->parentReduction, params->parentReductionSize); 
       population->reduceParentPopulation(params->parentReductionSize);
-
+}
     if( params->offspringReduction )
       population->reduceOffspringPopulation( params->offspringReductionSize );
 
@@ -379,13 +383,13 @@ params->parentReduction = 1;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
     if (this->params->printStats == 0){
 	pb.complited();
-	std::cout << "Stopping criterion is reached " << std::endl;
+	//std::cout << "Stopping criterion is reached " << std::endl;
 	std::cout << "Best fitness: " << population->Best->getFitness() << std::endl;
 	std::cout << "Best individual: " << std::endl;
 	 population->Best->printOn(std::cout);
     }
     else{
-	LOG_MSG(msgType::INFO, "Stopping criterion is reached ");
+	
 	/* Logging out the results */
 	std::stringstream stream;
 	stream << "Seed: " << params->seed; 
@@ -499,9 +503,9 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
       printf("------------------------------------------------------------------------------------------------\n");
     }
 #ifdef WIN32
-    printf("%7u\t%10.3f\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,duration,(int)population->currentEvaluationNb,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+    printf("%7u\t%10.3f\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,duration,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
-      printf("%7u\t%10ld.%03ds\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/1000,(int)population->currentEvaluationNb,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+      printf("%7u\t%10ld.%03ds\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/1000,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #endif
   }
 
@@ -671,8 +675,10 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       this->server->parm->data->pop_back();
       this->population->parents[index]->deserialize(line);
       // Reevaluate individaul if the flag reevaluateImmigrants == 1	
-      if (bReevaluate == true){ params->reevaluateImmigrants == 1;}
+      if (bReevaluate == true){ params->reevaluateImmigrants = 1;}
       if (params->reevaluateImmigrants == 1){
+	    this->population->parents[index]->valid = false;
+	    this->population->realEvaluationNb++;
 	    this->population->parents[index]->evaluate();
       }
 
