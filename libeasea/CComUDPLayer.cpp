@@ -58,7 +58,7 @@ void * CComUDPServer::UDP_server_thread(void *parm) {
 	string data ,fit;
 	while ( getline( iss, data, ' ' ) ) { fit = data; }
 
-      printf("    Received individual (fitness = %s ) from %s:%d\n", fit.c_str(), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+      printf("    Received individual (fitness = \t%.9e ) from %s:%d\n", std::stod(fit.c_str()), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
     
       pthread_mutex_lock(&server_mutex);
       /*process received data */

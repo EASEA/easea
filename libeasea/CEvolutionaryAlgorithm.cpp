@@ -301,7 +301,7 @@ params->elitSize = 0;
 this->params->parentReductionSize = 0;
 params->parentReduction = 1;
 }
-    // Sending individuals if remote island model
+    //  individuals if remote island model
     if(params->remoteIslandModel && this->numberOfClients>0)
       this->sendIndividual();
     TIME_ST(breeding);
@@ -641,7 +641,8 @@ void CEvolutionaryAlgorithm::sendIndividual(){
     //selecting a client randomly
     int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
     //for(int client=0; client<this->numberOfClients; client++){
-    cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to " 
+    //cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to "
+    cout << "    Sending my best individual to " 
     << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() <<endl;
     //cout << "Sending individual " << index << " to client " << client << " now" << endl;
     //cout << this->population->parents[index]->serialize() << endl;
