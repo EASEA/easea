@@ -344,9 +344,8 @@ params->parentReduction = 1;
 //if (bReevaluate == true)
 //population->reduceParentPopulation(0);//params->parentReductionSize);
     if( params->parentReduction ){
-printf("PP: %i %i\n", params->parentReduction, params->parentReductionSize); 
       population->reduceParentPopulation(params->parentReductionSize);
-}
+    }
     if( params->offspringReduction )
       population->reduceOffspringPopulation( params->offspringReductionSize );
 
@@ -674,6 +673,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       string line = this->server->parm->data->back().data;
       this->server->parm->data->pop_back();
       this->population->parents[index]->deserialize(line);
+      int reeval = params->reevaluateImmigrants;
       // Reevaluate individaul if the flag reevaluateImmigrants == 1	
       if (bReevaluate == true){ params->reevaluateImmigrants = 1;}
       if (params->reevaluateImmigrants == 1){
@@ -681,7 +681,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 	    this->population->realEvaluationNb++;
 	    this->population->parents[index]->evaluate();
       }
-
+      params->reevaluateImmigrants = reeval;
       //TAG THE INDIVIDUAL AS IMMIGRANT
       this->population->parents[index]->isImmigrant = true;
 

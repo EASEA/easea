@@ -726,6 +726,7 @@ int easeaParse(int argc, char *argv[]){
     if ((argv[nParamNb][0]=='-')||(argv[nParamNb][0]=='/')) sTemp=&(argv[nParamNb][1]);
     if (!mystricmp(sTemp,"cuda")){
       TARGET=CUDA;
+      printf("Compiled with CUDA template\n");
       TARGET_FLAVOR = CUDA_FLAVOR_SO;
     }
     else if( !mystricmp(sTemp,"cuda_mo") ){
@@ -733,17 +734,18 @@ int easeaParse(int argc, char *argv[]){
       TARGET_FLAVOR = CUDA_FLAVOR_MO;
     }
     else if( !mystricmp(sTemp,"cuda_gp") ){
-      printf("tpl is cuda gp\n");
+      printf("Compiled with CUDA GP template\n");
       TARGET=CUDA;
       TARGET_FLAVOR = FLAVOR_GP;
     }
     else if( !mystricmp(sTemp,"gp") ){
-      printf("tpl is gp\n");
+      printf("Compiled with GP template\n");
       TARGET=STD;
       TARGET_FLAVOR = FLAVOR_GP;
     }
     else if (!mystricmp(sTemp,"std"))  {
       TARGET=STD;
+      printf("Compiled with STD template\n");
       TARGET_FLAVOR = STD_FLAVOR_SO;
     }
     else if (!mystricmp(sTemp,"std_mo")) {
@@ -751,36 +753,45 @@ int easeaParse(int argc, char *argv[]){
       TARGET_FLAVOR = STD_FLAVOR_MO;
     }
     else if (!mystricmp(sTemp,"cmaes"))  {
+      printf("Compiled with CMAES template\n");
       TARGET_FLAVOR = CMAES;
     }
     else if (!mystricmp(sTemp,"memetic"))  {
       TARGET_FLAVOR = MEMETIC;
     }
     else if (!mystricmp(sTemp,"nsgaii"))  {
+      printf("Compiled with NSGAII template\n");
       TARGET_FLAVOR = NSGAII;
     }
     else if (!mystricmp(sTemp,"asrea"))  {
+      printf("Compiled with ASREA template\n");
       TARGET_FLAVOR = ASREA;
     }
     else if (!mystricmp(sTemp,"fastemo"))  {
+      printf("Compiled with FASTEMO template\n");
       TARGET_FLAVOR = FASTEMO;
     }
         else if (!mystricmp(sTemp,"fastemoii"))  {
            TARGET_FLAVOR = FASTEMOII;
      }
     else if (!mystricmp(sTemp,"nsgaiii"))  {
+	   printf("Compiled with NSGAIII template\n");
            TARGET_FLAVOR = NSGAIII;
          }
     else if (!mystricmp(sTemp,"ibea"))  {
+	    printf("Compiled with IBEA template\n");
             TARGET_FLAVOR = IBEA;
      }
     else if (!mystricmp(sTemp,"moead"))  {
+		printf("Compiled with MOEAD template\n");
                 TARGET_FLAVOR = MOEAD;
      }
      else if (!mystricmp(sTemp,"qiea"))  {
+		printf("Compiled with QIEA template\n");
                  TARGET_FLAVOR = QIEA;
       }
     else if (!mystricmp(sTemp,"cdas"))  {
+	    printf("Compiled with CDAS template\n");
              TARGET_FLAVOR = CDAS;
     }
     else if (!mystricmp(sTemp,"v"))  bVERBOSE=true;
