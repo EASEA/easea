@@ -12,7 +12,9 @@
 #include <string>
 #include <string.h>
 #include <iostream>
-
+#include <iomanip>
+#include <chrono>
+#include <ctime>
 #include <sstream>
 #include <fstream>
 #ifndef WIN32
@@ -57,8 +59,13 @@ void * CComUDPServer::UDP_server_thread(void *parm) {
 	istringstream iss(buffer);
 	string data ,fit;
 	while ( getline( iss, data, ' ' ) ) { fit = data; }
-
-      printf("    Received individual (fitness = \t%.9e ) from %s:%d\n", std::stod(fit.c_str()), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+	
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now); 
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time_t),  "%H:%M:%S");
+	cout << "["<<ss.str()<<"]";
+        printf(" Received individual (fitness = %.9e ) from %s:%d\n",  std::stod(fit.c_str()), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
     
       pthread_mutex_lock(&server_mutex);
       /*process received data */
@@ -429,7 +436,6 @@ CComUDPClient** parse_file(const char* file_name, unsigned* p_no_client, int por
 
 #endif
 
-//    free(holder);
     }
   }
 

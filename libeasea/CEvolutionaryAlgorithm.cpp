@@ -37,6 +37,7 @@
 #include <sys/wait.h>
 #include <chrono>
 #include <ctime>
+#include <iomanip>
 //#define INSTRUMENTED
 #ifdef INSTRUMENTED
 #define TIMING
@@ -642,10 +643,15 @@ void CEvolutionaryAlgorithm::sendIndividual(){
     int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
     //for(int client=0; client<this->numberOfClients; client++){
     //cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to "
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+    std::stringstream ss;
+    ss <<std::put_time(std::localtime(&in_time_t),  "%H:%M:%S");
     if (Clients[client]->getClientName() != NULL)
-	cout << "    Sending my best individual to " << this->Clients[client]->getClientName() <<endl;
+	cout << "[" << ss.str()<<"]"<<  " Sending my best individual to " << this->Clients[client]->getClientName() <<  endl;
     else
-	cout << "    Sending my best individual to " << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() <<endl;
+	cout << "[" << ss.str()<<"]" << " Sending my best individual to " << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() << endl;
     //cout << "Sending individual " << index << " to client " << client << " now" << endl;
     //cout << this->population->parents[index]->serialize() << endl;
     this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
