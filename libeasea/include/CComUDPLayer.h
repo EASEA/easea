@@ -57,9 +57,11 @@ public:
 	~CComUDPServer();
 	void read_data_lock();
 	void read_data_unlock();
+//	char *getServerName();
 private:
 	int ServerSocket;
 	pthread_t thread;
+//	char *name;
 };
 
 class CComUDPClient {
@@ -68,13 +70,16 @@ public:
 	int debug;
 	void CComUDP_client_send(char *individual);
 	CComUDPClient(unsigned short port, const char *ip,int dg);
-  CComUDPClient(struct sockaddr_in* addr, int dg);
+	CComUDPClient(struct sockaddr_in* addr, int dg);
 	~CComUDPClient();
 	std::string getIP();
-    int getPort();
+	int getPort();
+	char *getClientName();
+	void setClientName(char *name);
 private:
 	struct sockaddr_in ServAddr;
 	int Socket;
+	char *name;
 };
 
 bool isLocalMachine(const char* address);

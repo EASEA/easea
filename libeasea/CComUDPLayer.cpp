@@ -123,6 +123,9 @@ CComUDPServer::CComUDPServer(unsigned short port,int dg) {
     printf("pthread create failed. exiting\n"); exit(1);
   }
 };
+/*char *CComUDPServer::getServerName(){
+    return name;
+}*/
 
 void CComUDPServer::read_data_lock() {
   pthread_mutex_lock(&server_mutex);
@@ -145,6 +148,15 @@ CComUDPClient::CComUDPClient(unsigned short port, const char *ip,int dg){
   ServAddr.sin_addr.s_addr = inet_addr(ip);     /* Any incoming interface */
   ServAddr.sin_port = htons(port);          /* Local port */
 };
+
+char *CComUDPClient::getClientName(){
+	return name;
+}
+void CComUDPClient::setClientName(char *name){
+
+	this->name = name; 
+
+}
 
 CComUDPClient::CComUDPClient(struct sockaddr_in* addr, int dg){
   this->debug = dg;
@@ -284,9 +296,10 @@ bool checkValidLine(string line){
   strcpy(holder,ligne);
   char* address = strtok(holder, ":");
   char* port = strtok(NULL,":");
-
-  //printf("IP %s\n",address);
-  //printf("port %s\n",port);
+ // char *name = strtok(NULL,":");    
+ // printf("IP %s\n",address);
+ // printf("port %s\n",port);
+  
 
   //Check if there is an IP and a port
   if(address==NULL || port==NULL){
@@ -388,18 +401,35 @@ CComUDPClient** parse_file(const char* file_name, unsigned* p_no_client, int por
   //size_t n = 512;
   unsigned no_client = 0;
   struct sockaddr_in* client_addr = new struct sockaddr_in[128];
+  char* tmpClientName[128];
 
   //while(getline(&tmp_line,&n,ip_file)>0){
   while(getline(ip_file, tmp_line)){
     if(checkValidLine(tmp_line)){
+	const char* ligne = tmp_line.c_str();
+        char* holder = (char*)malloc(strlen(ligne)+1);
+	strcpy(holder,ligne);
+	char* address = strtok(holder, ":");
+	char* port = strtok(NULL,":");
+	char* name = strtok(NULL,":");
+
       struct sockaddr_in tmpClient = parse_addr_string(tmp_line.c_str());
 #ifndef WIN32
       if(!isLocalMachine(inet_ntoa(tmpClient.sin_addr), ntohs(tmpClient.sin_port), portServer)){
-        client_addr[no_client++] = tmpClient;
+        tmpClientName[no_client] = name;
+	tmpClientName[no_client] = name;
+
+	client_addr[no_client++] = tmpClient;
+	
+
       }
 #else
       client_addr[no_client++] = tmpClient;
+    
+
 #endif
+
+//    free(holder);
     }
   }
 
@@ -407,7 +437,9 @@ CComUDPClient** parse_file(const char* file_name, unsigned* p_no_client, int por
   CComUDPClient** clients = new CComUDPClient*[no_client];
   for( unsigned i=0 ; i<no_client ; i++ ){
     clients[i] = new CComUDPClient(&client_addr[i],0);
-  }
+
+    clients[i]->setClientName(tmpClientName[i]);
+    }
 
   (*p_no_client) = no_client;
   //delete[] tmp_line;
