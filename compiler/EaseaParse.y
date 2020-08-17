@@ -348,6 +348,8 @@ Object
 
   | Symbol  '[' Expr ']' {
       if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
+if((TARGET_FLAVOR==QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
+if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
 
       //printf("DEBUG : size of $3 %d nSize %d\n",(int)$3,pCURRENT_TYPE->nSize);
 
@@ -366,6 +368,13 @@ Object
       if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { 
 	nGENOME_NAME=$2->sName; nPROBLEM_DIM=(int)$4;
       }
+if((TARGET_FLAVOR==QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) {
+    nGENOME_NAME=$2->sName; nPROBLEM_DIM=(int)$4;}
+if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) {
+      nGENOME_NAME=$2->sName; nPROBLEM_DIM=(int)$4;
+
+}
+
       
       //pCURRENT_CLASS->nSize
 
@@ -755,6 +764,10 @@ int easeaParse(int argc, char *argv[]){
     else if (!mystricmp(sTemp,"cmaes"))  {
       printf("Compiled with CMAES template\n");
       TARGET_FLAVOR = CMAES;
+    }
+    else if (!mystricmp(sTemp,"qaes"))  {
+      printf("Compiled with QAES template\n");
+      TARGET_FLAVOR = QAES;
     }
     else if (!mystricmp(sTemp,"memetic"))  {
       TARGET_FLAVOR = MEMETIC;

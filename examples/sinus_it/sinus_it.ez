@@ -21,6 +21,30 @@ __________________________________________________________*/
 
 float fSAMPLE[NB_SAMPLES][2]; //  2nd dimension is x value [0] and y value [1]
 float fTARGET_SIN[NB_SIN][3]; // [0] = amplitude, [1] = frequence, [2] = phase
+
+/* Please remove comments below if you use QAES.tpl */
+/*
+#define NB_VARIABLES NB_SIN*3
+#define NB_OBJECTIVES 1
+TBoundary setBoundaryLocal(const size_t dimension)
+{
+        TBoundary boundary(dimension);
+        for (size_t i = 0; i < NB_SIN; ++i)
+        {
+                boundary[i*3+0].first = MIN_AMP;
+                boundary[i*3+0].second = MAX_AMP;
+		boundary[i*3+1].first = MIN_FREQ;
+		boundary[i*3+1].second = MAX_FREQ;
+		boundary[i*3+2].first = MIN_PH;
+		boundary[i*3+2].second = MAX_PH;
+        }
+
+        return boundary;
+}
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, setBoundaryLocal(NB_VARIABLES));
+*/
+
+
 \end
 
 \User functions:

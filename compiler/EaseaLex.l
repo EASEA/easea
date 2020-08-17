@@ -2578,8 +2578,10 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       strcat(sTemp,"CUDA.tpl");
     else if(TARGET_FLAVOR == CMAES )
       strcat(sTemp,"CMAES_CUDA.tpl");
-/*    else if (TARGET_FLAVOR == NSGAII)
-	strcat(sTemp,"NSGAII.tpl");*/
+    else if (TARGET_FLAVOR == QAES_CUDA )
+	 strcat(sTemp,"QAES_CUDA.tpl");
+    else if (TARGET_FLAVOR == NSGAII_CUDA)
+	strcat(sTemp,"NSGAII_CUDA.tpl");
     else if( TARGET_FLAVOR == FLAVOR_GP )
       strcat(sTemp,"CUDA_GP.tpl");
     else if(TARGET_FLAVOR == MEMETIC )
@@ -2600,6 +2602,8 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       strcat(sTemp,"CMAES.tpl");
     else if (TARGET_FLAVOR == FLAVOR_GP)
       strcat(sTemp,"GP.tpl");
+    else if (TARGET_FLAVOR == QAES)
+	strcat(sTemp, "QAES.tpl");
     else if (TARGET_FLAVOR == NSGAII){
 	strcat(sTemp, "NSGAII.tpl");
 	std::cout << "STD:NSGAII" << std::endl;
