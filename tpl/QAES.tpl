@@ -294,7 +294,8 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
-
+	int nbCPUThreads = setVariable("nbCPUThreads", 1);
+	omp_set_num_threads(nbCPUThreads);
 	seed = setVariable("seed",(int)time(0));
 	srand(seed);
 	globalRandomGenerator = new CRandomGenerator(seed);
@@ -467,6 +468,9 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
 	double koeff = 0;
 	double V = 0;
 	double Vtmp = 0;
+	bBest = new IndividualImpl();
+	bBest->fitness = std::numeric_limits<double>::max();
+
 
 	limitGen = EZ_NB_GEN[0];  /* Get maximal number of geneation from the prm file, defined by user */
 
@@ -535,6 +539,7 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
 	    Vtmp = 0;  
 	    int Nnext = Nt;
 	    int tt = 0;
+
 	    for ( int i = 0; i < szPopMax; i++){
 		if (flags[i] == 1){
 		nbV = 0;
@@ -551,7 +556,7 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
 		    double p = pop_pos_best[i][j]*fi + (1-fi)*globalSolution[j];
 		    /* if there is local optimum -> let's make the large diffusion displacement */
 		    if (koeff == 1){
-			 p = easea::shared::distributions::norm(p,nbVar/(3*fabs(meanSolution[j]-pop_pos_best[i][j])));
+			 p = easea::shared::distributions::norm(p,0.1*nbVar/(3*fabs(meanSolution[j]-pop_pos_best[i][j])));
 		    }
 
 		    if ((p - globalSolution[j]) < epsilon) nbV++;
@@ -615,7 +620,7 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
 	    for (int i = 0; i < szPop; i++){
 		if (bestM[i] == 0){ /* If weight function of particle is bad - let's make small diffusion displacement */
 		    for (int j = 0; j < nbVar; j++)
-			pop_x[i][j] = easea::shared::distributions::norm(pop_x[i][j], fabs(meanSolution[j]-pop_pos_best[i][j]));
+			pop_x[i][j] = easea::shared::distributions::norm(pop_x[i][j], 0.5*fabs(meanSolution[j]-pop_pos_best[i][j]));
 		    IndividualImpl *tmp = new IndividualImpl(pop_x[i]);
 		    F[i] = tmp->evaluate();
 		    delete(tmp);
@@ -653,18 +658,21 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
 		    currentGeneration = 0;
 		    reset = false;
 		}
-		ss << "Generation: " << currentGeneration << " Best solution: " << bestGlobal << std::endl;
+	
+		if (bestGlobal < bBest->fitness){
+		for (int j = 0; j < nbVar; j++)
+		    ((IndividualImpl*)(bBest))->\GENOME_NAME[j] = globalSolution[j];
+		
+	    	bBest->fitness = bestGlobal;
+		}
+		ss << "Generation: " << currentGeneration << " Best solution: " << bBest->fitness << " Current best solution: " << bestGlobal << std::endl;
 		LOG_MSG(msgType::INFO, ss.str());
-
-	}
-	bBest = new IndividualImpl();
-	for (int j = 0; j < nbVar; j++){
-	    ((IndividualImpl*)(bBest))->\GENOME_NAME[j] = globalSolution[j];
 	}
 	std::chrono::duration<double> tmDur = std::chrono::system_clock::now() - tmStart;
 	ostringstream ss;
         ss << "Total execution time (in sec.): " << tmDur.count() << std::endl;
 	LOG_MSG(msgType::INFO, ss.str());
+	delete(bBest);
 
 }
 
