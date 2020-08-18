@@ -11,7 +11,7 @@
 |                                                                       |
  ***********************************************************************/
 #pragma once
-
+#include <random>
 namespace easea{
 namespace shared {
 
