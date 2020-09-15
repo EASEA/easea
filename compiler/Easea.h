@@ -41,7 +41,7 @@ Centre de Math?matiques Appliqu?es
 #define CDAS 20
 #define QIEA 22
 #define QAES 23
-#define QAES_CUDA 24
+#define CUDA_QAES 24
 #define NSGAII_CUDA 25
 
 

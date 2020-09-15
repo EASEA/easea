@@ -2578,8 +2578,8 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       strcat(sTemp,"CUDA.tpl");
     else if(TARGET_FLAVOR == CMAES )
       strcat(sTemp,"CMAES_CUDA.tpl");
-    else if (TARGET_FLAVOR == QAES_CUDA )
-	 strcat(sTemp,"QAES_CUDA.tpl");
+    else if (TARGET_FLAVOR == CUDA_QAES )
+	 strcat(sTemp,"CUDA_QAES.tpl");
     else if (TARGET_FLAVOR == NSGAII_CUDA)
 	strcat(sTemp,"NSGAII_CUDA.tpl");
     else if( TARGET_FLAVOR == FLAVOR_GP )
