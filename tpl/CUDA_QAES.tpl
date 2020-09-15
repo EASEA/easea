@@ -652,7 +652,7 @@ m_problem.getBoundary()[j].first) + m_problem.getBoundary()[j].first);
                   double p = pop_pos_best[i][j]*fi + (1-fi)*globalSolution[j];
                   /* if there is local optimum -> let's make the large diffusion displacement */
                   if (koeff == 1){
-                       p = easea::shared::distributions::norm(p,0.1*nbVar/(3*fabs(meanSolution[j]-pop_pos_best[i][j])));
+                       p = easea::shared::distributions::norm(p,(1/(double)nbVar)*(fabs(meanSolution[j]-pop_pos_best[i][j])));
                   }
 
                   if ((p - globalSolution[j]) < epsilon) nbV++;
