@@ -120,9 +120,9 @@ extern CEvolutionaryAlgorithm *EA;
     size_t limitGen;
     bool reset;
     int num = 0;
-    #define ACC_1 100
-    #define ACC_2 100
-    #define LIMIT_UPDATE 30
+    #define ACC_1 1
+    #define ACC_2 10000
+    #define LIMIT_UPDATE 10
     #define SZ_POP_MAX 5000
     typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
