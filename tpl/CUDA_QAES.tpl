@@ -1418,7 +1418,7 @@ clean:
 --nbOffspring=1000 #\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
 
 ######    Stopping Criterions    #####
---nbGen= 200000 #\NB_GEN #Nb of generations
+--nbGen=200000 #\NB_GEN #Nb of generations
 --timeLimit=\TIME_LIMIT # Time Limit: desactivate with (0) (in Seconds)
 
 ######    Evolution Engine / Replacement    ######
