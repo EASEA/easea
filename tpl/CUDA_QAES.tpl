@@ -123,7 +123,7 @@ extern CEvolutionaryAlgorithm *EA;
     #define ACC_1 1
     #define ACC_2 10000
     #define LIMIT_UPDATE 10
-    #define SZ_POP_MAX 5000
+    #define SZ_POP_MAX 50000
     typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
 #define CUDA_TPL
@@ -1414,11 +1414,11 @@ clean:
 # --seed=0   # -S : Random number seed. It is possible to give a specific seed.
 
 ######    Evolution Engine    ######
---popSize=\POP_SIZE # -P : Population Size
---nbOffspring=\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
+--popSize=1000 #\POP_SIZE # -P : Population Size
+--nbOffspring=1000 #\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
 
 ######    Stopping Criterions    #####
---nbGen=\NB_GEN #Nb of generations
+--nbGen= 200000 #\NB_GEN #Nb of generations
 --timeLimit=\TIME_LIMIT # Time Limit: desactivate with (0) (in Seconds)
 
 ######    Evolution Engine / Replacement    ######
