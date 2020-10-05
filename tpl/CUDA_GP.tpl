@@ -102,6 +102,9 @@ extern CEvolutionaryAlgorithm *EA;
 
 #define CUDAGP_TPL
 
+typedef float TO;
+typedef float TV;
+
 #define HIT_LEVEL  0.01f
 #define PROBABLY_ZERO  1.11E-15f
 #define BIG_NUMBER 1.0E15f
@@ -112,13 +115,13 @@ float** inputs;
 float* outputs;
 
 
-struct gpuEvaluationData* gpuData;
+struct gpuEvaluationData<TO>* gpuData;
 
 int fstGpu = 0;
 int lstGpu = 0;
 
 
-struct gpuEvaluationData* globalGpuData;
+struct gpuEvaluationData<TO>* globalGpuData;
 float* fitnessTemp;  
 bool freeGPU = false;
 bool first_generation = true;
@@ -187,7 +190,7 @@ void dispatchPopulation(int populationSize){
   }
 }
 
-void cudaPreliminaryProcessGP(struct gpuEvaluationData* localGpuData){
+void cudaPreliminaryProcessGP(struct gpuEvaluationData<TO>* localGpuData){
 
   //  here we will compute how to spread the population to evaluate on GPGPU cores
   struct cudaFuncAttributes attr;
@@ -345,7 +348,7 @@ int flattening_tree_rpn( GPNode* root, float* buf, int* index){
 }
 
 
-int flatteningSubPopulation( struct gpuEvaluationData* localGpuData, IndividualImpl** population){
+int flatteningSubPopulation( struct gpuEvaluationData<TO>* localGpuData, IndividualImpl** population){
   int index = 0;
   for( int i=0 ; i<localGpuData->sh_pop_size ; i++ ){
     localGpuData->indexes[i] = index;
@@ -366,7 +369,7 @@ void* gpuThreadMain(void* arg){
   int nbr_cudaPreliminaryProcess = 2;
 
   cudaError_t lastError;
-  struct gpuEvaluationData* localGpuData = (struct gpuEvaluationData*)arg;
+  struct gpuEvaluationData<TO>* localGpuData = (struct gpuEvaluationData<TO>*)arg;
 
   CUDA_SAFE_CALL(cudaSetDevice(localGpuData->gpuId));
 
@@ -479,7 +482,7 @@ void InitialiseGPUs(){
   }
 
   //MultiGPU part on one CPU
-  globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
+  globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
   pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
   int gpuId = fstGpu;
   //here we want to create on thread per GPU
@@ -648,7 +651,7 @@ void EASEAInit(int argc, char** argv){
 	  }
 	}
 
-	//globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
+	//globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
 	\INSERT_INIT_FCT_CALL
 
 	InitialiseGPUs();

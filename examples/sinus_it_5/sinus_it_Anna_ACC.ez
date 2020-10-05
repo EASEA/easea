@@ -7,7 +7,7 @@ __________________________________________________________*/
 
 \User declarations :
 
-#define NB_SIN  3               // but you can try a different value
+#define NB_SIN  5               // but you can try a different value
 
 double iACC_MULT=1024*1024;
 #define PI  3.14159265358979323846
@@ -18,7 +18,7 @@ double iACC_MULT=1024*1024;
 #define MIN_PH 0.0
 #define MAX_PH 2*PI
 
-#define NB_SAMPLES 64 //4096 //8192 //16384 //8192 //131072 //8192 //4096       // number of samples to be created
+#define NB_SAMPLES 128 //1024 //4096 //8192 //16384 //8192 //131072 //8192 //4096       // number of samples to be created
 
 float fX_MIN;
 float fX_MAX;
@@ -100,6 +100,8 @@ else {fX_MIN=5000;fX_MAX=111496;}
 
 // We start by creating NB_SIN sines
 
+    fTARGET_SIN[4][0]=5024.329689; fTARGET_SIN[4][1]=0.268437474058823; fTARGET_SIN[4][2]=3.0180140540959;
+    fTARGET_SIN[3][0]=1022.173983; fTARGET_SIN[3][1]=0.268240534969381; fTARGET_SIN[3][2]=5.05911262303754;
     fTARGET_SIN[2][0]=610.33407; fTARGET_SIN[2][1]=0.268238859479379; fTARGET_SIN[2][2]=3.34970253886262;
     fTARGET_SIN[1][0]=224.796307; fTARGET_SIN[1][1]=0.268041723730465; fTARGET_SIN[1][2]=2.53040409949757;
     fTARGET_SIN[0][0]=36.470037; fTARGET_SIN[0][1]=0.267843206938707; fTARGET_SIN[0][2]=2.10950082600113;

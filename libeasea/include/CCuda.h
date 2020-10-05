@@ -24,7 +24,7 @@
     }							\
   }
    
-
+template <typename T>
 struct gpuEvaluationData{
    int indiv_start;
    int sh_pop_size;
@@ -44,7 +44,7 @@ struct gpuEvaluationData{
   sem_t sem_out;
   
   void* d_population;
-  float* d_fitness;
+  T* d_fitness;
 
   float* progs;
   float* d_progs;
@@ -52,7 +52,7 @@ struct gpuEvaluationData{
   int* indexes;
   int* d_indexes;
 
-  float* fitness;
+  T* fitness;
   
   float* flatInputs; // flattened inputs for GP
 

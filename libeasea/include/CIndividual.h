@@ -20,7 +20,6 @@ class CRandomGenerator;
 class CIndividual 
 {
 
-/*  Parametres for multi-objectives algorithmes  */
 public:
     
     int nbVar_;           // Number of variables

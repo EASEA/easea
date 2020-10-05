@@ -7,7 +7,7 @@ __________________________________________________________*/
 
 \User declarations :
 
-#define NB_SIN  3               // but you can try a different value
+#define NB_SIN  2               // but you can try a different value
 
 double iACC_MULT=1024*1024;
 #define PI  3.14159265358979323846
@@ -100,7 +100,6 @@ else {fX_MIN=5000;fX_MAX=111496;}
 
 // We start by creating NB_SIN sines
 
-    fTARGET_SIN[2][0]=610.33407; fTARGET_SIN[2][1]=0.268238859479379; fTARGET_SIN[2][2]=3.34970253886262;
     fTARGET_SIN[1][0]=224.796307; fTARGET_SIN[1][1]=0.268041723730465; fTARGET_SIN[1][2]=2.53040409949757;
     fTARGET_SIN[0][0]=36.470037; fTARGET_SIN[0][1]=0.267843206938707; fTARGET_SIN[0][2]=2.10950082600113;
 
@@ -181,7 +180,7 @@ printf("Fitness=%f\n",bBest->fitness);
 
 \User classes :
 GenomeClass {           // EASEA only implements single dimension arrays, so
-  double Sin[NB_SIN*3];  // sin[i*3+0] = amplitude of sine i
+  float Sin[NB_SIN*3];  // sin[i*3+0] = amplitude of sine i
                         // sin[i*3+1] = frequency of sine i
                         // sin[i*3+2] = phase of sine i
 }
@@ -250,7 +249,7 @@ for (int i=0;i<NB_SIN-1;i++){  // an evo-bub sort on the frequency :-)
 \Default run parameters :         // Please let the parameters appear in this order
   Number of generations : 2000     // NB_GEN
   Time limit: 0                   // In seconds, 0 to deactivate
-  Population size :131072 //16384 //32768 // 4096 
+  Population size : 131072  //16384 //32768 // 4096 
   Offspring size : 100% 
   Mutation probability : 1        // MUT_PROB
   Crossover probability : 1       // XOVER_PROB

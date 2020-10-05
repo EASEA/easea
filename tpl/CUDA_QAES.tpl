@@ -97,45 +97,40 @@ int main(int argc, char** argv){
 #include "CIndividual.h"
 #include <vector_types.h>
 #include "CCuda.h"
-#include <problems/CProblem.h>
+
 #include <shared/distributions/Norm.h>
+#include <shared/distributions/Cauchy.h>
+#include <shared/distributions/Unif.h>
 
 bool bReevaluate = false;
 
 
 using namespace std;
-extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses, int offset);
 #include "EASEAIndividual.hpp"
+extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, TO* d_fitnesses, int offset);
+
 bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm *EA;
 extern CEvolutionaryAlgorithm *EA;
-    typedef std::mt19937 TRandom;
-    typedef double TT;
-    typedef easea::problem::CProblem<TT> TP;
-    typedef TP::TV TV;
-    typedef TP::TV TO;
-    TRandom m_generator;
-    size_t limitGen;
-    bool reset;
-    int num = 0;
-    #define ACC_1 1
-    #define ACC_2 10000
-    #define LIMIT_UPDATE 10
-    #define SZ_POP_MAX 50000
-    typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
+size_t limitGen;
+bool reset;
 
 #define CUDA_TPL
 
-struct gpuEvaluationData* gpuData;
+struct gpuEvaluationData<TO>* gpuData;
 
 int fstGpu = 0;
 int lstGpu = 0;
 
+double ACC_1 = 0.4;
+double ACC_2 = 0.6;
+double LIMIT_UPDATE = 200;
+#define SZ_POP_MAX 100000
 
-struct gpuEvaluationData* globalGpuData;
-float* fitnessTemp;  
+struct gpuEvaluationData<TO>* globalGpuData;
+TO* fitnessTemp;  
 bool freeGPU = false;
 bool first_generation = true;
 int num_gpus = 0;       // number of CUDA GPUs
@@ -143,7 +138,7 @@ int num_gpus = 0;       // number of CUDA GPUs
 PopulationImpl* Pop = NULL;
 
 \INSERT_USER_DECLARATIONS
- void* cudaBuffer;
+void* cudaBuffer;
 
   /* Get the size of serach space dimension from problem difinition by user in ez file*/
         const size_t nbVar = m_problem.getBoundary().size();
@@ -152,48 +147,52 @@ PopulationImpl* Pop = NULL;
         size_t szPop;
 
         /* Define quantum population */
-        std::vector<std::vector<TT>>pop_x(szPopMax, std::vector<TT>(nbVar));
-        std::vector<std::vector<TT>>pop_pos_best(szPopMax, std::vector<TT>(nbVar));
+        std::vector<std::vector<TV>>pop_x(szPopMax, std::vector<TV>(nbVar));
+	std::vector<std::vector<TV>>pop_bank_1(szPopMax, std::vector<TV>(nbVar));
+
+	std::vector<std::vector<TV>>pop_bank_2(szPopMax, std::vector<TV>(nbVar));
+	std::vector<std::vector<TV>>pop_bank_3(szPopMax, std::vector<TV>(nbVar));
+
+        std::vector<std::vector<TV>>pop_pos_best(szPopMax, std::vector<TV>(nbVar));
 
 
         /* Objective function f(x) is the potential well V(x) in Schrödinger equation */
-        std::vector<TT> F(szPopMax);
+        std::vector<TO> F(szPopMax);
         /* Best objective function ever been for each particle */
-        std::vector<TT> bestF(szPopMax);
+        std::vector<TO> bestF(szPopMax);
         /* Weight function for each particle */
-        std::vector<int> bestM(szPopMax);
+        std::vector<TV> bestM(szPopMax);
         /* Memory - needed to avoid local optimum - not used yet */
-        std::vector<TT> memory(nbVar);
+        std::vector<TV> memory(nbVar);
         /* Mean value of solution */
-        std::vector<TT> meanSolution(nbVar);
+        std::vector<TV> meanSolution(nbVar);
         /* global solution */
-        std::vector<TT> globalSolution(nbVar);
+        std::vector<TV> globalSolution(nbVar);
         /* flags = 0 - particle is deleted, flags = 1 - particle is alive */
-        std::vector<TT> flags(szPopMax);
+        std::vector<int> flags(szPopMax);
 
         int globalIndex = 0;
-        double bestGlobal;    /* Global best value */
+        TO bestGlobal;    /* Global best value */
 
-        int nbV = 0;
-        int nbI = 0;
         int nbDeriv = 0;
-        std::vector<TT> derivF(szPopMax);
-        TT memoryF;
-        double epsilon = 0.01;
-        double koeff = 0;
-        double V = 0;
-        double Vtmp = 0;
-        int tt = 0;
+        std::vector<TO> derivF(szPopMax);
+        TO memoryF;
+        TO koeff = 0;
+        TO V = 0;
+        TO Vtmp = 0;
+	int szOldPop;
+
+
 
 \ANALYSE_USER_CLASSES
 
 \INSERT_USER_FUNCTIONS
 
-int getGlobalSolutionIndex(int size, std::vector<TT> F)
+int getGlobalSolutionIndex(int size, std::vector<TO> F)
 {
         int i, ind = 0;
 
-        double minVal = F[0];
+        TO minVal = F[0];
 
         for( i=1; i < size; i++)
         {
@@ -231,7 +230,7 @@ void dispatchPopulation(int populationSize){
     globalGpuData[index].indiv_start = count;
 
     if(index != (num_gpus - 1)) {
-      globalGpuData[index].sh_pop_size = ceil((float)populationSize * (((float)globalGpuData[index].num_MP) / (float)noTotalMP) );
+      globalGpuData[index].sh_pop_size = ceil((TO)populationSize * (((TO)globalGpuData[index].num_MP) / (TO)noTotalMP) );
     
     }
     //On the last card we are going to place the remaining individuals.  
@@ -242,7 +241,7 @@ void dispatchPopulation(int populationSize){
   }
 }
 
-void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populationSize){
+void cudaPreliminaryProcess(struct gpuEvaluationData<TO>* localGpuData, int populationSize){
 
 
   //  here we will compute how to spread the population to evaluate on GPGPU cores
@@ -265,11 +264,11 @@ void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populati
   if( localGpuData->d_fitness!=NULL ){ cudaFree(localGpuData->d_fitness); }
 
   CUDA_SAFE_CALL(cudaMalloc(&localGpuData->d_population,localGpuData->sh_pop_size*(sizeof(IndividualImpl))));
-  CUDA_SAFE_CALL(cudaMalloc(((void**)&localGpuData->d_fitness),localGpuData->sh_pop_size*sizeof(float)));
+  CUDA_SAFE_CALL(cudaMalloc(((void**)&localGpuData->d_fitness),localGpuData->sh_pop_size*sizeof(TO)));
 
 
-  std::cout << "card (" << localGpuData->threadId << ") " << localGpuData->gpuProp.name << " has " << localGpuData->sh_pop_size << " individual to evaluate" 
-	    << ": t=" << t << " b: " << b << std::endl;
+//  std::cout << "card (" << localGpuData->threadId << ") " << localGpuData->gpuProp.name << " has " << localGpuData->sh_pop_size << " individual to evaluate" 
+//	    << ": t=" << t << " b: " << b << std::endl;
    localGpuData->dimGrid = b;
    localGpuData->dimBlock = t;
 
@@ -279,13 +278,13 @@ __device__ __host__ inline IndividualImpl* INDIVIDUAL_ACCESS(void* buffer,unsign
   return (IndividualImpl*)buffer+id;
 }
 
-__device__ float cudaEvaluate(void* devBuffer, unsigned id){
+__device__ TO cudaEvaluate(void* devBuffer, unsigned id){
   \INSERT_CUDA_EVALUATOR
 }
   
 
 extern "C" 
-__global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses, int offset){
+__global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, TO* d_fitnesses, int offset){
 
         unsigned id = (blockDim.x*blockIdx.x)+threadIdx.x + offset;  // id of the individual computed by this thread
 
@@ -301,7 +300,7 @@ __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, flo
 void* gpuThreadMain(void* arg){
 
   cudaError_t lastError;
-  struct gpuEvaluationData* localGpuData = (struct gpuEvaluationData*)arg;
+  struct gpuEvaluationData<TO>* localGpuData = (struct gpuEvaluationData<TO>*)arg;
   //std::cout << " gpuId : " << localGpuData->gpuId << std::endl;
 
   lastError = cudaSetDevice(localGpuData->gpuId);
@@ -336,21 +335,22 @@ void* gpuThreadMain(void* arg){
 	      cudaFree(localGpuData->d_population);
 	      break;
 	    }
+	    if (szOldPop != szPop) nbr_cudaPreliminaryProcess = 1;
 
 	    if(nbr_cudaPreliminaryProcess > 0) {
 	      
 	      if( nbr_cudaPreliminaryProcess==2 ) 
-		cudaPreliminaryProcess(localGpuData,EA->population->parentPopulationSize);
+		cudaPreliminaryProcess(localGpuData, szPopMax);  //EA->population->parentPopulationSize);
 	      else {
-		cudaPreliminaryProcess(localGpuData,EA->population->offspringPopulationSize);
+		cudaPreliminaryProcess(localGpuData, szPop); //EA->population->offspringPopulationSize);
 	      }
 	      nbr_cudaPreliminaryProcess--;
 
 	      if( localGpuData->dimBlock*localGpuData->dimGrid!=localGpuData->sh_pop_size ){
 		// due to lack of individuals, the population distribution is not optimal according to core organisation
 		// warn the user and propose a proper configuration
-		std::cerr << "Warning, population distribution is not optimal, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
-			  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
+		//std::cerr << "Warning, population distribution is not optimal, consider adding " << (localGpuData->dimBlock*localGpuData->dimGrid-localGpuData->sh_pop_size) 
+		//	  << " individuals to " << (nbr_cudaPreliminaryProcess==2?"parent":"offspring")<<" population" << std::endl;
 	      }
             }
 	    
@@ -395,7 +395,7 @@ for (int u = 0; u != localGpuData->dimGrid; u+=1)
 	    lastError = cudaThreadSynchronize();
 	    if( lastError!=cudaSuccess ){ std::cerr << "Error during synchronize" << std::endl; }
 */	
-	    lastError = cudaMemcpy(fitnessTemp + localGpuData->indiv_start, localGpuData->d_fitness, localGpuData->sh_pop_size*sizeof(float), cudaMemcpyDeviceToHost);
+	    lastError = cudaMemcpy(fitnessTemp + localGpuData->indiv_start, localGpuData->d_fitness, localGpuData->sh_pop_size*sizeof(TO), cudaMemcpyDeviceToHost);
 	    
 	    // this thread has finished its phase, so lets tell it to the main thread
 	    sem_post(&localGpuData->sem_out);
@@ -418,7 +418,7 @@ void wake_up_gpu_thread(){
 				
 void InitialiseGPUs(){
 	//MultiGPU part on one CPU
-	globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
+	globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
 	pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
 	int gpuId = fstGpu;
 	//here we want to create on thread per GPU
@@ -448,6 +448,10 @@ void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
         \INSERT_END_GENERATION_FUNCTION
 }
 void EASEAEndGeneration(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+                     if (bestGlobal < bBest->fitness){
+                     for (int j = 0; j < nbVar; j++)
+                         ((IndividualImpl*)(bBest))->\GENOME_NAME[j] = globalSolution[j];
+}
     \INSERT_END_GENERATION_FUNCTION
 }
 void EASEAGenerationFunctionBeforeReplace(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
@@ -460,13 +464,13 @@ void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 
 
 void evaluateParentPopulation(){
-        unsigned actualPopulationSize = szPop;
-        fitnessTemp = new float[actualPopulationSize];
+        unsigned actualPopulationSize = szPopMax;
+        fitnessTemp = new TO[actualPopulationSize];
         int index;
         static bool dispatchedParents = false;
 
         if( dispatchedParents==false ){
-          dispatchPopulation(szPop);
+          dispatchPopulation(szPopMax);
           dispatchedParents=true;
         }
         for( index=(actualPopulationSize-1); index>=0; index--){
@@ -479,11 +483,8 @@ void evaluateParentPopulation(){
 
         for( index=(actualPopulationSize-1); index>=0; index--){
                 bestF[index] = F[index] = fitnessTemp[index];
-                 derivF[index] = std::numeric_limits<double>::max();
-                    if (index < szPop) flags[index] = 1;
-                    else { flags[index] = 0;} V+=F[index];
-
-
+                derivF[index] = std::numeric_limits<TO>::max();
+		if (flags[index] == 1) V+=F[index];
         }
 
         first_generation = false;
@@ -491,11 +492,13 @@ void evaluateParentPopulation(){
 
 }
 void evaluateOffspringPopulation(){
-        tt = 0;
+    
+	static bool dispatchedOffspring = false;
+	if (szOldPop != szPop) dispatchedOffspring = false;
+
         unsigned actualPopulationSize = szPop;
-        fitnessTemp = new float[actualPopulationSize];
+        fitnessTemp = new TO[actualPopulationSize];
         int index;
-        static bool dispatchedOffspring = false;
 
         if( dispatchedOffspring==false ){
           dispatchPopulation(szPop);
@@ -513,22 +516,9 @@ void evaluateOffspringPopulation(){
         wake_up_gpu_thread();
         
         for( index=(actualPopulationSize-1); index>=0; index--){
-         if (flags[index] == 1){
+        if (flags[index] == 1){
         
          F[index] = fitnessTemp[index];
-        
-        
-            //    if (flags[index] == 1){
-                if (nbV >= (nbVar-1)) nbI++;
-                Vtmp += F[index]; tt++;
-                int m = (int)std::floor(std::exp(-(F[index]-V)*0.001));
-                if (m < 0) m = 0;
-                if (m > 1){ bestM[index] = m;
-                /*  int newPoint = std::distance( flags.begin(), std::find(flags.begin(), flags.end(), 0) );
-                    if ( newPoint < szPopMax ) {
-                        pop_x[newPoint] = pop_x[i]; Nnext++; flags[newPoint]=1;
-                    }*/
-                }else bestM[index] = 0;
                 if (koeff==1){
                     for (int j = 0; j < nbVar; j++)
                         pop_pos_best[index][j] = pop_x[index][j];
@@ -536,9 +526,11 @@ void evaluateOffspringPopulation(){
 
                     globalIndex = getGlobalSolutionIndex(szPop, F);
                     for (int k = 0; k < nbVar; k++){
+			    if (memoryF > bestGlobal)
                             memory[k] = globalSolution[k];
                             globalSolution[k] = pop_pos_best[globalIndex][k];
                     }
+		    if (memoryF > bestGlobal)
                     memoryF = bestGlobal;
                     bestGlobal = bestF[globalIndex];
 
@@ -550,34 +542,38 @@ void evaluateOffspringPopulation(){
                     bestF[index] = F[index];
                         
                     
-                }if (bestF[index] < bestGlobal){
+                }/*else {
+		    for (int j = 0; j < nbVar; j++)
+			pop_x[index][j] = pop_pos_best[index][j];
+		    F[index] = bestF[index];
+		}*/
+		if (bestF[index] < bestGlobal){
                         for (int j = 0; j < nbVar; j++)
                                 globalSolution[j] = pop_pos_best[index][j];
                         bestGlobal = bestF[index];
                 }
 
-                
-            //    }
         }}      
+	delete[](fitnessTemp);
 }
  
 void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
-printf("HERE\n");
+
 
         /* Start logging */
-        LOG_MSG(msgType::INFO, "QAES starting....");
+        LOG_MSG(msgType::INFO, "QAES CUDA version starting....");
         auto tmStart = std::chrono::system_clock::now();
         /* koeff controls the local optimums - if koeff = 1, we are very probably in local optimum */
         bBest = new IndividualImpl();
-        bBest->fitness = std::numeric_limits<double>::max();
+        bBest->fitness = std::numeric_limits<TO>::max();
 
         szPop = this->params->parentPopulationSize;
-	cudaBuffer = (void*)malloc(sizeof(IndividualImpl)*( szPop ));
-
+	cudaBuffer = (void*)malloc(sizeof(IndividualImpl)*( szPopMax ));
+	szOldPop = szPop;
         limitGen = EZ_NB_GEN[0];  /* Get maximal number of geneation from the prm file, defined by user */
 
-        int Nt = szPop;
-        double cAcc_1, cAcc_2;
+        
+        TV cAcc_1, cAcc_2, a;
         currentGeneration = 0;  /* Counter of generation */
         size_t currentEval;     /* Counter of evaluation number */
 
@@ -592,18 +588,24 @@ printf("HERE\n");
             EASEABeginningGeneration(this);
             if (currentGeneration == 0){
             /* First generation settings */
+		a = 0.9;
                 /* Init and evaluate populations */
                 for (int i = 0; i < szPopMax; i++){
                     for (int j = 0; j < nbVar; j++){
-                        pop_x[i][j] = (rand() / (double)(RAND_MAX + 1.)*(m_problem.getBoundary()[j].second -
+                        pop_x[i][j] = (rand() / (TV)(RAND_MAX + 1.)*(m_problem.getBoundary()[j].second -
 m_problem.getBoundary()[j].first) + m_problem.getBoundary()[j].first);
                         pop_pos_best[i][j] = pop_x[i][j];
+		/*	pop_bank_1[i][j] = pop_x[i][j];
+			pop_bank_2[i][j] = pop_x[i][j];
+			pop_bank_3[i][j] = pop_x[i][j];*/
+			 if (i < szPop) flags[i] = 1;
+                         else { flags[i] = 0;} 
                     }
                 }
 
                 evaluateParentPopulation();
                 /* Avarage cost function value (potential energy) */
-                V = V/(double)szPop;
+                V = V/(TO)szPop;
 
                 /* Get index of current global optimum */
                 globalIndex = getGlobalSolutionIndex(szPop, F);
@@ -612,95 +614,107 @@ m_problem.getBoundary()[j].first) + m_problem.getBoundary()[j].first);
                 for (int i = 0; i < nbVar; i++)
                     globalSolution[i] = pop_pos_best[globalIndex][i];
                 bestGlobal = bestF[globalIndex];
+		memoryF = bestF[globalIndex];
             }
-            double tmp = 0;
+            TV tmp = 0.;
             /* Get mean value of all current solutions */
             for (int i = 0; i < nbVar; i++)
             {
-                tmp = 0;
+                tmp = 0.;
                 for ( int j = 0; j < szPop; j++)
                         tmp = tmp + pop_pos_best[j][i];
-                        meanSolution[i] = tmp / szPop;
+                        meanSolution[i] = tmp / (TV)szPop;
             }
             /* Alpha for QPSO part */
-            double a = 0.5 * (this->params->nbGen - currentGeneration)/(this->params->nbGen) + 0.5;
+        //    TV a =  0.5 * (this->params->nbGen - currentGeneration)/(this->params->nbGen) + 0.5;
             if (currentGeneration == 0){
                 currentEval = 0;
                 /* Initialization of  population if the first generation */
                 //this->initializeParentPopulation();
             }
+	    
 
             /* Logging current generation number */
             ostringstream ss;
-            nbI = 0;
             Vtmp = 0;
-            int Nnext = Nt;
-            int tt = 0;
+            
+            
  for ( int i = 0; i < szPopMax; i++){
               if (flags[i] == 1){
-              nbV = 0;
               for (int j = 0; j < nbVar; j++){
-                  double fi1 = rand()/(double)(RAND_MAX+1.0);
-                  double fi2 = rand()/(double)(RAND_MAX+1.0);
+                  TV fi1 = rand()/(TV)(RAND_MAX+1.0);
+                  TV fi2 = rand()/(TV)(RAND_MAX+1.0);
 
                   if (koeff == 0){
                       cAcc_1 = ACC_1;
                       cAcc_2 = ACC_2;
-                  }else { cAcc_1 = ACC_1; cAcc_2 = ACC_1;}
+		      a = 0.85;
+                  }else { cAcc_1 = 0.65; cAcc_2 = 0.45; a= easea::shared::distributions::unif(0.65,0.95);}
                   /* Crossover "à la QPSO" */
-                  double fi = cAcc_1*fi1/(cAcc_1*fi1+cAcc_2*fi2);
-                  double p = pop_pos_best[i][j]*fi + (1-fi)*globalSolution[j];
+                  TV fi = cAcc_1*fi1/(cAcc_1*fi1+cAcc_2*fi2);
+                  TV p = pop_pos_best[i][j]*fi + (1-fi)*globalSolution[j];
                   /* if there is local optimum -> let's make the large diffusion displacement */
-                  if (koeff == 1){
-                       p = easea::shared::distributions::norm(p,(1/(double)nbVar)*(fabs(meanSolution[j]-pop_pos_best[i][j])));
-                  }
 
-                  if ((p - globalSolution[j]) < epsilon) nbV++;
-                  double u = rand()/(double)(RAND_MAX+1.0);
-                  double b = a * fabs(meanSolution[j] - pop_x[i][j]);
-                  double v = log(1/(double)u);
-                  double z = rand()/(double)(RAND_MAX+1.0);
-                  if ( z < 0.5) pop_x[i][j] = (p + b * v);
-                  else pop_x[i][j] = (p - b * v);
-                  if (pop_x[i][j] < m_problem.getBoundary()[j].first) pop_x[i][j] = m_problem.getBoundary()[j].first;
-                  if (pop_x[i][j] > m_problem.getBoundary()[j].second) pop_x[i][j] = m_problem.getBoundary()[j].second;
+                  TV u = rand()/(TV)(RAND_MAX+1.0);
+                  TV b;
+                  TV v = log(1/(TV)u);
+                  TV z = rand()/(TV)(RAND_MAX+1.0);
+                  TV t = pop_x[i][j];
+                  TV sig = fabs(meanSolution[j] - pop_x[i][j]);
+                  /*if (sig < 0.0001)*/ 
+		  sig = (1./(TV)sqrt(sig));
 
+                  if (koeff == 1)
+    		  {
+		    TV z = rand()/(TV)(RAND_MAX+1.0);
+		    if (z < 0.5) t = easea::shared::distributions::cauchy(pop_x[i][j], sig);
+		  }
+
+                  b = a * fabs(meanSolution[j] - t);
+                  if ( z < 0.5) t = (p + b * v);
+                       else t = (p - b * v);
+                  if (t < m_problem.getBoundary()[j].first) t = m_problem.getBoundary()[j].first;
+                  if (t > m_problem.getBoundary()[j].second) t = m_problem.getBoundary()[j].second;
+/*
+		  pop_bank_3[i][j] = pop_bank_2[i][j];
+		  pop_bank_2[i][j] = pop_bank_1[i][j];
+		  pop_bank_1[i][j] = pop_x[i][j];     */
+		  pop_x[i][j] = t;
               }
             }}
+ if (koeff == 1){
+     int curSzPop = std::count (flags.begin(), flags.end(), 1);
+         szOldPop = szPop;
+//	if (currentGeneration > 2000) LIMIT_UPDATE = 1500;
+
+         for (int h = 0; h < 10; h++){
+	    flags[curSzPop] = 1;
+
+           for (int j = 0; j < nbVar; j++){
+	        double ii = 1./(TV)sqrt(fabs(meanSolution[j] - memory[j]));
+	        pop_x[curSzPop+h][j] = easea::shared::distributions::cauchy(memory[j], ii);
+    
+         }
+         curSzPop++;
+         szPop++;
+         }
+     }
+
         evaluateOffspringPopulation();
-  V = Vtmp/(double)tt;
-      double epsilonF = 0.00001;
-     /* for (int i = 0; i < szPop; i++){
-          if (bestM[i] == 0){ // If weight function of particle is bad - let's make small diffusion displacement
-              for (int j = 0; j < nbVar; j++)
-                  pop_x[i][j] = easea::shared::distributions::norm(pop_x[i][j], 0.5*fabs(meanSolution[j]-pop_pos_best[i][j]));
-              IndividualImpl *tmp = new IndividualImpl(pop_x[i]);
-              F[i] = tmp->evaluate();
-              delete(tmp);
-              if (F[i] < bestF[i]){
-                  pop_pos_best[i] = pop_x[i];
-                  bestF[i] = F[i];
-                  if (bestF[i] < bestGlobal){
-                      globalSolution = pop_pos_best[i];
-                      bestGlobal = bestF[i];
-                  }
-               }
-                  
-          }
-      }*/
+      TO epsilonF = 0.001;
       /* Control of local optimum */
-      if (nbI >= szPop){
           int count = 0;
           for (int i = 0; i < szPop; i++){
-              double curDerivF = bestF[i] - bestGlobal;
+              TO curDerivF = fabs(bestF[i] - bestGlobal);
               if (fabs(curDerivF - derivF[i]) <= epsilonF) count++;
               derivF[i] = curDerivF;
           }
-          if (count >= szPop-1) nbDeriv++;
-      }else nbDeriv = 0;
-      if (bestGlobal < 1) nbDeriv = 0;
-  if (nbDeriv >= LIMIT_UPDATE) koeff = 1;
-      else koeff = 0;
+          int curSzPop = std::count (flags.begin(), flags.end(), 1);
+
+      if (count >= curSzPop-1) nbDeriv++;
+      if (bestGlobal < 2) nbDeriv = 0;
+      if (nbDeriv >= LIMIT_UPDATE) {koeff = 1;nbDeriv = 0;}
+    	else koeff = 0;
                 currentGeneration++;
                 EASEAEndGeneration(this);
                 if (reset == true)
@@ -709,13 +723,13 @@ m_problem.getBoundary()[j].first) + m_problem.getBoundary()[j].first);
                     reset = false;
                 }
 
-                if (bestGlobal < bBest->fitness){
-                for (int j = 0; j < nbVar; j++)
+               if (bestGlobal < bBest->fitness){
+            /*    for (int j = 0; j < nbVar; j++)
                     ((IndividualImpl*)(bBest))->\GENOME_NAME[j] = globalSolution[j];
-
+	    */
                 bBest->fitness = bestGlobal;
                 }
-                ss << "Generation: " << currentGeneration << " Best solution: " << bBest->fitness << " Current best solution: " << bestGlobal << std::endl;
+                ss << "Generation: " << currentGeneration << " Best solution: " << bBest->fitness /*<< " Current best solution: " << bestGlobal*/ << std::endl;
                 LOG_MSG(msgType::INFO, ss.str());
         }
         std::chrono::duration<double> tmDur = std::chrono::system_clock::now() - tmStart;
@@ -755,7 +769,7 @@ void EASEAInit(int argc, char** argv){
 	  }
 	}
 
-	//globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
+	//globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
 	InitialiseGPUs();
 	\INSERT_INIT_FCT_CALL
 }
@@ -789,7 +803,7 @@ IndividualImpl::IndividualImpl() : CIndividual() {
   isImmigrant = false;
 }
 
-IndividualImpl::IndividualImpl(std::vector<double> ind)
+IndividualImpl::IndividualImpl(std::vector<TV> ind)
      {
     for (size_t i = 0; i < m_problem.getBoundary().size(); i++)
        this->\GENOME_NAME[i] = ind[i];
@@ -1131,6 +1145,7 @@ PopulationImpl::~PopulationImpl(){
 #include <string>
 #include <CStats.h>
 #include "CCuda.h"
+#include <problems/CProblem.h>
 #include <sstream>
 
 using namespace std;
@@ -1144,23 +1159,33 @@ class Parameters;
 class CCuda;
 
 
+typedef std::mt19937 TRandom;
+typedef double TV;
+typedef double TO;
+
+typedef easea::problem::CProblem<TV> TP;
+
+typedef typename easea::shared::CBoundary<TV>::TBoundary TBoundary;
+
+
 \INSERT_USER_CLASSES
 
 class IndividualImpl : public CIndividual {
 
 public: // in EASEA the genome is public (for user functions,...)
 	// Class members
+	TO fitness;
   	\INSERT_GENOME
 
 
 public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
-	IndividualImpl(std::vector<double> ind);
+	IndividualImpl(std::vector<TV> ind);
 	virtual ~IndividualImpl();
 	float evaluate();
 	static unsigned getCrossoverArrity(){ return 2; }
-	float getFitness(){ return this->fitness; }
+	TO getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
@@ -1414,8 +1439,8 @@ clean:
 # --seed=0   # -S : Random number seed. It is possible to give a specific seed.
 
 ######    Evolution Engine    ######
---popSize=1000 #\POP_SIZE # -P : Population Size
---nbOffspring=1000 #\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
+--popSize=10 #\POP_SIZE # -P : Population Size
+--nbOffspring=10 #\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
 
 ######    Stopping Criterions    #####
 --nbGen=200000 #\NB_GEN #Nb of generations
