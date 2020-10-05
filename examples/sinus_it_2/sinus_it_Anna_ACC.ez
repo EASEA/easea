@@ -180,7 +180,7 @@ printf("Fitness=%f\n",bBest->fitness);
 
 \User classes :
 GenomeClass {           // EASEA only implements single dimension arrays, so
-  float Sin[NB_SIN*3];  // sin[i*3+0] = amplitude of sine i
+  double Sin[NB_SIN*3];  // sin[i*3+0] = amplitude of sine i
                         // sin[i*3+1] = frequency of sine i
                         // sin[i*3+2] = phase of sine i
 }
