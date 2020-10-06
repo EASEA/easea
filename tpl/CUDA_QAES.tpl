@@ -1159,7 +1159,6 @@ class Parameters;
 class CCuda;
 
 
-typedef std::mt19937 TRandom;
 typedef double TV;
 typedef double TO;
 

@@ -99,12 +99,12 @@ bool INSTEAD_EVAL_STEP = false;
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 #define STD_TPL
-typedef std::mt19937 TRandom;
+
 typedef double TT;
 typedef easea::problem::CProblem<TT> TP;
 typedef TP::TV TV;
 typedef TP::TV TO;
-TRandom m_generator;
+//TRandom m_generator;
 size_t limitGen;
 bool reset;
 int num = 0;
