@@ -114,7 +114,7 @@ CComUDPServer::CComUDPServer(unsigned short port,int dg) {
   ServAddr.sin_port = htons(port);              /* Local port */
 
   /* Bind to the local address */
-  if (bind(ServerSocket, (struct sockaddr *) &ServAddr, sizeof(ServAddr)) < 0) {
+  if (::bind(ServerSocket, (struct sockaddr *) &ServAddr, sizeof(ServAddr)) < 0) {
     printf("Can't bind to given port number. Try a different one.\n"); exit(1);
   }
 
