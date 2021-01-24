@@ -190,7 +190,7 @@ void yyreset()
   CSymbol *pASymbol;
 
   unsigned iGP_OPCODE_FIELD, accolade_counter;
-  OPCodeDesc* opDesc[128];
+  OPCodeDesc* opDesc[512];
   unsigned iNoOp;
 
   
