@@ -80,17 +80,12 @@ int main(int argc, char** argv){
 
 using namespace std;
 bool bReevaluate = false;
-typedef float TO;
-typedef float TV;
-
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
-
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 #define STD_TPL
-
 
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES

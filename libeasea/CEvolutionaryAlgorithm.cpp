@@ -497,6 +497,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
   if(params->printStats){
     if(currentGeneration==0){
+
       printf("------------------------------------------------------------------------------------------------\n");
       printf("|GENER.|    ELAPSED    |    PLANNED    |     ACTUAL    |BEST INDIVIDUAL|  AVG  | WORST | STAND |\n");
       printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|FITNESS|  DEV  |\n");
@@ -534,6 +535,8 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   f = fopen(fichier.c_str(),"a"); //ajouter .csv
   if(f!=NULL){
     if(currentGeneration==0)
+    fprintf(f, "Run configuration:\nNB_GEN = %i POP_SIZE = %i OFFSPRING_SIZE = %i MUT_PROB = %f  XOVER_PROB = %f\n\n", (*EZ_NB_GEN), EZ_POP_SIZE, OFFSPRING_SIZE, (*pEZ_MUT_PROB), (*pEZ_XOVER_PROB));
+
     fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDDEV,WORST\n");
 #ifdef WIN32
     fprintf(f,"%u,%2.6f,%u,%.2e,%.2e,%.2e,%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());

@@ -22,6 +22,8 @@ extern CIndividual* bBest;
 extern float* pEZ_MUT_PROB;
 extern float* pEZ_XOVER_PROB;
 extern unsigned *EZ_NB_GEN;
+extern int EZ_POP_SIZE;
+extern int OFFSPRING_SIZE;
 extern unsigned *EZ_current_generation;
 extern std::vector<char *> vArgv;
 extern CRandomGenerator* globalRandomGenerator;
