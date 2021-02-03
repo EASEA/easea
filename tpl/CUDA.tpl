@@ -106,13 +106,16 @@ extern CEvolutionaryAlgorithm *EA;
 
 #define CUDA_TPL
 
-struct gpuEvaluationData* gpuData;
+typedef float TO;
+typedef float TV;
+
+struct gpuEvaluationData<TO>* gpuData;
 
 int fstGpu = 0;
 int lstGpu = 0;
 
 
-struct gpuEvaluationData* globalGpuData;
+struct gpuEvaluationData<TO>* globalGpuData;
 float* fitnessTemp;  
 bool freeGPU = false;
 bool first_generation = true;
@@ -161,7 +164,7 @@ void dispatchPopulation(int populationSize){
   }
 }
 
-void cudaPreliminaryProcess(struct gpuEvaluationData* localGpuData, int populationSize){
+void cudaPreliminaryProcess(struct gpuEvaluationData<TO>* localGpuData, int populationSize){
 
 
   //  here we will compute how to spread the population to evaluate on GPGPU cores
@@ -220,7 +223,7 @@ __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, flo
 void* gpuThreadMain(void* arg){
 
   cudaError_t lastError;
-  struct gpuEvaluationData* localGpuData = (struct gpuEvaluationData*)arg;
+  struct gpuEvaluationData<TO>* localGpuData = (struct gpuEvaluationData<TO>*)arg;
   //std::cout << " gpuId : " << localGpuData->gpuId << std::endl;
 
   lastError = cudaSetDevice(localGpuData->gpuId);
@@ -337,7 +340,7 @@ void wake_up_gpu_thread(){
 				
 void InitialiseGPUs(){
 	//MultiGPU part on one CPU
-	globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
+	globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
 	pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
 	int gpuId = fstGpu;
 	//here we want to create on thread per GPU
@@ -382,7 +385,7 @@ void EASEAInit(int argc, char** argv){
 	  }
 	}
 
-	//globalGpuData = (struct gpuEvaluationData*)malloc(sizeof(struct gpuEvaluationData)*num_gpus);
+	//globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
 	InitialiseGPUs();
 	\INSERT_INIT_FCT_CALL
 }
@@ -665,8 +668,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
 	EZ_current_generation=0;
 	EZ_POP_SIZE = parentPopulationSize;
-	OFFSPRING_SIZE = offspringPopulationSize;
-
+        OFFSPRING_SIZE = offspringPopulationSize;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
