@@ -26,28 +26,28 @@ float getSelectionPressure(std::string selectop){
 CSelectionOperator* getSelectionOperator(std::string selectop, int minimizing, CRandomGenerator* globalRandomGenerator){
   if(minimizing){
   if(selectop.compare("Tournament")==0)
-    return (new MinTournament(globalRandomGenerator));
+    return (new MinTournament(globalRandomGenerator, selectop));
   else if (selectop.compare("Random")==0)
-    return (new MinRandom(globalRandomGenerator));
+    return (new MinRandom(globalRandomGenerator, selectop));
   else if (selectop.compare("Deterministic")==0)
-    return (new MinDeterministic());
+    return (new MinDeterministic(selectop));
   else{
     std::cout << "Operateur n\'existe pas pour minimisation, utilise Tournament par defaut" << std::endl;
-    return (new MinTournament(globalRandomGenerator));
+    return (new MinTournament(globalRandomGenerator, "Tournament"));
   }
   }
   else{
   if(selectop.compare("Tournament")==0)
-    return (new MaxTournament(globalRandomGenerator));
+    return (new MaxTournament(globalRandomGenerator, selectop));
   else if (selectop.compare("Random")==0)
-    return (new MaxRandom(globalRandomGenerator));
+    return (new MaxRandom(globalRandomGenerator, selectop));
   else if (selectop.compare("Deterministic")==0)
-    return (new MaxDeterministic());
+    return (new MaxDeterministic(selectop));
   else if (selectop.compare("Roulette")==0)
-    return (new MaxRoulette(globalRandomGenerator));
+    return (new MaxRoulette(globalRandomGenerator, selectop));
   else{
     std::cout << "Operateur n\'existe pas pour maximisation, utilise Tournament par defaut" << std::endl;
-    return (new MaxTournament(globalRandomGenerator));
+    return (new MaxTournament(globalRandomGenerator, "Tournament"));
   }
   }
 }
@@ -100,8 +100,9 @@ float MinDeterministic::getExtremum(){
 /* ****************************************
    MaxRandom class
 ****************************************/
-MaxRandom::MaxRandom(CRandomGenerator* globalRandomGenerator){
-  rg = globalRandomGenerator;
+MaxRandom::MaxRandom(CRandomGenerator* globalRandomGenerator, std::string name){
+    this->rg = globalRandomGenerator;
+    this->name = name;
 }
 
 void MaxRandom::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
@@ -119,8 +120,9 @@ float MaxRandom::getExtremum(){
 /* ****************************************
    MinRandom class
 ****************************************/
-MinRandom::MinRandom(CRandomGenerator* globalRandomGenerator){
-  rg = globalRandomGenerator;
+MinRandom::MinRandom(CRandomGenerator* globalRandomGenerator, std::string name){
+  this->rg = globalRandomGenerator;
+  this->name = name;
 }
 
 void MinRandom::initialize(CIndividual** population, float selectionPressure, size_t populationSize){

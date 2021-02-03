@@ -29,6 +29,7 @@
 #include "include/CComUDPLayer.h"
 #include "include/CRandomGenerator.h"
 #include "include/CLogger.h"
+#include "include/CLogFile.h"
 #include "include/CProgressBar.h"
 #include <stdio.h>
 #include <sstream>
@@ -401,7 +402,53 @@ params->parentReduction = 1;
 	stream << "Elapsed time: " << elapsed_seconds.count();
 	LOG_MSG(msgType::INFO, stream.str());
     }
- 
+    string log_fichier_name = params->outputFilename;
+    log_fichier_name.append(".log");
+    std::ofstream outfile(log_fichier_name.c_str());
+    easena::log_stream log("EASEA REPORT", outfile);
+
+    log("Run configuration:\n");
+    log("Seed: ", params->seed);
+    log("Number of generations: ", params->nbGen);
+    log("Population size: ", params->parentPopulationSize);
+    log("CPU Threads number: ", params->nbCPUThreads);
+    log("Evaluation goal: ", params->minimizing);
+    log("____________________________________________________\n");
+    log("Special options: \n");
+    log("Offspring population size: ",  params->offspringPopulationSize);
+    log("Mutation probability: ", params->pMutation);
+    log("Crossover probability: ", params->pCrossover);
+    log("Selection operator: ", params->selectionOperator->getSelectorName());
+    log("Selection pressure: ", params->selectionPressure);
+    log("Reduce parent pressure: ", params->parentReductionPressure);
+    log("Reduce offspring pressure: ", params->offspringReductionPressure);
+    log("Reduce parents operator: ", params->parentReductionOperator->getSelectorName());
+    log("Reduce offspring operator: ", params->offspringReductionOperator->getSelectorName());
+    log("Surviving parents: ", params->parentReductionSize);
+    log("Surviving offspring: ", params->offspringReductionSize);
+    log("Replacement operator: ", params->replacementOperator->getSelectorName());
+    log("Replacement pressure: ", params->replacementPressure);
+    log("Elitism: ", params->strongElitism);
+    log("Elite size: ",params->elitSize);
+
+    log("____________________________________________________\n");
+    log("Remote island model: \n");
+    log("Remote island model: ", params->remoteIslandModel);
+    log("Ip file: ", params->ipFile);
+    log("Migration probability: ", params->migrationProbability);
+    log("Server port: ", params->serverPort);
+    log("Reevaluate immigrants: ", params->reevaluateImmigrants);
+    
+    
+    log("_____________________________________________________\n");
+    log("Result: \n");
+    log("Best fitness: ", population->Best->getFitness());
+    log("Best individual: ");
+    log(population->Best->serialize());
+//    population->Best->printOn(std::cout);
+    log("\n");
+    log("Elapsed time: ", elapsed_seconds.count(), " s");
+
 
 /*    std::cout << "finished computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";*/
@@ -535,7 +582,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   f = fopen(fichier.c_str(),"a"); //ajouter .csv
   if(f!=NULL){
     if(currentGeneration==0)
-    fprintf(f, "Run configuration:\nNB_GEN = %i POP_SIZE = %i OFFSPRING_SIZE = %i MUT_PROB = %f  XOVER_PROB = %f\n\n", (*EZ_NB_GEN), EZ_POP_SIZE, OFFSPRING_SIZE, (*pEZ_MUT_PROB), (*pEZ_XOVER_PROB));
+    fprintf(f, "Run configuration:\nNB_GEN = %i POP_SIZE = %i OFFSPRING_SIZE = %i MUT_PROB = %f  XOVER_PROB = %f \n\n", (*EZ_NB_GEN), EZ_POP_SIZE, OFFSPRING_SIZE, (*pEZ_MUT_PROB), (*pEZ_XOVER_PROB));
 
     fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDDEV,WORST\n");
 #ifdef WIN32

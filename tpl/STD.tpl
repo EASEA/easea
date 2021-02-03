@@ -154,7 +154,7 @@ void IndividualImpl::boundChecking(){
 string IndividualImpl::serialize(){
     ostringstream AESAE_Line(ios_base::app);
     \GENOME_SERIAL
-    AESAE_Line << this->fitness;
+    AESAE_Line << "[" << this->fitness << "]";
     return AESAE_Line.str();
 }
 
