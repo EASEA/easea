@@ -30,6 +30,8 @@ float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
 unsigned *EZ_NB_GEN;
 unsigned *EZ_current_generation;
+int EZ_POP_SIZE;
+int OFFSPRING_SIZE;
 CEvolutionaryAlgorithm* EA;
 std::vector<char *> vArgv;
 
@@ -110,7 +112,8 @@ using namespace std;
 extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, TO* d_fitnesses, int offset);
 
 bool INSTEAD_EVAL_STEP = false;
-
+extern std::ofstream easena::log_file;
+extern easena::log_stream logg;
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm *EA;
 extern CEvolutionaryAlgorithm *EA;
@@ -563,6 +566,14 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
         /* Start logging */
         LOG_MSG(msgType::INFO, "QAES CUDA version starting....");
         auto tmStart = std::chrono::system_clock::now();
+
+        string log_fichier_name = params->outputFilename;
+        time_t t = std::chrono::system_clock::to_time_t(tmStart);
+        std::tm * ptm = std::localtime(&t);
+        char buf_start_time[32];
+	std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
+        easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string(".log"));
+
         /* koeff controls the local optimums - if koeff = 1, we are very probably in local optimum */
         bBest = new IndividualImpl();
         bBest->fitness = std::numeric_limits<TO>::max();

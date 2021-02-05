@@ -98,6 +98,9 @@ bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
+extern std::ofstream easena::log_file;
+extern easena::log_stream logg;
+
 #define STD_TPL
 
 typedef double TT;
@@ -464,6 +467,14 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
 	/* Start logging */
 	LOG_MSG(msgType::INFO, "QAES starting....");
 	auto tmStart = std::chrono::system_clock::now();
+        string log_fichier_name = params->outputFilename;
+        time_t t = std::chrono::system_clock::to_time_t(tmStart);
+        std::tm * ptm = std::localtime(&t);
+        char buf_start_time[32];
+	std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
+        easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string(".log"));
+
+
 	/* koeff controls the local optimums - if koeff = 1, we are very probably in local optimum */
 	double koeff = 0;
 	double V = 0;
@@ -672,6 +683,9 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
 	ostringstream ss;
         ss << "Total execution time (in sec.): " << tmDur.count() << std::endl;
 	LOG_MSG(msgType::INFO, ss.str());
+
+
+
 	delete(bBest);
 
 }

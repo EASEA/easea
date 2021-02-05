@@ -60,7 +60,7 @@ void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 extern void evale_pop_chunk(CIndividual** pop, int popSize);
 extern bool INSTEAD_EVAL_STEP;
 extern bool bReevaluate;
-std::ofstream easena::log_file; //("EASENA_rapport.log");
+std::ofstream easena::log_file; 
 easena::log_stream logg;
 
 /**
@@ -244,13 +244,13 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   //std::cout << "Population initialisation (Generation 0)... "<< std::endl; 
   auto start = std::chrono::system_clock::now();
   string log_fichier_name = params->outputFilename;
-  log_fichier_name.append(".log");
+
   time_t t = std::chrono::system_clock::to_time_t(start);
   std::tm * ptm = std::localtime(&t);
   char buf_start_time[32];
-  std::strftime(buf_start_time, 32, "%Y-%m-%d %H:%M:%S", ptm);
-  easena::log_file.open(log_fichier_name.c_str() + std::string(buf_start_time));
-//  logg = new easena::log_stream();
+  std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
+  easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string(".log"));
+
 
 
 
@@ -459,6 +459,8 @@ params->parentReduction = 1;
 //    population->Best->printOn(std::cout);
     logg("\n");
     logg("Elapsed time: ", elapsed_seconds.count(), " s");
+    logg("_____________________________________________________\n");
+    logg("User's messages: \n");
 
 
 /*    std::cout << "finished computation at " << std::ctime(&end_time)
