@@ -417,15 +417,15 @@ params->parentReduction = 1;
     }
 
 
-    logg("Run configuration:\n");
+    logg("Run configuration:");
     logg("Start time: ", std::string(buf_start_time));
     logg("Seed: ", params->seed);
     logg("Number of generations: ", params->nbGen);
     logg("Population size: ", params->parentPopulationSize);
     logg("CPU Threads number: ", params->nbCPUThreads);
     logg("Evaluation goal: ", params->minimizing);
-    logg("____________________________________________________\n");
-    logg("Special options: \n");
+    logg("____________________________________________________");
+    logg("Special options: ");
     logg("Offspring population size: ",  params->offspringPopulationSize);
     logg("Mutation probability: ", params->pMutation);
     logg("Crossover probability: ", params->pCrossover);
@@ -442,8 +442,8 @@ params->parentReduction = 1;
     logg("Elitism: ", params->strongElitism);
     logg("Elite size: ",params->elitSize);
 
-    logg("____________________________________________________\n");
-    logg("Remote island model: \n");
+    logg("____________________________________________________");
+    logg("Remote island model: ");
     logg("Remote island model: ", params->remoteIslandModel);
     logg("Ip file: ", params->ipFile);
     logg("Migration probability: ", params->migrationProbability);
@@ -451,15 +451,15 @@ params->parentReduction = 1;
     logg("Reevaluate immigrants: ", params->reevaluateImmigrants);
     
     
-    logg("_____________________________________________________\n");
-    logg("Result: \n");
+    logg("_____________________________________________________");
+    logg("Result: ");
     logg("Best fitness: ", population->Best->getFitness());
     logg("Best individual: ");
     logg(population->Best->serialize());
 //    population->Best->printOn(std::cout);
     logg("\n");
     logg("Elapsed time: ", elapsed_seconds.count(), " s");
-    logg("_____________________________________________________\n");
+    logg("_____________________________________________________");
     logg("User's messages: \n");
 
 
