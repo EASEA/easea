@@ -60,6 +60,8 @@ void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 extern void evale_pop_chunk(CIndividual** pop, int popSize);
 extern bool INSTEAD_EVAL_STEP;
 extern bool bReevaluate;
+std::ofstream easena::log_file; //("EASENA_rapport.log");
+easena::log_stream logg;
 
 /**
  * @DEPRECATED the next contructor has to be used instead of this one.
@@ -241,6 +243,17 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
   //std::cout << "Population initialisation (Generation 0)... "<< std::endl; 
   auto start = std::chrono::system_clock::now();
+  string log_fichier_name = params->outputFilename;
+  log_fichier_name.append(".log");
+  time_t t = std::chrono::system_clock::to_time_t(start);
+  std::tm * ptm = std::localtime(&t);
+  char buf_start_time[32];
+  std::strftime(buf_start_time, 32, "%Y-%m-%d %H:%M:%S", ptm);
+  easena::log_file.open(log_fichier_name.c_str() + std::string(buf_start_time));
+//  logg = new easena::log_stream();
+
+
+
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
 
   TIME_ST(eval);
@@ -402,52 +415,50 @@ params->parentReduction = 1;
 	stream << "Elapsed time: " << elapsed_seconds.count();
 	LOG_MSG(msgType::INFO, stream.str());
     }
-    string log_fichier_name = params->outputFilename;
-    log_fichier_name.append(".log");
-    std::ofstream outfile(log_fichier_name.c_str());
-    easena::log_stream log("EASEA REPORT", outfile);
 
-    log("Run configuration:\n");
-    log("Seed: ", params->seed);
-    log("Number of generations: ", params->nbGen);
-    log("Population size: ", params->parentPopulationSize);
-    log("CPU Threads number: ", params->nbCPUThreads);
-    log("Evaluation goal: ", params->minimizing);
-    log("____________________________________________________\n");
-    log("Special options: \n");
-    log("Offspring population size: ",  params->offspringPopulationSize);
-    log("Mutation probability: ", params->pMutation);
-    log("Crossover probability: ", params->pCrossover);
-    log("Selection operator: ", params->selectionOperator->getSelectorName());
-    log("Selection pressure: ", params->selectionPressure);
-    log("Reduce parent pressure: ", params->parentReductionPressure);
-    log("Reduce offspring pressure: ", params->offspringReductionPressure);
-    log("Reduce parents operator: ", params->parentReductionOperator->getSelectorName());
-    log("Reduce offspring operator: ", params->offspringReductionOperator->getSelectorName());
-    log("Surviving parents: ", params->parentReductionSize);
-    log("Surviving offspring: ", params->offspringReductionSize);
-    log("Replacement operator: ", params->replacementOperator->getSelectorName());
-    log("Replacement pressure: ", params->replacementPressure);
-    log("Elitism: ", params->strongElitism);
-    log("Elite size: ",params->elitSize);
 
-    log("____________________________________________________\n");
-    log("Remote island model: \n");
-    log("Remote island model: ", params->remoteIslandModel);
-    log("Ip file: ", params->ipFile);
-    log("Migration probability: ", params->migrationProbability);
-    log("Server port: ", params->serverPort);
-    log("Reevaluate immigrants: ", params->reevaluateImmigrants);
+    logg("Run configuration:\n");
+    logg("Start time: ", std::string(buf_start_time));
+    logg("Seed: ", params->seed);
+    logg("Number of generations: ", params->nbGen);
+    logg("Population size: ", params->parentPopulationSize);
+    logg("CPU Threads number: ", params->nbCPUThreads);
+    logg("Evaluation goal: ", params->minimizing);
+    logg("____________________________________________________\n");
+    logg("Special options: \n");
+    logg("Offspring population size: ",  params->offspringPopulationSize);
+    logg("Mutation probability: ", params->pMutation);
+    logg("Crossover probability: ", params->pCrossover);
+    logg("Selection operator: ", params->selectionOperator->getSelectorName());
+    logg("Selection pressure: ", params->selectionPressure);
+    logg("Reduce parent pressure: ", params->parentReductionPressure);
+    logg("Reduce offspring pressure: ", params->offspringReductionPressure);
+    logg("Reduce parents operator: ", params->parentReductionOperator->getSelectorName());
+    logg("Reduce offspring operator: ", params->offspringReductionOperator->getSelectorName());
+    logg("Surviving parents: ", params->parentReductionSize);
+    logg("Surviving offspring: ", params->offspringReductionSize);
+    logg("Replacement operator: ", params->replacementOperator->getSelectorName());
+    logg("Replacement pressure: ", params->replacementPressure);
+    logg("Elitism: ", params->strongElitism);
+    logg("Elite size: ",params->elitSize);
+
+    logg("____________________________________________________\n");
+    logg("Remote island model: \n");
+    logg("Remote island model: ", params->remoteIslandModel);
+    logg("Ip file: ", params->ipFile);
+    logg("Migration probability: ", params->migrationProbability);
+    logg("Server port: ", params->serverPort);
+    logg("Reevaluate immigrants: ", params->reevaluateImmigrants);
     
     
-    log("_____________________________________________________\n");
-    log("Result: \n");
-    log("Best fitness: ", population->Best->getFitness());
-    log("Best individual: ");
-    log(population->Best->serialize());
+    logg("_____________________________________________________\n");
+    logg("Result: \n");
+    logg("Best fitness: ", population->Best->getFitness());
+    logg("Best individual: ");
+    logg(population->Best->serialize());
 //    population->Best->printOn(std::cout);
-    log("\n");
-    log("Elapsed time: ", elapsed_seconds.count(), " s");
+    logg("\n");
+    logg("Elapsed time: ", elapsed_seconds.count(), " s");
 
 
 /*    std::cout << "finished computation at " << std::ctime(&end_time)

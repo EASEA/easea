@@ -90,10 +90,15 @@ float gauss()
 
 \Before everything else function:
 {
+
 }
 \end
 
 \After everything else function:
+
+    double var = 0.5;
+    logg("EXAMPLE NUMBER ", 1, " HOW TO WRITE DOUBLE VARIABLE ", var, " TO LOG " );
+
   //cout << "After everything else function called" << endl;
 \end
 
@@ -118,10 +123,10 @@ GenomeClass {
 \end
 
 \GenomeClass::display:
-/* 	 for( size_t i=0 ; i<SIZE ; i++){ */
-/* 	      //     cout << Genome.x[i] << ":" << Genome.sigma[i] << "|"; */
-/* 	      printf("%.02f:%.02f|",Genome.x[i],Genome.sigma[i]); */
-/* 	 }	       */
+ 	 for( size_t i=0 ; i<SIZE ; i++){ 
+ 	          cout << Genome.x[i] ; 
+// 	      printf("%.02f|",Genome.x[i]); 
+ 	 }	       
 \end
 
 \GenomeClass::initialiser : // "initializer" is also accepted

@@ -7,52 +7,48 @@
 #include <iomanip>
 
 namespace easena {
+    extern std::ofstream log_file;
 
-    inline bool print(std::ostream& out) {
-        return !!(out << std::endl);
+    inline bool print() {
+
+        return !!(log_file << std::endl);
     }
 
     template<typename T>
-    bool print(std::ostream& out, T&& value)
+    bool print( T&& value)
     {
-        return !!(out << std::forward<T>(value) << std::endl);
+
+        return !!(log_file << std::forward<T>(value) << std::endl);
     }
 
     template<typename First, typename ... Rest>
-    bool print(std::ostream& out, First&& first, Rest&& ... rest)
+    bool print( First&& first, Rest&& ... rest)
     {
-        return !!(out << std::forward<First>(first)) && print(out, std::forward<Rest>(rest)...);
+        return !!(log_file << std::forward<First>(first)) && print( std::forward<Rest>(rest)...);
     }
 
-    std::mutex logger_mtx;
+
+
 
     class log_stream {
     public:
-        log_stream(std::string str, std::ostream& ifile)
-            : name(str)
-            , file(ifile)
+	
+        log_stream()
         {
-            std::string s{ "[" };
-            name = s + name + "] ";
+
         }
 
         template <typename... Args>
-        bool operator() (Args&&... args) {
-            bool OK = print(file, std::forward<Args>(args)...);
-            {
-                std::lock_guard<std::mutex> lck(logger_mtx);
-                print(std::cout, name, std::forward<Args>(args)...);
-                if (!OK) {
-                    print(std::cout, name, "-- Error writing to log file. --");
-                }
-            }
+        bool operator ()(Args&&... args) {
+            bool OK = print(std::forward<Args>(args)...);
             return OK;
         }
+	
 
     private:
-        std::string name;
-        std::ostream& file;
+        std::string name = "[EASEA RAPPORT]";
     };
+    
 
 
 }

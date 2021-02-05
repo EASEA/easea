@@ -11,6 +11,9 @@
 #include <stdlib.h>
 #include <vector>
 #include "define.h"
+#include "CLogFile.h"
+
+extern std::ofstream easena::log_file;
 
 //#define true 1;
 //#define false 0;
@@ -27,6 +30,7 @@ extern int OFFSPRING_SIZE;
 extern unsigned *EZ_current_generation;
 extern std::vector<char *> vArgv;
 extern CRandomGenerator* globalRandomGenerator;
+extern easena::log_stream logg;
 
 #ifdef WIN32
 #define RNDMAX (RAND_MAX+1)

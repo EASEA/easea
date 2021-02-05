@@ -85,6 +85,7 @@ bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
+
 #define STD_TPL
 
 \INSERT_USER_DECLARATIONS
