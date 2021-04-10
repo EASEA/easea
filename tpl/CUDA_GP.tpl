@@ -29,6 +29,10 @@ unsigned *EZ_NB_GEN;
 unsigned *EZ_current_generation;
 CEvolutionaryAlgorithm* EA;
 std::vector<char *> vArgv;
+int EZ_POP_SIZE;
+int OFFSPRING_SIZE;
+
+
 
 int main(int argc, char** argv){
 	if (argc > 1){
@@ -1092,7 +1096,7 @@ public:
 NVCC= nvcc
 CPPC= g++
 LIBAESAE=$(EZ_PATH)libeasea/
-CXXFLAGS+= -std=c++11 -g -Wall -O2 -I$(LIBAESAE)include 
+CXXFLAGS+= -std=c++14 -g -Wall -O2 -I$(LIBAESAE)include 
 LDFLAGS= $(LIBAESAE)libeasea.a -lpthread 
 
 

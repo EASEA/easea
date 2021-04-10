@@ -639,7 +639,7 @@ endif
 
 EASEALIB_PATH=$(EZ_PATH)/libeasea/
 
-CXXFLAGS =   -fopenmp -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
+CXXFLAGS = -std=c++14 -fopenmp -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
 
 OBJS = EASEA.o EASEAIndividual.o 
 
