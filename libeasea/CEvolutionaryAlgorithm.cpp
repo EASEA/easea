@@ -245,13 +245,14 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   auto start = std::chrono::system_clock::now();
   string log_fichier_name = params->outputFilename;
 
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()) % 1000;
+
   time_t t = std::chrono::system_clock::to_time_t(start);
   std::tm * ptm = std::localtime(&t);
   char buf_start_time[32];
+
   std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
-  easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string(".log"));
-
-
+  easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
 
 
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
