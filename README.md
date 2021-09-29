@@ -98,41 +98,21 @@ EASEA (EAsy Specification of Evolutionary Algorithms) is an Artificial Evolution
 
 Then, for very large problems, EASEA can also exploit computational ecosystems as it can parallelize (using an embedded island model) over loosely coupled heterogenous machines (Windows, Linux or Macintosh, with or without GPGPU cards, provided that they have internet access) a grid of computers or a Cloud.
 
-
-## Features
-
-Changes
---------------
-- Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, ASREA, FastEMO
-- Deleted boost
-- Added the lightweight C++ command line option parser from opensource https://github.com/jarro2783/cxxopts
-- Added event handler and fixed bug when the program is not responding after 1093 evaluations.
-- Fixed some bugs in template CUDA_GP.tpl for island model.
-- Added in libeasea three performance metrics: HV, GD, IGD 
-- Added in libeasea five 2-objective tests (ZDT) and seven 3-objective tests (DTLZ)
-- Added in libeasea three crossover operators: SBX, BLX-alpha, BLX-alpha-beta
-- Added in libeasea two mutation operators: Polynomial, Gaussian
-- Added in libeasea two selector operators: binary tournament (based on dominance comparison and crowding distance comparison), best individual selection
-- Added in libeasea dominance estimator and crowdind distance estimator
-- Added in libeasea crowding archive module
-- Added in libeasea simple logger
-
-
 ## Changes
 
 - Added new templates for three Multi-Objective Evolutionary Algorithm: NSGA-II, NSGA-III, CDAS, ASREA, IBEA
 - Deleted boost
 - Added the lightweight C++ command line option parser from opensource https://github.com/jarro2783/cxxopts
-- Added a simple logger 
 - Added event handler and fixed bug when the program is not responding after 1093 evaluations.
 - Fixed some bugs in template CUDA_GP.tpl for island model.
 - Added in libeasea three performance metrics: HV, GD, IGD 
 - Added in libeasea 2-objective tests (ZDT) and 3-objective tests (DTLZ)
-- Added in libeasea following crossover operators: SBX
+- Added in libeasea following crossover operators: SBX, BLX-alpha, BLX-alpha-beta
 - Added in libeasea following mutation operators: Polynomial, Gaussian
-- Added in libeasea following selector operators: binary tournament (based on dominance comparison and crowding distance comparison)
+- Added in libeasea following selector operators: binary tournament (based on dominance comparison and crowding distance comparison), best individual selection
 - Added in libeasea dominance estimator and crowdind distance estimator
-- Added in libeasea crowding archive 
+- Added in libeasea crowding archive archive
+- Added in libeasea simple logger
 
 ## Implementation of the Evolutionary Multiobjective Optimization
 
