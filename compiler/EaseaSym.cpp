@@ -42,19 +42,6 @@ void debug(char *s)
 //   else pHead=new CListItem<T>(pCurrent,NewObject);
 //   }
 
-template <class T> CListItem<T> *CLList<T>::walkToNextItem()
-{
-	if (pNextItem==NULL) return NULL;
-	if (pNextItem==pHead)
-	{
-		pNextItem=pHead->pNext;
-		return pHead;
-	}
-	pCurrentObject=pNextItem;
-	pNextItem=pNextItem->pNext;
-	return pCurrentObject;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // symbol construction/destruction
 
