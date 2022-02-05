@@ -6,7 +6,6 @@ set(PROJECT_VER  "RE")
 set(PROJECT_VER_MAJOR 2)
 set(PROJECT_VER_MINOR 20)
 set(PROJECT_VER_PATCH 0)
-CONFIGURE_FILE(config.h.in libeasea/include/config.h)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/libeasea/include)
 
 message("-- PROJECT NAME: ${PROJECT_NAME}")
@@ -19,8 +18,6 @@ INCLUDE_DIRECTORIES(${PROJECT_BINARY_BIN})
 INCLUDE_DIRECTORIES(libeasea/include)
 INCLUDE_DIRECTORIES(libeasna/include)
 INCLUDE_DIRECTORIES(cxxopts)
-
-set(OMP_NUM_THREADS 1)
 
 option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
 
@@ -121,6 +118,8 @@ SET(MINOR_VERSION 0)
 SET(PATCH_VERSION 0)
 
 ADD_SUBDIRECTORY(Test/xor_mnist)
+
+CONFIGURE_FILE(config.h.in libeasea/include/config.h)
 
 ## OUTDATED !
 ## IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
