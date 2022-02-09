@@ -78,7 +78,7 @@ int main(int argc, char** argv){
 
 #include <CLogger.h>
 #include <variables/continuous/uniform.h>
-#include <shared/functions/nbi.h>
+#include <shared/functions/ndi.h>
 #include <shared/functions/weight.h>
 #include <algorithms/moea/Cmoead.h>
 
@@ -186,8 +186,10 @@ printf("WEIGHT: %i\n",tmp_weight.size());}
 void EASEAFinal(CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
 /*EASEAFinalization(pop);*/
-        string file = "objectives";
-        std::ofstream out(file.c_str());
+        string file_o = "objectives";
+        string file_s = "solutions";
+        std::ofstream out_o(file_o.c_str());
+        std::ofstream out_s(file_s.c_str());
         cout.setf(ios::fixed);
 	
 	LOG_MSG(msgType::INFO, "Saving Pareto Front in file objectives");
@@ -195,12 +197,17 @@ void EASEAFinal(CPopulation* pop){
         const auto &population = m_algorithm->getPopulation();
         for (size_t i = 0; i < population.size(); ++i)
         {
-        	const auto &objective = population[i].m_objective;
-    		for (size_t j = 0; j < objective.size(); ++j)
-        		out << objective[j] << ' ';
-    			out << endl;
-    		}
-    	out.close();
+                const auto &objective = population[i].m_objective;
+                const auto &solution = population[i].m_variable;
+                for (size_t j = 0; j < objective.size(); ++j)
+                    out_o << objective[j] << ' ';
+                out_o << endl;
+                for(size_t j = 0; j < solution.size(); j++)
+                    out_s << solution[j] << ' ';
+                out_s << endl;
+    	}
+    	out_o.close();
+        out_s.close();
 	LOG_MSG(msgType::INFO, "Pareto Front is saved ");
 
 

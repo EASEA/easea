@@ -24,7 +24,7 @@
 #include <shared/CRandom.h>
 #include <shared/CConstant.h>
 #include <shared/functions/breeding.h>
-#include <shared/functions/nbi.h>
+#include <shared/functions/ndi.h>
 #include <shared/functions/dominance.h>
 #include <config.h>
 
