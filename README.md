@@ -87,6 +87,10 @@ If the <tt>Usage</tt> tool appears, it means the installation was successful.
 ## ----- Congratulations, you can now use EASENA -----
 Thanks for downloading and installing EASEA/EASENA. We hope it will be useful in your work!
 
+## Install EASEA GUI
+
+To install the EASEA UI, follow the README instructions in the `easea-ui/` directory.
+
 
 # EASEA -- EAsy Specification of Evolutionary Algorithms
 
