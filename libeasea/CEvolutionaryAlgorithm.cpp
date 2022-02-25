@@ -250,10 +250,10 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   time_t t = std::chrono::system_clock::to_time_t(start);
   std::tm * ptm = std::localtime(&t);
   char buf_start_time[32];
-
-  std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
-  easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
-
+  if (params->isLogg == 1){
+    std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
+    easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
+  }
 
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
 
@@ -417,7 +417,7 @@ params->parentReduction = 1;
 	LOG_MSG(msgType::INFO, stream.str());
     }
 
-
+if (params->isLogg == 1){
     logg("Run configuration:");
     logg("Start time: ", std::string(buf_start_time));
     logg("Seed: ", params->seed);
@@ -462,7 +462,7 @@ params->parentReduction = 1;
     logg("Elapsed time: ", elapsed_seconds.count(), " s");
     logg("_____________________________________________________");
     logg("User's messages: \n");
-
+}
 
 /*    std::cout << "finished computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";*/

@@ -238,6 +238,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 	this->nbCPUThreads = setVariable("nbCPUThreads", 1);
+        this->isLogg = setVariable("isLogg", 1);
 	this->reevaluateImmigrants = setVariable("reevaluateImmigrants", 0);
 
 	omp_set_num_threads(this->nbCPUThreads);
