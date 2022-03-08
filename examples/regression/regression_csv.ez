@@ -1,0 +1,210 @@
+/*_________________________________________________________
+
+  This is a standard GP implementation on EASEA,
+  aimed for regression.
+
+  use : easena -gp regression.ez
+	make
+
+	OR (if you'd like to exploit a CUDA-compatible graphic card)
+
+	easena -cuda_gp regression.ez
+        make
+
+  in order to generate and compile this code.
+  You can use C++ colour formatting for enhanced reading
+__________________________________________________________*/
+
+\User declarations :
+
+#include "interface/CcsvParser.h"
+#define csvFile "file-name.csv"
+std::ifstream fs( csvFile );
+CcsvParser parser( fs, ',' );
+
+
+#define NO_FITNESS_CASES parser.getRowNumber() //1024
+
+// VAR_LEN defines the number of dimensions of the problem
+#define VAR_LEN parser.getColumnNumber()-1
+
+#define GROW_FULL_RATIO 0.5
+
+// this is the number of learning cases computed in parallel.
+// note that on 1024 is the maximum size on fermi architectures 512 on older cards.
+#define NUMTHREAD 1024
+#define MAX_STACK 15
+
+#define PI (3.141592653589793)
+\end
+
+\User functions:
+#define FUNC(x) 4*sin(3*x)+x*x/10
+//#define FUNC(x) x*x*x-3*x*x+x
+/**
+   This function generates data NO_FITNESS_CASES fitness cases,
+   from function FUNC(X) with X randomly picked between (-1,1)
+
+   @inputs address of the inputs array. (array will be allocated here)
+   @outputs adddress of the outputs array. (array will be allocated here)
+
+   @ret number of loaded fitness cases (should be equal to NO_FITNESS_CASES).
+ */
+
+int generateData(float*** inputs, float** outputs){
+
+    CcsvData csvData;
+    
+    (*inputs) = new float*[NO_FITNESS_CASES];
+    (*outputs) = new float[NO_FITNESS_CASES];
+
+     for (unsigned int i = 0; i < NO_FITNESS_CASES; i++){
+	(*inputs)[i]=new float[VAR_LEN];
+        for (unsigned int j = 0; j < VAR_LEN; j++){
+            (*inputs)[i][j] = parser.getCell<float>(i,j);
+//	    printf(" %f ", (*inputs)[i][j]);
+        }
+	(*outputs)[i] = parser.getCell<float>(i,VAR_LEN-1);
+//        printf(" %f \n", (*outputs)[i]);
+    }
+
+    
+/*   for( i=0 ; i<NO_FITNESS_CASES ; i++ ){
+    (*inputs)[i]=new float[VAR_LEN];
+    float x = random(-10.,+10.);
+    (*inputs)[i][0] = x;
+    (*outputs)[i] = FUNC(x);
+  }*/
+  return NO_FITNESS_CASES;
+}
+
+void free_data(){
+  for( int i=0 ; i<NO_FITNESS_CASES ;i++ ) delete[] inputs[i] ;
+  delete[] outputs;
+  delete[] inputs;
+}
+\end
+
+\Before everything else function:
+
+  generateData(&inputs,&outputs);
+  for (size_t i = 0; i < NO_FITNESS_CASES; i++){
+    for (size_t j = 0; j < VAR_LEN; j++)
+	printf(" %f ", inputs[i][j]);
+    printf(" %f ", outputs[i]);
+    printf("\n");
+    
+  }  
+  
+\end
+
+\After everything else function:
+  std::cout << "----------\n";
+  std::cout << "y="<<toString(((IndividualImpl*)EA->population->Best)->root) << std::endl;
+  std::cout << "----------\n";
+  free_data();
+\end
+
+\At the beginning of each generation function:
+  //cout << "At the beginning of each generation function called" << endl;
+\end
+
+\At the end of each generation function:
+  //cout << "At the end of each generation function called" << endl;
+\end
+
+\At each generation before reduce function:
+ //cout << "At each generation before replacement function called" << endl;
+\end
+
+\User classes :
+GenomeClass {  // GPNode is a reserved name that must be used to create a GP tree
+  GPNode* root;
+}
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser :
+  Genome.root = ramped_hh();  // ramped-hh() is a reserved name
+\end
+
+\GenomeClass::crossover :
+  simpleCrossOver(parent1,parent2,child); // simpleCrossOver is reserved
+  child.valid = false;                    // child is reserved
+\end
+
+\GenomeClass::mutator :
+  simple_mutator(&Genome); // simple_mutator does a Koza mutation
+\end
+
+\begin operator description :
+OP_X, "x", 0, {RESULT=INPUT[0];};
+OP_ERC, "ERC", 0, {RESULT=ERC;};
+OP_ADD, "+", 2, {RESULT=OP1+OP2;};
+OP_SUB, "-", 2, {RESULT=OP1-OP2;};
+OP_MUL, "*", 2, {RESULT=OP1*OP2;};
+//OP_wEXP, "exp", 1, {RESULT=exp(OP1);};
+OP_SIN, "sin", 1, {RESULT=sin(OP1);};
+OP_DIV, "/", 2, {
+  if( !OP2 ) RESULT = 1;
+  else RESULT = OP1/OP2;
+};
+\end
+
+\GenomeClass::evaluator header:
+\end
+
+\GenomeClass::evaluator for each fc :
+//ERROR = pow((OUTPUT-EVOLVED_VALUE),2); // not good for noisy real-world data
+ERROR = fabs(OUTPUT-EVOLVED_VALUE);
+\end
+
+\GenomeClass::evaluator accumulator :
+//return sqrtf(ERROR);
+return ERROR;
+\end
+
+\User Makefile options:
+CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/
+LDFLAGS+=
+\end
+
+\Default run parameters :         // Please let the parameters appear in this order
+  Number of generations : 65   	// NB_GEN
+  Time limit: 60 			// In seconds, 0 to deactivate
+  Population size : 50000			//POP_SIZE
+  Offspring size : 50000 // 40%
+  Mutation probability : 0.3       // MUT_PROB
+  Crossover probability : 1      // XOVER_PROB
+  Evaluator goal : minimise      // Maximise
+  Selection operator: Tournament 30
+  Surviving parents: 100%//percentage or absolute
+  Surviving offspring: 100%
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+  Final reduce operator: Tournament 5
+
+  Elitism: Weak			//Weak or Strong
+  Elite: 1
+  Print stats: true
+  Generate csv stats file:false
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats:true
+
+  Remote island model: false
+  IP file: ip.txt 			//File containing all the remote island's IP
+  Server port : 2929
+  Migration probability: 0.33
+
+  Save population: false
+  Start from file:false
+
+  max init tree depth : 3   // must be strictly greater than min init tree depth
+  min init tree depth : 2
+  max tree depth : 5
+
+  size of prog buffer : 200000000
+\end
