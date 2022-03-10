@@ -63,7 +63,7 @@ public:
     }
     
     // returns the number of cells in this data 
-    int size() const {
+    unsigned int size() const {
 	return data_.size();
     }
     
