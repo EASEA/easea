@@ -1,0 +1,6 @@
+.vscode/
+dist/
+deploy/
+node_modules/
+package-lock.json
+guide/
