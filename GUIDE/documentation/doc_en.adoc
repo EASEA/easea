@@ -293,7 +293,7 @@ image::images/results_6.png[results 6 image, 800, align=center]
 === Result Plot tab
 
 After all the runs, if there is no problem during the execution, the application will generate a graph according to your compilation options.
-By default, only the best execution of a batch is plotted. To plot all runs, deselect "Plot the best run only" in the update plot menu.
+By default, only the last generation of a run is plotted. To plot all generations, deselect "Plot the last generation only" in the update plot menu.
 
 If you used options for <<Multi-objective problems>> you will have a 3D plot, otherwise, you will have a series of violin plots.
 

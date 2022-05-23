@@ -283,7 +283,7 @@ image::images/results_6.png[results 6 image, 800, align=center]
 === Onglet Result Plot
 
 A la fin de toutes les exécutions, si aucune erreur n'est survenue, cette application va générer un graphe en fonction des paramètres de compilation utilisés.
-Par défaut, seul la meilleure exécution d'un batch est tracée. Pour afficher le diagramme en violon de l'ensemble des exécutions, désélectionnez "Plot the best generation"
+Par défaut, seule la dernière génération d'un run est tracée. Pour afficher le diagramme en violon de l'ensemble des générations, désélectionnez "Plot the last generation only"
 dans le menu update plot.
 
 Utiliser une option de compilation pour un <<Problèmes multi-objectifs, problème multi-objectifs>> va générer un graphe 3D, dans les autres cas, vous obtiendrez un graphe contenant un ou plusieurs diagrammes en violon.

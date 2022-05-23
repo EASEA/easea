@@ -54,15 +54,15 @@ if len(argv) == 9 and argv[7] == "false":
     df2 = df
 
 else:
-    # only the best is plotted
-    tmp = df.loc[df["GEN"] == (nb_gen - 1)]
-    idx = tmp["BEST_FIT"].idxmin()
-    best_run = df.iloc[idx]["RUN"]
+    # only the best are plotted
+    df2 = df.loc[df["GEN"] == (nb_gen - 1)]
+    # idx = tmp["BEST_FIT"].idxmin()
+    # best_run = df.iloc[idx]["RUN"]
 
-    df2 = df.loc[df["RUN"] == best_run]
+    # df2 = df.loc[df["RUN"] == best_run]
 
     if title == "" or title == "Results":
-        title = f"Results for the best run (run {int(best_run)})"
+        title = f"Results for the last generation"
 
 df = df2
 

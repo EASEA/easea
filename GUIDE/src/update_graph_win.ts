@@ -101,13 +101,22 @@ export class Update_graph_win {
                 this.nb_plots = val;
             }
         });
+        this.plots.widget.setEnabled(false);
 
         // plot only last generations
         this.check_gen = new QCheckBox();
-        this.check_gen.setText('Plot the best run only');
+        this.check_gen.setText('Plot the last generation only');
         this.check_gen.adjustSize();
-        this.check_gen.setInlineStyle('margin-left:75%;margin-right:25%');
+        this.check_gen.setInlineStyle('margin-left:50%;margin-right:50%');
         this.check_gen.setChecked(true);
+        this.check_gen.addEventListener('stateChanged', ()=>{
+            if(this.check_gen.isChecked()){
+                this.plots.widget.setEnabled(false);
+                this.nb_plots = 1;
+            } else if(!this.check_gen.isChecked()){
+                this.plots.widget.setEnabled(true);
+            }
+        });
 
         // graph color
         this.color_palet = new QPushButton();
