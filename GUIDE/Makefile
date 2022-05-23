@@ -14,9 +14,6 @@ ifdef LOC
 endif
 
 # remove last versions
-	@$(test -f /usr/local/easena/bin/easea-compiler-app && sudo rm -f /usr/local/easena/bin/easea-compiler-app)
-	@$(test -f /usr/local/easena/bin/guide && sudo rm -f /usr/local/easena/bin/easea-compiler-app)
-
 	@echo "\n##### Installing modules #####\n"
 
 	npm install
@@ -63,6 +60,9 @@ endif
 	@echo "\n##### Packaging finished #####\n"
 
 	@echo "\n##### Installing executable #####\n"
+
+	@if test -f /usr/local/easena/bin/guide; then sudo rm -f /usr/local/easena/bin/guide; fi
+	@if test -f /usr/local/easena/bin/easea-compiler-app; then sudo rm -f /usr/local/easena/bin/easea-compiler-app; fi
 
 ifdef LOC
 	@sudo cp guide/guide $(LOC)
