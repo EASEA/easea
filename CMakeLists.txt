@@ -6,8 +6,7 @@ set(PROJECT_VER  "RE")
 set(PROJECT_VER_MAJOR 2)
 set(PROJECT_VER_MINOR 20)
 set(PROJECT_VER_PATCH 0)
-#CONFIGURE_FILE(config.h.in libeasea/include/config.h)
-#INCLUDE_DIRECTORIES(${CMAKE_CURRENT_DIR})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/libeasea/include)
 
 message("-- PROJECT NAME: ${PROJECT_NAME}")
 message("-- PROJECT VERSION: ${PROJECT_VER}")
@@ -16,10 +15,9 @@ message("-- PROJECT VERSION MINOR: ${PROJECT_VER_MINOR}")
 
 SET(CMAKE_STATIC_LIBRARY_PREFIX="")
 INCLUDE_DIRECTORIES(${PROJECT_BINARY_BIN})
-INCLUDE_DIRECTORIES(libeasea/include cxxopts)
+INCLUDE_DIRECTORIES(libeasea/include)
 INCLUDE_DIRECTORIES(libeasna/include)
-
-set(OMP_NUM_THREADS 1)
+INCLUDE_DIRECTORIES(cxxopts)
 
 option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
 
@@ -33,9 +31,6 @@ else ()
   # Disable warnings for all the unknown OpenMP pragmas.
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
 endif ()
-
-CONFIGURE_FILE(config.h.in libeasea/include/config.h)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_DIR})
 
 SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 
@@ -67,22 +62,22 @@ endif(APPLE)
 FIND_PACKAGE(BISON)
 FLEX_TARGET( EaseaLexer 
         compiler/EaseaLex.l 
-        compiler/EaseaLex.cpp
+	${CMAKE_SOURCE_DIR}/compiler/EaseaLex.cpp
 )
 BISON_TARGET( EaseaParser
         compiler/EaseaParse.y 
-        compiler/EaseaParse.cpp 
+	${CMAKE_SOURCE_DIR}/compiler/EaseaParse.cpp 
         COMPILE_FLAGS -d
         DEFINES_FILE compiler/EaseaParse.hpp
 )
 FLEX_TARGET( NeuralLexer 
         compiler/NeuralLex.l 
-        compiler/NeuralLex.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/NeuralLex.cpp
         DEFINES_FILE compiler/NeuralLex.h
 )
 BISON_TARGET( NeuralParser
         compiler/NeuralParse.y 
-        compiler/NeuralParse.cpp 
+        ${CMAKE_SOURCE_DIR}/compiler/NeuralParse.cpp 
         COMPILE_FLAGS -d
         DEFINES_FILE compiler/NeuralParse.hpp
 )
@@ -102,6 +97,8 @@ ADD_EXECUTABLE(easena ${easena_src})
 SET_TARGET_PROPERTIES(easena PROPERTIES COMPILE_FLAGS "-std=c++14 -w -Wno-deprecated -Wno-write-strings -fmessage-length=0")
 TARGET_LINK_LIBRARIES(easena libeasea libeasna)
 ADD_CUSTOM_COMMAND(TARGET easena POST_BUILD 
+	COMMAND $(CMAKE_COMMAND) -E make_directory libeasna
+	COMMAND $(CMAKE_COMMAND) -E make_directory libeasea
         COMMAND $(CMAKE_COMMAND) -E copy libeasea.a libeasea/
         COMMAND $(CMAKE_COMMAND) -E copy libeasna.a libeasna/
 )
@@ -121,6 +118,8 @@ SET(MINOR_VERSION 0)
 SET(PATCH_VERSION 0)
 
 ADD_SUBDIRECTORY(Test/xor_mnist)
+
+CONFIGURE_FILE(config.h.in libeasea/include/config.h)
 
 ## OUTDATED !
 ## IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")

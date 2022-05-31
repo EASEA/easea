@@ -6,12 +6,11 @@
 #cmakedefine PROJECT_VER_MINOR @PROJECT_VER_MINOR@
 #cmakedefine PROJECT_VER_PATCH @PROJECT_VER_PATCH@
 
-#cmakedefine OMP_NUM_THREADS @OMP_NUM_THREADS@
-
-
 #cmakedefine USE_OPENMP
 
 #ifdef USE_OPENMP
   #define EASEA_PRAGMA_OMP_PARALLEL _Pragma("omp parallel for schedule(runtime)")
   #define EASEA_PRAGMA_OMP_ATOMIC   _Pragma("omp atomic")
+#else
+  #define OMP_NUM_THREADS 1
 #endif
