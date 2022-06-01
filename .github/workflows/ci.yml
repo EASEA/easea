@@ -79,7 +79,7 @@ jobs:
       run: |
         EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" | tee examples.output
         result_code=${PIPESTATUS[0]}
-        echo "::set-output name=examples::$(cat test.log)"
+        echo "::set-output name=examples::$(cat examples.log)"
         exit $result_code
       continue-on-error: true
 
