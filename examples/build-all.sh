@@ -21,10 +21,10 @@ failed=0
 failed_list=()
 passed_list=()
 for edir in $all_examples; do
-	printf -- "- $(basename $edir) ($((passed+failed+1))/$nb_examples):\n"
+	printf -- "- ($((passed+failed+1))/$nb_examples) $(basename $edir):\n"
 	cd $edir
 
-	printf -- "-- reading README.txt..."
+	printf -- "\treading README.txt..."
 	EASEA_ARGS=$(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | xargs)
 	EASEA_OUT=$(sed -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | xargs)
 	if [[ "$EASEA_ARGS" == "" ]] || [[ "$EASEA_OUT" == "" ]]; then
@@ -36,11 +36,11 @@ for edir in $all_examples; do
 	printf "$Green ok!$Color_Off\n"
 
 	# build
-	printf -- "-- $1 $EASEA_ARGS..."
+	printf -- "\t$1 $EASEA_ARGS..."
 	OUT=$($1 $EASEA_ARGS 2>&1)
 	if [[ "$?" != "0" ]]; then # error
 		printf "$Red ko!$Color_Off\n"
-		printf "Error: $OUT\n"
+		printf "\tError: $OUT\n"
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 		continue
@@ -48,11 +48,11 @@ for edir in $all_examples; do
 	printf "$Green ok!$Color_Off\n"
 
 	# compile
-	printf -- "-- make..."
+	printf -- "\tmake..."
 	OUT=$(make 2>&1)
 	if [[ "$?" != "0" ]]; then # error
 		printf "$Red ko!$Color_Off\n"
-		printf "Error:$Red $OUT\n$Color_Off"
+		printf "\tError:$Red $OUT\n$Color_Off"
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 		continue
@@ -60,7 +60,7 @@ for edir in $all_examples; do
 	printf "$Green ok!$Color_Off\n"
 
 	# run
-	printf -- "-- $EASEA_OUT..."
+	printf -- "\t$EASEA_OUT..."
 	OUT=$(timeout -k 2 1 $EASEA_OUT)
 	ret=$?
 	if [[ "$ret" == "0" ]] || [[ "$ret" == "124" ]]; then # ok
@@ -69,7 +69,7 @@ for edir in $all_examples; do
 		passed_list+=($(basename $edir))
 	else
 		printf "$Red ko!$Color_Off\n"
-		printf "Error (RETURNED $ret):$Red $OUT\n$Color_Off"
+		printf "\tError (RETURNED $ret):$Red $OUT\n$Color_Off"
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 	fi
