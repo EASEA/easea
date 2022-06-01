@@ -25,8 +25,8 @@ for edir in $all_examples; do
 	cd $edir
 
 	printf -- "-- reading README.txt..."
-	EASEA_ARGS=$(sed -n 's/\$ ease\(a\|na\)[[:space:]]*\(.*\)/\2/p' README.txt)
-	EASEA_OUT=$(sed -n 's/$[[:space:]]*\(\.\/.*\)/\1/p' README.txt)
+	EASEA_ARGS=$(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | xargs)
+	EASEA_OUT=$(sed -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | xargs)
 	if [[ "$EASEA_ARGS" == "" ]] || [[ "$EASEA_OUT" == "" ]]; then
 		printf "$Red ko!$Color_Off\n"
 		failed=$((failed + 1))
