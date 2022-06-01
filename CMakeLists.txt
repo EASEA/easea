@@ -119,7 +119,7 @@ SET(PATCH_VERSION 0)
 
 ADD_SUBDIRECTORY(Test/xor_mnist)
 
-CONFIGURE_FILE(config.h.in libeasea/include/config.h)
+CONFIGURE_FILE(config.h.in ${CMAKE_SOURCE_DIR}/libeasea/include/config.h)
 
 ## OUTDATED !
 ## IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
