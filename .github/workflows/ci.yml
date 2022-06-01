@@ -106,7 +106,7 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         mkdir -p "${BRANCH}"
-        mv * "${BRANCH}"
+        mv *.svg "${BRANCH}"
         git add "${BRANCH}/"
         # Will give error if badge did not changed
         git commit -m "Add/Update badge" || true
