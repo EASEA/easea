@@ -21,10 +21,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: Jimver/cuda-toolkit@v0.2.7
-      id: cuda-toolkit
-      with:
-        cuda: '11.7.0'
+      #- uses: Jimver/cuda-toolkit@v0.2.7
+      #id: cuda-toolkit
+      #with:
+      #  cuda: '11.7.0'
 
     - name: Extract branch name
       id: extract_branch
@@ -61,27 +61,40 @@ jobs:
         label: 'Build'
         status: ${{steps.build.outcome == 'success' && 'passed' || 'failed' }}
         color: ${{steps.build.outcome == 'success' && 'green' || 'red' }}
-        path: badges/build.svg
-    - name: Upload badge as artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: badge
-        path: badges/build.svg
-        if-no-files-found: error
+        path: .github/badges/build.svg
     - name: Commit badge
-      continue-on-error: true
       env:
-        BADGE: badges/build.svg
+        BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        FILE: 'build.svg'
+      working-directory: ./badges
       run: |
-        git config user.email "action@github.com"
-        git config user.name "GitHub Action"
-        git add "${BADGE}"
-        git commit -m "Add/Update badge"
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        mkdir -p "${BRANCH}"
+        mv "${FILE}" "${BRANCH}"
+        git add "${BRANCH}/${FILE}"
+        # Will give error if badge did not changed
+        git commit -m "Add/Update badge" || true
+
     - name: Push badge commit
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: badges
+        directory: badges
+
+    - name: Badge image URL
+      id: url
+      env:
+        BRANCH: ${{ steps.extract_branch/.outputs.branch }}
+        FILE: 'build.svg'
+      run: |
+        URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/badges/${BRANCH}/${FILE}"
+        MARKDOWN="![Build status](${URL})"
+        echo "Badge URL: ${URL}"
+        echo "Badge image for Markdown: ${MARKDOWN}"
+        echo "##[set-output name=url;]${URL}"
+        echo "##[set-output name=markdown;]${MARKDOWN}"
 
     - name: Install
       id: install
