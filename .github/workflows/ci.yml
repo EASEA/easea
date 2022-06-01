@@ -86,7 +86,7 @@ jobs:
     - name: Badge image URL
       id: url
       env:
-        BRANCH: ${{ steps.extract_branch/.outputs.branch }}
+        BRANCH: ${{ steps.extract_branch.outputs.branch }}
         FILE: 'build.svg'
       run: |
         URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/badges/${BRANCH}/${FILE}"
