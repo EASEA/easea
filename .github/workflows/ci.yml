@@ -124,15 +124,15 @@ jobs:
           echo "##[set-ouput name=nb_examples;]${NBE}"
           echo "##[set-ouput name=passed;]${PASSED}"
 
-  badges:
-    runs-on: ubuntu-latest
-    name: Create badges for this branch
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: badges
-
-          #   - name: Create badge repository
+          # badges:
+          #   runs-on: ubuntu-latest
+          #   name: Create badges for this branch
+          #   steps:
+          #     - uses: actions/checkout@v3
+          #       with:
+          #         ref: badges
+          #
+          #         #   - name: Create badge repository
           #     run: mkdir -p badges
           #
           #   - name: Generate the badge SVG image
