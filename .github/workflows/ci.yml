@@ -128,13 +128,13 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: badge
-        path: ${{ badges/build.svg }}
+        path: badges/build.svg
         if-no-files-found: error
 
     - name: Commit badge
       continue-on-error: true
       env:
-        BADGE: ${{ badges/build.svg }}
+        BADGE: badges/build.svg
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
@@ -145,4 +145,4 @@ jobs:
       if: ${{ success() }}
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ badges }}
+        branch: badges
