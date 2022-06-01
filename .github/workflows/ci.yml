@@ -59,7 +59,7 @@ jobs:
       id: badge
       with:
         label: 'Build'
-        status: ${{ ${{steps.build.outcome}} }}
+        status: ${{steps.build.outcome == "success" && 'passed' || 'failed' }}
         color: ${{steps.build.outcome == 'success' && 'green' || 'red' }}
         path: badges/build.svg
     - name: Upload badge as artifact
