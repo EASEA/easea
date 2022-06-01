@@ -19,12 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and install Easea and examples
 
-    outputs:
-      build: ${{ steps.build.outputs.build }}
-      install: ${{ steps.install.outputs.install }}
-      nbe: ${{ steps.examples.outputs.nbe }}
-      passed: ${{ steps.examples.outputs.passed }}
-
     steps:
     - uses: actions/checkout@v3
     - uses: Jimver/cuda-toolkit@v0.2.7
@@ -60,8 +54,34 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       continue-on-error: true
 
-    - name: Output build status
-      run: echo "##[set-ouput name=build;]${{steps.build.outcome}}"
+    - name: Generate the badge SVG image
+      uses: emibcn/badge-action@v1
+      id: badge
+      with:
+        label: 'Build'
+        status: ${{ ${{steps.build.outcome}} }}
+        color: ${{steps.build.outcome == 'success' && 'green' || 'red' }}
+        path: badges/build.svg
+    - name: Upload badge as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: badge
+        path: badges/build.svg
+        if-no-files-found: error
+    - name: Commit badge
+      continue-on-error: true
+      env:
+        BADGE: badges/build.svg
+      run: |
+        git config user.email "action@github.com"
+        git config user.name "GitHub Action"
+        git add "${BADGE}"
+        git commit -m "Add/Update badge"
+    - name: Push badge commit
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: badges
 
     - name: Install
       id: install
@@ -89,60 +109,3 @@ jobs:
         PASSED=$(echo ${{steps.examples.outputs.examples}} | sed -n 's/passed: \([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
         echo "##[set-ouput name=nb_examples;]${NBE}"
         echo "##[set-ouput name=passed;]${PASSED}"
-
-  badges:
-        # Only generate and publish if these conditions are met:
-    # - The test step ended successfully
-    # - One of these is met:
-    #   - This is a pull request event and the pull actor is the same as the repo owner
-    #   - This is a push event and the push event is on branch 'master'
-    name: Generate badge image with all statuses
-      #if: ${{ ( github.event_name == 'pull_request' && github.actor == github.repository_owner ) || github.ref == 'refs/heads/master' }}
-    outputs:
-      url: ${{ steps.url.outputs.url }}
-      markdown: ${{ steps.url.outputs.markdown }}
-
-    runs-on: ubuntu-latest
-    needs: [ linux-build-install-test ]
-
-    steps:
-
-    - uses: actions/checkout@v3
-      with:
-        ref: badges
-        path: badges
-
-    # Use the output from the `coverage` step
-    - name: Generate the badge SVG image
-      uses: emibcn/badge-action@v1
-      id: badge
-      with:
-        label: 'Build'
-        status: ${{ needs.linux-build-install-test.build.outputs.build }}
-        color: ${{
-          needs.test.outputs.build == 'success' && 'green'         ||
-          'red' }}
-        path: badges/build.svg
-
-    - name: Upload badge as artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: badge
-        path: badges/build.svg
-        if-no-files-found: error
-
-    - name: Commit badge
-      continue-on-error: true
-      env:
-        BADGE: badges/build.svg
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add "${BADGE}"
-        git commit -m "Add/Update badge"
-    - name: Push badge commit
-      uses: ad-m/github-push-action@master
-      if: ${{ success() }}
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: badges
