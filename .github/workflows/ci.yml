@@ -54,8 +54,9 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       continue-on-error: true
 
-    - name: Generate the badge SVG image
+    - name: Create badge repository
       run: mkdir -p badges
+    - name: Generate the badge SVG image
       uses: emibcn/badge-action@v1
       id: badge
       with:
