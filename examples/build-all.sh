@@ -10,7 +10,7 @@ Green='\033[0;32m'
 
 # Retrieves test directories
 printf "Calculating examples list..."
-all_examples=$(find . -mindepth 1 -type d -exec sh -c '[ -f "$0"/*.ez ]' {} \; -print 2>&1 | sed -n 's/^\([./a-zA-Z0-9_\-]\+\)\(.*\)*$/\1/p')
+all_examples=$(find $examples_dir -mindepth 1 -type d -exec sh -c '[ -f "$0"/*.ez ]' {} \; -print 2>&1 | sed -n 's/^\([./a-zA-Z0-9_\-]\+\)\(.*\)*$/\1/p')
 nb_examples=$(echo $all_examples | wc -w)
 printf "$Green ok!\n$Color_Off"
 echo "Found $nb_examples examples to compile."
@@ -76,7 +76,7 @@ for edir in $all_examples; do
 
 	# clean
 	make clean easeaclean >/dev/null
-	rm *.log
+	rm -rf *.log
 done
 
 # Stats
