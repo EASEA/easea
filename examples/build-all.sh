@@ -29,6 +29,7 @@ for edir in $all_examples; do
 	EASEA_OUT=$(sed -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | xargs)
 	if [[ "$EASEA_ARGS" == "" ]] || [[ "$EASEA_OUT" == "" ]]; then
 		printf "$Red ko!$Color_Off\n"
+		printf "\tError:$Red Bad README\n$Color_Off"
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 		continue
@@ -40,7 +41,7 @@ for edir in $all_examples; do
 	OUT=$($1 $EASEA_ARGS 2>&1)
 	if [[ "$?" != "0" ]]; then # error
 		printf "$Red ko!$Color_Off\n"
-		printf "\tError: $OUT\n"
+		printf "\tError:$Red $OUT\n$Color_Off"
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 		continue
