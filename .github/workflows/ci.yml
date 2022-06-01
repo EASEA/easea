@@ -36,4 +36,4 @@ jobs:
       run: sudo cmake --install ${{github.workspace}}/build
 
     - name: Build examples
-      run: EZ_PATH=/usr/local/easena/ sh ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena"
+      run: EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena"

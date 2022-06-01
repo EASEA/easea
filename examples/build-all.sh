@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Attempts to build all examples and run them for less than a second
 # Léo Chéneau - 2022
 # $1 = easea binary to call
