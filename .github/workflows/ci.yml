@@ -26,6 +26,9 @@ jobs:
       #with:
       #  cuda: '11.7.0'
 
+    - name: Create badge repository
+      run: mkdir -p badges
+
     - name: Extract branch name
       id: extract_branch
       shell: bash
@@ -54,8 +57,6 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       continue-on-error: true
 
-    - name: Create badge repository
-      run: mkdir -p badges
     - name: Generate the badge SVG image
       uses: emibcn/badge-action@v1
       id: badge
@@ -64,40 +65,6 @@ jobs:
         status: ${{steps.build.outcome == 'success' && 'passed' || 'failed' }}
         color: ${{steps.build.outcome == 'success' && 'green' || 'red' }}
         path: badges/build.svg
-    - name: Commit badge
-      env:
-        BRANCH: ${{ steps.extract_branch.outputs.branch }}
-        FILE: 'build.svg'
-      working-directory: ./badges
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        mkdir -p "${BRANCH}"
-        mv "${FILE}" "${BRANCH}"
-        git add "${BRANCH}/${FILE}"
-        # Will give error if badge did not changed
-        git commit -m "Add/Update badge" || true
-
-    - name: Push badge commit
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: badges
-        directory: badges
-        force: true
-
-    - name: Badge image URL
-      id: url
-      env:
-        BRANCH: ${{ steps.extract_branch.outputs.branch }}
-        FILE: 'build.svg'
-      run: |
-        URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/badges/${BRANCH}/${FILE}"
-        MARKDOWN="![Build status](${URL})"
-        echo "Badge URL: ${URL}"
-        echo "Badge image for Markdown: ${MARKDOWN}"
-        echo "##[set-output name=url;]${URL}"
-        echo "##[set-output name=markdown;]${MARKDOWN}"
 
     - name: Install
       id: install
@@ -125,3 +92,28 @@ jobs:
         PASSED=$(echo ${{steps.examples.outputs.examples}} | sed -n 's/passed: \([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
         echo "##[set-ouput name=nb_examples;]${NBE}"
         echo "##[set-ouput name=passed;]${PASSED}"
+
+# Badges
+    - uses: actions/checkout@v1
+      with:
+        ref: badges
+
+    - name: Commit badge
+      env:
+        BRANCH: ${{ steps.extract_branch.outputs.branch }}
+      working-directory: ./badges
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        mkdir -p "${BRANCH}"
+        mv * "${BRANCH}"
+        git add "${BRANCH}/"
+        # Will give error if badge did not changed
+        git commit -m "Add/Update badge" || true
+
+    - name: Push badge commit
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: badges
+        directory: badges
