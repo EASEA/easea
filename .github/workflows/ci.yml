@@ -12,11 +12,18 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+  linux-build-install-test:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
+    name: Build and install Easea and examples
+
+    outputs:
+      build: ${{ steps.build.outputs.build }}
+      install: ${{ steps.install.outputs.install }}
+      nbe: ${{ steps.examples.outputs.nbe }}
+      passed: ${{ steps.examples.outputs.passed }}
 
     steps:
     - uses: actions/checkout@v3
@@ -25,19 +32,117 @@ jobs:
       with:
         cuda: '11.7.0'
 
+    - name: Extract branch name
+      id: extract_branch
+      shell: bash
+      run: |
+        TMP_PULL_HEAD_REF="${{ github.head_ref }}"
+        TMP_GITHUB_REF="${GITHUB_REF#refs/heads/}"
+        EXPORT_VALUE=""
+        if [ "${TMP_PULL_HEAD_REF}" != "" ]
+        then
+            EXPORT_VALUE="${TMP_PULL_HEAD_REF}"
+        else
+            EXPORT_VALUE="${TMP_GITHUB_REF}"
+        fi
+        echo "##[set-output name=branch;]${EXPORT_VALUE}"
+
     - name: Configure CMake
+      id: configure
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      continue-on-error: true
 
     - name: Build
+      id: build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      continue-on-error: true
+
+    - name: Output build status
+      run: echo "##[set-ouput name=build;]${{steps.build.outcome}}"
 
     - name: Install
+      id: install
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: sudo cmake --install ${{github.workspace}}/build
+      continue-on-error: true
+
+    - name: Output install status
+      run: echo "##[set-ouput name=install;]${{steps.install.outcome}}"
+
 
     - name: Build examples
-      run: EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena"
+      id: examples
+      run: |
+        EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" | tee examples.output
+        result_code=${PIPESTATUS[0]}
+        echo "::set-output name=examples::$(cat test.log)"
+        exit $result_code
+      continue-on-error: true
+
+    - name: Output examples status
+      run: |
+        NBE=$(echo ${{steps.examples.outputs.examples}} | sed -n 's/passed: \([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
+        PASSED=$(echo ${{steps.examples.outputs.examples}} | sed -n 's/passed: \([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
+        echo "##[set-ouput name=nb_examples;]${NBE}"
+        echo "##[set-ouput name=passed;]${PASSED}"
+
+  badges:
+        # Only generate and publish if these conditions are met:
+    # - The test step ended successfully
+    # - One of these is met:
+    #   - This is a pull request event and the pull actor is the same as the repo owner
+    #   - This is a push event and the push event is on branch 'master'
+    name: Generate badge image with all statuses
+      #if: ${{ ( github.event_name == 'pull_request' && github.actor == github.repository_owner ) || github.ref == 'refs/heads/master' }}
+    outputs:
+      url: ${{ steps.url.outputs.url }}
+      markdown: ${{ steps.url.outputs.markdown }}
+
+    runs-on: ubuntu-latest
+    needs: [ linux-build-install-test ]
+
+    steps:
+
+    - uses: actions/checkout@v3
+      with:
+        ref: badges
+        path: badges
+
+    # Use the output from the `coverage` step
+    - name: Generate the badge SVG image
+      uses: emibcn/badge-action@v1
+      id: badge
+      with:
+        label: 'Build'
+        status: ${{ needs.linux-build-install-test.build.outputs.build }}
+        color: ${{
+          needs.test.outputs.build == 'success' && 'green'         ||
+          'red' }}
+        path: badges/build.svg
+
+    - name: Upload badge as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: badge
+        path: ${{ badges/build.svg }}
+        if-no-files-found: error
+
+    - name: Commit badge
+      continue-on-error: true
+      env:
+        BADGE: ${{ badges/build.svg }}
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add "${BADGE}"
+        git commit -m "Add/Update badge"
+    - name: Push badge commit
+      uses: ad-m/github-push-action@master
+      if: ${{ success() }}
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ badges }}
