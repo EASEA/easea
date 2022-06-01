@@ -66,6 +66,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: build-configured
+          path: ${{github.workspace}}/build
 
       - name: Building easea
         id: build
@@ -89,6 +90,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: built
+          path: ${{github.workspace}}/build
 
       - name: Install
         run: sudo cmake --install ${{github.workspace}}/build
@@ -111,6 +113,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: installed
+          path: /usr/local/easena
 
       - name: Installing CUDA toolkit
         uses: Jimver/cuda-toolkit@v0.2.7
