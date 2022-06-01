@@ -55,6 +55,7 @@ jobs:
       continue-on-error: true
 
     - name: Generate the badge SVG image
+      run: mkdir -p badges
       uses: emibcn/badge-action@v1
       id: badge
       with:
