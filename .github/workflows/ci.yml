@@ -61,7 +61,7 @@ jobs:
         label: 'Build'
         status: ${{steps.build.outcome == 'success' && 'passed' || 'failed' }}
         color: ${{steps.build.outcome == 'success' && 'green' || 'red' }}
-        path: .github/badges/build.svg
+        path: badges/build.svg
     - name: Commit badge
       env:
         BRANCH: ${{ steps.extract_branch.outputs.branch }}
