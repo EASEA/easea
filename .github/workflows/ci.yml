@@ -78,7 +78,7 @@ jobs:
 
   install:
     runs-on: ubuntu-latest
-    name: Installing Easea
+    name: Install Easea
     needs: [build]
 
     steps:
@@ -104,7 +104,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    name: Testing Easea
+    name: Test Easea
     needs: [install]
 
     steps:
