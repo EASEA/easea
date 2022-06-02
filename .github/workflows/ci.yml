@@ -138,7 +138,7 @@ jobs:
         run: |
           cat examples.output
           LINE=$(cat examples.output | sed -n 's/passed://p')
-          NBE=$(echo ${LINE} | sed -n 's/^\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*\([^[:digit:]]*\)*\([[:digit:]]\+\)\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*[^[:digit:]]*\([[:digit:]]\+\)/\9/p' | xxd)
+          NBE=$(echo ${LINE} | sed -n 's/^\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*\([^[:digit:]]*\)*\([[:digit:]]\+\)\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*[^[:digit:]]*\([[:digit:]]\+\)/\9/p')
           PASSED=$(echo ${LINE} | sed -n 's/^\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*\([^[:digit:]]*\)*\([[:digit:]]\+\)\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*[^[:digit:]]*\([[:digit:]]\+\)/\5/p')
           echo "##[set-ouput name=nb_examples;]${NBE}"
           echo "##[set-ouput name=passed;]${PASSED}"
