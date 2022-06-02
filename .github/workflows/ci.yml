@@ -136,47 +136,49 @@ jobs:
 
       - name: Output examples status
         run: |
+          cat examples.output
           NBE=$(cat examples.output | sed -n 's/passed: \([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
           PASSED=$(cat examples.output | sed -n 's/passed: \([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
           echo "##[set-ouput name=nb_examples;]${NBE}"
           echo "##[set-ouput name=passed;]${PASSED}"
 
-          # badges:
-          #   runs-on: ubuntu-latest
-          #   name: Create badges for this branch
-          #   steps:
-          #     - uses: actions/checkout@v3
-          #       with:
-          #         ref: badges
-          #
-          #         #   - name: Create badge repository
-          #     run: mkdir -p badges
-          #
-          #   - name: Generate the badge SVG image
-          #     uses: emibcn/badge-action@v1
-          #     id: badge
-          #     with:
-          #       label: 'Build'
-          #       status: ${{steps.build.outcome == 'success' && 'passed' || 'failed' }}
-          #       color: ${{steps.build.outcome == 'success' && 'green' || 'red' }}
-          #       path: badges/build.svg
-          #
-          #   - name: Commit badge
-          #     env:
-          #       BRANCH: ${{ steps.extract_branch.outputs.branch }}
-          #     working-directory: ./badges
-          #     run: |
-          #       git config --local user.email "action@github.com"
-          #       git config --local user.name "GitHub Action"
-          #       mkdir -p "${BRANCH}"
-          #       mv *.svg "${BRANCH}"
-          #       git add "${BRANCH}/"
-          #       # Will give error if badge did not changed
-          #       git commit -m "Add/Update badge" || true
-          #
-          #   - name: Push badge commit
-          #     uses: ad-m/github-push-action@master
-          #     with:
-          #       github_token: ${{ secrets.GITHUB_TOKEN }}
-          #       branch: badges
-          #       directory: badges
+  badges:
+    runs-on: ubuntu-latest
+    name: Create badges
+    needs: [configure, build, install, test]
+    if: ${{ always() }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: badges
+
+      - run: mkdir -p badges
+
+      - name: Generate configure badge
+        uses: emibcn/badge-action@v1
+        with:
+          label: 'Configure'
+          status: ${{steps.build.outcome == 'success' && 'passed' || 'failed' }}
+          color: ${{steps.build.outcome == 'success' && 'green' || 'red' }}
+          path: badges/build.svg
+
+      - name: Commit badge
+        env:
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        working-directory: ./badges
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          mkdir -p "${BRANCH}"
+          mv *.svg "${BRANCH}"
+          git add "${BRANCH}/"
+          # Will give error if badge did not changed
+          git commit -m "Add/Update badge" || true
+
+      - name: Push badge commit
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: badges
+          directory: badges
