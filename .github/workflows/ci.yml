@@ -137,8 +137,8 @@ jobs:
       - name: Output examples status
         run: |
           cat examples.output
-          NBE=$(cat examples.output | sed -n 's/passed: \([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
-          PASSED=$(cat examples.output | sed -n 's/passed: \([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
+          NBE=$(cat examples.output | sed -n 's/passed:[^[:digit:]]*\([[:digit:]]\+\)[^[:digit:]]*\([[:digit:]]\+\)/\2/p')
+          PASSED=$(cat examples.output | sed -n 's/passed:[^[:digit:]]*\([[:digit:]]\+\)[^[:digit:]]*\([[:digit:]]\+\)/\1/p')
           echo "##[set-ouput name=nb_examples;]${NBE}"
           echo "##[set-ouput name=passed;]${PASSED}"
 
