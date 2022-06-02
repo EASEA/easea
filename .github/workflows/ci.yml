@@ -41,12 +41,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Configure CMake
-      id: configure
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      continue-on-error: true
-
-    - name: Output install status
-      run: echo "##[set-ouput name=install;]${{steps.install.outcome}}"
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
@@ -67,6 +62,9 @@ jobs:
         with:
           name: build-configured
           path: ${{github.workspace}}/build
+
+      - name: Generating configuration
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
       - name: Building easea
         id: build
@@ -92,6 +90,9 @@ jobs:
           name: built
           path: ${{github.workspace}}/build
 
+      - name: Generating configuration
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
       - name: Install
         run: sudo cmake --install ${{github.workspace}}/build
 
@@ -114,6 +115,9 @@ jobs:
         with:
           name: built
           path: ${{github.workspace}}/build
+
+      - name: Generating configuration
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
       - name: Installing easea
         run: sudo cmake --install ${{github.workspace}}/build
