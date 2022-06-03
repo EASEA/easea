@@ -176,7 +176,7 @@ jobs:
   badges:
     runs-on: ubuntu-latest
     name: Create badges
-    needs: [configure, build, install, test]
+    needs: [pre-ci, configure, build, install, test]
     if: ${{ always() }}
 
     steps:
@@ -196,7 +196,7 @@ jobs:
 
       - name: Commit badge
         env:
-          BRANCH: ${{ steps.extract_branch.outputs.branch }}
+          BRANCH: ${{ needs.pre-ci.outputs.branch }}
         working-directory: ./badges
         run: |
           git config --local user.email "action@github.com"
