@@ -190,8 +190,8 @@ jobs:
         uses: emibcn/badge-action@v1
         with:
           label: 'configure'
-          status: ${{ steps.build.outcome == 'success' && 'passed' || 'failed' }}
-          color: ${{ steps.build.outcome == 'success' && 'green' || 'red' }}
+          status: ${{ needs.configure.outputs.status == 'success' && 'passed' || 'failed' }}
+          color: ${{ needs.configure.outputs.status == 'success' && 'green' || 'red' }}
           path: badges/configure.svg
 
       - name: Commit badge
