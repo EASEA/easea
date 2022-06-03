@@ -223,7 +223,7 @@ jobs:
           echo "::set-ouput name=passed::${PASSED}"
           echo "::set-ouput name=failed::${FAILED}"
 
-      - run: echo ${{ steps.examples.outputs.total }}
+      - run: echo ${{ join(steps.examples.outputs.*, '\n') }}
 
       - name: Generate test badge if all failed
         uses: emibcn/badge-action@v1
