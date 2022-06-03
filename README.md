@@ -1,6 +1,15 @@
 EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 ===============================================
 
+<div style="text-align:center;" align="center">
+
+![Configure badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/configure.svg)
+![Build badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/build.svg)
+![Install badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/install.svg)
+![Examples badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/test.svg)
+
+</div>
+
 In this beta version, EASENA platform contains two engines within one program: EASEA and EASNA.
 - The EASEA compiler (for artificial evolution) is automatically used on files using extension .ez
 - The EASNA platform (for neural networks) is automatically used on files using extension .nz
