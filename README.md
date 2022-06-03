@@ -1,7 +1,7 @@
 EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 ===============================================
 
-<div style="text-align:center:">
+<div style="text-align:center;" align="center">
 
 ![Configure badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/configure.svg)
 ![Build badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/build.svg)
