@@ -185,6 +185,7 @@ jobs:
           ref: badges
 
       - run: mkdir -p badges
+      - run: echo ${{ needs.configure.outputs.status }}  ${{ needs.build.outputs.status }} ${{ needs.install.outputs.status }} ${{ needs.test.outputs.passed }} ${{ needs.test.outputs.total }} ${{ needs.test.outputs.failed }}
 
       - name: Generate configure badge
         uses: emibcn/badge-action@v1
