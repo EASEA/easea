@@ -14,7 +14,10 @@ env:
 jobs:
   pre-ci:
     name: Configure workflow
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     outputs:
       branch: ${{ steps.extract_branch.outputs.branch }}
 
@@ -36,8 +39,11 @@ jobs:
         echo "::set-output name=branch::${EXPORT_VALUE}"
 
   configure:
-    runs-on: ubuntu-latest
     name: Configure Easea
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [pre-ci]
     outputs:
       status: ${{ steps.status.outputs.status }}
@@ -60,8 +66,11 @@ jobs:
       run: echo "::set-output name=status::${{ job.status }}"
 
   build:
-    runs-on: ubuntu-latest
     name: Build Easea
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [configure]
     outputs:
       status: ${{ steps.status.outputs.status }}
@@ -94,8 +103,11 @@ jobs:
         run: echo "::set-output name=status::${{ job.status }}"
 
   install:
-    runs-on: ubuntu-latest
     name: Install Easea
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [build]
     outputs:
       status: ${{ steps.status.outputs.status }}
@@ -127,8 +139,11 @@ jobs:
         run: echo "::set-output name=status::${{ job.status }}"
 
   test:
-    runs-on: ubuntu-latest
     name: Test Easea
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [install]
     outputs:
       total: ${{ steps.status.outputs.total }}
@@ -172,6 +187,7 @@ jobs:
           echo "::set-output name=total::${NBE}"
           echo "::set-output name=passed::${PASSED}"
           echo "::set-output name=failed::${FAILED}"
+        shell: bash
 
   badges:
     runs-on: ubuntu-latest
