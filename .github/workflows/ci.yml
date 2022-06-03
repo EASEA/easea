@@ -14,11 +14,7 @@ env:
 jobs:
   pre-ci:
     name: Configure workflow
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ubuntu-latest
     outputs:
       branch: ${{ steps.extract_branch.outputs.branch }}
 
@@ -37,10 +33,6 @@ jobs:
         else
             EXPORT_VALUE="${TMP_GITHUB_REF}"
         fi
-        if [ "$RUNNER_OS" == "macOS" ]; then
-          brew install bison
-          export PATH="$(brew --prefix bison)/bin:$PATH"
-        fi
         echo "::set-output name=branch::${EXPORT_VALUE}"
 
   configure:
@@ -56,6 +48,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Installing dependencies if needed
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "macOS" ]; then
+          brew install bison
+          export PATH="$(brew --prefix bison)/bin:$PATH"
+        fi
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
