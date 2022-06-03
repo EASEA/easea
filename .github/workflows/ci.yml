@@ -57,19 +57,19 @@ jobs:
         if [ "$RUNNER_OS" == "macOS" ]; then
           brew install bison
           export PATH="$(brew --prefix bison)/bin:$PATH"
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          choco install winflexbison3
         fi
 
     - name: Configure CMake
-      env:
-        BUILD_DIR: ${{ github.workspace }}${{ runner.os == 'Windows' && '\build' || '/build' }}
       run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       shell: bash
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: build-configured
-        path: ${{github.workspace}}/build
+        name: configured-${{ runner.os }}
+        path: ./build
 
     - name: Save status
       if: ${{ always() }}
@@ -96,16 +96,16 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          name: build-configured
-          path: ${{github.workspace}}/build
+          name: build-configured-${{ runner.os }}
+          path: ./build
 
       - name: Generating configuration
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         shell: bash
 
       - name: Building easea
         id: build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        run: cmake --build ./build --config ${{env.BUILD_TYPE}}
         shell: bash
 
       - name: Upload artifacts
