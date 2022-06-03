@@ -15,6 +15,9 @@ jobs:
   pre-ci:
     name: Configure workflow
     runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.extract_branch.outputs.branch }}
+
     steps:
     - uses: actions/checkout@v3
     - name: Extract branch name
@@ -30,12 +33,14 @@ jobs:
         else
             EXPORT_VALUE="${TMP_GITHUB_REF}"
         fi
-        echo "##[set-output name=branch;]${EXPORT_VALUE}"
+        echo "::set-output name=branch::${EXPORT_VALUE}"
 
   configure:
     runs-on: ubuntu-latest
     name: Configure Easea
     needs: [pre-ci]
+    outputs:
+      status: ${{ steps.status.outputs.status }}
 
     steps:
     - uses: actions/checkout@v3
@@ -49,10 +54,17 @@ jobs:
         name: build-configured
         path: ${{github.workspace}}/build
 
+    - name: Save status
+      if: ${{ always() }}
+      id: status
+      run: echo "::set-output name=status::${{ job.status }}"
+
   build:
     runs-on: ubuntu-latest
     name: Build Easea
     needs: [configure]
+    outputs:
+      status: ${{ steps.status.outputs.status }}
 
     steps:
       - uses: actions/checkout@v3
@@ -76,10 +88,17 @@ jobs:
           name: built
           path: ${{github.workspace}}/build
 
+      - name: Save status
+        if: ${{ always() }}
+        id: status
+        run: echo "::set-output name=status::${{ job.status }}"
+
   install:
     runs-on: ubuntu-latest
     name: Install Easea
     needs: [build]
+    outputs:
+      status: ${{ steps.status.outputs.status }}
 
     steps:
       - uses: actions/checkout@v3
@@ -102,10 +121,19 @@ jobs:
           name: installed
           path: /usr/local/easena
 
+      - name: Save status
+        if: ${{ always() }}
+        id: status
+        run: echo "::set-output name=status::${{ job.status }}"
+
   test:
     runs-on: ubuntu-latest
     name: Test Easea
     needs: [install]
+    outputs:
+      passed: ${{ steps.status.outputs.passed }}
+      failed: ${{ steps.status.outputs.failed }}
+      total: ${{ steps.status.outputs.total }}
 
     steps:
       - uses: actions/checkout@v3
@@ -132,15 +160,18 @@ jobs:
           EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" | tee examples.output
           result_code=${PIPESTATUS[0]}
           exit $result_code
-        continue-on-error: true
 
       - name: Output examples status
+        id: status
+        if: ${{ always() }}
         run: |
           LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
           NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
           PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
-          echo "##[set-ouput name=nb_examples;]${NBE}"
-          echo "##[set-ouput name=passed;]${PASSED}"
+          FAILED=$((NBE - PASSED))
+          echo "::set-ouput name=total::${NBE}"
+          echo "::set-ouput name=passed::${PASSED}"
+          echo "::set-ouput name=failed::${FAILED}"
 
   badges:
     runs-on: ubuntu-latest
