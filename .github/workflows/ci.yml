@@ -189,10 +189,12 @@ jobs:
       - name: Generate configure badge
         uses: emibcn/badge-action@v1
         with:
-          label: 'Configure'
-          status: ${{steps.build.outcome == 'success' && 'passed' || 'failed' }}
-          color: ${{steps.build.outcome == 'success' && 'green' || 'red' }}
-          path: badges/build.svg
+          label: 'configure'
+          status: ${{ ${STATUS} == 'success' && 'passed' || 'failed' }}
+          color: ${{ ${STATUS} == 'success' && 'green' || 'red' }}
+          path: badges/configure.svg
+        env:
+          STATUS: ${{ steps.build.outcome }}
 
       - name: Commit badge
         env:
@@ -205,7 +207,7 @@ jobs:
           mv *.svg "${BRANCH}"
           git add "${BRANCH}/"
           # Will give error if badge did not changed
-          git commit -m "Add/Update badge" || true
+          git commit -m "Add/Update badge for branch: ${BRANCH}" || true
 
       - name: Push badge commit
         uses: ad-m/github-push-action@master
