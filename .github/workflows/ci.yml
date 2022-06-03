@@ -220,8 +220,8 @@ jobs:
           PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
           FAILED=$((NBE - PASSED))
           echo "::set-ouput name=total::${NBE}"
-          echo "::set-ouput name=passed::${PASSED}"
-          echo "::set-ouput name=failed::${FAILED}"
+          #echo "::set-ouput name=passed::${PASSED}"
+          #echo "::set-ouput name=failed::${FAILED}"
 
       - run: echo ${{ join(steps.examples.outputs.*, '\n') }}
 
