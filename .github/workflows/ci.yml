@@ -194,6 +194,44 @@ jobs:
           color: ${{ needs.configure.outputs.status == 'success' && 'green' || 'red' }}
           path: badges/configure.svg
 
+      - name: Generate build badge
+        uses: emibcn/badge-action@v1
+        with:
+          label: 'build'
+          status: ${{ needs.build.outputs.status == 'success' && 'passed' || 'failed' }}
+          color: ${{ needs.build.outputs.status == 'success' && 'green' || 'red' }}
+          path: badges/build.svg
+
+      - name: Generate install badge
+        uses: emibcn/badge-action@v1
+        with:
+          label: 'install'
+          status: ${{ needs.install.outputs.status == 'success' && 'passed' || 'failed' }}
+          color: ${{ needs.install.outputs.status == 'success' && 'green' || 'red' }}
+          path: badges/install.svg
+
+      - name: Generate test badge if all failed
+        uses: emibcn/badge-action@v1
+        if: ${{ needs.test.outputs.total == '' }}
+        with:
+          label: 'test'
+          status: 'ERROR'
+          color: 'red'
+          path: badges/test.svg
+
+      - name: Generate test badge if run
+        uses: emibcn/badge-action@v1
+        if: ${{ needs.test.outputs.total != '' }}
+        with:
+          label: 'test'
+          status: ${{ needs.test.outputs.passed }} '/' ${{ needs.test.outputs.total }}
+          color: ${{ needs.test.outputs.failed == '0' && 'green' ||
+                    needs.test.outputs.failed >= 1 && needs.test.outputs.failed <= 3 && 'yellow' ||
+                    needs.test.outputs.failed >= 3 && needs.test.outputs.failed <= 6 && 'orange' ||
+                    'red' }}
+          path: badges/test.svg
+
+
       - name: Commit badge
         env:
           BRANCH: ${{ needs.pre-ci.outputs.branch }}
