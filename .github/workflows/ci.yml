@@ -44,7 +44,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [pre-ci]
     outputs:
-      status: ${{ steps.status.outputs.status }}
+      status-Linux: ${{ steps.status.outputs.status-Linux }}
+      status-Windows: ${{ steps.status.outputs.status-Windows }}
+      status-macOS: ${{ steps.status.outputs.status-macOS }}
 
     steps:
     - uses: actions/checkout@v3
@@ -72,7 +74,7 @@ jobs:
     - name: Save status
       if: ${{ always() }}
       id: status
-      run: echo "::set-output name=status::${{ job.status }}"
+      run: echo "::set-output name=status-${{ runner.os }}::${{ job.status }}"
       shell: bash
 
   build:
@@ -84,7 +86,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [configure]
     outputs:
-      status: ${{ steps.status.outputs.status }}
+      status-Linux: ${{ steps.status.outputs.status-Linux }}
+      status-Windows: ${{ steps.status.outputs.status-Windows }}
+      status-macOS: ${{ steps.status.outputs.status-macOS }}
 
     steps:
       - uses: actions/checkout@v3
@@ -113,7 +117,7 @@ jobs:
       - name: Save status
         if: ${{ always() }}
         id: status
-        run: echo "::set-output name=status::${{ job.status }}"
+        run: echo "::set-output name=status-${{ runner.os }}::${{ job.status }}"
         shell: bash
 
   install:
@@ -125,7 +129,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [build]
     outputs:
-      status: ${{ steps.status.outputs.status }}
+      status-Linux: ${{ steps.status.outputs.status-Linux }}
+      status-Windows: ${{ steps.status.outputs.status-Windows }}
+      status-macOS: ${{ steps.status.outputs.status-macOS }}
 
     steps:
       - uses: actions/checkout@v3
@@ -153,7 +159,7 @@ jobs:
       - name: Save status
         if: ${{ always() }}
         id: status
-        run: echo "::set-output name=status::${{ job.status }}"
+        run: echo "::set-output name=status-${{ runner.os }}::${{ job.status }}"
         shell: bash
 
   test:
