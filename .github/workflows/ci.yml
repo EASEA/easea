@@ -62,7 +62,7 @@ jobs:
     - name: Configure CMake
       env:
         BUILD_DIR: ${{ github.workspace }}${{ runner.os == 'Windows' && '\build' || '/build' }}
-      run: cmake -B ${{env.BUILD_DIR}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       shell: bash
 
     - name: Upload artifacts
