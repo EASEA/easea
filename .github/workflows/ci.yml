@@ -68,7 +68,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: configured-${{ runner.os }}
+        name: build-configured-${{ runner.os }}
         path: ./build
 
     - name: Save status
