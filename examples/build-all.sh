@@ -85,7 +85,7 @@ printf "\n### Results ###\n"
 printf "passed: $Green$passed$Color_Off/$nb_examples\n"
 
 if [[ "$((nb_examples-passed))" != "0" ]]; then # at least one fail
-	printf "failed: $Red$failed$Color_Off/$nb_examples\n"
+	printf "failed:$Red $failed$Color_Off/$nb_examples\n"
 	printf "test failed:$Red"
 	for te in "${failed_list[@]}"; do
 		printf " $te"
