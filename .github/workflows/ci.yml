@@ -166,7 +166,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: examples
-          path: ${{github.workspace}}/examples.output
+          path: ${{github.workspace}}
 
   badges:
     runs-on: ubuntu-latest
