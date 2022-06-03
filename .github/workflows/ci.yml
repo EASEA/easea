@@ -33,12 +33,17 @@ jobs:
         else
             EXPORT_VALUE="${TMP_GITHUB_REF}"
         fi
+        if [ "$RUNNER_OS" == "macOS" ]; then
+          brew install bison
+          export PATH="$(brew --prefix bison)/bin:$PATH"
+        fi
         echo "::set-output name=branch::${EXPORT_VALUE}"
 
   configure:
     name: Configure Easea
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [pre-ci]
@@ -68,6 +73,7 @@ jobs:
     name: Build Easea
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [configure]
@@ -108,6 +114,7 @@ jobs:
     name: Install Easea
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [build]
@@ -147,6 +154,7 @@ jobs:
     name: Test Easea
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     needs: [install]
