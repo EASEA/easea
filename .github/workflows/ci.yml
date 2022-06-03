@@ -161,17 +161,12 @@ jobs:
           result_code=${PIPESTATUS[0]}
           exit $result_code
 
-      - name: Output examples status
-        id: status
+      - name: Uploading artifacts
         if: ${{ always() }}
-        run: |
-          LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
-          NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
-          PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
-          FAILED=$((NBE - PASSED))
-          echo "::set-ouput name=total::${NBE}"
-          echo "::set-ouput name=passed::${PASSED}"
-          echo "::set-ouput name=failed::${FAILED}"
+        uses: actions/upload-artifact@v3
+        with:
+          name: examples
+          path: ${{github.workspace}}/examples.output
 
   badges:
     runs-on: ubuntu-latest
@@ -211,9 +206,27 @@ jobs:
           color: ${{ needs.install.outputs.status == 'success' && 'green' || 'red' }}
           path: badges/install.svg
 
+      - name: Downloading examples output
+        uses: actions/download-artifact@v3
+        with:
+          name: examples
+          path: ${{github.workspace}}/examples.output
+
+      - name: Parsing examples output
+        id: examples
+        run: LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
+          NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
+          PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
+          FAILED=$((NBE - PASSED))
+          echo "::set-ouput name=total::${NBE}"
+          echo "::set-ouput name=passed::${PASSED}"
+          echo "::set-ouput name=failed::${FAILED}"
+
+      - run: echo ${{ steps.examples.outputs }}
+
       - name: Generate test badge if all failed
         uses: emibcn/badge-action@v1
-        if: ${{ needs.test.outputs.total == '' }}
+        if: ${{ steps.examples.outputs.total == '' }}
         with:
           label: 'test'
           status: 'ERROR'
@@ -222,13 +235,13 @@ jobs:
 
       - name: Generate test badge if run
         uses: emibcn/badge-action@v1
-        if: ${{ needs.test.outputs.total != '' }}
+        if: ${{ steps.examples.outputs.total != '' }}
         with:
           label: 'test'
-          status: ${{ needs.test.outputs.passed }} '/' ${{ needs.test.outputs.total }}
-          color: ${{ needs.test.outputs.failed == '0' && 'green' ||
-                    needs.test.outputs.failed >= 1 && needs.test.outputs.failed <= 3 && 'yellow' ||
-                    needs.test.outputs.failed >= 3 && needs.test.outputs.failed <= 6 && 'orange' ||
+          status: ${{ steps.examples.outputs.passed }} '/' ${{ steps.examples.outputs.total }}
+          color: ${{ steps.examples.outputs.failed == '0' && 'green' ||
+                    steps.examples.outputs.failed >= 1 && steps.examples.outputs.failed <= 3 && 'yellow' ||
+                    steps.examples.outputs.failed >= 3 && steps.examples.outputs.failed <= 6 && 'orange' ||
                     'red' }}
           path: badges/test.svg
 
