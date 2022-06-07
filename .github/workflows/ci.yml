@@ -85,6 +85,13 @@ jobs:
       run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       shell: bash
 
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-configured-Windows
+        path: ./build
+
+
   configure-Linux:
     name: Configure Easea (Linux)
     runs-on: ubuntu-latest
@@ -140,6 +147,47 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: built-Linux
+          path: ${{github.workspace}}/build
+
+      - name: Save status
+        if: ${{ always() }}
+        id: status
+        run: echo "::set-output name=status::${{ job.status }}"
+        shell: bash
+
+  build-Windows:
+    name: Build Easea (Windows)
+    runs-on: windows-latest
+    needs: [configure-Windows]
+    outputs:
+      status: ${{ steps.status.outputs.status }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-configured-Windows
+          path: ./build
+
+      - name: Installing dependencies if needed
+        run: choco install winflexbison3
+        shell: bash
+
+      - name: Configure CMake
+        run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        shell: bash
+
+      - name: Building easea
+        id: build
+        run: cmake --build ./build --config ${{env.BUILD_TYPE}}
+        shell: bash
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: built-Windows
           path: ${{github.workspace}}/build
 
       - name: Save status
