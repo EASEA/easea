@@ -76,17 +76,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
     - name: Installing dependencies if needed
-      uses: msys2/setup-msys2@v2
-      with:
-        install: >-
-          cmake
-          flex
-          bison
+      run: choco install winflexbison3
+      shell: bash
 
     - name: Configure CMake
       run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      shell: msys2 {0}
+      shell: bash
 
   configure-Linux:
     name: Configure Easea (Linux)
