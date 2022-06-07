@@ -67,8 +67,14 @@ jobs:
           bison
 
     - name: Configure CMake
+      if: ${{ runner.os != 'Windows' }}
       run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      shell: ${{ runner.os == 'Windows' && msys2 {0} || bash }}
+      shell: bash
+
+    - name: Configure CMake (Windows)
+      if: ${{ runner.os == 'Windows' }}
+      run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      shell: msys2 {0}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
