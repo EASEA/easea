@@ -51,19 +51,24 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Installing dependencies if needed
+    - name: Installing dependencies if needed (macOS)
       shell: bash
+      if: ${{ runner.os == 'macOS' }}
       run: |
-        if [ "$RUNNER_OS" == "macOS" ]; then
-          brew install bison
-          export PATH="$(brew --prefix bison)/bin:$PATH"
-        elif [ "$RUNNER_OS" == "Windows" ]; then
-          choco install winflexbison3
-        fi
+        brew install bison
+        export PATH="$(brew --prefix bison)/bin:$PATH"
+
+    - name: Installing dependencies if needed (Windows)
+      uses: msys2/setup-msys2@v2
+      with:
+        install: >-
+          cmake
+          flex
+          bison
 
     - name: Configure CMake
       run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      shell: bash
+      shell: ${{ runner.os == 'Windows' && msys2 {0} || bash }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
