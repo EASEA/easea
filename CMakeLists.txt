@@ -41,6 +41,11 @@ if(WIN32)
 endif(WIN32)
 ADD_LIBRARY( libeasea STATIC ${libeasea_src} ${libeasea_src_win})
 SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-std=c++14 -O3")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY omp)
+endif()
 # -fopenmp")
 
 # Creation of a static library for EASNA that will be linked to the main program easena 
