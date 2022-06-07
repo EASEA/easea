@@ -161,6 +161,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Installing dependencies if needed
+        shell: bash
+        run: |
+          brew install bison
+          export PATH="$(brew --prefix bison)/bin:$PATH"
+
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
@@ -233,6 +239,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Installing dependencies if needed
+        shell: bash
+        run: |
+          brew install bison
+          export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -322,6 +334,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Installing dependencies if needed
+        shell: bash
+        run: |
+          brew install bison
+          export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
