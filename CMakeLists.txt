@@ -24,17 +24,6 @@ INCLUDE_DIRECTORIES(cxxopts)
 
 option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
 
-if (USE_OPENMP)
-  find_package(OpenMP)
-endif ()
-if (OPENMP_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-else ()
-  # Disable warnings for all the unknown OpenMP pragmas.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
-endif ()
-
 SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 
 # Creation of a static library for EASEA that will be linked to the main program easena
@@ -44,12 +33,20 @@ if(WIN32)
 endif(WIN32)
 ADD_LIBRARY( libeasea STATIC ${libeasea_src} ${libeasea_src_win})
 SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-std=c++14 -O3")
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
-        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
-        set(OpenMP_CXX_LIB_NAMES "omp")
-        set(OpenMP_omp_LIBRARY omp)
-endif()
 # -fopenmp")
+
+if (USE_OPENMP)
+	find_package(OPENMP)
+endif ()
+if (OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  #target_include_directories(libeasea
+else ()
+  # Disable warnings for all the unknown OpenMP pragmas.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
+endif ()
+
 
 # Creation of a static library for EASNA that will be linked to the main program easena 
 # Program based on the one that can be found in https://git.unistra.fr/rorhand/perceptron/
