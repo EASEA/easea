@@ -48,7 +48,7 @@ jobs:
     - name: Installing dependencies if needed
       shell: bash
       run: |
-        brew install bison
+        brew install bison libomp
         export PATH="$(brew --prefix bison)/bin:$PATH"
 
     - name: Configure CMake
@@ -161,7 +161,7 @@ jobs:
       - name: Installing dependencies if needed
         shell: bash
         run: |
-          brew install bison
+          brew install bison libomp
           export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
@@ -240,7 +240,7 @@ jobs:
       - name: Installing dependencies if needed
         shell: bash
         run: |
-          brew install bison
+          brew install bison libomp
           export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
@@ -335,7 +335,7 @@ jobs:
       - name: Installing dependencies if needed
         shell: bash
         run: |
-          brew install bison
+          brew install bison libomp
           export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
