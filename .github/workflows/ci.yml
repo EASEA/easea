@@ -101,6 +101,7 @@ jobs:
       status-Linux: ${{ steps.status.outputs.status-Linux }}
       status-Windows: ${{ steps.status.outputs.status-Windows }}
       status-macOS: ${{ steps.status.outputs.status-macOS }}
+    if: ${{ format('needs.configure.status-{0}', runner.os) == 'success' }}
 
     steps:
       - uses: actions/checkout@v3
