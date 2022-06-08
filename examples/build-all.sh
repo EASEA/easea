@@ -11,7 +11,7 @@ Green='\033[0;32m'
 
 # Retrieves test directories
 printf "Calculating examples list..."
-all_examples=$(find $examples_dir -mindepth 1 -type d -exec sh -c '[ -f "$0"/*.ez ]' {} \; -print 2>&1 | sed -n 's/^\([./a-zA-Z0-9_\-]\+\)\(.*\)*$/\1/p')
+all_examples=$(find . -mindepth 1 -type f -name "*.ez" | xargs dirname | xargs realpath)
 nb_examples=$(echo $all_examples | wc -w)
 printf "$Green ok!\n$Color_Off"
 echo "Found $nb_examples examples to compile."
@@ -38,7 +38,7 @@ for edir in $all_examples; do
 	printf "$Green ok!$Color_Off\n"
 
 	# Convert args if CUDA not available
-	if [ $2 == "--no-cuda" ]; then
+	if [[ "$2" == "--no-cuda" ]]; then
 		EASEA_ARGS=$(echo $EASEA_ARGS | sed 's/\(cuda_\|-cuda\)//')
 	fi
 
