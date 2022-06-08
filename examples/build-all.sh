@@ -17,7 +17,7 @@ for f in $all_examples_raw; do
 	all_examples="$all_examples $(dirname $f | xargs realpath)"
 done
 echo $all_examples
-nb_examples=$(echo $all_examples | wc -w)
+nb_examples=$(echo $all_examples | wc -w | tr -d " ")
 printf "$Green ok!\n$Color_Off"
 echo "Found $nb_examples examples to compile."
 
@@ -31,6 +31,9 @@ for edir in $all_examples; do
 	cd $edir
 
 	printf -- "\treading README.txt..."
+	echo "DBG: $(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt)"
+	echo "DBG: $(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1)"
+	echo "DBG: $(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)"
 	EASEA_ARGS=$(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)
 	EASEA_OUT=$(sed -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | xargs)
 	if [[ "$EASEA_ARGS" == "" ]] || [[ "$EASEA_OUT" == "" ]]; then
