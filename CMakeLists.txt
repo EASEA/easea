@@ -49,17 +49,17 @@ SET(CMAKE_STATIC_LIBRARY_PREFIX="")
 target_compile_features(libeasea PUBLIC cxx_std_14)
 target_compile_features(libeasna PUBLIC cxx_std_14)
 target_compile_options(libeasea PUBLIC 
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -march=native -mtune=native>
-	$<$<CXX_COMPILER_ID:MSVC>:/O3>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -march=native -mtune=native -ppm>
+	$<$<CXX_COMPILER_ID:MSVC>:/O3 /polokl>
 	)
 target_compile_options(libeasna PUBLIC	
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -march=native -mtune=native>
-	$<$<CXX_COMPILER_ID:MSVC>:/O3>
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op>
+	$<$<CXX_COMPILER_ID:MSVC>:/O3 /YOOO>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op -pooo>
 	$<$<CXX_COMPILER_ID:MSVC>:/W4>
 	)
 target_compile_options(easena PUBLIC 
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -Wno-deprecated -Wno-write-strings -fmessage-length=0>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -Wno-deprecated -Wno-write-strings -fmessage-length=0 -oiipp>
 	)
 TARGET_LINK_LIBRARIES(easena libeasea libeasna)
 
