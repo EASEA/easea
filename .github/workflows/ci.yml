@@ -469,9 +469,9 @@ jobs:
         shell: bash
 
   test-Windows:
-    name: Test Easea
-    runs-on: macos-latest
-    needs: [install-Macos]
+    name: Test Easea (Windows)
+    runs-on: windows-latest
+    needs: [install-Windows]
     outputs:
       total: ${{ steps.status.outputs.total }}
       passed: ${{ steps.status.outputs.passed }}
