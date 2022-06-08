@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.14)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.9) # 3.9: OpenMP improved support
 
 ### Metadata ###
 
@@ -77,15 +77,16 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/libeasea/include)
 option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
 
 if (USE_OPENMP)
-	find_package(OpenMP)
+	find_package(OpenMP REQUIRED)
 endif ()
-if (OPENMP_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  #target_include_directories(libeasea
+if (OpenMP_CXX_FOUND)
+	target_link_libraries(libeasea PUBLIC OpenMP::OpenMP_CXX)
+	target_link_libraries(libeasna PUBLIC OpenMP::OpenMP_CXX)
+	#target_compile_options(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 else ()
   # Disable warnings for all the unknown OpenMP pragmas.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
+  	target_compile_options(libeasna $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-unknown-pragmas>)
 endif ()
 
 ## Bison & Flex: FLEX and BISON management to create the easea language and soon the easna/neural language
