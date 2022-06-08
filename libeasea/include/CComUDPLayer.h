@@ -19,7 +19,7 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
+//#include <pthread.h> // not necessary
 #include <typeinfo>
 #include <float.h>
 #include <limits.h>
