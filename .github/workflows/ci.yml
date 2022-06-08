@@ -48,7 +48,7 @@ jobs:
     - name: Installing dependencies if needed
       shell: bash
       run: |
-        brew install bison libomp
+        brew install bison libomp boost
         export PATH="$(brew --prefix bison)/bin:$PATH"
 
     - name: Configure CMake
@@ -102,6 +102,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Installing dependencies if needed
+      shell: bash
+      run: |
+        sudo apt install -y libboost-all-dev
+
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       shell: bash
@@ -127,6 +132,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Installing dependencies if needed
+        shell: bash
+        run: |
+          sudo apt install -y libboost-all-dev
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -209,7 +219,7 @@ jobs:
       - name: Installing dependencies if needed
         shell: bash
         run: |
-          brew install bison libomp
+          brew install bison libomp boost
           export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
@@ -248,6 +258,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Installing dependencies if needed
+        shell: bash
+        run: |
+          sudo apt install -y libboost-all-dev
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -288,7 +303,7 @@ jobs:
       - name: Installing dependencies if needed
         shell: bash
         run: |
-          brew install bison libomp
+          brew install bison libomp boost
           export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
@@ -376,6 +391,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Installing dependencies if needed
+        shell: bash
+        run: |
+          sudo apt install -y libboost-all-dev
+
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
@@ -430,7 +450,7 @@ jobs:
       - name: Installing dependencies if needed
         shell: bash
         run: |
-          brew install bison libomp coreutils
+          brew install bison libomp coreutils boost
           export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
