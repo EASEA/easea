@@ -317,6 +317,47 @@ jobs:
         run: echo "::set-output name=status::${{ job.status }}"
         shell: bash
 
+  install-Windows:
+    name: Install Easea (Windows)
+    runs-on: windows-latest
+    needs: [build-Windows]
+    outputs:
+      status: ${{ steps.status.outputs.status }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Installing dependencies if needed
+        run: choco install winflexbison3
+        shell: bash
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: built-Windows
+          path: ./build
+
+      - name: Generating configuration
+        run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        shell: bash
+
+      - name: Install
+        run: sudo cmake --install ./build
+        shell: bash
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: installed-Windows
+          path: c:/Program Files/easena
+
+      - name: Save status
+        if: ${{ always() }}
+        id: status
+        run: echo "::set-output name=status::${{ job.status }}"
+        shell: bash
+
+
   test-Linux:
     name: Test Easea
     runs-on: ubuntu-latest
