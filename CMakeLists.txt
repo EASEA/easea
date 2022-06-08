@@ -68,8 +68,7 @@ TARGET_LINK_LIBRARIES(easena libeasea libeasna)
 INCLUDE_DIRECTORIES(${PROJECT_BINARY_BIN})
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libeasea/include)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libeasna/include)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/cxxopts)
-target_include_directories(libeasea PUBLIC ${CMAKE_SOURCE_DIR}/third_party)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/third_party/cxxopts)
 
 ### Dependencies ###
 
@@ -86,6 +85,10 @@ else ()
   	# Disable warnings for all the unknown OpenMP pragmas.
   	target_compile_options(libeasna $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-unknown-pragmas>)
 endif ()
+
+## Boost (asio)
+find_package(Boost REQUIRED)
+target_include_directories(libeasea PUBLIC ${Boost_INCLUDE_DIRS})
 
 ## Bison & Flex: FLEX and BISON management to create the easea language and soon the easna/neural language
 
@@ -126,7 +129,6 @@ INSTALL(TARGETS libeasea DESTINATION libeasna)
 FILE(GLOB templates ${CMAKE_SOURCE_DIR}/tpl/*)
 INSTALL(FILES ${templates} DESTINATION tpl)
 INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasea/include DESTINATION libeasea)
-INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/boost DESTINATION libeasea/include)
 INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasna/include DESTINATION libeasna)
 INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasna/src DESTINATION libeasna)
 INSTALL(DIRECTORY examples DESTINATION ".")
