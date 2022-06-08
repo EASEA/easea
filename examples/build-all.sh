@@ -31,6 +31,7 @@ for edir in $all_examples; do
 	cd $edir
 
 	printf -- "\treading README.txt..."
+	echo "s/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p'"
 	echo "DBG: $(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt)"
 	echo "DBG: $(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1)"
 	echo "DBG: $(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)"
