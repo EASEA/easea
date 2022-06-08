@@ -2,6 +2,7 @@
 # Attempts to build all examples and run them for less than a second
 # Léo Chéneau - 2022
 # $1 = easea binary to call
+# $2 = --no-cuda
 path_to_script=$(realpath $BASH_SOURCE)
 examples_dir=$(dirname $path_to_script)
 Color_Off='\033[0m'
@@ -35,6 +36,11 @@ for edir in $all_examples; do
 		continue
 	fi
 	printf "$Green ok!$Color_Off\n"
+
+	# Convert args if CUDA not available
+	if [ $2 == "--no-cuda" ]; then
+		EASEA_ARGS=$(echo $EASEA_ARGS | sed 's/\(cuda_\|-cuda\)//')
+	fi
 
 	# build
 	printf -- "\t$1 $EASEA_ARGS..."
