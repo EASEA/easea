@@ -36,7 +36,7 @@ jobs:
         echo "::set-output name=branch::${EXPORT_VALUE}"
 
   configure-MacOS:
-    name: Configure Easea (macOS)
+    name: Configure Easea (MacOS)
     runs-on: macos-latest
     needs: [pre-ci]
     outputs:
@@ -345,6 +345,13 @@ jobs:
         run: sudo cmake --install ./build
         shell: bash
 
+      - name: DEBUG
+        run: ls -al "/"
+        
+      - run: ls -al "D:"
+      - run: ls -al "D:/*"
+      - run: ls -al "C:/*"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -359,7 +366,7 @@ jobs:
 
 
   test-Linux:
-    name: Test Easea
+    name: Test Easea (Linux)
     runs-on: ubuntu-latest
     needs: [install-Linux]
     outputs:
@@ -410,9 +417,9 @@ jobs:
         shell: bash
 
   test-MacOS:
-    name: Test Easea
+    name: Test Easea (MacOS)
     runs-on: macos-latest
-    needs: [install-macos]
+    needs: [install-Macos]
     outputs:
       total: ${{ steps.status.outputs.total }}
       passed: ${{ steps.status.outputs.passed }}
@@ -424,7 +431,7 @@ jobs:
       - name: Installing dependencies if needed
         shell: bash
         run: |
-          brew install bison libomp
+          brew install bison libomp coreutils
           export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
@@ -461,6 +468,55 @@ jobs:
           echo "::set-output name=failed::${FAILED}"
         shell: bash
 
+  test-Windows:
+    name: Test Easea
+    runs-on: macos-latest
+    needs: [install-Macos]
+    outputs:
+      total: ${{ steps.status.outputs.total }}
+      passed: ${{ steps.status.outputs.passed }}
+      failed: ${{ steps.status.outputs.failed }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Installing dependencies if needed
+        run: choco install winflexbison3
+        shell: bash
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: built-Windows
+          path: ./build
+
+      - name: Generating configuration
+        run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        shell: bash
+
+      - name: Installing easea
+        run: sudo cmake --install ./build
+        shell: bash
+
+      - name: Build examples
+        run: |
+          EZ_PATH="C:/Program Files/easena/" bash ${{github.workspace}}/examples/build-all.sh "C:/Program Files/easena" | tee examples.output
+          result_code=${PIPESTATUS[0]}
+          exit $result_code
+        shell: bash
+
+      - name: Output examples status
+        id: status
+        if: ${{ always() }}
+        run: |
+          LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
+          NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
+          PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
+          FAILED=$((NBE - PASSED))
+          echo "::set-output name=total::${NBE}"
+          echo "::set-output name=passed::${PASSED}"
+          echo "::set-output name=failed::${FAILED}"
+        shell: bash
 
           # badges:
           #   runs-on: ubuntu-latest
