@@ -189,7 +189,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     this->myClientNumber=0; 
     this->initializeClients();
     //if(params->remoteIslandModel)
-    server = new CComUDPServer(params->serverPort,0); //1 if debug
+    server = new CComUDPServer(params->serverPort); //1 if debug
   }
 }
 
@@ -198,11 +198,6 @@ CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
   delete population;
         if(this->params->remoteIslandModel){
                 delete this->server;
-                if(this->numberOfClients>1){
-                        for(int i=0; (unsigned)i<this->numberOfClients; i++)
-                                delete this->Clients[i];
-                        delete this->Clients;
-                }
         }
 }
 void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
@@ -688,11 +683,10 @@ void CEvolutionaryAlgorithm::initializeClients(){
 }
 
 void CEvolutionaryAlgorithm::refreshClient(){
-    unsigned no_client;
-    this->Clients = parse_file(this->params->ipFile,&no_client, this->params->serverPort);
+    this->Clients = parse_file(this->params->ipFile);
+    this->numberOfClients = Clients.size();
 
-    cout << "ip file : " << this->params->ipFile << " contains " << no_client << " client ip(s)" << endl;
-    this->numberOfClients = no_client;
+    cout << "ip file : " << this->params->ipFile << " contains " << numberOfClients << " client ip(s)" << endl;
 }
 
 void CEvolutionaryAlgorithm::sendIndividual(){
@@ -712,27 +706,27 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 
     std::stringstream ss;
     ss <<std::put_time(std::localtime(&in_time_t),  "%H:%M:%S");
-    if (Clients[client]->getClientName() != NULL)
+    if (Clients[client]->getClientName() != ""s)
 	cout << "[" << ss.str()<<"]"<<  " Sending my best individual to " << this->Clients[client]->getClientName() <<  endl;
     else
 	cout << "[" << ss.str()<<"]" << " Sending my best individual to " << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() << endl;
     //cout << "Sending individual " << index << " to client " << client << " now" << endl;
     //cout << this->population->parents[index]->serialize() << endl;
-    this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
+    this->Clients[client]->send(bBest->serialize());
   }
 }
 
 void CEvolutionaryAlgorithm::receiveIndividuals(){
 
   //Checking every generation for received individuals
-  if(this->server->parm->data->size() != 0){
+  if(server->has_data()){
     //cout << "number of received individuals :" << this->server->nb_data << endl;
     //cout << "number of treated individuals :" << this->treatedIndividuals << endl;
     CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);   
 
 
     //Treating all the individuals before continuing
-    while(this->server->parm->data->size() != 0){
+    while(server->has_data()){
       //selecting the individual to erase
       antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
       unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
@@ -742,9 +736,8 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 
       //cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
       //cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
-      this->server->read_data_lock();
-      string line = this->server->parm->data->back().data;
-      this->server->parm->data->pop_back();
+      auto data = server->consume();
+      string line = std::string{std::begin(data), std::end(data)};
       this->population->parents[index]->deserialize(line);
       int reeval = params->reevaluateImmigrants;
       // Reevaluate individaul if the flag reevaluateImmigrants == 1	
@@ -758,7 +751,6 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       //TAG THE INDIVIDUAL AS IMMIGRANT
       this->population->parents[index]->isImmigrant = true;
 
-      this->server->read_data_unlock();
       //cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
     }
   }

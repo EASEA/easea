@@ -56,7 +56,7 @@ public:
   unsigned numberOfClients;
   unsigned myClientNumber;
   CComUDPServer *server;
-  CComUDPClient **Clients;
+  std::vector<std::unique_ptr<CComUDPClient>> Clients;
   void initializeClients();
   void receiveIndividuals();
   void sendIndividual();
