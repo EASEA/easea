@@ -136,15 +136,15 @@ ADD_CUSTOM_COMMAND(TARGET easena POST_BUILD
 
 ### Installation ###
 
-INSTALL(TARGETS easena DESTINATION /usr/local/easena/bin )
-INSTALL(TARGETS libeasea DESTINATION /usr/local/easena/libeasea )
-INSTALL(TARGETS libeasna DESTINATION /usr/local/easena/libeasna )
-INSTALL(DIRECTORY tpl DESTINATION /usr/local/easena )
-INSTALL(DIRECTORY "libeasea/include" DESTINATION "/usr/local/easena/libeasea")
-INSTALL(DIRECTORY "libeasna/include" DESTINATION "/usr/local/easena/libeasna")
-INSTALL(DIRECTORY "libeasna/src" DESTINATION "/usr/local/easena/libeasna")
-INSTALL(DIRECTORY examples DESTINATION /usr/local/easena/examples)
-INSTALL(FILES easeagrapher/EaseaGrapher.jar DESTINATION /usr/local/easena/easeagrapher )
+INSTALL(TARGETS easena)
+INSTALL(TARGETS libeasea)
+INSTALL(TARGETS libeasna)
+INSTALL(DIRECTORY tpl)
+INSTALL(DIRECTORY "libeasea/include" DESTINATION "libeasea")
+INSTALL(DIRECTORY "libeasna/include" DESTINATION "libeasna")
+#INSTALL(DIRECTORY "libeasna/src" DESTINATION "/usr/local/easena/libeasna")
+INSTALL(DIRECTORY "examples" DESTINATION "examples")
+INSTALL(FILES "easeagrapher/EaseaGrapher.jar" DESTINATION "easeagrapher")
 
 ### Tests ###
 
