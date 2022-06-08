@@ -36,7 +36,7 @@
 //#include <config.h>
 
 /* Specification.  */
-#include "include/inet_pton.h"
+#include "inet_pton.h"
 
 #include <ctype.h>
 #include <string.h>
