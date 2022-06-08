@@ -11,7 +11,12 @@ Green='\033[0;32m'
 
 # Retrieves test directories
 printf "Calculating examples list..."
-all_examples=$(find . -mindepth 1 -type f -name "*.ez" | xargs dirname | xargs realpath)
+all_examples_raw=$(find . -mindepth 2 -type f -name "*.ez")
+all_examples=""
+for f in $all_examples_raw; do
+	all_examples="$all_examples $(dirname $f | xargs realpath)"
+done
+echo $all_examples
 nb_examples=$(echo $all_examples | wc -w)
 printf "$Green ok!\n$Color_Off"
 echo "Found $nb_examples examples to compile."
