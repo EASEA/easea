@@ -41,12 +41,26 @@ SET(easena_src
         ${CMAKE_SOURCE_DIR}/compiler/NeuralParse.cpp
 )
 ADD_EXECUTABLE(easena ${easena_src})
+SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "")
+SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "")
 
 ### Base flags
 SET(CMAKE_STATIC_LIBRARY_PREFIX="")
-SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-std=c++14 -O3")# -fopenmp")
-SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "" COMPILE_FLAGS "-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op -std=c++11 -O3 -march=native -mtune=native -s")
-SET_TARGET_PROPERTIES(easena PROPERTIES COMPILE_FLAGS "-std=c++14 -w -Wno-deprecated -Wno-write-strings -fmessage-length=0")
+target_compile_features(libeasea PUBLIC cxx_std_14)
+target_compile_features(libeasna PUBLIC cxx_std_14)
+target_compile_options(libeasea PUBLIC 
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -march=native -mtune=native>
+	$<$<CXX_COMPILER_ID:MSVC>:/O3>
+	)
+target_compile_options(libeasna PUBLIC	
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -march=native -mtune=native>
+	$<$<CXX_COMPILER_ID:MSVC>:/O3>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op>
+	$<$<CXX_COMPILER_ID:MSVC>:/W4>
+	)
+target_compile_options(easena PUBLIC 
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -Wno-deprecated -Wno-write-strings -fmessage-length=0>
+	)
 TARGET_LINK_LIBRARIES(easena libeasea libeasna)
 
 ### Includes ###
