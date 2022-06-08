@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <string>
 #include <time.h>
-#include "CEvolutionaryAlgorithm.h"
 #include "CSelectionOperator.h"
 #include "CPopulation.h"
 #include "CStoppingCriterion.h"

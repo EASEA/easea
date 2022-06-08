@@ -11,6 +11,7 @@
 #include "include/CEvolutionaryAlgorithm.h"
 #ifndef WIN32
 #include <sys/time.h>
+#include <sys/wait.h>
 #endif
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -35,7 +36,6 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-#include <sys/wait.h>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -110,26 +110,24 @@ void childHandler(int signum)
         int status;
 	ostringstream ss;
 
+#ifndef WIN32
         while((w=waitpid(-1, &status, WNOHANG))>0)
         {
             if(WIFEXITED(status)){
                 ss << "Display process stopped normally" << std::endl;
 		LOG_MSG(msgType::WARNING, ss.str());
 		done = 0;
-        }
-        else if (WIFSIGNALED(status)){
+            } else if (WIFSIGNALED(status)){
                 ss << "Display process stopped by a signal" << std::endl;
 		LOG_MSG(msgType::WARNING, ss.str());
                 done = 0;
-        }
-        else if (WIFSTOPPED(status)){
+            } else if (WIFSTOPPED(status)){
                  ss << "Display process stopped by a signal" << std::endl;
 		 LOG_MSG(msgType::WARNING, ss.str());
                  done = 0;
         }
-
 }//!WIFEXITED(status) && !WIFSIGNALED(status));
-
+#endif
 }
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
