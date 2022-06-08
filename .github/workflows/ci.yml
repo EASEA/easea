@@ -294,7 +294,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          name: built-Linux
+          name: built-MacOS
           path: ${{github.workspace}}/build
 
       - name: Generating configuration
