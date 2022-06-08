@@ -66,10 +66,10 @@ TARGET_LINK_LIBRARIES(easena libeasea libeasna)
 ### Includes ###
 
 INCLUDE_DIRECTORIES(${PROJECT_BINARY_BIN})
-INCLUDE_DIRECTORIES(libeasea/include)
-INCLUDE_DIRECTORIES(libeasna/include)
-INCLUDE_DIRECTORIES(cxxopts)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/libeasea/include)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libeasea/include)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libeasna/include)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/cxxopts)
+target_include_directories(libeasea PUBLIC ${CMAKE_SOURCE_DIR}/third_party/boost)
 
 ### Dependencies ###
 
