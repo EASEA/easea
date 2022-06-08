@@ -1,42 +1,69 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.14)
+
+### Metadata ###
 
 # Debug ONLY
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
-PROJECT(EASENA)#_DEBUG VERSION "2.20.0")
+PROJECT(EASENA VERSION 3.0.0)#_DEBUG VERSION "2.20.0")
 set(PROJECT_NAME "EASENA")
-set(PROJECT_VER  "RE")
-set(PROJECT_VER_MAJOR 2)
-set(PROJECT_VER_MINOR 20)
-set(PROJECT_VER_PATCH 0)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/libeasea/include)
 
 message("-- PROJECT NAME: ${PROJECT_NAME}")
-message("-- PROJECT VERSION: ${PROJECT_VER}")
-message("-- PROJECT VERSION MAJOR: ${PROJECT_VER_MAJOR}")
-message("-- PROJECT VERSION MINOR: ${PROJECT_VER_MINOR}")
-
-SET(CMAKE_STATIC_LIBRARY_PREFIX="")
-INCLUDE_DIRECTORIES(${PROJECT_BINARY_BIN})
-INCLUDE_DIRECTORIES(libeasea/include)
-INCLUDE_DIRECTORIES(libeasna/include)
-INCLUDE_DIRECTORIES(cxxopts)
-
-option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
+message("-- PROJECT VERSION: ${PROJECT_VERSION}")
+message("-- PROJECT VERSION MAJOR: ${PROJECT_VERSION_MAJOR}")
+message("-- PROJECT VERSION MINOR: ${PROJECT_VERSION_MINOR}")
+message("-- PROJECT VERSION PATCH: ${PROJECT_VERSION_PATCH}")
 
 SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 
-# Creation of a static library for EASEA that will be linked to the main program easena
+### Configuration file
+
+CONFIGURE_FILE(config.h.in ${CMAKE_SOURCE_DIR}/libeasea/include/config.h)
+
+### Target declarations ###
 FILE(GLOB libeasea_src libeasea/*.cpp )
 if(WIN32)
         FILE(GLOB libeasea_src_win  "libeasea/win32/*.cpp" )
 endif(WIN32)
-ADD_LIBRARY( libeasea STATIC ${libeasea_src} ${libeasea_src_win})
-SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-std=c++14 -O3")
-# -fopenmp")
+
+ADD_LIBRARY(libeasea STATIC ${libeasea_src} ${libeasea_src_win})
+FILE(GLOB_RECURSE libeasna_src libeasna/*.cpp )
+# Creation of a static library for EASNA that will be linked to the main program easena 
+ADD_LIBRARY(libeasna STATIC ${libeasna_src}) # Program based on the one that can be found in https://git.unistra.fr/rorhand/perceptron/
+#Easena compiler
+SET(easena_src 
+        compiler/EaseaLex.cpp
+        compiler/EaseaParse.cpp
+        compiler/EaseaSym.cpp
+        compiler/EaseaYTools.cpp
+        compiler/easena.cpp
+        compiler/NeuralLex.cpp
+        compiler/NeuralParse.cpp
+)
+ADD_EXECUTABLE(easena ${easena_src})
+
+### Base flags
+SET(CMAKE_STATIC_LIBRARY_PREFIX="")
+SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "" COMPILE_FLAGS "-std=c++14 -O3")# -fopenmp")
+SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "" COMPILE_FLAGS "-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op -std=c++11 -O3 -march=native -mtune=native -s")
+SET_TARGET_PROPERTIES(easena PROPERTIES COMPILE_FLAGS "-std=c++14 -w -Wno-deprecated -Wno-write-strings -fmessage-length=0")
+TARGET_LINK_LIBRARIES(easena libeasea libeasna)
+
+### Includes ###
+
+INCLUDE_DIRECTORIES(${PROJECT_BINARY_BIN})
+INCLUDE_DIRECTORIES(libeasea/include)
+INCLUDE_DIRECTORIES(libeasna/include)
+INCLUDE_DIRECTORIES(cxxopts)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/libeasea/include)
+
+### Dependencies ###
+
+## OpenMP
+option(USE_OPENMP "If available, use OpenMP for parallelization." ON)
 
 if (USE_OPENMP)
-	find_package(OPENMP)
+	find_package(OpenMP)
 endif ()
 if (OPENMP_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -47,19 +74,8 @@ else ()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
 endif ()
 
+## Bison & Flex: FLEX and BISON management to create the easea language and soon the easna/neural language
 
-# Creation of a static library for EASNA that will be linked to the main program easena 
-# Program based on the one that can be found in https://git.unistra.fr/rorhand/perceptron/
-FILE(GLOB_RECURSE libeasna_src libeasna/*.cpp )
-ADD_LIBRARY(libeasna STATIC ${libeasna_src})
-SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "" COMPILE_FLAGS "-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op -std=c++11 -O3 -march=native -mtune=native -s")
-#if(CMAKE_VERSION VERSION_GREATER 3.9.0)
-#        TARGET_LINK_LIBRARIES(libeasna PUBLIC OpenMP::OpenMP_CXX)
-#else ()
-#        TARGET_LINK_LIBRARIES(libeasna PUBLIC "${OpenMP_CXX_FLAGS}")
-#endif ()
-
-# FLEX and BISON management to create the easea language and soon the easna/neural language
 FIND_PACKAGE(FLEX)
 if(APPLE)
         SET(BISON_EXECUTABLE "/usr/local/opt/bison/bin/bison" CACHE PATH "Bison executable")
@@ -87,26 +103,23 @@ BISON_TARGET( NeuralParser
         DEFINES_FILE compiler/NeuralParse.hpp
 )
 
-#Easena compiler
-SET(easena_src 
-        compiler/EaseaLex.cpp
-        compiler/EaseaParse.cpp
-        compiler/EaseaSym.cpp
-        compiler/EaseaYTools.cpp
-        compiler/easena.cpp
-        compiler/NeuralLex.cpp
-        compiler/NeuralParse.cpp
-)
 
-ADD_EXECUTABLE(easena ${easena_src})
-SET_TARGET_PROPERTIES(easena PROPERTIES COMPILE_FLAGS "-std=c++14 -w -Wno-deprecated -Wno-write-strings -fmessage-length=0")
-TARGET_LINK_LIBRARIES(easena libeasea libeasna)
+#if(CMAKE_VERSION VERSION_GREATER 3.9.0)
+#        TARGET_LINK_LIBRARIES(libeasna PUBLIC OpenMP::OpenMP_CXX)
+#else ()
+#        TARGET_LINK_LIBRARIES(libeasna PUBLIC "${OpenMP_CXX_FLAGS}")
+#endif ()
+
+### Custom commands ###
+
 ADD_CUSTOM_COMMAND(TARGET easena POST_BUILD 
 	COMMAND $(CMAKE_COMMAND) -E make_directory libeasna
 	COMMAND $(CMAKE_COMMAND) -E make_directory libeasea
         COMMAND $(CMAKE_COMMAND) -E copy libeasea.a libeasea/
         COMMAND $(CMAKE_COMMAND) -E copy libeasna.a libeasna/
 )
+
+### Installation ###
 
 INSTALL(TARGETS easena DESTINATION /usr/local/easena/bin )
 INSTALL(TARGETS libeasea DESTINATION /usr/local/easena/libeasea )
@@ -118,13 +131,10 @@ INSTALL(DIRECTORY "libeasna/src" DESTINATION "/usr/local/easena/libeasna")
 INSTALL(DIRECTORY examples DESTINATION /usr/local/easena/examples)
 INSTALL(FILES easeagrapher/EaseaGrapher.jar DESTINATION /usr/local/easena/easeagrapher )
 
-SET(MAJOR_VERSION 3)
-SET(MINOR_VERSION 0)
-SET(PATCH_VERSION 0)
+### Tests ###
 
 ADD_SUBDIRECTORY(Test/xor_mnist)
 
-CONFIGURE_FILE(config.h.in ${CMAKE_SOURCE_DIR}/libeasea/include/config.h)
 
 ## OUTDATED !
 ## IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
