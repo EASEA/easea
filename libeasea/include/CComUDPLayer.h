@@ -141,11 +141,10 @@ class CComUDPClient
 	 *
 	 * @return A string representing the name
 	 */
-	std::string_view getClientName() const;
+	std::string const& getClientName() const;
 
     private:
 	std::string client_name; ///< Human-readble name
-	std::string destination; ///< Adress of the destination
 	boost::asio::ip::udp::socket socket; ///< Socket used to communicate with destination
 };
 

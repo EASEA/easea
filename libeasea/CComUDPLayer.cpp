@@ -9,6 +9,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <algorithm>
 
 using namespace boost::asio;
 using namespace boost::asio::ip;
@@ -74,7 +75,7 @@ CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::st
 	socket.connect(ep);
 };
 
-std::string_view CComUDPClient::getClientName() const
+std::string const& CComUDPClient::getClientName() const
 {
 	return client_name;
 }
