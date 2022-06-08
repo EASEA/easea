@@ -82,10 +82,8 @@ endif ()
 if (OpenMP_CXX_FOUND)
 	target_link_libraries(libeasea PUBLIC OpenMP::OpenMP_CXX)
 	target_link_libraries(libeasna PUBLIC OpenMP::OpenMP_CXX)
-	#target_compile_options(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 else ()
-  # Disable warnings for all the unknown OpenMP pragmas.
+  	# Disable warnings for all the unknown OpenMP pragmas.
   	target_compile_options(libeasna $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-unknown-pragmas>)
 endif ()
 
@@ -118,32 +116,19 @@ BISON_TARGET( NeuralParser
         DEFINES_FILE ${CMAKE_SOURCE_DIR}/compiler/NeuralParse.hpp
 )
 
-
-#if(CMAKE_VERSION VERSION_GREATER 3.9.0)
-#        TARGET_LINK_LIBRARIES(libeasna PUBLIC OpenMP::OpenMP_CXX)
-#else ()
-#        TARGET_LINK_LIBRARIES(libeasna PUBLIC "${OpenMP_CXX_FLAGS}")
-#endif ()
-
-### Custom commands ###
-
-ADD_CUSTOM_COMMAND(TARGET easena POST_BUILD 
-	COMMAND $(CMAKE_COMMAND) -E make_directory libeasna
-	COMMAND $(CMAKE_COMMAND) -E make_directory libeasea
-        COMMAND $(CMAKE_COMMAND) -E copy libeasea.a libeasea/
-        COMMAND $(CMAKE_COMMAND) -E copy libeasna.a libeasna/
-)
-
 ### Installation ###
+## Binaries
+INSTALL(TARGETS easena libeasea libeasna)
+INSTALL(TARGETS libeasna DESTINATION libeasea)
+INSTALL(TARGETS libeasea DESTINATION libeasna)
 
-INSTALL(TARGETS easena)
-INSTALL(TARGETS libeasea)
-INSTALL(TARGETS libeasna)
-INSTALL(DIRECTORY tpl)
-INSTALL(DIRECTORY "libeasea/include" DESTINATION "libeasea")
-INSTALL(DIRECTORY "libeasna/include" DESTINATION "libeasna")
-#INSTALL(DIRECTORY "libeasna/src" DESTINATION "/usr/local/easena/libeasna")
-INSTALL(DIRECTORY "examples" DESTINATION "examples")
+## Text
+FILE(GLOB templates ${CMAKE_SOURCE_DIR}/tpl/*)
+INSTALL(FILES ${templates} DESTINATION tpl)
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasea/include DESTINATION libeasea)
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasna/include DESTINATION libeasna)
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasna/src DESTINATION libeasna)
+INSTALL(DIRECTORY examples DESTINATION ".")
 INSTALL(FILES "easeagrapher/EaseaGrapher.jar" DESTINATION "easeagrapher")
 
 ### Tests ###
