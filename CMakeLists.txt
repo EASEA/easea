@@ -32,13 +32,13 @@ FILE(GLOB_RECURSE libeasna_src libeasna/*.cpp )
 ADD_LIBRARY(libeasna STATIC ${libeasna_src}) # Program based on the one that can be found in https://git.unistra.fr/rorhand/perceptron/
 #Easena compiler
 SET(easena_src 
-        compiler/EaseaLex.cpp
-        compiler/EaseaParse.cpp
-        compiler/EaseaSym.cpp
-        compiler/EaseaYTools.cpp
-        compiler/easena.cpp
-        compiler/NeuralLex.cpp
-        compiler/NeuralParse.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/EaseaLex.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/EaseaParse.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/EaseaSym.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/EaseaYTools.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/easena.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/NeuralLex.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/NeuralParse.cpp
 )
 ADD_EXECUTABLE(easena ${easena_src})
 
@@ -89,18 +89,18 @@ BISON_TARGET( EaseaParser
         compiler/EaseaParse.y 
 	${CMAKE_SOURCE_DIR}/compiler/EaseaParse.cpp 
         COMPILE_FLAGS -d
-        DEFINES_FILE compiler/EaseaParse.hpp
+        DEFINES_FILE ${CMAKE_SOURCE_DIR}/compiler/EaseaParse.hpp
 )
 FLEX_TARGET( NeuralLexer 
         compiler/NeuralLex.l 
         ${CMAKE_SOURCE_DIR}/compiler/NeuralLex.cpp
-        DEFINES_FILE compiler/NeuralLex.h
+        DEFINES_FILE ${CMAKE_SOURCE_DIR}/compiler/NeuralLex.h
 )
 BISON_TARGET( NeuralParser
         compiler/NeuralParse.y 
         ${CMAKE_SOURCE_DIR}/compiler/NeuralParse.cpp 
         COMPILE_FLAGS -d
-        DEFINES_FILE compiler/NeuralParse.hpp
+        DEFINES_FILE ${CMAKE_SOURCE_DIR}/compiler/NeuralParse.hpp
 )
 
 
