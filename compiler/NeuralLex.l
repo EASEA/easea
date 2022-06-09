@@ -5,6 +5,8 @@
 #include "config.h"
 #ifdef OS_WINDOWS
 	#define YY_NO_UNISTD_H
+	#include <io.h>
+	using ssize_t = signed long long;
 #endif
 
 #include "NeuralParse.hpp"
