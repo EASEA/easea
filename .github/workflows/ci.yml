@@ -450,8 +450,9 @@ jobs:
       - name: Installing dependencies if needed
         shell: bash
         run: |
-          brew install bison libomp coreutils boost
+          brew install bison libomp coreutils boost gnu-sed
           export PATH="$(brew --prefix bison)/bin:$PATH"
+          export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH"
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
