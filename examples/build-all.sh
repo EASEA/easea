@@ -20,7 +20,7 @@ fi
 
 # Retrieves test directories
 printf "Calculating examples list..."
-all_examples_raw=$(find . -mindepth 2 -type f -name "*.ez")
+all_examples_raw=$(find $examples_dir -mindepth 2 -type f -name "*.ez")
 all_examples=""
 for f in $all_examples_raw; do
 	all_examples="$all_examples $(dirname $f | xargs realpath)"
