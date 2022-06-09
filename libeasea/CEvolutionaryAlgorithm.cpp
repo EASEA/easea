@@ -6,6 +6,9 @@
  *
  *  Created on: 22 juin 2009
  *      Author: maitre
+ *  =======
+ *  Updated on june 2022 to restore Windows compatibility
+ *  TODO: switch to C++....
  */
 
 #include "include/CEvolutionaryAlgorithm.h"
@@ -103,6 +106,7 @@ easena::log_stream logg;
 /*****
  * REAL CONSTRUCTOR
  */
+#ifndef WIN32
 sig_atomic_t volatile done = 1;
 void childHandler(int signum)
 {
@@ -110,7 +114,6 @@ void childHandler(int signum)
         int status;
 	ostringstream ss;
 
-#ifndef WIN32
         while((w=waitpid(-1, &status, WNOHANG))>0)
         {
             if(WIFEXITED(status)){
@@ -127,8 +130,8 @@ void childHandler(int signum)
                  done = 0;
         }
 }//!WIFEXITED(status) && !WIFSIGNALED(status));
-#endif
 }
+#endif
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	
@@ -138,7 +141,9 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 
 	this->params = params;
 	this->cstats = new CStats();
+#ifndef WIN32
 	signal(SIGCHLD, childHandler);
+#endif
 	CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
         params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
