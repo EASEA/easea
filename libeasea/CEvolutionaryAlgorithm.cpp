@@ -106,8 +106,8 @@ easena::log_stream logg;
 /*****
  * REAL CONSTRUCTOR
  */
-#ifndef WIN32
 sig_atomic_t volatile done = 1;
+#ifndef WIN32
 void childHandler(int signum)
 {
         pid_t w;
