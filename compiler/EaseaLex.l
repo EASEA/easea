@@ -10,14 +10,14 @@ Centre de Math�matiques Appliqu�es
 ------
 Updated on june 2022 by Léo Chéneau to improve windows portability
   ****************************************************************************/
-#ifdef WIN32
+#ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
 //#pragma comment(lib, "libAlexYacc.lib")
 #endif
 #include "Easea.h"
 #include "EaseaParse.hpp"
 
-#if defined(WIN32) || defined(__WIN64__)
+#if defined(_WIN32)
 #include <direct.h>
 using ssize_t = signed long long;
 #else
@@ -36,7 +36,7 @@ using ssize_t = signed long long;
 //#include <iostream>
 //#include <sstream>
 
-#if defined(__WIN64__) || defined(__APPLE__) || defined(WIN32)
+#if defined(__APPLE__) || defined(_WIN32)
  /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
 char *strndup (const char *s, size_t n){
     size_t len = strlen (s);
@@ -1362,7 +1362,7 @@ if(OPERATING_SYSTEM=WINDOWS)
     // add "Makefile" at the end of path
     //char* cdn = get_current_dir_name();
     char cdn[4096];
-    #ifdef WIN32 
+    #ifdef _WIN32 
     _getcwd(cdn,4096);
     #else
     getcwd(cdn,4096);
@@ -1380,13 +1380,13 @@ if(OPERATING_SYSTEM=WINDOWS)
     
   
     // create a symbolic link from Makefile to EASEA.mak
-#ifndef WIN32
+#ifndef _WIN32
     symlink(sFullFileName,sPathName);
 #endif
   }
   else{
     //DEBUG_PRT_PRT("file name : %s",sFileName);
-#ifndef WIN32
+#ifndef _WIN32
     if( symlink(sFileName,"Makefile") ) /*perror("Error symplink creation: ")*/;
 #endif
   }
@@ -2487,7 +2487,7 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
   char sTemp[1000];
 #if defined UNIX_OS
   OPERATING_SYSTEM=UNIX;
-#elif defined WIN32 //WINDOWS_OS
+#elif defined _WIN32 //WINDOWS_OS
   OPERATING_SYSTEM=WINDOWS;
 //#else
 //  OPERATING_SYSTEM=OTHER_SYSTEM;
