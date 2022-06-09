@@ -121,7 +121,7 @@ BISON_TARGET( NeuralParser
 
 ### Installation ###
 if (WIN32)
-	set(OUTPUT_DIR "")
+	set(OUTPUT_DIR ".")
 else()
 	string(TOLOWER ${PROJECT_NAME} OUTPUT_DIR)
 endif()
