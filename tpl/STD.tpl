@@ -519,7 +519,6 @@ endif
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
 set(EZ_ROOT $ENV{EZ_PATH})
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 project(EASEA)
 set(default_build_type "Release")
