@@ -17,7 +17,7 @@ Updated on june 2022 by Léo Chéneau to improve windows portability
 #include "Easea.h"
 #include "EaseaParse.hpp"
 
-#if defined WIN32 || defined __WIN64__
+#if defined(WIN32) || defined(__WIN64__)
 #include <direct.h>
 #else
 #include <unistd.h>
@@ -35,7 +35,7 @@ Updated on june 2022 by Léo Chéneau to improve windows portability
 //#include <iostream>
 //#include <sstream>
 
-#if defined __WIN64__ || defined __APPLE__ || defined __WIN32__
+#if defined(__WIN64__) || defined(__APPLE__) || defined(WIN32)
  /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
 char *strndup (const char *s, size_t n){
     size_t len = strlen (s);
