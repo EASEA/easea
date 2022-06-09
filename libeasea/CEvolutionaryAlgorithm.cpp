@@ -1,4 +1,4 @@
-//#ifdef _WIN32
+//#ifdef OS_WINDOWS
 //#pragma comment(lib, "WinMM.lib")
 //#endif
 /*
@@ -12,12 +12,13 @@
  */
 
 #include "include/CEvolutionaryAlgorithm.h"
-#ifndef _WIN32
+#include "config.h"
+#ifndef OS_WINDOWS
 #include <sys/time.h>
 #include <sys/wait.h>
 #endif
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
+#ifdef OS_WINDOWS
+#define OS_WINDOWS_LEAN_AND_MEAN
 #include <windows.h>
 #include <mmsystem.h>
 #endif
@@ -107,7 +108,7 @@ easena::log_stream logg;
  * REAL CONSTRUCTOR
  */
 sig_atomic_t volatile done = 1;
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 void childHandler(int signum)
 {
         pid_t w;
@@ -141,7 +142,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 
 	this->params = params;
 	this->cstats = new CStats();
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 	signal(SIGCHLD, childHandler);
 #endif
 	CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
@@ -174,7 +175,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     fichier.append(".r");
     remove(fichier.c_str());
   }
-  //#ifndef WIN32 
+  //#ifndef OS_WINDOWS 
   if(params->plotStats){
         string str = "Plotting of the evolution of ";;
         string str2 = this->params->outputFilename;
@@ -211,7 +212,7 @@ void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   CIndividual** elitistPopulation = NULL;
     
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
    clock_t begin(clock());
 #else
@@ -384,7 +385,7 @@ params->parentReduction = 1;
   this->params->parentReductionSize = tmpPrntReduceSize;
  params->parentReduction = tmpPrntReduct ;
   }
-//#ifdef __linux__
+//#ifdef OS_UNIX
   //if(this->params->plotStats && this->grapher->valid){
     //outputGraph();
     //delete this->grapher;
@@ -505,7 +506,7 @@ if (params->isLogg == 1){
 }
 
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 void CEvolutionaryAlgorithm::showPopulationStats(clock_t beginTime){
 #else
 void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
@@ -541,7 +542,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   this->cstats->currentStdDev/=population->parentPopulationSize;
   this->cstats->currentStdDev=sqrt(this->cstats->currentStdDev);
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
   clock_t end(clock());
   double duration;
   duration = (double)(end-beginTime)/CLOCKS_PER_SEC;
@@ -562,7 +563,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
       printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|FITNESS|  DEV  |\n");
       printf("------------------------------------------------------------------------------------------------\n");
     }
-#ifdef _WIN32
+#ifdef OS_WINDOWS
     printf("%7u\t%10.3f\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,duration,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
       printf("%7u\t%10ld.%03ds\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/1000,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
@@ -577,7 +578,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   if(f!=NULL){
     if(currentGeneration==0)
       fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDDEV\t\tWORST\n\n");
-#ifdef _WIN32
+#ifdef OS_WINDOWS
     fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,population->Worst->getFitness(),this->cstats->currentStdDev);
 #else
       //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
@@ -597,7 +598,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
     fprintf(f, "Run configuration:\nNB_GEN = %i POP_SIZE = %i OFFSPRING_SIZE = %i MUT_PROB = %f  XOVER_PROB = %f \n\n", (*EZ_NB_GEN), EZ_POP_SIZE, OFFSPRING_SIZE, (*pEZ_MUT_PROB), (*pEZ_XOVER_PROB));
 
     fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDDEV,WORST\n");
-#ifdef _WIN32
+#ifdef OS_WINDOWS
     fprintf(f,"%u,%2.6f,%u,%.2e,%.2e,%.2e,%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
       //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
@@ -607,7 +608,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
         }
   }
   //print grapher
-  #ifndef WIN32
+  #ifndef OS_WINDOWS
   if(this->params->plotStats && this->grapher->valid){
   //if(currentGeneration==0)
   //  fprintf(this->grapher->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
@@ -632,7 +633,7 @@ currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitn
  }
 #endif
  
-#ifdef __linux__
+#ifdef OS_UNIX
   double elapsedTime = res.tv_sec + 0.0;
   double micSec = res.tv_usec + 0.0;
 
@@ -812,7 +813,7 @@ bool CEvolutionaryAlgorithm::allCriteria(){
   return false;
 }
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 int gettimeofday
 (struct timeval* tp, void* tzp) {
   DWORD t;
