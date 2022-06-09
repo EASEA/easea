@@ -21,6 +21,7 @@ Updated on june 2022 by Léo Chéneau to improve windows portability
 
 #ifdef OS_WINDOWS
 #include <direct.h>
+#include <io.h>
 using ssize_t = signed long long;
 #else
 #include <unistd.h>
