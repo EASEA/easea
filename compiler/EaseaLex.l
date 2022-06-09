@@ -19,6 +19,7 @@ Updated on june 2022 by Léo Chéneau to improve windows portability
 
 #if defined(WIN32) || defined(__WIN64__)
 #include <direct.h>
+using ssize_t = signed long long;
 #else
 #include <unistd.h>
 #endif
