@@ -91,6 +91,13 @@ int main(int argc, char** argv){
 #include <vector_types.h>
 #include "CCuda.h"
 #include "CGPNode.h"
+
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
+
+
 using namespace std;
 bool bReevaluate = false;
 extern "C"

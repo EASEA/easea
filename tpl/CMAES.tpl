@@ -70,6 +70,12 @@ int main(int argc, char** argv){
 #include "CIndividual.h"
 #include "CCmaes.h"
 
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
+
+
 using namespace std;
 bool bReevaluate = false;
 

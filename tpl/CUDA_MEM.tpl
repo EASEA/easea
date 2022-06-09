@@ -80,6 +80,12 @@ int main(int argc, char** argv){
 #include "CCuda.h"
 #include <vector_types.h>
 
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
+
+
 using namespace std;
 
 #include "EASEAIndividual.hpp"

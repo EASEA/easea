@@ -84,6 +84,11 @@ int main(int argc, char** argv){
 #include <problems/CProblem.h>
 #include <shared/distributions/Norm.h>
 
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
+
 using namespace std;
 #define EASENA
 bool bReevaluate = false;

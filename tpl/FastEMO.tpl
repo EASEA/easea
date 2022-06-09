@@ -77,7 +77,6 @@ int main(int argc, char** argv){
 #include "global.h"
 #include <CLogger.h>
 
-
 #include <CQMetrics.h>
 #include <CQMetricsHV.h>
 #include <CQMetricsGD.h>
@@ -85,11 +84,13 @@ int main(int argc, char** argv){
 #include <problems/CProblem.h>
 #include <operators/crossover/C2x2CrossoverLauncher.h>
 
-
 #include <variables/continuous/uniform.h>
 #include <algorithms/moea/Csigma.h>
 
-
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
 
 
 using namespace std;

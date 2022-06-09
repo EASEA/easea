@@ -93,8 +93,14 @@ int main(int argc, char** argv){
 #include "CIndividual.h"
 #include <vector_types.h>
 #include "CCuda.h"
-bool bReevaluate = false;
 
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
+
+
+bool bReevaluate = false;
 
 using namespace std;
 extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses, int offset);

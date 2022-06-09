@@ -104,6 +104,12 @@ int main(int argc, char** argv){
 #include <shared/distributions/Cauchy.h>
 #include <shared/distributions/Unif.h>
 
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
+
+
 bool bReevaluate = false;
 
 

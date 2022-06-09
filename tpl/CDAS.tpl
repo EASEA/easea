@@ -89,7 +89,10 @@ int main(int argc, char** argv){
 #include <shared/CConstant.h>
 #include <algorithms/moea/Ccdas.h>
 
-
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
 
 
 using namespace std;

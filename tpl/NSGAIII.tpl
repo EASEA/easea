@@ -88,6 +88,11 @@ int main(int argc, char** argv){
 #include <problems/CProblem.h>
 #include <operators/crossover/C2x2CrossoverLauncher.h>
 
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
+
 using namespace std;
 bool bReevaluate = false;
 

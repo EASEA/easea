@@ -74,6 +74,11 @@ int main(int argc, char** argv){
 #include "global.h"
 #include "CIndividual.h"
 
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
+
 
 using namespace std;
 bool bReevaluate = false;

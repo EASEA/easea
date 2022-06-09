@@ -87,7 +87,10 @@ int main(int argc, char** argv){
 #include <variables/continuous/uniform.h>
 #include <algorithms/moea/Cnsga-ii.h>
 
-
+#include "config.h"
+#ifdef USE_OPENMP
+	#include <omp.h>
+#endif
 
 
 using namespace std;
