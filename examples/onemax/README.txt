@@ -1,6 +1,6 @@
 To Compile this example:
   $ easea onemax.ez
-  $ make
+  $ cmake . && cmake --build .
 
 To test it:
   $ ./onemax

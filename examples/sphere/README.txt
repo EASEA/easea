@@ -1,6 +1,6 @@
 To Compile this example:
   $ easea sphere.ez
-  $ make
+  $ cmake . && cmake --build .
 
 To test it:
   $ ./sphere

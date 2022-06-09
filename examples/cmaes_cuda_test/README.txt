@@ -1,6 +1,6 @@
 To Compile this example:
   $ easea -cuda cigtabGPU.ez
-  $ make
+  $ cmake . && cmake --build .
 
 To test it:
   $ ./cigtabGPU

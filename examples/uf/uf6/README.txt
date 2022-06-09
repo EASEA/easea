@@ -1,5 +1,5 @@
 To Compile this example:
-  $ easena easena -fastemo uf6.ez
+  $ easena -fastemo uf6.ez
   $ make
 
 To test it:

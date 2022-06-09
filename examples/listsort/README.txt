@@ -1,6 +1,6 @@
 To Compile this example:
   $ easea listsort.ez
-  $ make
+  $ cmake . && cmake --build .
 
 To test it:
   $ ./listsort
