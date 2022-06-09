@@ -1047,9 +1047,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release")
 endif()
 
-file(GLOB EASEA_src EASEA.cpp ${CMAKE_SOURCE_DIR}/*.c ${CMAKE_SOURCE_DIR}/*.cu)
+file(GLOB EASEA_src ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.c ${CMAKE_SOURCE_DIR}/*.cu)
+list(FILTER EASEA_src EXCLUDE REGEX .*EASEAIndividual.cpp)
 add_executable(EASEA ${EASEA_src})
-#set_source_files_properties(${EASEA_src} PROPERTIES LANGUAGE CUDA)
 set_target_properties(EASEA PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 target_compile_features(EASEA PUBLIC cxx_std_14)
