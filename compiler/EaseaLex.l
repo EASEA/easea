@@ -10,6 +10,7 @@ Centre de Math�matiques Appliqu�es
 ------
 Updated on june 2022 by Léo Chéneau to improve windows portability
   ****************************************************************************/
+#include "config.h"
 #ifdef OS_WINDOWS
 #define _CRT_SECURE_NO_WARNINGS
 //#pragma comment(lib, "libAlexYacc.lib")
