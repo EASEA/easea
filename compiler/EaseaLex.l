@@ -16,10 +16,10 @@ Updated on june 2022 by Léo Chéneau to improve windows portability
 #elif defined(__CYGWIN__) || defined(__MINGW32__) || defined(__MINGW64__) || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__WINDOWS__) || defined(__TOS_WIN__)
 	#define OS_WINDOWS
 #endif
-#ifdef OS_WINDOWS
+//#ifdef OS_WINDOWS
 #define _CRT_SECURE_NO_WARNINGS
 //#pragma comment(lib, "libAlexYacc.lib")
-#endif
+//#endif
 #include "Easea.h"
 #include "EaseaParse.hpp"
 
