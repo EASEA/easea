@@ -516,6 +516,49 @@ else
 	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
 endif
 
+\START_CMAKELISTS
+cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
+set(EZ_ROOT $ENV{EZ_PATH})
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
+
+project(bbob2013)
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release")
+endif()
+
+file(GLOB bbob2013_src ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.c)
+add_executable(bbob2013 ${bbob2013_src})
+
+target_compile_features(bbob2013 PUBLIC cxx_std_14)
+target_compile_options(bbob2013 PUBLIC
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /W3>
+	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -march=native -mtune=native -Wall -Wextra -pedantic>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/O1 /W4 /DEBUG:FULL>
+	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O2 -g -Wall -Wextra -pedantic>
+	)
+
+find_library(LIBEASEA
+	NAMES libeasea easea
+	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easena ${CMAKE_INSTALL_PREFIX}/easea
+	PATH_SUFFIXES lib libeasea easea easena)
+find_path(LIBEASEA_INCLUDE
+	NAMES CLogger.h
+	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
+	PATH_SUFFIXES include easena libeasea)
+find_package(Boost)
+find_package(OpenMP)
+
+message(STATUS ${LIBEASEA_INCLUDE} ${CLOGGER})
+
+target_include_directories(bbob2013 PUBLIC ${Boost_INCLUDE_DIRS} ${LIBEASEA_INCLUDE})
+target_link_libraries(bbob2013 PUBLIC ${LIBEASEA} OpenMP::OpenMP_CXX)
+
 \START_EO_PARAM_TPL#****************************************
 #                                         
 #  EASEA.prm
