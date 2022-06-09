@@ -10,16 +10,12 @@ Centre de Math�matiques Appliqu�es
 ------
 Updated on june 2022 by Léo Chéneau to improve windows portability
   ****************************************************************************/
-// OS defines
-#if defined(linux) || defined(__linux) || (__APPLE__) || (macintosh) || (Macintosh)
-	#define OS_UNIX
-#elif defined(__CYGWIN__) || defined(__MINGW32__) || defined(__MINGW64__) || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__WINDOWS__) || defined(__TOS_WIN__)
-	#define OS_WINDOWS
-#endif
-//#ifdef OS_WINDOWS
+#include "config.h"
+#ifdef OS_WINDOWS
 #define _CRT_SECURE_NO_WARNINGS
+#define YY_NO_UNISTD_H
 //#pragma comment(lib, "libAlexYacc.lib")
-//#endif
+#endif
 #include "Easea.h"
 #include "EaseaParse.hpp"
 
