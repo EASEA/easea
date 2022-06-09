@@ -5,6 +5,7 @@
 # $2 = --no-cuda
 path_to_script=$(realpath $BASH_SOURCE)
 examples_dir=$(dirname $path_to_script)
+EZ_BINARY=$(realpath $1)
 Color_Off='\033[0m'
 Red='\033[0;31m'
 Green='\033[0;32m'
@@ -43,7 +44,8 @@ for edir in $all_examples; do
 	echo "DBG: $($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt)"
 	echo "DBG: $($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1)"
 	echo "DBG: $($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)"
-	EASEA_ARGS=$($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)
+	EASEA_ARGS=$($SED -n 's/\$[[:space:]]*ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)
+	EASEA_BUILD=$($SED -n 's/\$[[:space:]]*\(.*make.*$\)/\1/p' README.txt | head -n1 | xargs)
 	EASEA_OUT=$($SED -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | xargs)
 	if [[ "$EASEA_ARGS" == "" ]] || [[ "$EASEA_OUT" == "" ]]; then
 		printf "$Red ko!$Color_Off\n"
@@ -60,8 +62,8 @@ for edir in $all_examples; do
 	fi
 
 	# build
-	printf -- "\t$1 $EASEA_ARGS..."
-	OUT=$($1 $EASEA_ARGS 2>&1)
+	printf -- "\t$EZ_BINARY $EASEA_ARGS..."
+	OUT=$($EZ_BINARY $EASEA_ARGS 2>&1)
 	if [[ "$?" != "0" ]]; then # error
 		printf "$Red ko!$Color_Off\n"
 		printf "\tError:$Red $OUT\n$Color_Off"
@@ -72,11 +74,11 @@ for edir in $all_examples; do
 	printf "$Green ok!$Color_Off\n"
 
 	# compile
-	printf -- "\tmake..."
-	OUT=$(make 2>&1)
+	printf -- "\t$EASEA_BUILD..."
+	OUT=$(bash -c "$EASEA_BUILD" 2>&1)
 	if [[ "$?" != "0" ]]; then # error
 		printf "$Red ko!$Color_Off\n"
-		printf "\tError:$Red $OUT\n$Color_Off"
+		echo -e -- "\tError:$Red $OUT\n$Color_Off"
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 		continue
