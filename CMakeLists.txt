@@ -122,15 +122,15 @@ BISON_TARGET( NeuralParser
 ### Installation ###
 ## Binaries
 INSTALL(TARGETS easena libeasea libeasna)
-INSTALL(TARGETS libeasna DESTINATION libeasea)
-INSTALL(TARGETS libeasea DESTINATION libeasna)
+INSTALL(TARGETS libeasna DESTINATION ${PROJECT_NAME}/libeasea)
+INSTALL(TARGETS libeasea DESTINATION ${PROJECT_NAME}/libeasna)
 
 ## Text
 FILE(GLOB templates ${CMAKE_SOURCE_DIR}/tpl/*)
-INSTALL(FILES ${templates} DESTINATION tpl)
-INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasea/include DESTINATION libeasea)
-INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasna/include DESTINATION libeasna)
-INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasna/src DESTINATION libeasna)
+INSTALL(FILES ${templates} DESTINATION ${PROJECT_NAME}/tpl)
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasea/include DESTINATION ${PROJECT_NAME}/libeasea)
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasna/include DESTINATION ${PROJECT_NAME}/libeasna)
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/libeasna/src DESTINATION ${PROJECT_NAME}/libeasna)
 INSTALL(DIRECTORY examples DESTINATION ".")
 INSTALL(FILES "easeagrapher/EaseaGrapher.jar" DESTINATION "easeagrapher")
 
