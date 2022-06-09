@@ -2,6 +2,10 @@
 %option prefix="nz"
 
 %{
+#include "config.h"
+#ifdef OS_WINDOWS
+	#define YY_NO_UNISTD_H
+#endif
 
 #include "NeuralParse.hpp"
 #include <stdio.h>
