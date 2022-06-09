@@ -122,9 +122,9 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-  for( unsigned i=0 ; i < populationSize ; i++ ){
+  for( int i=0 ; i < populationSize ; i++ ){
     if (population[i]->valid == false)
-    realEvaluationNb++;
+    	realEvaluationNb++;
     
     population[i]->evaluate();
 }
