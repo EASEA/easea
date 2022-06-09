@@ -5,7 +5,7 @@
 #pragma comment(lib, "Winmm.lib")
 #endif
 /**
- This is program entry for STD template for EASEA
+ This is program entry for CUDA template for EASEA
 */
 
 \ANALYSE_PARAMETERS

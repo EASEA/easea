@@ -1,6 +1,6 @@
 \TEMPLATE_START
 /**
- This is program entry for STD template for EASEA
+ This is program entry for STD_MEM template for EASEA
 
 */
 

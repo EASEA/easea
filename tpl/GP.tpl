@@ -1,6 +1,6 @@
 \TEMPLATE_START
 /**
- This is program entry for GP and STD template for EASEA
+ This is program entry for GP template for EASEA
 
 */
 

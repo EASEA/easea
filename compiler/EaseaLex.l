@@ -1403,6 +1403,14 @@ if(OPERATING_SYSTEM=WINDOWS)
     exit(-1);
   }
 }
+
+<TEMPLATE_ANALYSIS>"\\START_CMAKELISTS"  {
+  fclose(fpOutputFile);
+  if (bVERBOSE) printf("Creating CMakeLists.txt...\n");
+  fpOutputFile=fopen("CMakeLists.txt","w");
+}
+
+
 <TEMPLATE_ANALYSIS>"\\TEMPLATE_END"  {
   if (nWARNINGS) printf ("\nWARNING !!!\nTarget file(s) generation went through WITH %d WARNING(S) !\n",nWARNINGS);
   else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded without warnings.\n");

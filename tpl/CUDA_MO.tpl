@@ -1,5 +1,5 @@
 \TEMPLATE_START/**
- This is program entry for multi-objective 
+ This is program entry for CUDA multi-objective
  CUDA template for EASEA
 
 */

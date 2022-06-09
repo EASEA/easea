@@ -5,7 +5,7 @@
 #pragma comment(lib, "Winmm.lib")
 #endif
 /**
- This is program entry for STD template for EASEA
+ This is program entry for CUDA_MEM template for EASEA
 
 */
 
@@ -506,7 +506,7 @@ void PopulationImpl::optimiseOffspringPopulation(){
 void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->minimizing = \MINIMAXI;
         this->nbGen = setVariable("nbGen",(int)\NB_GEN);
-	int nbCPUThreads = setVariable("nbCPUThreads", 1);
+	int nbCPUThreads = setVariable("nbCPUThreads", 1);
 	omp_set_num_threads(nbCPUThreads);
 
         seed = setVariable("seed",(int)time(0));
