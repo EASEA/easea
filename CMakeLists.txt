@@ -128,8 +128,8 @@ endif()
 ## Binaries
 INSTALL(TARGETS easena libeasea libeasna)
 INSTALL(TARGETS easena DESTINATION ${OUTPUT_DIR}/bin)
-INSTALL(TARGETS libeasna DESTINATION ${OUTPUT_DIR}/libeasea)
-INSTALL(TARGETS libeasea DESTINATION ${OUTPUT_DIR}/libeasna)
+INSTALL(TARGETS libeasea DESTINATION ${OUTPUT_DIR}/libeasea)
+INSTALL(TARGETS libeasna DESTINATION ${OUTPUT_DIR}/libeasna)
 
 ## Text
 FILE(GLOB templates ${CMAKE_SOURCE_DIR}/tpl/*)
