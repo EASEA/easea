@@ -9,6 +9,14 @@ Color_Off='\033[0m'
 Red='\033[0;31m'
 Green='\033[0;32m'
 
+SED=sed
+# Use GNU version of sed
+if command -v gsed 2>&1 > /dev/null
+then
+	echo "Found gnu-sed."
+	SED=gsed
+fi
+
 # Retrieves test directories
 printf "Calculating examples list..."
 all_examples_raw=$(find . -mindepth 2 -type f -name "*.ez")
@@ -32,11 +40,11 @@ for edir in $all_examples; do
 
 	printf -- "\treading README.txt..."
 	echo "s/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p'"
-	echo "DBG: $(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt)"
-	echo "DBG: $(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1)"
-	echo "DBG: $(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)"
-	EASEA_ARGS=$(sed -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)
-	EASEA_OUT=$(sed -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | xargs)
+	echo "DBG: $($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt)"
+	echo "DBG: $($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1)"
+	echo "DBG: $($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)"
+	EASEA_ARGS=$($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)
+	EASEA_OUT=$($SED -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | xargs)
 	if [[ "$EASEA_ARGS" == "" ]] || [[ "$EASEA_OUT" == "" ]]; then
 		printf "$Red ko!$Color_Off\n"
 		printf "\tError:$Red Bad README\n$Color_Off"
@@ -48,7 +56,7 @@ for edir in $all_examples; do
 
 	# Convert args if CUDA not available
 	if [[ "$2" == "--no-cuda" ]]; then
-		EASEA_ARGS=$(echo $EASEA_ARGS | sed 's/\(cuda_\|-cuda\)//')
+		EASEA_ARGS=$(echo $EASEA_ARGS | $SED 's/\(cuda_\|-cuda\)//')
 	fi
 
 	# build
