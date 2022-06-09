@@ -16,10 +16,6 @@ message("-- PROJECT VERSION PATCH: ${PROJECT_VERSION_PATCH}")
 
 SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 
-### Configuration file
-
-CONFIGURE_FILE(config.h.in ${CMAKE_SOURCE_DIR}/libeasea/include/config.h)
-
 ### Target declarations ###
 FILE(GLOB libeasea_src libeasea/*.cpp )
 if(WIN32)
@@ -144,31 +140,6 @@ INSTALL(FILES "easeagrapher/EaseaGrapher.jar" DESTINATION ${OUTPUT_DIR}/easeagra
 
 ADD_SUBDIRECTORY(Test/xor_mnist)
 
+### Configuration file
 
-## OUTDATED !
-## IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
-## INCLUDE(InstallRequiredSystemLibraries)
-##  
-## SET(CPACK_SET_DESTDIR "on")
-## SET(CPACK_PACKAGING_INSTALL_PREFIX "/tmp")
-## SET(CPACK_GENERATOR "DEB")
-##  
-## SET(CPACK_PACKAGE_DESCRIPTION "EASEA framework")
-## SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "EASEA: A distributed and massively parallel evolutionary engine")
-## SET(CPACK_PACKAGE_VENDOR "University of Strasbourg")
-## SET(CPACK_PACKAGE_CONTACT "Pallamidessi Joseph")
-## SET(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR_VERSION}")
-## SET(CPACK_PACKAGE_VERSION_MINOR "${MINOR_VERSION}")
-## SET(CPACK_PACKAGE_VERSION_PATCH "${PATCH_VERSION}")
-## SET(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
-## SET(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${MAJOR_VERSION}.${MINOR_VERSION}.${CPACK_PACKAGE_VERSION_PATCH}")
-##  
-## SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.1.3), libgcc1 (>= 1:4.1.1), libstdc++6 (>= 4.2.1), build-essential, openjdk-8-jre")
-## SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-## SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
-## SET(CPACK_DEBIAN_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
-##  
-## SET(CPACK_COMPONENTS_ALL Libraries ApplicationData)
-## INCLUDE(CPack)
-##  
-## ENDIF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
+CONFIGURE_FILE(config.h.in ${CMAKE_SOURCE_DIR}/libeasea/include/config.h)
