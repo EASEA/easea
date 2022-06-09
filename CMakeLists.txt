@@ -54,7 +54,7 @@ target_compile_options(libeasea PUBLIC
 	)
 target_compile_options(libeasna PUBLIC
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -march=native -mtune=native>
-	$<$<CXX_COMPILER_ID:MSVC>:/O3>
+	$<$<CXX_COMPILER_ID:MSVC>:/O2>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op>
 	$<$<CXX_COMPILER_ID:MSVC>:/W4>
 	)
