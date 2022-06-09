@@ -120,7 +120,7 @@ BISON_TARGET( NeuralParser
 )
 
 ### Installation ###
-set(OUTPUT_DIR string(TOLOWER ${PROJECT_NAME}))
+string(TOLOWER ${PROJECT_NAME} OUTPUT_DIR)
 ## Binaries
 INSTALL(TARGETS easena libeasea libeasna)
 INSTALL(TARGETS libeasna DESTINATION ${OUTPUT_DIR}/libeasea)
