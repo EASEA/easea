@@ -7,6 +7,8 @@ Pierre COLLET (Pierre.Collet@polytechnique.fr)
 Ecole Polytechnique
 Centre de Math�matiques Appliqu�es
 91128 Palaiseau cedex
+------
+Updated on june 2022 by Léo Chéneau to improve windows portability
   ****************************************************************************/
 #ifdef WIN32
 #define _CRT_SECURE_NO_WARNINGS
@@ -15,7 +17,7 @@ Centre de Math�matiques Appliqu�es
 #include "Easea.h"
 #include "EaseaParse.hpp"
 
-#if defined WIN32 || defined WIN64
+#if defined WIN32 || defined __WIN64__
 #include <direct.h>
 #else
 #include <unistd.h>
