@@ -36,14 +36,10 @@ failed=0
 failed_list=()
 passed_list=()
 for edir in $all_examples; do
-	printf -- "- ($((passed+failed+1))/$nb_examples) $(basename $edir):\n"
+	printf -- "- %d/%d %s:\n" $((passed+failed+1)) $nb_examples $(basename $edir)
 	cd $edir
 
-	printf -- "\treading README.txt..."
-	echo "s/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p'"
-	echo "DBG: $($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt)"
-	echo "DBG: $($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1)"
-	echo "DBG: $($SED -n 's/\$ ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)"
+	printf "\treading README.txt..."
 	EASEA_ARGS=$($SED -n 's/\$[[:space:]]*ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)
 	EASEA_BUILD=$($SED -n 's/\$[[:space:]]*\(.*make.*$\)/\1/p' README.txt | head -n1 | xargs)
 	EASEA_OUT=$($SED -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | xargs)
@@ -62,11 +58,11 @@ for edir in $all_examples; do
 	fi
 
 	# build
-	printf -- "\t"$EZ_BINARY" $EASEA_ARGS..."
+	printf "\t%s %s..." "$EZ_BINARY" "$EASEA_ARGS"
 	OUT=$("$EZ_BINARY" $EASEA_ARGS 2>&1)
 	if [[ "$?" != "0" ]]; then # error
 		printf "$Red ko!$Color_Off\n"
-		printf "\tError:$Red $OUT\n$Color_Off"
+		printf "\tError:$Red %s\n$Color_Off" "$OUT"
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 		continue
@@ -78,7 +74,8 @@ for edir in $all_examples; do
 	OUT=$(bash -c "$EASEA_BUILD" 2>&1)
 	if [[ "$?" != "0" ]]; then # error
 		printf "$Red ko!$Color_Off\n"
-		echo -e -- "\tError:$Red $OUT\n$Color_Off"
+		#echo -e -- "\tError:$Red $OUT\n$Color_Off"
+		printf "\tError:$Red %s\n$Color_Off" "$OUT"
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 		continue
@@ -86,7 +83,7 @@ for edir in $all_examples; do
 	printf "$Green ok!$Color_Off\n"
 
 	# run
-	printf -- "\t$EASEA_OUT..."
+	printf "\t%s ..." "$EASEA_OUT"
 	OUT=$(timeout -k 2 1 $EASEA_OUT)
 	ret=$?
 	if [[ "$ret" == "0" ]] || [[ "$ret" == "124" ]]; then # ok
@@ -95,7 +92,7 @@ for edir in $all_examples; do
 		passed_list+=($(basename $edir))
 	else
 		printf "$Red ko!$Color_Off\n"
-		printf "\tError (RETURNED $ret):$Red $OUT\n$Color_Off"
+		printf "\tError (RETURNED %d):$Red %s\n$Color_Off" "$ret" "$OUT"
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 	fi
@@ -107,13 +104,13 @@ done
 
 # Stats
 printf "\n### Results ###\n"
-printf "passed: $Green$passed$Color_Off/$nb_examples\n"
+printf "passed: $Green%d$Color_Off/%d\n" "$passed" "$nb_examples"
 
 if [[ "$((nb_examples-passed))" != "0" ]]; then # at least one fail
-	printf "failed:$Red $failed$Color_Off/$nb_examples\n"
+	printf "failed:$Red %d$Color_Off/%d\n" "$failed" "$nb_examples"
 	printf "test failed:$Red"
 	for te in "${failed_list[@]}"; do
-		printf " $te"
+		printf " %s" "$te"
 	done
 	printf "$Red\nFAILED$Color_Off\n"
 	exit 1
