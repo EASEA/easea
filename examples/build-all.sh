@@ -18,6 +18,14 @@ then
 	SED=gsed
 fi
 
+TIMEOUT=timeout
+# Use GNU version of timeout
+if command -v gtimeout 2>&1 > /dev/null
+then
+	echo "Found gnu-timeout."
+	TIMEOUT=gtimeout
+fi
+
 # Retrieves test directories
 printf "Calculating examples list..."
 all_examples_raw=$(find $examples_dir -mindepth 2 -type f -name "*.ez")
@@ -91,7 +99,7 @@ for edir in $all_examples; do
 
 	# run
 	printf "\tExecuting %s ..." "$EASEA_OUT"
-	OUT=$(timeout -k 7s 5s "./$EASEA_OUT")
+	OUT=$($TIMEOUT -k 7s 5s "./$EASEA_OUT")
 	ret=$?
 	if [[ "$ret" == "0" ]] || [[ "$ret" == "124" ]] || [[ "$ret" == "137" ]]; then # ok
 		printf "$Green ok!$Color_Off\n"
