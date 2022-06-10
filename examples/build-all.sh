@@ -91,7 +91,7 @@ for edir in $all_examples; do
 
 	# run
 	printf "\tExecuting %s ..." "$EASEA_OUT"
-	OUT=$(timeout -k 2 1 "./$EASEA_OUT")
+	OUT=$((timeout -k 2 1 "./$EASEA_OUT") 2>&1)
 	ret=$?
 	if [[ "$ret" == "0" ]] || [[ "$ret" == "124" ]]; then # ok
 		printf "$Green ok!$Color_Off\n"
