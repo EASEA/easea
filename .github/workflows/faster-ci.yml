@@ -162,6 +162,67 @@ jobs:
           echo "::set-output name=failed::${FAILED}"
         shell: bash
 
+  Windows:
+    name: Test application (Windows)
+    runs-on: windows-latest
+    needs: [pre-ci]
+    outputs:
+      configure: ${{ steps.cmake-configure.outcome }}
+      build: ${{ steps.cmake-build.outcome }}
+      install: ${{ steps.cmake-install.outcome }}
+      total: ${{ steps.status.outputs.total }}
+      passed: ${{ steps.status.outputs.passed }}
+      failed: ${{ steps.status.outputs.failed }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Installing dependencies
+        run: choco install winflexbison3 boost-msvc-14.3 sed
+        shell: bash
+
+      - name: CMake configure
+        id: cmake-configure
+        run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        shell: bash
+
+      - name: CMake build
+        id: cmake-build
+        run: cmake --build ./build --config ${{env.BUILD_TYPE}}
+        shell: bash
+
+      - name: CMake Install
+        id: cmake-install
+        run: sudo cmake --install ./build
+        shell: bash
+
+      - name: Upload installation artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: installed-Windows
+          path: C:/Program Files (x86)/EASENA/
+
+      - name: Build examples
+        run: |
+          EZ_PATH="C:/Program Files (x86)/EASENA/" bash ${{github.workspace}}/examples/build-all.sh "C:/Program Files (x86)/EASENA/bin/easena.exe" --no-cuda | tee examples.output
+          result_code=${PIPESTATUS[0]}
+          exit $result_code
+        shell: bash
+
+      - name: Output examples status
+        id: status
+        if: ${{ always() }}
+        run: |
+          LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
+          NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
+          PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
+          FAILED=$((NBE - PASSED))
+          echo "::set-output name=total::${NBE}"
+          echo "::set-output name=passed::${PASSED}"
+          echo "::set-output name=failed::${FAILED}"
+        shell: bash
+
+
           # badges:
           #   runs-on: ubuntu-latest
           #   name: Create badges
