@@ -273,7 +273,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-size_t IndividualImpl::mutate( float pMutationPerGene ){
+void IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 
@@ -286,7 +286,6 @@ size_t IndividualImpl::mutate( float pMutationPerGene ){
                 sum += cma->B[i][j] * cma->rgdTmp[j];
         this->\GENOME_NAME[i] = (float)(cma->rgxmean[i] + cma->sigma * sum);
   }
-  return 0;
 }
 
 
@@ -547,7 +546,7 @@ public:
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	size_t mutate(float pMutationPerGene);
+	void mutate(float pMutationPerGene);
 
 	void boundChecking();
 
