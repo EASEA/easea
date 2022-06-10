@@ -778,6 +778,8 @@ clean:
 </VisualStudioProject>
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(EZ_ROOT $ENV{EZ_PATH})
 
 project(EASEA LANGUAGES CUDA CXX C)

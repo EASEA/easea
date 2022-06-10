@@ -1,5 +1,6 @@
 \TEMPLATE_START/**
  This is program entry for standard multiobjective template for EASEA
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 */
 \ANALYSE_PARAMETERS
