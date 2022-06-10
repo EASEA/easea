@@ -1,6 +1,6 @@
 To Compile this example:
   $ easena -nsgaii coco2018.ez
-  $ make
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./coco2018

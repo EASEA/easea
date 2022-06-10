@@ -1,6 +1,6 @@
 To Compile this example:
   $ easena -fastemo dtlz1.ez
-  $ make
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./dtlz1

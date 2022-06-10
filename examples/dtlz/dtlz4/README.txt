@@ -1,6 +1,6 @@
 To Compile this example:
   $ easena -asrea  dtlz4.ez
-  $ make
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./dtlz4
