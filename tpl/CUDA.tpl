@@ -1062,7 +1062,7 @@ target_compile_options(EASEA PUBLIC
 
 find_library(libeasea_LIB
 	NAMES libeasea easea
-	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easena ${CMAKE_INSTALL_PREFIX}/easea
+	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easena ${CMAKE_INSTALL_PREFIX}/EASENA
 	PATH_SUFFIXES lib libeasea easea easena)
 find_path(libeasea_INCLUDE
 	NAMES CLogger.h

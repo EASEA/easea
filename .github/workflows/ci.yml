@@ -410,6 +410,8 @@ jobs:
         run: sudo cmake --install ${{github.workspace}}/build
         shell: bash
 
+      - run: ls -al /usr/local/easena/
+
       - name: Installing CUDA toolkit
         uses: Jimver/cuda-toolkit@v0.2.7
         with:
