@@ -360,17 +360,11 @@ jobs:
         run: cmake --install ./build
         shell: bash
 
-      - name: DEBUG
-        run: ls -al "/"
-      - run: ls -al "D:"
-      - run: ls -al "D:/*"
-      - run: ls -al "C:/*"
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: installed-Windows
-          path: c:/Program Files/easena
+          path: C:/Program Files (x86)/EASENA/
 
       - name: Save status
         if: ${{ always() }}
@@ -522,7 +516,7 @@ jobs:
 
       - name: Build examples
         run: |
-          EZ_PATH="C:/Program Files/easena/" bash ${{github.workspace}}/examples/build-all.sh "C:/Program Files/easena" --no-cuda | tee examples.output
+          EZ_PATH="C:/Program Files (x86)/EASENA/" bash ${{github.workspace}}/examples/build-all.sh "C:/Program Files (x86)/EASENA/bin/easena.exe" --no-cuda | tee examples.output
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
