@@ -204,7 +204,7 @@ jobs:
 
       - name: Build examples
         run: |
-          EZ_PATH="C:/Program Files (x86)/EASENA/" bash ${{github.workspace}}/examples/build-all.sh "C:/Program Files (x86)/EASENA/bin/easena.exe" --no-cuda | tee examples.output
+          EZ_PATH="C:/Program Files (x86)/EASENA/" bash ./examples/build-all.sh "C:/Program Files (x86)/EASENA/bin/easena.exe" --no-cuda | tee examples.output
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
