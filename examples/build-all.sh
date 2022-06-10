@@ -5,7 +5,7 @@
 # $2 = --no-cuda
 path_to_script=$(realpath $BASH_SOURCE)
 examples_dir=$(dirname $path_to_script)
-EZ_BINARY=$(realpath $1)
+EZ_BINARY="$(realpath "$1")"
 Color_Off='\033[0m'
 Red='\033[0;31m'
 Green='\033[0;32m'
@@ -62,8 +62,8 @@ for edir in $all_examples; do
 	fi
 
 	# build
-	printf -- "\t$EZ_BINARY $EASEA_ARGS..."
-	OUT=$($EZ_BINARY $EASEA_ARGS 2>&1)
+	printf -- "\t"$EZ_BINARY" $EASEA_ARGS..."
+	OUT=$("$EZ_BINARY" $EASEA_ARGS 2>&1)
 	if [[ "$?" != "0" ]]; then # error
 		printf "$Red ko!$Color_Off\n"
 		printf "\tError:$Red $OUT\n$Color_Off"
