@@ -19,6 +19,7 @@
 #endif
 #ifdef OS_WINDOWS
 #define OS_WINDOWS_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 #include <mmsystem.h>
 #endif
