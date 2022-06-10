@@ -99,6 +99,69 @@ jobs:
           echo "::set-output name=failed::${FAILED}"
         shell: bash
 
+  MacOS:
+    name: Test application (MacOS)
+    runs-on: macos-latest
+    needs: [pre-ci]
+    outputs:
+      configure: ${{ steps.cmake-configure.outcome }}
+      build: ${{ steps.cmake-build.outcome }}
+      install: ${{ steps.cmake-install.outcome }}
+      total: ${{ steps.status.outputs.total }}
+      passed: ${{ steps.status.outputs.passed }}
+      failed: ${{ steps.status.outputs.failed }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Installing dependencies
+        shell: bash
+        run: |
+          brew install bison libomp coreutils boost gnu-sed
+          export PATH="$(brew --prefix bison)/bin:$PATH"
+          export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH"
+
+      - name: CMake configure
+        id: cmake-configure
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        shell: bash
+
+      - name: CMake build
+        id: cmake-build
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        shell: bash
+
+      - name: CMake Install
+        id: cmake-install
+        run: sudo cmake --install ${{github.workspace}}/build
+        shell: bash
+
+      - name: Upload installation artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: installed-MacOS
+          path: /usr/local/easena
+
+      - name: Build examples
+        run: |
+          EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" | tee examples.output
+          result_code=${PIPESTATUS[0]}
+          exit $result_code
+        shell: bash
+      
+      - name: Output examples status
+        id: status
+        if: ${{ always() }}
+        run: |
+          LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
+          NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
+          PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
+          FAILED=$((NBE - PASSED))
+          echo "::set-output name=total::${NBE}"
+          echo "::set-output name=passed::${PASSED}"
+          echo "::set-output name=failed::${FAILED}"
+        shell: bash
+
           # badges:
           #   runs-on: ubuntu-latest
           #   name: Create badges
