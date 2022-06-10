@@ -139,7 +139,7 @@ jobs:
 
       - name: Build examples
         run: |
-          EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" | tee examples.output
+          EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --no-cuda | tee examples.output
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
