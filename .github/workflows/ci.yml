@@ -45,15 +45,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: actions/cache@v2
-      with:
-        path: /usr
-        key: MacOS-cache
-
     - name: Installing dependencies if needed
       shell: bash
       run: |
-        brew install bison libomp boost coreutils gnu-sed
+        brew install bison libomp boost
         export PATH="$(brew --prefix bison)/bin:$PATH"
 
     - name: Configure CMake
@@ -81,13 +76,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    - uses: actions/cache@v2
-      with:
-        path: |
-          C:\Program Data
-          C:\Program Files*
-        key: Windows-cache
 
     - name: Installing dependencies if needed
       run: choco install winflexbison3 boost-msvc-14.3
@@ -187,18 +175,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/cache@v2
-        with:
-          path: |
-            C:\Program Data
-            C:\Program Files*
-          key: Windows-cache
-
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
           name: build-configured-Windows
           path: ./build
+
+      - name: Installing dependencies if needed
+        run: choco install winflexbison3 boost-msvc-14.3
+        shell: bash
 
       - name: Configure CMake
         run: cmake -B ./build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -231,10 +216,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/cache@v2
-        with:
-          path: /usr
-          key: MacOS-cache
+      - name: Installing dependencies if needed
+        shell: bash
+        run: |
+          brew install bison libomp boost
+          export PATH="$(brew --prefix bison)/bin:$PATH"
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
