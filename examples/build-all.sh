@@ -81,9 +81,13 @@ for edir in $all_examples; do
 	fi
 	printf "$Green ok!$Color_Off\n"
 
+	# Match output file
+	CURATED_BIN=$(echo $EASEA_OUT | sed -n 's/\.\///p')
+	EASEA_OUT=$(find -type f -name "$CURATED_BIN" | sed -n 's/^\(\.\/\)*\(bbob2013\)\(\.exe\)*$/\2\3/p' | head -n1)
+
 	# run
-	printf "\t%s ..." "$EASEA_OUT"
-	OUT=$(timeout -k 2 1 $EASEA_OUT)
+	printf "\tExecuting %s ..." "$EASEA_OUT"
+	OUT=$(timeout -k 2 1 "./$EASEA_OUT")
 	ret=$?
 	if [[ "$ret" == "0" ]] || [[ "$ret" == "124" ]]; then # ok
 		printf "$Green ok!$Color_Off\n"
