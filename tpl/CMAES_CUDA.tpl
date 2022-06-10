@@ -776,6 +776,50 @@ clean:
 	<Globals>
 	</Globals>
 </VisualStudioProject>
+\START_CMAKELISTS
+cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
+set(EZ_ROOT $ENV{EZ_PATH})
+
+project(EASEA LANGUAGES CUDA CXX C)
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release")
+endif()
+
+file(GLOB EASEA_src ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.c ${CMAKE_SOURCE_DIR}/*.cu)
+list(FILTER EASEA_src EXCLUDE REGEX .*EASEAIndividual.cpp)
+add_executable(EASEA ${EASEA_src})
+set_target_properties(EASEA PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+target_compile_features(EASEA PUBLIC cxx_std_14)
+target_compile_options(EASEA PUBLIC
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /W3>
+	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -march=native -mtune=native -Wall -Wextra>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/O1 /W4 /DEBUG:FULL>
+	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O2 -g -Wall -Wextra>
+	)
+
+find_library(libeasea_LIB
+	NAMES libeasea easea
+	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easena ${CMAKE_INSTALL_PREFIX}/EASENA
+	PATH_SUFFIXES lib libeasea easea easena)
+find_path(libeasea_INCLUDE
+	NAMES CLogger.h
+	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
+	PATH_SUFFIXES include easena libeasea)
+find_package(Boost REQUIRED)
+find_package(OpenMP REQUIRED)
+find_package(CUDAToolkit REQUIRED)
+
+message(STATUS ${libeasea_INCLUDE} ${CLOGGER} ${CUDAToolkit_INCLUDE_DIRS})
+
+target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE} ${CUDAToolkit_INCLUDE_DIRS})
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} OpenMP::OpenMP_CXX $<$<CXX_COMPILER_ID:MSVC>:winmm>)
 
 \START_EO_PARAM_TPL#****************************************
 #
