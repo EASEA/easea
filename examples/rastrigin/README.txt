@@ -1,6 +1,6 @@
 To Compile this example:
   $ easea rastrigin.ez
-  $ cmake . && cmake --build .
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./rastrigin

@@ -1,6 +1,6 @@
 To Compile this example:
   $ easea weierstrass.ez
-  $ cmake . && cmake --build .
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./weierstrass
