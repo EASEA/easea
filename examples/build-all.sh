@@ -85,8 +85,8 @@ for edir in $all_examples; do
 	CURATED_BIN=$(echo $EASEA_OUT | $SED -n 's/\.\///p')
 	echo "DEBUG: " "$CURATED_BIN"
 	echo "DEBUG: " "$(find . -type f -name "$CURATED_BIN*")"
-	echo "DEBUG: " "$(find . -type f -name "$CURATED_BIN*" | $SED -n 's/^\(\.\/\)*\('"$CURATED_BIN"'\)\(\.exe\)*$/\2\3/p')"
-	EASEA_OUT=$(find . -type f -name "$CURATED_BIN*" | $SED -n 's/^\(\.\/\)*\('"$CURATED_BIN"'\)\(\.exe\)*$/\2\3/p' | head -n1)
+	echo "DEBUG: " "$(find . -type f -name "$CURATED_BIN*" | $SED -n 's/^\(\.\/\)*\([^.]*'"$CURATED_BIN"'\)\(\.exe\)*$/\2\3/p')"
+	EASEA_OUT=$(find . -type f -name "$CURATED_BIN*" | $SED -n 's/^\(\.\/\)*\([^.]*'"$CURATED_BIN"'\)\(\.exe\)*$/\2\3/p'    | head -n1)
 	echo "DEBUG: " "$EASEA_OUT"
 
 	# run
