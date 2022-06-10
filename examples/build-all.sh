@@ -83,7 +83,7 @@ for edir in $all_examples; do
 
 	# Match output file
 	CURATED_BIN=$(echo $EASEA_OUT | $SED -n 's/\.\///p')
-	EASEA_OUT=$(find -type f -name "$CURATED_BIN" | $SED -n 's/^\(\.\/\)*\('"$CURATED_BIN"'\)\(\.exe\)*$/\2\3/p' | head -n1)
+	EASEA_OUT=$(find . -type f -name "$CURATED_BIN" | $SED -n 's/^\(\.\/\)*\('"$CURATED_BIN"'\)\(\.exe\)*$/\2\3/p' | head -n1)
 
 	# run
 	printf "\tExecuting %s ..." "$EASEA_OUT"
