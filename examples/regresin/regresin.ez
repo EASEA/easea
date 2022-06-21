@@ -160,11 +160,6 @@ return ERROR/(float)NO_FITNESS_CASES;
 \end
 
 
-\User Makefile options: 
-
-CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/
-LDFLAGS+=
-\end
 
 \Default run parameters :         // Please let the parameters appear in this order
   Number of generations : 40   	// NB_GEN

@@ -1,5 +1,5 @@
 To Compile this example:
-  $ easea regresin.ez
+  $ easea -gp regresin.ez
   $ cmake . && cmake --build . --config Release
 
 To test it:
