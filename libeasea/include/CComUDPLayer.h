@@ -148,6 +148,7 @@ class CComUDPClient
 
     private:
 	std::string client_name; ///< Human-readble name
+	boost::asio::ip::udp::endpoint dest; ///< Destination endpoint
 	boost::asio::ip::udp::socket socket; ///< Socket used to communicate with destination
 };
 

@@ -14,7 +14,15 @@ message("-- PROJECT VERSION MAJOR: ${PROJECT_VERSION_MAJOR}")
 message("-- PROJECT VERSION MINOR: ${PROJECT_VERSION_MINOR}")
 message("-- PROJECT VERSION PATCH: ${PROJECT_VERSION_PATCH}")
 
-SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release")
+endif()
 
 ### Target declarations ###
 FILE(GLOB libeasea_src libeasea/*.cpp )
@@ -45,17 +53,31 @@ SET(CMAKE_STATIC_LIBRARY_PREFIX="")
 target_compile_features(libeasea PUBLIC cxx_std_14)
 target_compile_features(libeasna PUBLIC cxx_std_14)
 target_compile_options(libeasea PUBLIC
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -march=native -mtune=native>
-	$<$<CXX_COMPILER_ID:MSVC>:/O2>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic>
+	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -march=native -mtune=native>
+	$<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-g>
+
+	$<$<CXX_COMPILER_ID:MSVC>:/W3>
+	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<CXX_COMPILER_ID:MSVC>>:/O2>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL /W4>
 	)
 target_compile_options(libeasna PUBLIC
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -march=native -mtune=native>
-	$<$<CXX_COMPILER_ID:MSVC>:/O2>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default -Wlogical-op>
-	$<$<CXX_COMPILER_ID:MSVC>:/W4>
+	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -march=native -mtune=native>
+	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-g>
+
+	$<$<CXX_COMPILER_ID:MSVC>:/W3>
+	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<CXX_COMPILER_ID:MSVC>>:/O2>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL>
 	)
 target_compile_options(easena PUBLIC
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w -Wno-deprecated -Wno-write-strings -fmessage-length=0>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -w -Wno-deprecated -Wno-write-strings -fmessage-length=0>
+	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -march=native -mtune=native>
+	$<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-g>
+
+	$<$<CXX_COMPILER_ID:MSVC>:/W3>
+	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<CXX_COMPILER_ID:MSVC>>:/O2>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL>
 	)
 TARGET_LINK_LIBRARIES(easena libeasea libeasna)
 

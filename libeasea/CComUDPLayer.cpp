@@ -75,9 +75,9 @@ CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::st
 	: client_name(std::move(client_name_)), socket(CComSharedContext::get())
 {
 	udp::resolver resolver(CComSharedContext::get());
-	udp::endpoint ep = *resolver.resolve(udp::v4(), ip, client_name).begin(); // throw if error (safe)
+	dest = *resolver.resolve(udp::v4(), ip, client_name).begin(); // throw if error (safe)
+	dest.port(port);
 	socket.open(udp::v4());
-	socket.connect(ep);
 };
 
 std::string const& CComUDPClient::getClientName() const
@@ -87,17 +87,17 @@ std::string const& CComUDPClient::getClientName() const
 
 void CComUDPClient::send(std::string const& individual)
 {
-	socket.send(boost::asio::buffer(individual));
+	socket.send_to(boost::asio::buffer(individual), dest);
 };
 
 std::string CComUDPClient::getIP() const
 {
-	return socket.remote_endpoint().address().to_string();
+	return dest.address().to_string();
 }
 
 unsigned short CComUDPClient::getPort() const
 {
-	return socket.remote_endpoint().port();
+	return dest.port();
 }
 
 bool isLocalMachine(std::string const& address)
