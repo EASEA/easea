@@ -18,6 +18,7 @@
 #include <vector>
 #include <queue>
 #include <memory>
+#include <thread>
 
 /**
  * @brief Global common io_context
@@ -33,12 +34,14 @@ class CComSharedContext
      	*/
 	static inline context_t& get()
 	{
-		static boost::asio::io_context ctx;
-		return ctx;
+		static CComSharedContext gctx;
+		return gctx.ctx;
 	}
 
     private:
-	CComSharedContext() = delete;
+	CComSharedContext();
+	boost::asio::io_context ctx;
+	std::thread thread;
 };
 
 class CComUDPServer

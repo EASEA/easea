@@ -14,6 +14,10 @@
 using namespace boost::asio;
 using namespace boost::asio::ip;
 
+CComSharedContext::CComSharedContext() : ctx(1), thread([this]() { ctx.run(); })
+{
+}
+
 CComUDPServer::CComUDPServer(unsigned short port) : socket(CComSharedContext::get(), udp::endpoint(udp::v4(), port))
 {
 	start_receive();
@@ -62,12 +66,13 @@ void CComUDPServer::print_stats() const
 	auto fmt = std::put_time(std::localtime(&in_time_t), "%H:%M:%S");
 
 	std::stringstream ss;
-	std::cout << "[" << fmt << "]" <<
-		" Received individual (fitness = " << last << ") from " << 
-		last_endpoint.address().to_string() << ":" << last_endpoint.port();
+	std::cout << "[" << fmt << "]"
+		  << " Received individual (fitness = " << last << ") from " << last_endpoint.address().to_string()
+		  << ":" << last_endpoint.port();
 }
 
-CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::string client_name_) : client_name(std::move(client_name_)), socket(CComSharedContext::get())
+CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::string client_name_)
+	: client_name(std::move(client_name_)), socket(CComSharedContext::get())
 {
 	udp::resolver resolver(CComSharedContext::get());
 	udp::endpoint ep = *resolver.resolve(udp::v4(), ip, client_name).begin(); // throw if error (safe)
@@ -95,7 +100,6 @@ unsigned short CComUDPClient::getPort() const
 	return socket.remote_endpoint().port();
 }
 
-
 bool isLocalMachine(std::string const& address)
 {
 	try {
@@ -114,7 +118,7 @@ bool checkValidLine(std::string const& line)
 	if (sep == std::end(line))
 		return false;
 	auto ip = std::string(std::begin(line), sep);
-	auto port = std::string(sep+1, std::end(line));
+	auto port = std::string(sep + 1, std::end(line));
 
 	try {
 		auto p = std::stoi(port);
@@ -126,13 +130,13 @@ bool checkValidLine(std::string const& line)
 	return true;
 }
 
-
-std::unique_ptr<CComUDPClient> parse_line(std::string const& line) {
+std::unique_ptr<CComUDPClient> parse_line(std::string const& line)
+{
 	auto sep = std::find(std::begin(line), std::end(line), ':');
 	if (sep == std::end(line))
 		throw std::runtime_error("no ':' found");
 	auto ip = std::string(std::begin(line), sep);
-	auto port = std::string(sep+1, std::end(line));
+	auto port = std::string(sep + 1, std::end(line));
 	auto p = std::stoi(port);
 
 	return std::make_unique<CComUDPClient>(ip, p, "");
@@ -149,8 +153,8 @@ std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_n
 		try {
 			ret.push_back(parse_line(tmp));
 		} catch (std::exception const& e) {
-			std::cerr << "Error while reading ip file on line " << idx 
-				<< ": " << tmp << "\nError: " << e.what();
+			std::cerr << "Error while reading ip file on line " << idx << ": " << tmp
+				  << "\nError: " << e.what();
 		}
 		++idx;
 	}
