@@ -188,7 +188,7 @@
     printSolution();
 #endif    
 
-    free_data();
+    //free_data(); // Better fix required
 }
 \end
 
