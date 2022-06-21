@@ -1,0 +1,147 @@
+#ifndef FILES2
+////////////////////////// BEGIN GENERATE DATA ////////////////////////
+
+int generateData(float*** inputArrs, float** outputArr, std::string filename, int varLen, int objectiveFunction){
+    std::ifstream myfile(filename.c_str());
+    std::string str;
+    std::vector<std::vector<float> > inputs;
+    float f = 0;
+    char c;
+
+    for (int j = 0; j < NO_FITNESS_CASES+1; j++) {
+	std::vector<float> input;
+	for(int i = 0; i < varLen; i++){
+	    myfile >> f ;
+	    if( i!=varLen-1 ) myfile >> c;
+	    
+	    if( c!=',' && i!=(varLen-1) ){
+		std::cerr << "Parsing error, separator is not a \",\"" << std::endl;
+		return 1;
+	    }
+	    input.push_back(f);
+	}
+
+	if( myfile.fail() ) {
+	    break;
+	}
+	else inputs.push_back(input);
+    }
+
+    //    std::cout << inputs.size() << endl;
+
+    (*inputArrs) = new float*[inputs.size()-1];
+    (*outputArr) = new float[inputs.size()-1];
+
+    for( int i=0 ; i<(int)inputs.size()-1 ; i++ ){
+	std::vector<float> input = inputs.at(i);
+	(*inputArrs)[i] = new float[varLen];
+	for( int j=0 ; j<varLen ; j++ ){
+	    (*inputArrs)[i][j] = input.at(j);
+	}
+	(*outputArr)[i] = (inputs.at(i+1).at(objectiveFunction) - inputs.at(i).at(objectiveFunction)) * 50;
+    }
+
+    return 0;
+}
+
+///////////////////// END GENERATE DATA ////////////////////
+#endif
+
+#ifdef FILES2
+////////////////////// BEGIN GENERATE SEVERAL DATA ///////////////////
+
+int generateData(float*** input1, float** output1, std::string filename1, float*** input2, float** output2, std::string filename2, int varLen, int objectiveFunction) {
+
+    std::ifstream myfile(filename1.c_str());
+    std::string str;
+    std::vector<std::vector<float> > inputs;
+    float f = 0;
+    char c;
+
+    for (int j = 0; j < NO_FITNESS_CASES+1; j++) {
+	std::vector<float> input;
+	for(int i = 0; i < varLen; i++){
+	    myfile >> f ;
+	    if( i!=varLen-1 ) myfile >> c;
+	    
+	    if( c!=',' && i!=(varLen-1) ){
+		std::cerr << "Parsing error, separator is not a \",\"" << std::endl;
+		return 1;
+	    }
+	    input.push_back(f);
+	}
+
+	if( myfile.fail() ) {
+	    break;
+	}
+	else inputs.push_back(input);
+    }
+
+    //    std::cout << inputs.size() << endl;
+
+    (*input1) = new float*[inputs.size()-1];
+    (*output1) = new float[inputs.size()-1];
+    
+    for( int i=0 ; i<inputs.size()-1 ; i++ ){
+	std::vector<float> input = inputs.at(i);
+	(*input1)[i] = new float[varLen];
+	for( int j=0 ; j<varLen ; j++ ){
+	    (*input1)[i][j] = input.at(j);
+	}
+	(*output1)[i] = (inputs.at(i+1).at(objectiveFunction) - inputs.at(i).at(objectiveFunction)) * 50;
+    }
+
+    // Deuxième fichier
+
+    std::ifstream myfile2(filename2.c_str());
+    std::vector<std::vector<float> > inputs2;
+
+    for (int j = 0; j < NO_FITNESS_CASES+1; j++) {
+	std::vector<float> input;
+	for(int i = 0; i < varLen; i++){
+	    myfile2 >> f ;
+	    if( i!=varLen-1 ) myfile2 >> c;
+	    
+	    if( c!=',' && i!=(varLen-1) ){
+		std::cerr << "Parsing error, separator is not a \",\"" << std::endl;
+		return 1;
+	    }
+	    input.push_back(f);
+	}
+
+	if( myfile2.fail() ) {
+	    break;
+	}
+	else inputs2.push_back(input);
+    }
+
+    //    std::cout << inputs2.size() << endl;
+
+    (*input2) = new float*[inputs2.size()-1];
+    (*output2) = new float[inputs2.size()-1];
+    
+    for( int i=0 ; i<inputs2.size()-1 ; i++ ){
+	std::vector<float> input = inputs2.at(i);
+	(*input2)[i] = new float[varLen];
+	for( int j=0 ; j<varLen ; j++ ){
+	    (*input2)[i][j] = input.at(j);
+	}
+	(*output2)[i] = (inputs2.at(i+1).at(objectiveFunction) - inputs2.at(i).at(objectiveFunction)) * 50;
+    }
+
+    return 0;
+}
+
+/////////////////////// END GENERATE SEVERAL DATA ///////////////////
+#endif
+
+///////////////////// BEGIN FREE DATA //////////////////////
+
+void free_data(){
+    for( int i=0 ; i<NO_FITNESS_CASES ;i++ )
+	delete[] inputs[i] ;
+    delete[] outputs;
+    delete[] inputs;
+}
+
+///////////////////////// END FREE DATA //////////////////////////
