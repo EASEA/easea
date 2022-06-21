@@ -16,8 +16,6 @@ __________________________________________________________*/
  
 float pMutPerGene=0.1;
 
-struct gpuOptions initOptions;
-
 \end
 
 \User functions:
