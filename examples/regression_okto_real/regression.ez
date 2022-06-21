@@ -100,7 +100,7 @@
 \User functions:
 // include
 #include "add/globalDeclarations.add"
-//#include "add/generateAndFreeData.add"
+#include "add/generateAndFreeData.add"
 //#include "add/GPNodeCompare.add"
 #include "add/SNode.add"
 #include "add/best.add"
