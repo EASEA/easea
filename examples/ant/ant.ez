@@ -542,7 +542,7 @@
     if(d<pMutPerGene){
      Element *elt=chercheNoeud(racine,i);
       if(elt==NULL){
-	return;
+	continue;
       }
       double rnd = random(0.0,1.0);
       switch(elt->Value){
