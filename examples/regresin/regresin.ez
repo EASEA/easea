@@ -152,11 +152,11 @@ OP_SIN, "sin", 1, {RESULT=sin(OP1);};
 
 \GenomeClass::evaluator for each fc :
 float expected_value = OUTPUT;
-ERROR = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
+error = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
 \end
 
 \GenomeClass::evaluator accumulator :
-return ERROR/(float)NO_FITNESS_CASES;
+return error/(float)NO_FITNESS_CASES;
 \end
 
 
