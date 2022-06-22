@@ -113,12 +113,15 @@ void CArchive<TIndividual>::updateArchive(const TI candidate)
 
 	for (auto it = m_archive.begin(); it != m_archive.end();)
 	{
-		if (Dominate(candidate, *it))
+		if (Dominate(candidate, *it)) {
 			it = m_archive.erase(it);
-		else if (Dominate(*it, candidate))
+		} else if (Dominate(*it, candidate)) {
 			return;
-		else	++it;
-		if (Equal(*it, candidate) == true)
+		}
+		else {
+			++it;
+		}
+		if (it != m_archive.end() && Equal(*it, candidate) == true)
 		    it = m_archive.erase(it);
 
 	}
