@@ -523,12 +523,14 @@
   Element * elt1=chercheNoeud(child.arbre,locusC);
   Element * eltParent2=chercheNoeud(parent2.arbre,locusP2);
   
+  if (elt1 && eltParent2) {
   Element *elt11 = copierSousArbreRec(eltParent2, elt1->profondeur,profondeurMax1);
   
   remplace(child.arbre,elt11,locusC);
+  }
   regenSize(child.arbre);
   child.Size=EZ_SIZE;
-  
+
   \end
   
   \GenomeClass::mutator:
