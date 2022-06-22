@@ -139,7 +139,7 @@ OP_ADD, "+", 2, {RESULT=OP1+OP2;};
 OP_SUB, "-", 2, {RESULT=OP1-OP2;};
 OP_MUL, "*", 2, {RESULT=OP1*OP2;};
 OP_DIV, "/", 2, {
-  if( !OP2 ) RESULT = 1;
+  if( !OP2 ) RESULT = 1.f;
   else RESULT = OP1/OP2;
 };
 OP_SIN, "sin", 1, {RESULT=sin(OP1);};
