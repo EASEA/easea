@@ -67,6 +67,8 @@
 #include <ctime>
 #include <cmath>
 
+#define _CRT_SECURE_NO_WARNINGS
+
 class MTRand {
 // Data
 public:
