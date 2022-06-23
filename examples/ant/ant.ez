@@ -497,10 +497,10 @@
   * Attention : penser à commenter dans la fonction evaluerMove
    */
   imprimerArbre(bBest->arbre);
-  printf("\nfitness = %f\n",pPopulation[0]->getFitness());
+  printf("\nfitness = %f\n",bBest->getFitness());
   FILE *fichier;
   fichier = fopen("sortieEasea.txt","w");
-  imprimerArbreDansFichier(pPopulation[0]->arbre, fichier);
+  imprimerArbreDansFichier(bBest->arbre, fichier);
   fclose(fichier);
  
   \end
