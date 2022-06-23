@@ -138,7 +138,8 @@ void CArchive<TIndividual>::updateArchive(const TI candidate)
 		easea::shared::functions::setCrowdingDistance< TO>(iFront.begin(), iFront.end());
 
     		std::sort(iFront.begin(), iFront.end(), [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;});
-		m_archive.erase(m_archive.end());
+		// ????
+		//m_archive.erase(m_archive.end());
 	}
 }
 template <typename TIndividual>
