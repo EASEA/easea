@@ -69,7 +69,7 @@ int numberOfLeaves(GPNode* root, const unsigned* opArity) {
     } else return 0; // In all other cases, root can't have leaves.
 
     int leaves = 0; // Number of children which are leaves.
-    int notLeaves[arity]; // Element of notLeaves are the indexes of the children which are not leaves.
+    int notLeaves[64]; // Element of notLeaves are the indexes of the children which are not leaves.
     for (int i = 0; i < arity; i++) {
 	notLeaves[i] = i;
     }
