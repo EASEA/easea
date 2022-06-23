@@ -6,6 +6,9 @@ or CUDA version:
   $ cmake . && cmake --build . --config Release
 
 To test it:
+  $ ./regression
+
+To test network communications
   $ ./cmd.sh regression
 
 To clean easea related file:

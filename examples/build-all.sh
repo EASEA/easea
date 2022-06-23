@@ -49,7 +49,7 @@ for edir in $all_examples; do
 	printf "\treading README.txt..."
 	EASEA_ARGS=$($SED -n 's/\$[[:space:]]*ease\(a\|na[[:space:]]\)\([^ ]*\)/\2/p' README.txt | head -n1 | xargs)
 	EASEA_BUILD=$($SED -n 's/\$[[:space:]]*\(.*make.*$\)/\1/p' README.txt | head -n1 | xargs)
-	EASEA_OUT=$($SED -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | xargs)
+	EASEA_OUT=$($SED -n 's/\(\$[[:space:]]*\)*\(\.\/.*\)/\2/p' README.txt | head -n1 | xargs)
 	if [[ "$EASEA_ARGS" == "" ]] || [[ "$EASEA_OUT" == "" ]]; then
 		printf "$Red ko!$Color_Off\n"
 		printf "\tError:$Red Bad README\n$Color_Off"
