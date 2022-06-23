@@ -6,7 +6,7 @@ or CUDA version:
   $ cmake . && cmake --build . --config Release
 
 To test it:
-  $ ./regression
+  $ ./cmd.sh regression
 
 To clean easea related file:
  $ make easeaclean

@@ -14,12 +14,16 @@
 using namespace boost::asio;
 using namespace boost::asio::ip;
 
-CComSharedContext::CComSharedContext() : ctx(1), thread([this]() { ctx.run(); })
+CComSharedContext::CComSharedContext() : ctx(1), thread([this]() {
+		auto work = make_work_guard(ctx.get_executor());
+		ctx.run();
+		/*std::cerr << "io_service ended.\n";*/})
 {
 }
 
 CComUDPServer::CComUDPServer(unsigned short port) : socket(CComSharedContext::get(), udp::endpoint(udp::v4(), port))
 {
+	//std::cerr << "Server started on port: " << port << "\n";
 	start_receive();
 }
 
@@ -28,7 +32,7 @@ bool CComUDPServer::has_data() const
 	return recv_queue.size() > 0;
 }
 
-CComUDPServer::buffer_t CComUDPServer::consume()
+std::vector<char> CComUDPServer::consume()
 {
 	if (!has_data())
 		throw std::runtime_error("No data");
@@ -46,11 +50,16 @@ void CComUDPServer::start_receive()
 
 void CComUDPServer::handle_receive(const boost::system::error_code& error, std::size_t bytes_transfered)
 {
-	if (error || bytes_transfered == 0)
-		return;
-	recv_queue.push(std::move(recv_buffer));
+	//std::cerr << "Received message of size: " << bytes_transfered << "\n";
+	if (error) {
+		std::cerr << "UDP error: " << error.message() << "\n";
+	} else if (bytes_transfered != 0) {
+		//std::cerr << "Appending message to buffer" << std::endl;
+		std::vector<char> tmp(recv_buffer.begin(), recv_buffer.begin() + bytes_transfered);
+		recv_queue.push(std::move(tmp));
+		print_stats();
+	}
 	start_receive();
-	print_stats();
 }
 
 void CComUDPServer::print_stats() const

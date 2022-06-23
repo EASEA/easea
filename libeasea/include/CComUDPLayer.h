@@ -63,7 +63,7 @@ class CComUDPServer
 	/**
 	 * @brief Buffer type used
 	 */
-	using buffer_t = std::vector<char>;
+	using buffer_t = std::array<char, 65535>;
 
 	/**
 	 * @brief Check if server has received data since last time
@@ -77,11 +77,11 @@ class CComUDPServer
 	 *
 	 * @return A buffer with the data
 	 */
-	buffer_t consume();
+	std::vector<char> consume();
 
     private:
 	boost::asio::ip::udp::socket socket; ///< Socket used by the server
-	std::queue<buffer_t> recv_queue; ///< Queue used to store data received until consumption
+	std::queue<std::vector<char>> recv_queue; ///< Queue used to store data received until consumption
 	buffer_t recv_buffer; ///< Buffer used to receive
 	boost::asio::ip::udp::endpoint last_endpoint; /// Last endpoint who sent data
 
