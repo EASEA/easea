@@ -173,7 +173,8 @@ void CArchive<TIndividual>::updateArchiveEpsilon(const TI candidate, bool epsilo
 		    }
 //int c = std::count_if(iFront.begin(), iFront.end(), [](TPtr i) {return i->m_fitness == 0;});
 
-                m_archive.erase(m_archive.end());
+		// NOTE: no idea why this UB is here
+                //m_archive.erase(m_archive.end());
         }
 }
 }
