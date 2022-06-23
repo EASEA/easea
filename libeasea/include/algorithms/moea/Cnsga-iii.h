@@ -135,7 +135,7 @@ typename Cnsga_iii<TIndividual, TRandom>::TPopulation Cnsga_iii<TIndividual, TRa
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-    for (size_t i = 0; i < offspring.size(); ++i)
+    for (int i = 0; i < offspring.size(); ++i)
     {
 	TIndividual &child = offspring[i];
 	this->getMutation()(child);
