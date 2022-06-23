@@ -6,6 +6,7 @@
 #endif
 
 #define SIZE 2
+#define DIM SIZE
 #define BBOB_FUNCTION_ID 1
 #define BBOB_INSTANCE_ID 1
 #define X_MIN -5.
@@ -18,7 +19,6 @@
 #define PI 3.141592654
 
 /*Global declarations */
-extern int DIM;  // passed by parameter
 extern int trialid;
 extern int funcId; //passed by parameter
 extern int instanceId;
