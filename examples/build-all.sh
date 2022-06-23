@@ -94,7 +94,7 @@ for edir in $all_examples; do
 	#echo "DEBUG: " "$CURATED_BIN"
 	#echo "DEBUG: " "$(find . -type f -name "$CURATED_BIN*")"
 	#echo "DEBUG: " "$(find . -type f -name "$CURATED_BIN*" | $SED -n 's/^\(\.\/\)*\([^.]*'"$CURATED_BIN"'\)\(\.exe\)*$/\2\3/p')"
-	EASEA_OUT=$(find . -type f -name "$CURATED_BIN*" | $SED -n 's/^\(\.\/\)*\([^.]*'"$CURATED_BIN"'\)\(\.exe\)*$/\2\3/p'    | head -n1)
+	EASEA_OUT=$(find . -type f -name "$CURATED_BIN*" | $SED -n 's/^\(\.\/\)*\([^.]*'"$CURATED_BIN"'\)\(\.exe\)*$/\2\3/p' | head -n1)
 	#echo "DEBUG: " "$EASEA_OUT"
 
 	# run
