@@ -94,7 +94,6 @@ extern CEvolutionaryAlgorithm* EA;
 
 #define STD_TPL
 
-\INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES
 
 
@@ -406,6 +405,8 @@ class Parameters;
 
 extern int EZ_POP_SIZE;
 extern int OFFSPRING_SIZE;
+
+\INSERT_USER_DECLARATIONS
 
 \INSERT_USER_CLASSES
 

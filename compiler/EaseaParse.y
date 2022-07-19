@@ -79,6 +79,28 @@ void yyerror(const char * s){
 	 s,yylineno,yytext);
 }
 
+char* concat_delete(char* lhs, char* rhs) {
+	int len = strlen(lhs) + strlen(rhs) + 1;
+	char* ret = new char[len]();
+	ret = strncat(ret, lhs, len);
+	ret = strncat(ret, rhs, len);
+	delete[] lhs;
+	return ret;
+}
+
+char* sdup(char* str) {
+	int len = strlen(str)+1;
+	char* ret = new char[len];
+	memcpy(ret, str, len);
+	return ret;
+}
+
+char* itos(int n) {
+	char buf[32];
+	snprintf(buf, 32, "%d", n);
+	return sdup(buf);
+}
+
 %}
 
 %code provides {
@@ -101,6 +123,7 @@ class CSymbol;
 %type <pSymbol> BaseType
 %type <pSymbol> UserType
 %type <pSymbol> Symbol
+%type <szString> Template TemplateType TemplateList
 
 // tokens
 %right '='
@@ -283,13 +306,45 @@ UserType
   : Symbol {  
       CSymbol *pSym=SymbolTable.find($1->sName);
       if (pSym==NULL) {
-        fprintf(stderr,"\n%s - Error line %d: Class \"%s\" was not defined.\n",sEZ_FILE_NAME,yylineno,$1->sName);
+        /*fprintf(stderr,"\n%s - Error line %d: Class \"%s\" was not defined.\n",sEZ_FILE_NAME,yylineno,$1->sName);
         fprintf(stderr,"Only base types (bool, int, float, double, char) or new user classes defined\nwithin the \"User classes\" sections are allowed.\n");
-        exit(1);
+        exit(1);*/
+	auto pNewBaseType=new CSymbol($1->sName);
+  	pNewBaseType->nSize=0;
+  	pNewBaseType->ObjectType=oObject;
+  	SymbolTable.insert(pNewBaseType);
+	pSym = SymbolTable.find($1->sName);
       }       
       else $$=pSym;
     }
+  | Symbol '<' Template {
+      char* buf = concat_delete(concat_delete(sdup($1->sName), sdup("<")), $3);
+      CSymbol *pSym=SymbolTable.find(buf);
+      if (pSym==NULL) {
+        fprintf(stderr, "DEBUG: %s\n", buf);
+	auto pNewBaseType=new CSymbol(buf);
+  	pNewBaseType->nSize=0;
+  	pNewBaseType->ObjectType=oObject;
+  	SymbolTable.insert(pNewBaseType);
+	pSym = SymbolTable.find(buf);
+      }
+      $$=pSym;
+    }
   ;
+
+TemplateType
+  : BaseType { $$ = sdup($1->sName); }
+  | UserType { $$ = sdup($1->sName); }
+  | NUMBER { $$ = itos($1); }
+
+TemplateList
+  : ',' TemplateType '>' {$$ = concat_delete(concat_delete(sdup(","), $2), sdup(">")); }
+  | ',' TemplateType TemplateList { $$ = concat_delete(concat_delete(sdup(","), $2), $3); }
+
+Template
+  : TemplateType '>' { $$ = concat_delete($1, sdup(">")); }
+  | TemplateType TemplateList { $$ = concat_delete($1, $2);}
+  | '>' { $$ = sdup(">"); }
 
 Objects
   : Object
