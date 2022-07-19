@@ -42,10 +42,10 @@ _______________________________________________________________*/
 #define PARETO_TRUE_FILE "../pf/dtlz1/3D/DTLZ1.3D.pf" 
 #define PBLM_NAME "DTLZ1"
 
-typedef easea::operators::crossover::continuous::beta::CbetaCrossover<TT, TRandom &> TCrossover;
-typedef easea::operators::mutation::continuous::pm::CSelfGaussianMutation<TT, TRandom &> TMutation;
-//typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
-//typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
+//typedef easea::operators::crossover::continuous::beta::CbetaCrossover<TT, TRandom &> TCrossover;
+//typedef easea::operators::mutation::continuous::pm::CSelfGaussianMutation<TT, TRandom &> TMutation;
+typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
+typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
 
 
 TRandom m_generator;
