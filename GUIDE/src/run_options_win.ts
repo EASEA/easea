@@ -23,7 +23,7 @@ export class Run_options {
     compression: number = NaN;
     pop_size: number = NaN;
     nb_elite: number = NaN;
-    elite_type: number = NaN;
+    elite_type: number = 1;
     nb_gen: number = NaN;
     time_limit: number = NaN;
     select_op: string = 'Tournament';
@@ -179,13 +179,10 @@ export class Run_options {
         elite_type_widget.setLayout(elite_layout);
         const combo_elite_type = new QComboBox();
         combo_elite_type.setFixedSize(100, 30);
-        combo_elite_type.addItem(undefined, 'Default');
         combo_elite_type.addItem(undefined, 'Strong');
         combo_elite_type.addItem(undefined, 'Weak');
         combo_elite_type.addEventListener('currentTextChanged', (val) => {
-            if (val === 'Default') {
-                this.elite_type = NaN;
-            } else if (val === 'Strong') {
+            if (val === 'Strong') {
                 this.elite_type = 1;
             } else {
                 this.elite_type = 0;

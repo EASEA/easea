@@ -2,17 +2,19 @@
  * @author Clément Ligneul <clement.ligneul@etu.unistra.fr>
  */
 
-import { QTabWidget, QIcon, QMainWindow, QWidget, WidgetEventTypes, QMenu } from '@nodegui/nodegui';
+import { QTabWidget, QIcon, QMainWindow, QWidget, QMenu } from '@nodegui/nodegui';
 import { spawn, ChildProcess } from 'child_process';
 import { Compile } from './compile_tab';
 import { general_css } from './style';
 import { Run_tab } from './run_tab';
-import * as util from './utilities';
 import { QMenuBar, QAction, QGridLayout } from "@nodegui/nodegui";
 import { Plot_result } from './plot_tab';
 import fs from 'fs';
 import os from 'os';
+import * as util from './utilities'
 import { exit } from 'process';
+//import { Remote_Island } from './remote_island';
+import { argv } from 'process';
 
 
 /** arrays of running child processes **/
@@ -22,7 +24,24 @@ export var running_proc: ChildProcess[] = [];
 export var running_plot: ChildProcess[] = [];
 
 /** arrays of running islands **/
-export var running_islands: ChildProcess[] = []; 
+export var running_islands: ChildProcess[] = [];
+
+argv.forEach(function (val, index, array) {
+    console.log(index + ': ' + val);
+});
+
+/** remote island model */          /*=> appel guide "" ~/Bureau/island_test/weierstrass.ez ~/Bureau/island_test/config.json */
+var island_display = false;
+
+if(argv.length === 4){
+    island_display = true;
+
+    //var island:Remote_Island = new Remote_Island(argv[2], argv[3]);
+
+    // island.compile();
+
+    // exit(0);
+}
 
 /** main window */
 const global_win = new QMainWindow();
@@ -87,6 +106,7 @@ plot.setLayout(plot_obj.generate());
 export const tab_menu = new QTabWidget();
 tab_menu.addTab(compile, new QIcon(), 'Compile');
 tab_menu.addTab(run, new QIcon(), 'Run');
+// tab_menu.addTab(new QWidget, new QIcon(), 'Remote Islands');
 tab_menu.addTab(plot, new QIcon(), 'Result Plot')
 
 general_layout.addWidget(tab_menu);
@@ -108,6 +128,8 @@ fs.mkdir('/tmp/plotting/', (err) => {
     }
 });
 
-global_win.show();
+if(!island_display)
+    global_win.show();
 
 (global as any).global_win = global_win;    // for garbage collector
+
