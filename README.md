@@ -1,12 +1,13 @@
+
 EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 ===============================================
 
 <div style="text-align:center;" align="center">
 
-![Configure badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/configure.svg)
-![Build badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/build.svg)
-![Install badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/install.svg)
-![Examples badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/test.svg)
+| Operating System | Configure | Build | Install | Working examples |
+|------------------|:---------:|:-----:|:-------:|:----------------:|
+| Windows (MSVC)   | ![Configure badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/configure-windows.svg) | ![Build badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/build-windows.svg) | ![Install badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/install-windows.svg) | ![Examples badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/test-windows.svg) |
+
 
 </div>
 
@@ -457,3 +458,4 @@ Finally, you can get here an example of such a json architecture file expected b
     "paramOfDist2":0.1
 }
 ```
+
