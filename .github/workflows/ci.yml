@@ -80,7 +80,7 @@ jobs:
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
-      
+
       - name: Output examples status
         id: status
         if: ${{ always() }}
@@ -143,7 +143,7 @@ jobs:
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
-      
+
       - name: Output examples status
         id: status
         if: ${{ always() }}
@@ -217,82 +217,164 @@ jobs:
           echo "::set-output name=failed::${FAILED}"
         shell: bash
 
+  Badges:
+      runs-on: ubuntu-latest
+      name: Create badges
+      needs: [Windows, Linux, Ubuntu]
+        #if: ${{ always() && github.ref == 'refs/heads/master' }}
+      if: ${{ always() }}
 
-          # badges:
-          #   runs-on: ubuntu-latest
-          #   name: Create badges
-          #   needs: [pre-ci, configure, build, install, test]
-          #   if: ${{ always() }}
-          #
-          #   steps:
-          #     - uses: actions/checkout@v3
-          #       with:
-          #         ref: badges
-          #
-          #     - run: mkdir -p badges
-          #     - run: echo ${{ needs.configure.outputs.status }}  ${{ needs.build.outputs.status }} ${{ needs.install.outputs.status }} ${{ needs.test.outputs.total }} ${{ needs.test.outputs.passed }} ${{ needs.test.outputs.failed }}
-          #
-          #     - name: Generate configure badge
-          #       uses: emibcn/badge-action@v1
-          #       with:
-          #         label: 'configure'
-          #         status: ${{ needs.configure.outputs.status == 'success' && 'passed' || 'failed' }}
-          #         color: ${{ needs.configure.outputs.status == 'success' && 'green' || 'red' }}
-          #         path: badges/configure.svg
-          #
-          #     - name: Generate build badge
-          #       uses: emibcn/badge-action@v1
-          #       with:
-          #         label: 'build'
-          #         status: ${{ needs.build.outputs.status == 'success' && 'passed' || 'failed' }}
-          #         color: ${{ needs.build.outputs.status == 'success' && 'green' || 'red' }}
-          #         path: badges/build.svg
-          #
-          #     - name: Generate install badge
-          #       uses: emibcn/badge-action@v1
-          #       with:
-          #         label: 'install'
-          #         status: ${{ needs.install.outputs.status == 'success' && 'passed' || 'failed' }}
-          #         color: ${{ needs.install.outputs.status == 'success' && 'green' || 'red' }}
-          #         path: badges/install.svg
-          #
-          #     - name: Generate test badge if all failed
-          #       uses: emibcn/badge-action@v1
-          #       if: ${{ needs.test.outputs.total == '' }}
-          #       with:
-          #         label: 'test'
-          #         status: 'ERROR'
-          #         color: 'red'
-          #         path: badges/test.svg
-          #
-          #     - name: Generate test badge if run
-          #       uses: emibcn/badge-action@v1
-          #       if: ${{ needs.test.outputs.total != '' }}
-          #       with:
-          #         label: 'Working examples'
-          #         status: ${{ needs.test.outputs.passed }}/${{ needs.test.outputs.total }}
-          #         color: ${{ needs.test.outputs.failed == '0' && 'green' ||
-          #                   needs.test.outputs.failed >= 1 && needs.test.outputs.failed <= 3 && 'yellow' ||
-          #                   needs.test.outputs.failed >= 3 && needs.test.outputs.failed <= 6 && 'orange' ||
-          #                   'red' }}
-          #         path: badges/test.svg
-          #
-          #     - name: Commit badge
-          #       env:
-          #         BRANCH: ${{ needs.pre-ci.outputs.branch }}
-          #       working-directory: ./badges
-          #       run: |
-          #         git config --local user.email "action@github.com"
-          #         git config --local user.name "GitHub Action"
-          #         mkdir -p "${BRANCH}"
-          #         mv *.svg "${BRANCH}"
-          #         git add "${BRANCH}/"
-          #         # Will give error if badge did not changed
-          #         git commit -m "Add/Update badge for branch: ${BRANCH}" || true
-          #
-          #     - name: Push badge commit
-          #       uses: ad-m/github-push-action@master
-          #       with:
-          #         github_token: ${{ secrets.GITHUB_TOKEN }}
-          #         branch: badges
-          #         directory: badges
+      steps:
+        - uses: actions/checkout@v3
+          with:
+            ref: badges
+
+        - run: mkdir -p badges
+
+        # Configure
+        - name: Generate configure badge (Windows)
+          uses: emibcn/badge-action@v1
+          with:
+            label: 'configure'
+            status: ${{ needs.Windows.outputs.configure == 'success' && 'passed' || 'failed' }}
+            color: ${{ needs.Windows.outputs.configure == 'success' && 'green' || 'red' }}
+            path: badges/configure-windows.svg
+        - name: Generate configure badge (Linux)
+          uses: emibcn/badge-action@v1
+          with:
+            label: 'configure'
+            status: ${{ needs.Linux.outputs.configure == 'success' && 'passed' || 'failed' }}
+            color: ${{ needs.Linux.outputs.configure == 'success' && 'green' || 'red' }}
+            path: badges/configure-linux.svg
+        - name: Generate configure badge (MacOS)
+          uses: emibcn/badge-action@v1
+          with:
+            label: 'configure'
+            status: ${{ needs.MacOS.outputs.configure == 'success' && 'passed' || 'failed' }}
+            color: ${{ needs.MacOS.outputs.configure == 'success' && 'green' || 'red' }}
+            path: badges/configure-macOS.svg
+
+        # Build
+        - name: Generate build badge (Windows)
+          uses: emibcn/badge-action@v1
+          with:
+            label: 'build'
+            status: ${{ needs.Windows.outputs.build == 'success' && 'passed' || 'failed' }}
+            color: ${{ needs.Windows.outputs.build == 'success' && 'green' || 'red' }}
+            path: badges/build-windows.svg
+        - name: Generate build badge (Linux)
+          uses: emibcn/badge-action@v1
+          with:
+            label: 'build'
+            status: ${{ needs.Linux.outputs.build == 'success' && 'passed' || 'failed' }}
+            color: ${{ needs.Linux.outputs.build == 'success' && 'green' || 'red' }}
+            path: badges/build-linux.svg
+        - name: Generate build badge (MacOS)
+          uses: emibcn/badge-action@v1
+          with:
+            label: 'build'
+            status: ${{ needs.MacOS.outputs.build == 'success' && 'passed' || 'failed' }}
+            color: ${{ needs.MacOS.outputs.build == 'success' && 'green' || 'red' }}
+            path: badges/build-macOS.svg
+
+        # Install
+        - name: Generate install badge (Windows)
+          uses: emibcn/badge-action@v1
+          with:
+            label: 'install'
+            status: ${{ needs.Windows.outputs.install == 'success' && 'passed' || 'failed' }}
+            color: ${{ needs.Windows.outputs.install == 'success' && 'green' || 'red' }}
+            path: badges/install-windows.svg
+        - name: Generate install badge (Linux)
+          uses: emibcn/badge-action@v1
+          with:
+            label: 'install'
+            status: ${{ needs.Linux.outputs.install == 'success' && 'passed' || 'failed' }}
+            color: ${{ needs.Linux.outputs.install == 'success' && 'green' || 'red' }}
+            path: badges/install-linux.svg
+        - name: Generate install badge (MacOS)
+          uses: emibcn/badge-action@v1
+          with:
+            label: 'install'
+            status: ${{ needs.MacOS.outputs.install == 'success' && 'passed' || 'failed' }}
+            color: ${{ needs.MacOS.outputs.install == 'success' && 'green' || 'red' }}
+            path: badges/install-macOS.svg
+
+        # Tests
+        - name: Generate test badge if all failed (Windows)
+          uses: emibcn/badge-action@v1
+          if: ${{ needs.Windows.outputs.total == '' }}
+          with:
+            label: 'test'
+            status: 'ERROR'
+            color: 'red'
+            path: badges/test-windows.svg
+        - name: Generate test badge if run
+          uses: emibcn/badge-action@v1
+          if: ${{ needs.Windows.outputs.total != '' }}
+          with:
+            label: 'Working examples'
+            status: ${{ needs.test.outputs.passed }}/${{ needs.test.outputs.total }}
+            color: ${{ needs.test.outputs.failed == '0' && 'green' ||
+                      needs.test.outputs.failed >= 1 && needs.test.outputs.failed <= 3 && 'yellow' ||
+                      needs.test.outputs.failed >= 3 && needs.test.outputs.failed <= 6 && 'orange' ||
+                      'red' }}
+            path: badges/test-windows.svg
+        - name: Generate test badge if all failed (Linux)
+          uses: emibcn/badge-action@v1
+          if: ${{ needs.Linux.outputs.total == '' }}
+          with:
+            label: 'test'
+            status: 'ERROR'
+            color: 'red'
+            path: badges/test-linux.svg
+        - name: Generate test badge if run
+          uses: emibcn/badge-action@v1
+          if: ${{ needs.Linux.outputs.total != '' }}
+          with:
+            label: 'Working examples'
+            status: ${{ needs.test.outputs.passed }}/${{ needs.test.outputs.total }}
+            color: ${{ needs.test.outputs.failed == '0' && 'green' ||
+                      needs.test.outputs.failed >= 1 && needs.test.outputs.failed <= 3 && 'yellow' ||
+                      needs.test.outputs.failed >= 3 && needs.test.outputs.failed <= 6 && 'orange' ||
+                      'red' }}
+            path: badges/test-linux.svg
+        - name: Generate test badge if all failed (MacOS)
+          uses: emibcn/badge-action@v1
+          if: ${{ needs.MacOS.outputs.total == '' }}
+          with:
+            label: 'test'
+            status: 'ERROR'
+            color: 'red'
+            path: badges/test-macos.svg
+        - name: Generate test badge if run
+          uses: emibcn/badge-action@v1
+          if: ${{ needs.MacOS.outputs.total != '' }}
+          with:
+            label: 'Working examples'
+            status: ${{ needs.test.outputs.passed }}/${{ needs.test.outputs.total }}
+            color: ${{ needs.test.outputs.failed == '0' && 'green' ||
+                      needs.test.outputs.failed >= 1 && needs.test.outputs.failed <= 3 && 'yellow' ||
+                      needs.test.outputs.failed >= 3 && needs.test.outputs.failed <= 6 && 'orange' ||
+                      'red' }}
+            path: badges/test-macos.svg
+
+        - name: Commit badge
+          env:
+            BRANCH: ${{ needs.pre-ci.outputs.branch }}
+          working-directory: ./badges
+          run: |
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            mkdir -p "${BRANCH}"
+            mv *.svg "${BRANCH}"
+            git add "${BRANCH}/"
+            # Will give error if badge did not changed
+            git commit -m "Add/Update badge for branch: ${BRANCH}" || true
+
+        - name: Push badge commit
+          uses: ad-m/github-push-action@master
+          with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            branch: badges
+            directory: badges
