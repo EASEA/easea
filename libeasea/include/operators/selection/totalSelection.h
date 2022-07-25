@@ -38,7 +38,7 @@ TIter totalSelection(std::vector<TI> &donorPop, TIter recipPopBegin, TIter recip
         if (donorPop.size() > std::distance(recipPopBegin, recipPopEnd)) 	LOG_ERROR(errorCode::value, "Donor populaton size must be smaller or the same as the recipient population!");
 
         TIter selected = recipPopBegin;
-		if (std::distance(selected, recipPopEnd) > donorPop.size())
+		if (std::distance(selected, recipPopEnd) >= donorPop.size())
 		{
 			for (size_t i = 0; i < donorPop.size(); ++i, ++selected)
                     	    *selected = *donorPop[i];

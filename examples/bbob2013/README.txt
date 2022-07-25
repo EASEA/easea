@@ -1,6 +1,6 @@
 To Compile this example:
   $ easea bbob2013.ez
-  $ make
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./bbob2013

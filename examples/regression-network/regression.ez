@@ -146,11 +146,11 @@ OP_DIV, "/", 2, {
 
 \GenomeClass::evaluator for each fc :
 float expected_value = OUTPUT;
-ERROR = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
+error = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
 \end
 
 \GenomeClass::evaluator accumulator :
-return sqrtf(ERROR);
+return sqrtf(error);
 \end
 
 

@@ -84,7 +84,7 @@ void CPopulation::syncOutVector(){
   for( unsigned i = 0 ; i<actualParentPopulationSize ; i++ ){
     pop_vect.push_back(parents[i]);
   }
-#ifndef WIN32
+#ifndef _WIN32
   DEBUG_PRT("Size of outVector",pop_vect.size());
 #endif
 }
@@ -122,9 +122,9 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-  for( unsigned i=0 ; i < populationSize ; i++ ){
+  for( int i=0 ; i < populationSize ; i++ ){
     if (population[i]->valid == false)
-    realEvaluationNb++;
+    	realEvaluationNb++;
     
     population[i]->evaluate();
 }
@@ -382,7 +382,7 @@ void CPopulation::strongElitism(unsigned elitismSize, CIndividual** population, 
   float bestFitness = population[0]->getFitness();
   unsigned bestCIndividual = 0;
 
-#ifndef WIN32
+#ifndef _WIN32
   if( elitismSize >= 5 )DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%d)",elitismSize);
 #endif
 

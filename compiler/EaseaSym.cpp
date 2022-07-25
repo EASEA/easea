@@ -808,7 +808,7 @@ void CSymbol::deserializeIndividual(FILE *fp, char* sCompleteName){
 
 
 void CSymbol::printAllSymbols(FILE *fp, char *sCompleteName, EObjectType FatherType, CListItem<CSymbol *> *pSym){
-	char sNewCompleteName[000], s[20];
+	char sNewCompleteName[2048], s[20];
 	strcpy(sNewCompleteName, sCompleteName);
 	do {
 		if (pSym->Object->pType->ObjectType==oUserClass){

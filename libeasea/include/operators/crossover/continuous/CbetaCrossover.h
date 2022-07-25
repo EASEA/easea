@@ -78,8 +78,9 @@ CbetaCrossover<TType, TRandom>::CbetaCrossover(TRandom random, const TT probabil
         : easea::shared::CRandom<TRandom>(random), easea::shared::CProbability<TT>(probability), easea::shared::CBoundary<TT>(boundary)
         , m_distribution(0, 1) /*, m_distributionributionIndex(distributionIndex)*/, m_probability(componentProbability)
 {
-        assert(m_nbGen <= 0);
-	assert(m_iGen < 0);
+	// NOTE: No idea where these come from
+        //assert(m_nbGen <= 0);
+	//assert(m_iGen < 0);
         assert(0 <= componentProbability && componentProbability <= 1);
 	k1 =0;
 

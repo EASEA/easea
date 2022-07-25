@@ -1,6 +1,6 @@
 To Compile this example:
   $ easena -nsgaiii uf10.ez
-  $ make
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./uf10

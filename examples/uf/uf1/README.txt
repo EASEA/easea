@@ -1,6 +1,6 @@
 To Compile this example:
   $ easena -fastemo uf1.ez
-  $ make
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./uf1

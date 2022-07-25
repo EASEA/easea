@@ -16,8 +16,6 @@ __________________________________________________________*/
  
 float pMutPerGene=0.1;
 
-struct gpuOptions initOptions;
-
 \end
 
 \User functions:
@@ -90,9 +88,7 @@ GenomeClass {
 \GenomeClass::crossover :
 \end
 
-\GenomeClass::mutator : // Must return the number of mutations
-  int NbMut=0;
-return NbMut;
+\GenomeClass::mutator : 
 \end
 
 \GenomeClass::evaluator : // Returns the score
@@ -101,15 +97,12 @@ return NbMut;
   return Score;
 \end
 
-\User Makefile options: 
-CPPFLAGS+=
-\end
-
 \Default run parameters :        // Please let the parameters appear in this order
   Number of generations : 100     // NB_GEN
   Time limit: 0                 // In seconds, 0 to deactive
   Population size : 1000     // POP_SIZE
   Offspring size : 2000
+  Selection operator: Tournament 2.0
   Final reduce operator:Deterministic //Deterministic, Tournament, Random, Roulette(only Maximise)
   Elitism: Strong                       //Weak or Strong
   Elite: 5

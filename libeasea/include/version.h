@@ -19,17 +19,18 @@ namespace easea
 {
 struct version
 {
-  static const unsigned int major = PROJECT_VER_MAJOR;
-  static const unsigned int minor = PROJECT_VER_MINOR;
+  static constexpr unsigned int major = PROJECT_VERSION_MAJOR;
+  static constexpr unsigned int minor = PROJECT_VERSION_MINOR;
+  static constexpr unsigned int patch = PROJECT_VERSION_PATCH;
+  static constexpr const char* full = PROJECT_VERSION;
 
   static inline std::string as_string()
   {
-    const char* nickname = PROJECT_VER;
-
-    std::stringstream ss;
-    ss << version::major << '.' << version::minor << " (" << nickname << ')';
-
-    return ss.str();
+    //const char* nickname = PROJECT_VERSION;
+    //std::stringstream ss;
+    //ss << version::major << '.' << version::minor << " (" << nickname << ')';
+    //return ss.str();
+    return full;
   }
 
 };

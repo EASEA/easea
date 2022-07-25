@@ -79,3 +79,6 @@ examples/ant/sortieEasea.txt
 #Doxygen
 doxygen/html
 doxygen/man
+
+# configuration file (generated)
+libeasea/include/config.h

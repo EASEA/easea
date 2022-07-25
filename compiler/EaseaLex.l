@@ -7,16 +7,22 @@ Pierre COLLET (Pierre.Collet@polytechnique.fr)
 Ecole Polytechnique
 Centre de Math�matiques Appliqu�es
 91128 Palaiseau cedex
+------
+Updated on june 2022 by Léo Chéneau to improve windows portability
   ****************************************************************************/
-#ifdef WIN32
+#include "config.h"
+#ifdef OS_WINDOWS
 #define _CRT_SECURE_NO_WARNINGS
+#define YY_NO_UNISTD_H
 //#pragma comment(lib, "libAlexYacc.lib")
 #endif
 #include "Easea.h"
 #include "EaseaParse.hpp"
 
-#if defined WIN32 || defined WIN64
+#ifdef OS_WINDOWS
 #include <direct.h>
+#include <io.h>
+using ssize_t = signed long long;
 #else
 #include <unistd.h>
 #endif
@@ -33,7 +39,7 @@ Centre de Math�matiques Appliqu�es
 //#include <iostream>
 //#include <sstream>
 
-#if defined __WIN64__ || defined __APPLE__ || defined __WIN32__
+#if defined(__APPLE__) || defined(OS_WINDOWS)
  /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
 char *strndup (const char *s, size_t n){
     size_t len = strlen (s);
@@ -1359,7 +1365,7 @@ if(OPERATING_SYSTEM=WINDOWS)
     // add "Makefile" at the end of path
     //char* cdn = get_current_dir_name();
     char cdn[4096];
-    #ifdef WIN32 
+    #ifdef OS_WINDOWS 
     _getcwd(cdn,4096);
     #else
     getcwd(cdn,4096);
@@ -1377,13 +1383,13 @@ if(OPERATING_SYSTEM=WINDOWS)
     
   
     // create a symbolic link from Makefile to EASEA.mak
-#ifndef WIN32
+#ifndef OS_WINDOWS
     symlink(sFullFileName,sPathName);
 #endif
   }
   else{
     //DEBUG_PRT_PRT("file name : %s",sFileName);
-#ifndef WIN32
+#ifndef OS_WINDOWS
     if( symlink(sFileName,"Makefile") ) /*perror("Error symplink creation: ")*/;
 #endif
   }
@@ -1397,6 +1403,14 @@ if(OPERATING_SYSTEM=WINDOWS)
     exit(-1);
   }
 }
+
+<TEMPLATE_ANALYSIS>"\\START_CMAKELISTS"  {
+  fclose(fpOutputFile);
+  if (bVERBOSE) printf("Creating CMakeLists.txt...\n");
+  fpOutputFile=fopen("CMakeLists.txt","w");
+}
+
+
 <TEMPLATE_ANALYSIS>"\\TEMPLATE_END"  {
   if (nWARNINGS) printf ("\nWARNING !!!\nTarget file(s) generation went through WITH %d WARNING(S) !\n",nWARNINGS);
   else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded without warnings.\n");
@@ -2482,9 +2496,9 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
 { 
   int i;
   char sTemp[1000];
-#if defined UNIX_OS
+#if defined(OS_UNIX)
   OPERATING_SYSTEM=UNIX;
-#elif defined WIN32 //WINDOWS_OS
+#elif defined(OS_WINDOWS) //WINDOWS_OS
   OPERATING_SYSTEM=WINDOWS;
 //#else
 //  OPERATING_SYSTEM=OTHER_SYSTEM;

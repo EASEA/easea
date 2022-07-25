@@ -1,6 +1,6 @@
 To Compile this example:
   $ easea memetic_weierstrass.ez
-  $ make
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./memetic_weierstrass

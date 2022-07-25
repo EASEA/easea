@@ -114,13 +114,11 @@ void CArchive<TIndividual>::updateArchive(const TI candidate)
 
 	for (auto it = m_archive.begin(); it != m_archive.end();)
 	{
-
 		if (Dominate(candidate, *it, false))
 			it = m_archive.erase(it);
 		else if (Dominate(*it, candidate, false))
 			return;
 		else	++it;
-
 	}
 
 	m_archive.push_back(candidate);
@@ -135,7 +133,8 @@ void CArchive<TIndividual>::updateArchive(const TI candidate)
 		easea::shared::functions::setCrowdingDistance< TO>(iFront.begin(), iFront.end());
 
     		std::sort(iFront.begin(), iFront.end(), [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;});
-		m_archive.erase(m_archive.end());
+		// ????
+		//m_archive.erase(m_archive.end());
 	}
 }
 template <typename TIndividual>
@@ -171,7 +170,8 @@ void CArchive<TIndividual>::updateArchiveEpsilon(const TI candidate, bool epsilo
 		    }
 //int c = std::count_if(iFront.begin(), iFront.end(), [](TPtr i) {return i->m_fitness == 0;});
 
-                m_archive.erase(m_archive.end());
+		// NOTE: no idea why this UB is here
+                //m_archive.erase(m_archive.end());
         }
 }
 }

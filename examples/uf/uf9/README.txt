@@ -1,6 +1,6 @@
 To Compile this example:
   $ easena -moead uf9.ez
-  $ make
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./uf9

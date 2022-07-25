@@ -1,6 +1,6 @@
 To Compile this example:
-  $ easea cigtab.ez
-  $ make
+  $ easea -cmaes cigtab.ez
+  $ cmake . && cmake --build . --config Release
 
 To test it:
   $ ./cigtab

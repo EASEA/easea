@@ -127,13 +127,13 @@ OP_DIV, "/", 2, {
 \end
 
 \GenomeClass::evaluator for each fc :
-//ERROR = pow((OUTPUT-EVOLVED_VALUE),2); // not good for noisy real-world data
-ERROR = fabs(OUTPUT-EVOLVED_VALUE);
+//error = pow((OUTPUT-EVOLVED_VALUE),2); // not good for noisy real-world data
+error = fabs(OUTPUT-EVOLVED_VALUE);
 \end
 
 \GenomeClass::evaluator accumulator :
-//return sqrtf(ERROR);
-return ERROR;
+//return sqrtf(error);
+return error;
 \end
 
 \User Makefile options:

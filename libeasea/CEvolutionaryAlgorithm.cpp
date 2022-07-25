@@ -1,4 +1,4 @@
-//#ifdef WIN32
+//#ifdef OS_WINDOWS
 //#pragma comment(lib, "WinMM.lib")
 //#endif
 /*
@@ -6,14 +6,20 @@
  *
  *  Created on: 22 juin 2009
  *      Author: maitre
+ *  =======
+ *  Updated on june 2022 to restore Windows compatibility
+ *  TODO: switch to C++....
  */
 
 #include "include/CEvolutionaryAlgorithm.h"
-#ifndef WIN32
+#include "config.h"
+#ifndef OS_WINDOWS
 #include <sys/time.h>
+#include <sys/wait.h>
 #endif
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
+#ifdef OS_WINDOWS
+#define OS_WINDOWS_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 #include <mmsystem.h>
 #endif
@@ -35,7 +41,6 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-#include <sys/wait.h>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -104,6 +109,7 @@ easena::log_stream logg;
  * REAL CONSTRUCTOR
  */
 sig_atomic_t volatile done = 1;
+#ifndef OS_WINDOWS
 void childHandler(int signum)
 {
         pid_t w;
@@ -116,21 +122,18 @@ void childHandler(int signum)
                 ss << "Display process stopped normally" << std::endl;
 		LOG_MSG(msgType::WARNING, ss.str());
 		done = 0;
-        }
-        else if (WIFSIGNALED(status)){
+            } else if (WIFSIGNALED(status)){
                 ss << "Display process stopped by a signal" << std::endl;
 		LOG_MSG(msgType::WARNING, ss.str());
                 done = 0;
-        }
-        else if (WIFSTOPPED(status)){
+            } else if (WIFSTOPPED(status)){
                  ss << "Display process stopped by a signal" << std::endl;
 		 LOG_MSG(msgType::WARNING, ss.str());
                  done = 0;
         }
-
 }//!WIFEXITED(status) && !WIFSIGNALED(status));
-
 }
+#endif
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	
@@ -140,7 +143,9 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 
 	this->params = params;
 	this->cstats = new CStats();
+#ifndef OS_WINDOWS
 	signal(SIGCHLD, childHandler);
+#endif
 	CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
         params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
@@ -171,7 +176,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     fichier.append(".r");
     remove(fichier.c_str());
   }
-  //#ifndef WIN32 
+  //#ifndef OS_WINDOWS 
   if(params->plotStats){
         string str = "Plotting of the evolution of ";;
         string str2 = this->params->outputFilename;
@@ -189,7 +194,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     this->myClientNumber=0; 
     this->initializeClients();
     //if(params->remoteIslandModel)
-    server = new CComUDPServer(params->serverPort,0); //1 if debug
+    server = new CComUDPServer(params->serverPort); //1 if debug
   }
 }
 
@@ -198,11 +203,6 @@ CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
   delete population;
         if(this->params->remoteIslandModel){
                 delete this->server;
-                if(this->numberOfClients>1){
-                        for(int i=0; (unsigned)i<this->numberOfClients; i++)
-                                delete this->Clients[i];
-                        delete this->Clients;
-                }
         }
 }
 void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
@@ -213,7 +213,7 @@ void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   CIndividual** elitistPopulation = NULL;
     
-#ifdef WIN32
+#ifdef OS_WINDOWS
 
    clock_t begin(clock());
 #else
@@ -386,7 +386,7 @@ params->parentReduction = 1;
   this->params->parentReductionSize = tmpPrntReduceSize;
  params->parentReduction = tmpPrntReduct ;
   }
-//#ifdef __linux__
+//#ifdef OS_UNIX
   //if(this->params->plotStats && this->grapher->valid){
     //outputGraph();
     //delete this->grapher;
@@ -507,7 +507,7 @@ if (params->isLogg == 1){
 }
 
 
-#ifdef WIN32
+#ifdef OS_WINDOWS
 void CEvolutionaryAlgorithm::showPopulationStats(clock_t beginTime){
 #else
 void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
@@ -543,7 +543,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   this->cstats->currentStdDev/=population->parentPopulationSize;
   this->cstats->currentStdDev=sqrt(this->cstats->currentStdDev);
 
-#ifdef WIN32
+#ifdef OS_WINDOWS
   clock_t end(clock());
   double duration;
   duration = (double)(end-beginTime)/CLOCKS_PER_SEC;
@@ -564,7 +564,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
       printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|FITNESS|  DEV  |\n");
       printf("------------------------------------------------------------------------------------------------\n");
     }
-#ifdef WIN32
+#ifdef OS_WINDOWS
     printf("%7u\t%10.3f\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,duration,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
       printf("%7u\t%10ld.%03ds\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/1000,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
@@ -579,7 +579,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   if(f!=NULL){
     if(currentGeneration==0)
       fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDDEV\t\tWORST\n\n");
-#ifdef WIN32
+#ifdef OS_WINDOWS
     fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,population->Worst->getFitness(),this->cstats->currentStdDev);
 #else
       //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
@@ -599,7 +599,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
     fprintf(f, "Run configuration:\nNB_GEN = %i POP_SIZE = %i OFFSPRING_SIZE = %i MUT_PROB = %f  XOVER_PROB = %f \n\n", (*EZ_NB_GEN), EZ_POP_SIZE, OFFSPRING_SIZE, (*pEZ_MUT_PROB), (*pEZ_XOVER_PROB));
 
     fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDDEV,WORST\n");
-#ifdef WIN32
+#ifdef OS_WINDOWS
     fprintf(f,"%u,%2.6f,%u,%.2e,%.2e,%.2e,%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
       //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
@@ -609,7 +609,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
         }
   }
   //print grapher
-  #ifndef WIN32
+  #ifndef OS_WINDOWS
   if(this->params->plotStats && this->grapher->valid){
   //if(currentGeneration==0)
   //  fprintf(this->grapher->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
@@ -634,7 +634,7 @@ currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitn
  }
 #endif
  
-#ifdef __linux__
+#ifdef OS_UNIX
   double elapsedTime = res.tv_sec + 0.0;
   double micSec = res.tv_usec + 0.0;
 
@@ -688,11 +688,10 @@ void CEvolutionaryAlgorithm::initializeClients(){
 }
 
 void CEvolutionaryAlgorithm::refreshClient(){
-    unsigned no_client;
-    this->Clients = parse_file(this->params->ipFile,&no_client, this->params->serverPort);
+    this->Clients = parse_file(this->params->ipFile);
+    this->numberOfClients = Clients.size();
 
-    cout << "ip file : " << this->params->ipFile << " contains " << no_client << " client ip(s)" << endl;
-    this->numberOfClients = no_client;
+    cout << "ip file : " << this->params->ipFile << " contains " << numberOfClients << " client ip(s)" << endl;
 }
 
 void CEvolutionaryAlgorithm::sendIndividual(){
@@ -712,27 +711,27 @@ void CEvolutionaryAlgorithm::sendIndividual(){
 
     std::stringstream ss;
     ss <<std::put_time(std::localtime(&in_time_t),  "%H:%M:%S");
-    if (Clients[client]->getClientName() != NULL)
+    if (Clients[client]->getClientName() != ""s)
 	cout << "[" << ss.str()<<"]"<<  " Sending my best individual to " << this->Clients[client]->getClientName() <<  endl;
     else
 	cout << "[" << ss.str()<<"]" << " Sending my best individual to " << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() << endl;
     //cout << "Sending individual " << index << " to client " << client << " now" << endl;
     //cout << this->population->parents[index]->serialize() << endl;
-    this->Clients[client]->CComUDP_client_send((char*)bBest->serialize().c_str());
+    this->Clients[client]->send(bBest->serialize());
   }
 }
 
 void CEvolutionaryAlgorithm::receiveIndividuals(){
 
   //Checking every generation for received individuals
-  if(this->server->parm->data->size() != 0){
+  if(server->has_data()){
     //cout << "number of received individuals :" << this->server->nb_data << endl;
     //cout << "number of treated individuals :" << this->treatedIndividuals << endl;
     CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);   
 
 
     //Treating all the individuals before continuing
-    while(this->server->parm->data->size() != 0){
+    while(server->has_data()){
       //selecting the individual to erase
       antiTournament->initialize(this->population->parents, 7, this->population->actualParentPopulationSize);
       unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
@@ -742,9 +741,8 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 
       //cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
       //cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
-      this->server->read_data_lock();
-      string line = this->server->parm->data->back().data;
-      this->server->parm->data->pop_back();
+      auto data = server->consume();
+      string line = std::string{std::begin(data), std::end(data)};
       this->population->parents[index]->deserialize(line);
       int reeval = params->reevaluateImmigrants;
       // Reevaluate individaul if the flag reevaluateImmigrants == 1	
@@ -758,7 +756,6 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       //TAG THE INDIVIDUAL AS IMMIGRANT
       this->population->parents[index]->isImmigrant = true;
 
-      this->server->read_data_unlock();
       //cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
     }
   }
@@ -817,7 +814,7 @@ bool CEvolutionaryAlgorithm::allCriteria(){
   return false;
 }
 
-#ifdef WIN32
+#ifdef OS_WINDOWS
 int gettimeofday
 (struct timeval* tp, void* tzp) {
   DWORD t;

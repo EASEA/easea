@@ -139,7 +139,7 @@ OP_ADD, "+", 2, {RESULT=OP1+OP2;};
 OP_SUB, "-", 2, {RESULT=OP1-OP2;};
 OP_MUL, "*", 2, {RESULT=OP1*OP2;};
 OP_DIV, "/", 2, {
-  if( !OP2 ) RESULT = 1;
+  if( !OP2 ) RESULT = 1.f;
   else RESULT = OP1/OP2;
 };
 OP_SIN, "sin", 1, {RESULT=sin(OP1);};
@@ -152,19 +152,14 @@ OP_SIN, "sin", 1, {RESULT=sin(OP1);};
 
 \GenomeClass::evaluator for each fc :
 float expected_value = OUTPUT;
-ERROR = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
+error = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
 \end
 
 \GenomeClass::evaluator accumulator :
-return ERROR/(float)NO_FITNESS_CASES;
+return error/(float)NO_FITNESS_CASES;
 \end
 
 
-\User Makefile options: 
-
-CXXFLAGS+=-I/usr/local/cuda/common/inc/ -I/usr/local/cuda/include/
-LDFLAGS+=
-\end
 
 \Default run parameters :         // Please let the parameters appear in this order
   Number of generations : 40   	// NB_GEN

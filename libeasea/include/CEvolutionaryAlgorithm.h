@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <string>
 #include <time.h>
-#include "CEvolutionaryAlgorithm.h"
 #include "CSelectionOperator.h"
 #include "CPopulation.h"
 #include "CStoppingCriterion.h"
@@ -18,6 +17,7 @@
 #include "CStats.h"
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 #endif
 
@@ -56,7 +56,7 @@ public:
   unsigned numberOfClients;
   unsigned myClientNumber;
   CComUDPServer *server;
-  CComUDPClient **Clients;
+  std::vector<std::unique_ptr<CComUDPClient>> Clients;
   void initializeClients();
   void receiveIndividuals();
   void sendIndividual();

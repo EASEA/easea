@@ -57,7 +57,7 @@ int numberOfLeaves(GPNode* root, const unsigned* opArity) {
     char code = root->opCode;
     int arity = opArity[(int)code];
 
-    bool isLeaf[arity]; // The value at position i is true if children[i] is a leaf for the current node.
+    bool isLeaf[64]; // The value at position i is true if children[i] is a leaf for the current node.
     if (code == OP_MUL || code == OP_DIV) {
 	for (int i = 0; i < arity; i++) {
 	    isLeaf[i] = root->children[i]->opCode != OP_MUL && root->children[i]->opCode != OP_DIV;
@@ -69,7 +69,7 @@ int numberOfLeaves(GPNode* root, const unsigned* opArity) {
     } else return 0; // In all other cases, root can't have leaves.
 
     int leaves = 0; // Number of children which are leaves.
-    int notLeaves[arity]; // Element of notLeaves are the indexes of the children which are not leaves.
+    int notLeaves[64]; // Element of notLeaves are the indexes of the children which are not leaves.
     for (int i = 0; i < arity; i++) {
 	notLeaves[i] = i;
     }
