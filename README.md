@@ -25,14 +25,14 @@ Otherwise, you will need to compile this project.
 
 ### Dependencies
 
-Compiling EASENA requires you to install `boost`, `flex`, `bison`, 'openMP` and `cmake`.
-It is also recommended to install `r` and the r-package _scatterplot3d_, along with `java` and `cuda` if you would like to use EASENA to its fullest.
+Compiling EASENA requires you to install `boost`, `flex`, `bison`, `openMP` and `cmake`. 
+It is also recommended to install `r` and the r-package _scatterplot3d_, along with `java` and `CUDA` if you would like to use EASENA to its fullest.
 
 #### Linux
 
 If your OS is up-to-date there should be no need to update your C++ compiler.
 
-All these packages can be installed on *_Ubuntu_* using the following command :
+All the dependencies can be installed on *_Ubuntu_* by typing the following command:
 
 ```bash
 sudo apt install libboost-all-dev flex bison cmake gcc
@@ -43,12 +43,14 @@ sudo apt install libboost-all-dev flex bison cmake gcc
 All the required dependencies for MacOS can be installed using [brew](https://brew.sh/). Once _brew_ is installed the following command install everything that is needed :
 
 ```bash
-brew install bison libomp coreutils boost cmake clang
+brew install bison flex libomp coreutils boost cmake clang
 ```
 
 #### Windows
 
-Windows builds using _msvc_ are supported. The recommended way to install the required packages is to first install [chocolatey package manager](https://chocolatey.org/install). First you need to install [Windows C++ compiler](https://visualstudio.microsoft.com/fr/downloads/). This can be done via _chocolatey_ with the command `choco install visualstudio2022buildtools` inside a Powershell command prompt, or via the _Visual Studio Community/Entreprise Installer_.
+Windows builds using _msvc_ are supported. The recommended way to install the required packages is to first install [chocolatey package manager](https://chocolatey.org/install).
+
+You need to install [Windows C++ compiler](https://visualstudio.microsoft.com/fr/downloads/). This can be done via _chocolatey_ with the command `choco install visualstudio2022buildtools` inside a Powershell command prompt, or via the _Visual Studio Community/Entreprise Installer_.
 
 The other dependencies can be installed using chocolatey by opening a Powershell prompt and pasting the following command :
 
@@ -58,19 +60,33 @@ choco install winflexbison3 boost-msvc-14.3 cmake
 
 ### Building and installing EASEA with CMake
 
-. Once all dependencies are installed open either a bash shell on Linux/MacOS or a [MSBuild shell](https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line?view=msvc-170) on Windows
+1. Once all dependencies are installed open either a bash shell on Linux/MacOS or a [MSBuild shell](https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line?view=msvc-170) on Windows
 
-. Navigate to the directory you [downloaded this repository](https://stevenpcurtis.medium.com/downloading-repos-from-github-13a017951450) at
+2. Navigate to the directory you [downloaded this repository](https://stevenpcurtis.medium.com/downloading-repos-from-github-13a017951450) at
 
-. Configure the build by typing the following command into your shell: `cmake -B build -DCMAKE_BUILD_TYPE=Release`
+3. Configure the build by typing the following command into your shell: `cmake -B build -DCMAKE_BUILD_TYPE=Release`
 
-. Compile EASENA by typing: `cmake --build build --config Release`
+4. Compile EASENA by typing:
 
-. Finally install EASENA with the command: `cmake --install build`
+```bash
+`cmake --build build --config Release`
+```
+
+5. Finally install EASENA with the command:
+
+```bash
+cmake --install build
+```
 
 ## How to use
 
-**EASENA requires you to set the _EZ_PATH_ environment variable.** *_This variable must include the trailing / !_*
+**EASENA requires you to set the _EZ_PATH_ environment variable.** *_This variable must include the trailing "/" !_*
+
+* [Set environment variables on Windows](https://docs.oracle.com/en/database/oracle/machine-learning/oml4r/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html)
+
+* [Set environment variables on MacOS](https://phoenixnap.com/kb/set-environment-variable-mac)
+
+* [Set environment variables on Linux](https://phoenixnap.com/kb/linux-set-environment-variable)
 
 Compiling a .ez file into a binary is a two steps process :
 
