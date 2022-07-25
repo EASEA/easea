@@ -253,7 +253,7 @@ jobs:
             label: 'configure'
             status: ${{ needs.MacOS.outputs.configure == 'success' && 'passed' || 'failed' }}
             color: ${{ needs.MacOS.outputs.configure == 'success' && 'green' || 'red' }}
-            path: badges/configure-macOS.svg
+            path: badges/configure-macos.svg
 
         # Build
         - name: Generate build badge (Windows)
@@ -276,7 +276,7 @@ jobs:
             label: 'build'
             status: ${{ needs.MacOS.outputs.build == 'success' && 'passed' || 'failed' }}
             color: ${{ needs.MacOS.outputs.build == 'success' && 'green' || 'red' }}
-            path: badges/build-macOS.svg
+            path: badges/build-macos.svg
 
         # Install
         - name: Generate install badge (Windows)
@@ -299,7 +299,7 @@ jobs:
             label: 'install'
             status: ${{ needs.MacOS.outputs.install == 'success' && 'passed' || 'failed' }}
             color: ${{ needs.MacOS.outputs.install == 'success' && 'green' || 'red' }}
-            path: badges/install-macOS.svg
+            path: badges/install-macos.svg
 
         # Tests
         - name: Generate test badge if all failed (Windows)
