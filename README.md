@@ -64,7 +64,11 @@ choco install winflexbison3 boost-msvc-14.3 cmake
 
 2. Navigate to the directory you [downloaded this repository](https://stevenpcurtis.medium.com/downloading-repos-from-github-13a017951450) at
 
-3. Configure the build by typing the following command into your shell: `cmake -B build -DCMAKE_BUILD_TYPE=Release`
+3. Configure the build by typing the following command into your shell:
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+```
 
 4. Compile EASENA by typing:
 
