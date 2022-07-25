@@ -220,7 +220,7 @@ jobs:
   Badges:
       runs-on: ubuntu-latest
       name: Create badges
-      needs: [Windows, Linux, Ubuntu]
+      needs: [Windows, Linux, MacOS]
         #if: ${{ always() && github.ref == 'refs/heads/master' }}
       if: ${{ always() }}
 
