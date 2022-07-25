@@ -6,8 +6,9 @@ EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 
 | Operating System | Configure | Build | Install | Working examples |
 |------------------|:---------:|:-----:|:-------:|:----------------:|
-| Windows (MSVC)   | ![Configure badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/configure-windows.svg) | ![Build badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/build-windows.svg) | ![Install badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/install-windows.svg) | ![Examples badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/test-windows.svg) |
-
+| Windows (msvc)   | ![Configure badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/configure-windows.svg) | ![Build badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/build-windows.svg) | ![Install badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/install-windows.svg) | ![Examples badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/test-windows.svg) |
+| Linux (gcc)   | ![Configure badge linux](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/configure-linux.svg) | ![Build badge linux](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/build-linux.svg) | ![Install badge linux](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/install-linux.svg) | ![Examples badge linux](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/test-linux.svg) |
+| MacOS (clang)   | ![Configure badge macos](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/configure-macos.svg) | ![Build badge macos](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/build-macos.svg) | ![Install badge macos](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/install-macos.svg) | ![Examples badge macos](https://raw.githubusercontent.com/EASEA/easea/badges/badges/ci-windows/test-macos.svg) |
 
 </div>
 
