@@ -220,7 +220,7 @@ jobs:
   Badges:
       runs-on: ubuntu-latest
       name: Create badges
-      needs: [Windows, Linux, MacOS]
+      needs: [Windows, Linux, MacOS, pre-ci]
         #if: ${{ always() && github.ref == 'refs/heads/master' }}
       if: ${{ always() }}
 
@@ -230,6 +230,7 @@ jobs:
             ref: badges
 
         - run: mkdir -p badges
+        - run: echo 
 
         # Configure
         - name: Generate configure badge (Windows)
@@ -309,15 +310,15 @@ jobs:
             status: 'ERROR'
             color: 'red'
             path: badges/test-windows.svg
-        - name: Generate test badge if run
+        - name: Generate test badge if run (Windows)
           uses: emibcn/badge-action@v1
           if: ${{ needs.Windows.outputs.total != '' }}
           with:
             label: 'Working examples'
-            status: ${{ needs.test.outputs.passed }}/${{ needs.test.outputs.total }}
-            color: ${{ needs.test.outputs.failed == '0' && 'green' ||
-                      needs.test.outputs.failed >= 1 && needs.test.outputs.failed <= 3 && 'yellow' ||
-                      needs.test.outputs.failed >= 3 && needs.test.outputs.failed <= 6 && 'orange' ||
+            status: ${{ needs.Windows.outputs.passed }}/${{ needs.Windows.outputs.total }}
+            color: ${{ needs.Windows.outputs.failed == '0' && 'green' ||
+                      needs.Windows.outputs.failed >= 1 && needs.Windows.outputs.failed <= 3 && 'yellow' ||
+                      needs.Windows.outputs.failed >= 3 && needs.Windows.outputs.failed <= 6 && 'orange' ||
                       'red' }}
             path: badges/test-windows.svg
         - name: Generate test badge if all failed (Linux)
@@ -328,15 +329,15 @@ jobs:
             status: 'ERROR'
             color: 'red'
             path: badges/test-linux.svg
-        - name: Generate test badge if run
+        - name: Generate test badge if run (Linux)
           uses: emibcn/badge-action@v1
           if: ${{ needs.Linux.outputs.total != '' }}
           with:
             label: 'Working examples'
-            status: ${{ needs.test.outputs.passed }}/${{ needs.test.outputs.total }}
-            color: ${{ needs.test.outputs.failed == '0' && 'green' ||
-                      needs.test.outputs.failed >= 1 && needs.test.outputs.failed <= 3 && 'yellow' ||
-                      needs.test.outputs.failed >= 3 && needs.test.outputs.failed <= 6 && 'orange' ||
+            status: ${{ needs.Linux.outputs.passed }}/${{ needs.Linux.outputs.total }}
+            color: ${{ needs.Linux.outputs.failed == '0' && 'green' ||
+                      needs.Linux.outputs.failed >= 1 && needs.Linux.outputs.failed <= 3 && 'yellow' ||
+                      needs.Linux.outputs.failed >= 3 && needs.Linux.outputs.failed <= 6 && 'orange' ||
                       'red' }}
             path: badges/test-linux.svg
         - name: Generate test badge if all failed (MacOS)
@@ -347,15 +348,15 @@ jobs:
             status: 'ERROR'
             color: 'red'
             path: badges/test-macos.svg
-        - name: Generate test badge if run
+        - name: Generate test badge if run (MacOS)
           uses: emibcn/badge-action@v1
           if: ${{ needs.MacOS.outputs.total != '' }}
           with:
             label: 'Working examples'
-            status: ${{ needs.test.outputs.passed }}/${{ needs.test.outputs.total }}
-            color: ${{ needs.test.outputs.failed == '0' && 'green' ||
-                      needs.test.outputs.failed >= 1 && needs.test.outputs.failed <= 3 && 'yellow' ||
-                      needs.test.outputs.failed >= 3 && needs.test.outputs.failed <= 6 && 'orange' ||
+            status: ${{ needs.MacOS.outputs.passed }}/${{ needs.MacOS.outputs.total }}
+            color: ${{ needs.MacOS.outputs.failed == '0' && 'green' ||
+                      needs.MacOS.outputs.failed >= 1 && needs.MacOS.outputs.failed <= 3 && 'yellow' ||
+                      needs.MacOS.outputs.failed >= 3 && needs.MacOS.outputs.failed <= 6 && 'orange' ||
                       'red' }}
             path: badges/test-macos.svg
 
