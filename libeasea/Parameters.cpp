@@ -18,7 +18,7 @@ Parameters::~Parameters(){
 
 int Parameters::setReductionSizes(int popSize, float popReducSize){
         if(popReducSize<1.0 && popReducSize>=0.0)
-                return (int)(popReducSize*popSize);
+                return static_cast<int>(popReducSize*static_cast<float>(popSize));
         if(popReducSize<0.0)
                 return 0;
   if(popReducSize == 1.0)
@@ -29,6 +29,6 @@ int Parameters::setReductionSizes(int popSize, float popReducSize){
                 return popSize;
         }
         else
-                return (int)popReducSize;
+                return static_cast<int>(popReducSize);
 }
 

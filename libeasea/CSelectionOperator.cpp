@@ -104,7 +104,9 @@ float MinDeterministic::getExtremum(){
 /* ****************************************
    MaxRandom class
 ****************************************/
-MaxRandom::MaxRandom(CRandomGenerator* globalRandomGenerator, std::string name_) : rg(globalRandomGenerator), name(std::move(name_)) {}
+MaxRandom::MaxRandom(CRandomGenerator* globalRandomGenerator, std::string const& name_) : rg(globalRandomGenerator) {
+	this->name = std::move(name_); // bruh
+}
 
 void MaxRandom::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
   CSelectionOperator::initialize(population,selectionPressure,populationSize);
@@ -121,7 +123,9 @@ float MaxRandom::getExtremum(){
 /* ****************************************
    MinRandom class
 ****************************************/
-MinRandom::MinRandom(CRandomGenerator* globalRandomGenerator, std::string const& name): rg(globalrandomgenerator), name(std::move(name_)){}
+MinRandom::MinRandom(CRandomGenerator* globalRandomGenerator, std::string const& name_): rg(globalRandomGenerator) {
+	this->name = std::move(name_); // bruh
+}
 
 void MinRandom::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
   CSelectionOperator::initialize(population,selectionPressure,populationSize);
