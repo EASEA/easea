@@ -58,7 +58,7 @@ int enumTreeNodes(GPNode* root){
 void flattenDatas2D( float** inputs, int length, int width, float** flat_inputs){
   (*flat_inputs)=(float*)malloc(sizeof(float)*length*width);
   for( int i=0 ; i<length ; i++ ){
-    memcpy( (*flat_inputs)+(i*width),inputs[i],width*sizeof(float));
+    memcpy( (*flat_inputs)+static_cast<ptrdiff_t>(i*width),inputs[i],width*sizeof(float));
   }
 }
 
@@ -113,13 +113,13 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
   }
   int stockPointCount=0;
   for( int i=0 ; i<collected; i++ ){
-    stockPointCount+=opArity[(int)dNodes[i]->opCode];
+    stockPointCount+=static_cast<int>(opArity[(int)dNodes[i]->opCode]);
   }
 
   int reminderP = 0, parentIndexP = 0;
 
-  unsigned xoverP = globalRandomGenerator->random(0,stockPointCount);
-  for( unsigned i=0 ; ; )
+  int xoverP = globalRandomGenerator->random(0,stockPointCount);
+  for( int i=0 ; ; )
     if( (i+opArity[(int)dNodes[parentIndexP]->opCode])>xoverP ){
       reminderP = xoverP-i;
       break;
@@ -164,7 +164,7 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
     else node->opCode = globalRandomGenerator->random(0, constLen);
   }
  
-  int arity = opArity[(int)node->opCode];
+  int arity = static_cast<int>(opArity[(int)node->opCode]);
   //node->arity = arity;
 
   // construct children (if any)
@@ -190,16 +190,16 @@ GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, u
      This is the standard ramped half-and-half method
      for creation of trees.
    */
-  int id = actualParentPopulationSize;  
-  int seg = parentPopulationSize/(INIT_TREE_DEPTH_MAX-INIT_TREE_DEPTH_MIN); 
-  int currentDepth = INIT_TREE_DEPTH_MIN+id/seg;
+  int id = static_cast<int>(actualParentPopulationSize);  
+  int seg = static_cast<int>(parentPopulationSize/(INIT_TREE_DEPTH_MAX-INIT_TREE_DEPTH_MIN)); 
+  int currentDepth = static_cast<int>(INIT_TREE_DEPTH_MIN+id/seg);
 
   bool full;
   if( GROW_FULL_RATIO==0 ) full=true;
-  else full = (id%seg)/(int)(seg*GROW_FULL_RATIO);
+  else full = (id%seg)/static_cast<int>((static_cast<float>(seg)*GROW_FULL_RATIO));
 
   //cout << seg << " " <<  currentDepth << " " << full ;
-  return construction_method( VAR_LEN+1, OPCODE_SIZE , 1, currentDepth ,full, opArity, OP_ERC);
+  return construction_method( static_cast<int>(VAR_LEN+1), static_cast<int>(OPCODE_SIZE) , 1, currentDepth ,full, opArity, OP_ERC);
 }
 
 void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
