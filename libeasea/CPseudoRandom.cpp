@@ -3,6 +3,10 @@
  *
  *  Created on: 26 jullet 2018
  *      Author: Anna Ouskova Leonteva
+ *  ===
+ *
+ *  Updated on: 26 july 2022 by Léo Chéneau
+ *
  */
 #include <math.h>
 #include "CPseudoRandom.h"
@@ -11,31 +15,26 @@
  * More info can be found on web site of Kanpur Genetic Algorithms Laboratory:
  * www.iitk.ac.in/kangal/index.shtml
  */
-CRandomGenerator * CPseudoRandom::randomGenerator_ = nullptr ;
+CRandomGenerator CPseudoRandom::randomGenerator_ = CRandomGenerator{};
 
-CPseudoRandom::CPseudoRandom() {
-    if (CPseudoRandom::randomGenerator_ == nullptr)
-        CPseudoRandom::randomGenerator_ = new CRandomGenerator();
+CPseudoRandom::CPseudoRandom()
+{
 }
-/* Fetch a single double number between 0.0 and 1.0 */
-double CPseudoRandom::randDouble() {
-    if (CPseudoRandom::randomGenerator_ == nullptr)
-        CPseudoRandom::randomGenerator_ = new CRandomGenerator();
 
-    return CPseudoRandom::randomGenerator_->rndreal(0.0,1.0);
-}
 /* Fetch a single random integer number between lowerLimit and upperLimit */
-int CPseudoRandom::randInt(int lowerLimit, int upperLimit) {
-    if (CPseudoRandom::randomGenerator_ == nullptr)
-        CPseudoRandom::randomGenerator_ = new CRandomGenerator();
-
-    return CPseudoRandom::randomGenerator_->rnd(lowerLimit, upperLimit);
+int CPseudoRandom::randInt(int lowerLimit, int upperLimit)
+{
+	return CPseudoRandom::randomGenerator_.randInt(lowerLimit, upperLimit);
 }
+
 /* Fetch a single random double number between lowerLimit and upperLimit */
-double CPseudoRandom::randDouble(double lowerLimit, double upperLimit) {
-    if (CPseudoRandom::randomGenerator_ == nullptr)
-        CPseudoRandom::randomGenerator_ = new CRandomGenerator();
-
-    return CPseudoRandom::randomGenerator_->rndreal(lowerLimit, upperLimit);
+double CPseudoRandom::randDouble(double lowerLimit, double upperLimit)
+{
+	return CPseudoRandom::randomGenerator_.randDouble(lowerLimit, upperLimit);
 }
 
+/* Fetch a single double number between 0.0 and 1.0 */
+double CPseudoRandom::randDouble()
+{
+	return randDouble(0.0, 1.0);
+}
