@@ -171,7 +171,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av){
     parseArguments( parametersFileName,ac,av, vm, vm_file);
 }
 
-std::string setVariable(const std::string& optionName, string defaultValue){
+std::string setVariable(const std::string& optionName, string const& defaultValue){
     return setVariable(optionName, defaultValue, vm, vm_file);
 }
 

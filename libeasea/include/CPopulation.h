@@ -91,7 +91,7 @@ public:
     virtual void optimiseOffspringPopulation();
 
     CIndividual** reducePopulations(CIndividual** population, unsigned populationSize,
-                  CIndividual** reducedPopulation, unsigned obSize,int pressure);
+                  CIndividual** reducedPopulation, unsigned obSize,float pressure);
     CIndividual** reduceParentPopulation(unsigned obSize);
     CIndividual** reduceOffspringPopulation(unsigned obSize);
     void reduceTotalPopulation(CIndividual** elitPop);
@@ -130,7 +130,7 @@ public:
 
     static void reducePopulation(CIndividual** population, unsigned populationSize,
                 CIndividual** reducedPopulation, unsigned obSize,
-                CSelectionOperator* replacementOperator,int pressure);
+                CSelectionOperator* replacementOperator,float pressure);
 
     void syncOutVector();
     void syncInVector();
