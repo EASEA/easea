@@ -10,11 +10,11 @@
 
 #include <iostream>
 #include <semaphore.h>
-// NOLINTBEGIN(*)
+// NOLINTNEXTLINE
 #include <cuda.h>
+// NOLINTNEXTLINE
 #include <cuda_runtime_api.h>
 //#include <cuda_runtime_api.h>
-// NOLINTEND
 
 #define CUDA_SAFE_CALL(f)				\
   {							\
