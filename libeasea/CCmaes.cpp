@@ -2,10 +2,11 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <cassert>
 #include "include/CCmaes.h"
 
 //Functions for cma
-long Caleatoire::alea_Start(long unsigned inseed)
+long Caleatoire::alea_Start(long  inseed)
 {
   long tmp;
   int i;
@@ -28,7 +29,7 @@ long Caleatoire::alea_Start(long unsigned inseed)
   return inseed;
 }
 
-long Caleatoire::alea_init(long unsigned inseed)
+long Caleatoire::alea_init(long inseed)
 {
   clock_t cloc = clock();
 
@@ -126,7 +127,7 @@ this->updateCmode.modulo *= this->facupdateCmode;
 
 while ((int) (cloc - clock()) == 0)
 ; /* TODO: remove this for time critical applications!? */
-  this->seed = (unsigned int)abs((long)(100*time(NULL)+clock()));
+  this->seed = (int)abs((long)(100*time(NULL)+clock()));
 }
 
 void CCmaes::TestMinStdDevs()
@@ -423,8 +424,7 @@ void QLalgo2 (int n, double *d, double *e, double **V) {
 void Eigen( int taille,  double **C, double *diag, double **Q, double *rgtmp)
 {
   int i, j;
-  if (rgtmp == NULL) /* was OK in former versions */
-    printf("cmaes_t:Eigen(): input parameter double *rgtmp must be non-NULL\n");
+  assert(rgtmp && "cmaes_t:Eigen(): input parameter double *rgtmp must be non-NULL\n");
 
   /* copy C to Q */
   if (C != Q) {
