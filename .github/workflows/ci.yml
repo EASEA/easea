@@ -221,8 +221,8 @@ jobs:
       runs-on: ubuntu-latest
       name: Create badges
       needs: [Windows, Linux, MacOS, pre-ci]
-        #if: ${{ always() && github.ref == 'refs/heads/master' }}
-      if: ${{ always() }}
+      if: ${{ always() && github.ref == 'refs/heads/master' }}
+      #if: ${{ always() }}
 
       steps:
         - uses: actions/checkout@v3
