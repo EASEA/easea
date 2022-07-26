@@ -453,7 +453,7 @@ void CCmaes::cmaes_UpdateEigensystem(int flgforce)
 
   if (this->flgCheckEigen)
     /* needs O(n^3)! writes, in case, error message in error file */ 
-    i = Check_Eigen( this->dim, this->C, this->rgD, this->B);
+    Check_Eigen( this->dim, this->C, this->rgD, this->B);
   
   for (i = 0; i < this->dim; ++i)
     this->rgD[i] = sqrt(this->rgD[i]);
