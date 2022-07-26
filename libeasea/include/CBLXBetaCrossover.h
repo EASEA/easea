@@ -13,6 +13,8 @@
 #include <CPseudoRandom.h>
 #include <CWrapIndividual.h>
 
+#include <sstream>
+
 
 /*  In this class a Blind Alpha Beta Crossover is realised
  *  It could be used for any kind types of variables,
