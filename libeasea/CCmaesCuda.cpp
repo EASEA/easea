@@ -3,10 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <cassert>
 #include "include/CCmaesCuda.h"
 
 //Functions for cma
-long CaleatoireCuda::alea_Start(long unsigned inseed)
+long CaleatoireCuda::alea_Start(long inseed)
 {
   long tmp;
   int i;
@@ -29,7 +30,7 @@ long CaleatoireCuda::alea_Start(long unsigned inseed)
   return inseed;
 }
 
-long CaleatoireCuda::alea_init(long unsigned inseed)
+long CaleatoireCuda::alea_init(long inseed)
 {
   clock_t cloc = clock();
 
@@ -54,7 +55,7 @@ float CaleatoireCuda::alea_Uniform()
   tmp = this->aktalea / 67108865;
   this->aktalea = this->rgalea[tmp];
   this->rgalea[tmp] = this->aktseed;
-  return (float)(this->aktalea)/(2.147483647e9);
+  return static_cast<float>(this->aktalea)/2.147483647e9f;
 }
 
 float CaleatoireCuda::alea_Gauss()
@@ -68,11 +69,11 @@ float CaleatoireCuda::alea_Gauss()
   }
   do 
   {
-    x1 = 2.0 * this->alea_Uniform() - 1.0;
-    x2 = 2.0 * this->alea_Uniform() - 1.0;
+    x1 = 2.0f * this->alea_Uniform() - 1.0f;
+    x2 = 2.0f * this->alea_Uniform() - 1.0f;
     rquad = x1*x1 + x2*x2;
-  } while(rquad >= 1 || rquad <= 0);
-  fac = sqrt(-2.0*log(rquad)/rquad);
+  } while(rquad >= 1.f || rquad <= 0.f);
+  fac = sqrt(-2.0f*log(rquad)/rquad);
   this->flgstored = 1;
   this->hold = fac * x1;
   return fac * x2;
@@ -89,9 +90,9 @@ this->mu = mu;
 /*set weights*/
 this->weights = (float*)malloc(this->mu*sizeof(float));
 for (i=0; i<this->mu; ++i) 
-      this->weights[i] = log(this->mu+1.)-log(i+1.);
+      this->weights[i] = log(static_cast<float>(this->mu)+1.f)-log(static_cast<float>(i)+1.f);
 /* normalize weights vector and set mueff */
-s1=0., s2=0.;
+s1=0.f, s2=0.f;
 for (i=0; i<this->mu; ++i) {
     s1 += this->weights[i];
     s2 += this->weights[i]*this->weights[i];
@@ -105,29 +106,29 @@ if(this->mu < 1 || this->mu > this->lambda || (this->mu==this->lambda && this->w
 }
 
 /*supplement defaults*/
-this->cs = (this->mueff + 2.) / (this->dim + this->mueff + 3.);
-this->ccumcov = 4. / (this->dim + 4);
+this->cs = (this->mueff + 2.f) / (static_cast<float>(this->dim) + this->mueff + 3.f);
+this->ccumcov = 4.f / (static_cast<float>(this->dim) + 4.f);
 this->mucov = this->mueff;
 
-t1 = 2. / ((this->dim+1.4142)*(this->dim+1.4142));
-t2 = (2.*this->mueff-1.) / ((this->dim+2.)*(this->dim+2.)+this->mueff);
-t2 = (t2 > 1) ? 1 : t2;
-t2 = (1./this->mucov) * t1 + (1.-1./this->mucov) * t2;
+t1 = 2.f / ((static_cast<float>(this->dim)+1.4142f)*(static_cast<float>(this->dim)+1.4142f));
+t2 = (2.f*this->mueff-1.f) / ((static_cast<float>(this->dim)+2.f)*(static_cast<float>(this->dim)+2.f)+this->mueff);
+t2 = (t2 > 1.f) ? 1.f : t2;
+t2 = (1.f/this->mucov) * t1 + (1.f-1.f/this->mucov) * t2;
 
 this->ccov = t2;
 
 //this->stopMaxIter = ceil((float)(this->stopMaxFunEvals / this->lambda));
 
-this->damps = 1;
+this->damps = 1.f;
 
-this->damps = this->damps * (1 + 2*MAX(0., sqrt((this->mueff-1.)/(this->dim+1.)) - 1)) * 0.3 + this->cs;
+this->damps = this->damps * (1.f + 2.f*MAX(0.f, sqrt((this->mueff-1.f)/(static_cast<float>(this->dim)+1.f)) - 1.f)) * 0.3f + this->cs;
 
-this->updateCmode.modulo = 1./this->ccov/(float)(this->dim)/10.;
+this->updateCmode.modulo = 1.f/this->ccov/(float)(this->dim)/10.f;
 this->updateCmode.modulo *= this->facupdateCmode;
 
 while ((int) (cloc - clock()) == 0)
 ; /* TODO: remove this for time critical applications!? */
-  this->seed = (unsigned int)abs((long)(100*time(NULL)+clock()));
+  this->seed = (long)abs((long)(100*time(NULL)+clock()));
 }
 
 void CCmaesCuda::TestMinStdDevs()
@@ -139,7 +140,7 @@ void CCmaesCuda::TestMinStdDevs()
   else{
   for (i = 0; i < this->dim; ++i)
     while (this->sigma * sqrt(this->C[i][i]) < this->rgDiffMinChange[i]) 
-      this->sigma *= exp(0.05+this->cs/this->damps);
+      this->sigma *= exp(0.05f+this->cs/this->damps);
   }
 
 } /* cmaes_TestMinStdDevs() */
@@ -162,7 +163,7 @@ int Check_Eigen(int taille,  float **C, float *diag, float **Q)
       printf("cmaes_t:Eigen(): imprecise result detected \n");
       ++res; 
           }
-          if (fabs(dd - (i==j)) > 1e-10) {
+          if (fabs(dd - static_cast<float>(i==j)) > 1e-10f) {
             printf("cmaes_t:Eigen(): imprecise result detected (Q not orthog.)\n");
             ++res;
           }
@@ -334,8 +335,8 @@ void QLalgo2 (int n, float *d, float *e, float **V) {
       do { /* while (fabs(e[l]) > eps*tst1); */
         float dl1, h;
         float g = d[l];
-        float p = (d[l+1] - g) / (2.0 * e[l]); 
-        float r = myhypot(p, 1.); 
+        float p = (d[l+1] - g) / (2.0f * e[l]); 
+        float r = myhypot(p, 1.f); 
 
         iter = iter + 1;  /* Could check iteration count here */
    
@@ -424,8 +425,8 @@ void QLalgo2 (int n, float *d, float *e, float **V) {
 void Eigen( int taille,  float **C, float *diag, float **Q, float *rgtmp)
 {
   int i, j;
-  if (rgtmp == NULL) /* was OK in former versions */
-    printf("cmaes_t:Eigen(): input parameter float *rgtmp must be non-NULL\n");
+  assert(rgtmp && "cmaes_t:Eigen(): input parameter double *rgtmp must be non-NULL\n");
+
 
   /* copy C to Q */
   if (C != Q) {
@@ -446,7 +447,7 @@ void CCmaesCuda::cmaes_UpdateEigensystem(int flgforce)
       return; 
 
     /* return on modulo generation number */ 
-    if (this->gen < this->genOfEigensysUpdate + this->updateCmode.modulo)
+    if (static_cast<float>(this->gen) < this->genOfEigensysUpdate + this->updateCmode.modulo)
       return;
   }
 
@@ -455,7 +456,7 @@ void CCmaesCuda::cmaes_UpdateEigensystem(int flgforce)
 
   if (this->flgCheckEigen)
     /* needs O(n^3)! writes, in case, error message in error file */ 
-    i = Check_Eigen( this->dim, this->C, this->rgD, this->B);
+    Check_Eigen( this->dim, this->C, this->rgD, this->B);
   
   for (i = 0; i < this->dim; ++i){
     //printf("%f ",this->rgD[i]);
@@ -470,7 +471,7 @@ void CCmaesCuda::cmaes_UpdateEigensystem(int flgforce)
   }*/
   
   this->flgEigensysIsUptodate = 1;
-  this->genOfEigensysUpdate = this->gen; 
+  this->genOfEigensysUpdate = static_cast<float>(this->gen); 
   
   return;
 } /* cmaes_UpdateEigensystem() */
@@ -513,22 +514,21 @@ CCmaesCuda::CCmaesCuda(int lambda, int mu, int problemdim){
 
   this->Cmaes_init_param(lambda,mu);
 
-  this->seed = this->alea.alea_init((unsigned) this->seed);
+  this->seed = this->alea.alea_init(this->seed);
 
   /* initialization  */
-  for (i = 0, trace = 0.; i < this->dim; ++i)
+  for (i = 0, trace = 0.f; i < this->dim; ++i)
     trace += this->rgInitialStds[i]*this->rgInitialStds[i];
-  this->sigma = sqrt(trace/this->dim); /* this->sp.mueff/(0.2*this->mueff+sqrt(this->dim)) * sqrt(trace/this->dim); */
+  this->sigma = sqrt(trace/static_cast<float>(this->dim)); /* this->sp.mueff/(0.2*this->mueff+sqrt(this->dim)) * sqrt(trace/this->dim); */
 
-  this->chiN = sqrt((float) this->dim) * (1. - 1./(4.*this->dim) + 1./(21.*this->dim*this->dim));
+  this->chiN = sqrt(static_cast<float>(this->dim)) * (1.f - 1.f/(4.f*static_cast<float>(this->dim)) + 1.f/(21.f*static_cast<float>(this->dim*this->dim)));
   this->flgEigensysIsUptodate = 1;
   this->flgCheckEigen = 0;
-  this->genOfEigensysUpdate = 0;
+  this->genOfEigensysUpdate = 0.f;
 
   this->rgpc = (float*)malloc(this->dim*sizeof(float));
   this->rgps = (float*)malloc(this->dim*sizeof(float));
-  if((this->rgdTmp = (float*)malloc((this->dim)*sizeof(float)))==NULL)
-    puts("malloc failed");
+  this->rgdTmp = (float*)malloc((this->dim)*sizeof(float));
   this->rgBDz = (float*)malloc((this->dim)*sizeof(float));
   this->rgxmean = (float*)malloc(this->dim*sizeof(float));
   this->rgxold = (float*)malloc(this->dim*sizeof(float));  
@@ -544,20 +544,20 @@ CCmaesCuda::CCmaesCuda(int lambda, int mu, int problemdim){
 
   for (i = 0; i < this->dim; ++i)
     for (j = 0; j < i; ++j){
-      this->C[i][j] = this->B[i][j] = this->B[j][i] = 0.;
+      this->C[i][j] = this->B[i][j] = this->B[j][i] = 0.f;
     }
   for (i = 0; i < this->dim; ++i)
   {
-    this->B[i][i] = 1.;
-    this->C[i][i] = this->rgD[i] = this->rgInitialStds[i] * sqrt(this->dim / trace);
+    this->B[i][i] = 1.f;
+    this->C[i][i] = this->rgD[i] = this->rgInitialStds[i] * sqrt(static_cast<float>(this->dim) / trace);
     this->C[i][i] *= this->C[i][i];
-    this->rgpc[i] = this->rgps[i] = 0.;
-    this->rgdTmp[i] = 0.0;
+    this->rgpc[i] = this->rgps[i] = 0.f;
+    this->rgdTmp[i] = 0.0f;
   }
 
   //initialise mean;
     for ( i = 0; i < this->dim; ++i){
-    this->rgxmean[i] = 0.5 + (this->sigma * this->rgD[i] * this->alea.alea_Gauss());
+    this->rgxmean[i] = 0.5f + (this->sigma * this->rgD[i] * this->alea.alea_Gauss());
         this->rgxold[i] = this->rgxmean[i];
     }
 }
@@ -568,7 +568,7 @@ void CCmaesCuda::Adapt_C2(int hsig, float **parents)
   if (this->ccov != 0. && this->flgIniphase == 0) {
     
     /* definitions for speeding up inner-most loop */
-    float ccovmu = this->ccov * (1-1./this->mucov); 
+    float ccovmu = this->ccov * (1.f-(1.f/this->mucov)); 
     float sigmasquare = this->sigma * this->sigma; 
 
     this->flgEigensysIsUptodate = 0;
@@ -576,7 +576,7 @@ void CCmaesCuda::Adapt_C2(int hsig, float **parents)
     /* update covariance matrix */
     for (i = 0; i < this->dim; ++i)
       for (j = 0; j <=i; ++j) {
-        this->C[i][j] = (1 - this->ccov) * this->C[i][j] + this->ccov * (1./this->mucov) * (this->rgpc[i] * this->rgpc[j] + (1-hsig)*this->ccumcov*(2.-this->ccumcov) * this->C[i][j]);
+        this->C[i][j] = (1.f - this->ccov) * this->C[i][j] + this->ccov * (1.f/this->mucov) * (this->rgpc[i] * this->rgpc[j] + static_cast<float>(1-hsig)*this->ccumcov*(2.f-this->ccumcov) * this->C[i][j]);
       for (k = 0; k < this->mu; ++k) { /* additional rank mu update */
         this->C[i][j] += ccovmu * this->weights[k] * (parents[k][i] - this->rgxold[i]) * (parents[k][j] - this->rgxold[j]) / sigmasquare;
       }
@@ -611,7 +611,7 @@ void CCmaesCuda::cmaes_update(float **popparent, float *fitpar){
   float sum; 
   float psxps;
   if (fitpar[0] == fitpar[(int)this->mu/2]){
-    this->sigma *= exp(0.2+this->cs/this->damps);
+    this->sigma *= exp(0.2f+this->cs/this->damps);
     printf("Warning: sigma increased due to equal function values\n");
     printf("   Reconsider the formulation of the objective function\n");
   }
@@ -645,7 +645,7 @@ void CCmaesCuda::cmaes_update(float **popparent, float *fitpar){
     for (j = 0; j < this->dim; ++j){
       sum += this->B[i][j] * this->rgdTmp[j];
     }
-    this->rgps[i] = (1. - this->cs) * this->rgps[i] + sqrt(this->cs * (2. - this->cs)) * sum;
+    this->rgps[i] = (1.f - this->cs) * this->rgps[i] + sqrt(this->cs * (2.f - this->cs)) * sum;
   }
   /* calculate norm(ps)^2 */
   psxps = 0.;
@@ -654,10 +654,10 @@ void CCmaesCuda::cmaes_update(float **popparent, float *fitpar){
   /* cumulation for covariance matrix (pc) using B*D*z~N(0,C) */
   hsig = (sqrt(psxps) / sqrt(1. - pow(1.-this->cs, 2*this->gen)) / this->chiN) < (1.4 + 2./(this->dim+1));
   for (i = 0; i < this->dim; ++i) {
-    this->rgpc[i] = (1. - this->ccumcov) * this->rgpc[i] + hsig * sqrt(this->ccumcov * (2. - this->ccumcov)) * this->rgBDz[i];
+    this->rgpc[i] = (1.f - this->ccumcov) * this->rgpc[i] + static_cast<float>(hsig) * sqrt(this->ccumcov * (2.f - this->ccumcov)) * this->rgBDz[i];
   }
   /* stop initial phase */
-  if (this->flgIniphase && this->gen > MIN(1/this->cs, 1+this->dim/this->mucov)) 
+  if (this->flgIniphase && static_cast<float>(this->gen) > MIN(1.f/this->cs, 1.f+static_cast<float>(this->dim)/this->mucov)) 
   {
     if (psxps / this->damps / (1.-pow((1. - this->cs), this->gen)) < this->dim * 1.05) 
       this->flgIniphase = 0;
@@ -668,7 +668,7 @@ void CCmaesCuda::cmaes_update(float **popparent, float *fitpar){
 //  exit(1);
 //  printf("TEST %f %f %f %f\n",psxps, this->chiN, this->cs, this->damps);
   /* update of sigma */
-  this->sigma *= exp(((sqrt(psxps)/this->chiN)-1.)*this->cs/this->damps);
+  this->sigma *= exp(((sqrt(psxps)/this->chiN)-1.f)*this->cs/this->damps);
   this->gen++;
   //printf("Dans update sigma fin%f %f %f %f %f\n",this->sigma, psxps, this->chiN, this->cs, this->damps);
   //if(isnan(this->sigma))
