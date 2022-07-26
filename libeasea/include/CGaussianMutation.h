@@ -14,6 +14,9 @@
 #include <CPseudoRandom.h>
 #include <CWrapIndividual.h>
 
+#include <sstream>
+#include <memory>
+
 
 //constexpr double eta_m_ = 0.05;
 
