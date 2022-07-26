@@ -105,7 +105,7 @@ float MinDeterministic::getExtremum(){
    MaxRandom class
 ****************************************/
 MaxRandom::MaxRandom(CRandomGenerator* globalRandomGenerator, std::string const& name_) : rg(globalRandomGenerator) {
-	this->name = std::move(name_); // bruh
+	this->name = name_; // bruh
 }
 
 void MaxRandom::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
@@ -113,7 +113,7 @@ void MaxRandom::initialize(CIndividual** population, float selectionPressure, si
 }
 
 size_t MaxRandom::selectNext(size_t populationSize){
-  return static_cast<size_t>(rg->random(0,populationSize-1));
+  return static_cast<size_t>(rg->random(0,static_cast<int>(populationSize)-1));
 }
 
 float MaxRandom::getExtremum(){
@@ -124,7 +124,7 @@ float MaxRandom::getExtremum(){
    MinRandom class
 ****************************************/
 MinRandom::MinRandom(CRandomGenerator* globalRandomGenerator, std::string const& name_): rg(globalRandomGenerator) {
-	this->name = std::move(name_); // bruh
+	this->name = name_; // bruh
 }
 
 void MinRandom::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
@@ -132,7 +132,7 @@ void MinRandom::initialize(CIndividual** population, float selectionPressure, si
 }
 
 size_t MinRandom::selectNext(size_t populationSize){
-  return static_cast<size_t>(rg->random(0,populationSize-1));
+  return static_cast<size_t>(rg->random(0,static_cast<int>(populationSize)-1));
 }
 
 float MinRandom::getExtremum(){
@@ -170,8 +170,8 @@ size_t MinTournament::selectNext(size_t populationSize){
     }
   }
   else if( currentSelectionPressure <= 1.f && currentSelectionPressure > 0.f ){
-    auto i1 = rg->getRandomIntMax(populationSize);
-    auto i2 = rg->getRandomIntMax(populationSize);
+    auto i1 = rg->getRandomIntMax(static_cast<int>(populationSize));
+    auto i2 = rg->getRandomIntMax(static_cast<int>(populationSize));
 
     if( rg->tossCoin(currentSelectionPressure) ){
       if( population[i1]->getFitness() < population[i2]->getFitness() ){
@@ -224,8 +224,8 @@ size_t MaxTournament::selectNext(size_t populationSize){
     }
   }
   else if( currentSelectionPressure <= 1.f && currentSelectionPressure > 0.f ){
-    auto i1 = rg->getRandomIntMax(populationSize);
-    auto i2 = rg->getRandomIntMax(populationSize);
+    auto i1 = rg->getRandomIntMax(static_cast<int>(populationSize));
+    auto i2 = rg->getRandomIntMax(static_cast<int>(populationSize));
 
     if( rg->tossCoin(currentSelectionPressure) ){
       if( population[i1]->getFitness() > population[i2]->getFitness() ){
