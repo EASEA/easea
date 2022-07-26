@@ -38,10 +38,10 @@ TIter randomSelection(TRandom &random, TIter begin, TIter end)
 {
         if (begin == end) LOG_ERROR(errorCode::value, "Popultion is empty");
     
-        std::uniform_int_distribution<size_t> uniform(0, std::distance(begin, end) - 1);
+        std::uniform_int_distribution<std::size_t> uniform(0, std::distance(begin, end) - 1);
         TIter selected = begin;
 
-        for (size_t count = uniform(random); count; --count)
+        for (std::size_t count = uniform(random); count; --count)
                 ++selected; 
         return selected;
 }

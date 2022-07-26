@@ -73,13 +73,13 @@ void C2x2CrossoverLauncher<TObjective, TVariable, TRandom>::runCrossover(std::ve
 	this->getCrossover().setLimitGen(TBase::getLimitGen());
 	this->getCrossover().setCurrentGen(TBase::getCurrentGen());
 
-        for (size_t offspring1 = 0; offspring1 < offspring.size();)
+        for (std::size_t offspring1 = 0; offspring1 < offspring.size();)
         {
                 std::shuffle(parent.begin(), parent.end(), this->getRandom());
-                for (size_t parent1 = 0; offspring1 < offspring.size() && parent1 < parent.size(); offspring1 += 2, parent1 += 2)
+                for (std::size_t parent1 = 0; offspring1 < offspring.size() && parent1 < parent.size(); offspring1 += 2, parent1 += 2)
                 {
-                        const size_t parent2 = (parent1 + 1) % parent.size();
-                        const size_t offspring2 = (offspring1 + 1) % offspring.size();
+                        const std::size_t parent2 = (parent1 + 1) % parent.size();
+                        const std::size_t offspring2 = (offspring1 + 1) % offspring.size();
                         (*this)(*parent[parent1], *parent[parent2], *offspring[offspring1], *offspring[offspring2]);
                 }
         }

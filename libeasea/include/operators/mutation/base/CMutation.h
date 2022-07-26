@@ -36,18 +36,18 @@ public:
         typedef TObjective TO;
         typedef TVariable TV;
         typedef CmoIndividual<TO, TV> TI;
-size_t m_nbGen;
-size_t m_iGen;
+std::size_t m_nbGen;
+std::size_t m_iGen;
 
 
         CMutation(void);
         virtual ~CMutation(void);
         void operator ()(TI &individual);
 
-	void setLimitGen(const size_t nbGen);
-        void setCurrentGen(const size_t iGen);
-        size_t getLimitGen();
-        size_t getCurrentGen();
+	void setLimitGen(const std::size_t nbGen);
+        void setCurrentGen(const std::size_t iGen);
+        std::size_t getLimitGen();
+        std::size_t getCurrentGen();
 
 protected:
         virtual void runMutation(TI &individual) = 0;
@@ -67,22 +67,22 @@ CMutation<TObjective, TV>::~CMutation(void)
 }
 
 template <typename TObjective, typename TVariable>
-void CMutation<TObjective, TVariable>::setLimitGen(const size_t nbGen)
+void CMutation<TObjective, TVariable>::setLimitGen(const std::size_t nbGen)
 {
         m_nbGen = nbGen;
 }
 template <typename TObjective, typename TVariable>
-size_t CMutation<TObjective, TVariable>::getLimitGen()
+std::size_t CMutation<TObjective, TVariable>::getLimitGen()
 {
         return m_nbGen;
 }
 template <typename TObjective, typename TVariable>
-void CMutation<TObjective, TVariable>::setCurrentGen(const size_t iGen)
+void CMutation<TObjective, TVariable>::setCurrentGen(const std::size_t iGen)
 {
         m_iGen = iGen;
 }
 template <typename TObjective, typename TVariable>
-size_t CMutation<TObjective, TVariable>::getCurrentGen()
+std::size_t CMutation<TObjective, TVariable>::getCurrentGen()
 {
         return m_iGen;
 }
