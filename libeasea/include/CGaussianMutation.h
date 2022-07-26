@@ -23,7 +23,7 @@
 template<typename TIndividual>
 class CGaussianMutation :  public COperator<double, double>  {
 public :
-    CGaussianMutation() : COperator(){};
+    CGaussianMutation() : COperator(0., 1.){};
     CGaussianMutation(double probability, double deviation) : COperator(probability, deviation) {
         std::ostringstream ss;
         ss << "EASEA LOG [DEBUG]: Mutation " <<  "probability  =  "<< get<double>(0) << std::endl
