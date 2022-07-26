@@ -5,9 +5,11 @@
  *      Author: maitre
  */
 
-#ifndef COPTIONPARSER_H_
+#ifndef COPTIONPARSER_H
 #define COPTIONPARSER_H
 
+
+#include <string>
 
 void parseArguments(const char* parametersFileName, int ac, char** av);
 
