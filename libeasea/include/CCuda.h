@@ -10,9 +10,11 @@
 
 #include <iostream>
 #include <semaphore.h>
+// NOLINTBEGIN(*)
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 //#include <cuda_runtime_api.h>
+// NOLINTEND
 
 #define CUDA_SAFE_CALL(f)				\
   {							\
@@ -36,7 +38,7 @@ struct gpuEvaluationData{
    int dimGrid;
    int dimBlock;
 
-  cudaDeviceProp gpuProp;
+  cudaDeviceProp gpuProp; // NOLINT
 
   int gpuId;
   int threadId;
