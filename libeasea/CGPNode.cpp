@@ -124,7 +124,7 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
       reminderP = xoverP-i;
       break;
     }
-    else i+=opArity[(int)dNodes[parentIndexP++]->opCode];
+    else i+=static_cast<int>(opArity[(int)dNodes[parentIndexP++]->opCode]);
   
   *childId = reminderP;
   //cout << "d of x : " << xoverDepth << "/" << depthOfTree(root)<< " n : "<< xoverP << endl;
