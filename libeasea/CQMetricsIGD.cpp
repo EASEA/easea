@@ -12,7 +12,7 @@
 
     CQMetricsIGD::~CQMetricsIGD() {};
 
-    double CQMetricsIGD::get(vector< vector<double> > takenFront, vector< vector<double> > realFront, int nbObj) {
+    double CQMetricsIGD::get(vector< vector<double> > const& takenFront, vector< vector<double> > const& realFront, int nbObj) {
         vector<double> maxValues = getFunctions()->getMaxValues(realFront, nbObj);
         vector<double> minValues = getFunctions()->getMinValues(realFront, nbObj);
 
@@ -31,7 +31,7 @@
 
         sum = pow(sum,1.0/c_pow);
 
-        double metricIGD = sum / normalizedRealFront.size();
+        double metricIGD = sum / static_cast<double>(normalizedRealFront.size());
 
         return metricIGD;
 
