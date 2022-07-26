@@ -55,7 +55,7 @@ public:
         return front;
     };
 
-    vector<double> getMaxValues(vector< vector<double> > front, int nbObj) {
+    vector<double> getMaxValues(vector< vector<double> > const& front, int nbObj) {
 
         vector<double> maxValues;
 
@@ -73,7 +73,7 @@ public:
 	    return maxValues;
     };
 
-    vector<double> getMinValues(vector< vector<double> > front, int nbObj) {
+    vector<double> getMinValues(vector< vector<double> > const& front, int nbObj) {
 
         vector<double> minValues;
 
@@ -89,7 +89,7 @@ public:
         return minValues;
     };
 
-	double distance(vector<double> a, vector<double> b){
+	double distance(vector<double> const& a, vector<double> const& b){
 
         double distance = 0.0;
 
@@ -100,7 +100,7 @@ public:
         return sqrt(distance);
     };
 
-    double distanceToClosedPoint(vector<double> point, vector< vector<double> > front){
+    double distanceToClosedPoint(vector<double> const& point, vector< vector<double> > const& front){
 
         double minDistance = distance(point,front[0]);
 
@@ -113,7 +113,7 @@ public:
         return minDistance;
     };
 
-    vector< vector<double> > getNormalizedFront(vector< vector<double> > front, vector<double> maxValue, vector<double> minValue) {
+    vector< vector<double> > getNormalizedFront(vector< vector<double> > const& front, vector<double> const& maxValue, vector<double> const& minValue) {
 
         vector< vector<double> > normalizedFront;
 
@@ -127,7 +127,7 @@ public:
         return normalizedFront;
     };
 
-	vector< vector<double> > getInvertedFront(vector< vector<double> > front) {
+	vector< vector<double> > getInvertedFront(vector< vector<double> > const& front) {
 
 	vector< vector<double> > invertedFront;
 
