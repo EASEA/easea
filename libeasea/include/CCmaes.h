@@ -82,7 +82,7 @@ class CCmaes{
     double facupdateCmode;
 
     Caleatoire alea; /* random number generator */
-    int seed;
+    long seed;
   public:
     CCmaes(int lambda, int mu, int problemdim);
     ~CCmaes();
