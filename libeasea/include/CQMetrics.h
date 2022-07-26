@@ -22,7 +22,7 @@ private:
 	vector<vector<double>> paretoRealFront;
 
 public:
-	CQMetrics(string paretoTakenFrontFile, string const& paretoRealFrontFile, int nbObj) : CQMetricsAbs() {
+	CQMetrics(string const& paretoTakenFrontFile, string const& paretoRealFrontFile, int nbObj) : CQMetricsAbs() {
 		this->nbObj = nbObj;
 		paretoTakenFront = getFunctions()->readFrontFromFile(paretoTakenFrontFile);
 		paretoRealFront = getFunctions()->readFrontFromFile(paretoRealFrontFile);

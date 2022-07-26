@@ -25,7 +25,7 @@ using namespace std;
 class CQMetricsFunctions{
 public:
     /* Read Pareto front from file */
-	vector< vector<double> > readFrontFromFile(string path){
+	vector< vector<double> > readFrontFromFile(string const& path){
 
         vector< vector <double> > front;
 
@@ -58,6 +58,7 @@ public:
     vector<double> getMaxValues(vector< vector<double> > const& front, int nbObj) {
 
         vector<double> maxValues;
+	maxValues.reserve(nbObj);
 
 	    for (auto i = 0; i < nbObj; i++)
 		    maxValues.push_back(-std::numeric_limits<double>::max());
@@ -76,6 +77,7 @@ public:
     vector<double> getMinValues(vector< vector<double> > const& front, int nbObj) {
 
         vector<double> minValues;
+	minValues.reserve(nbObj);
 
        for (auto i = 0; i < nbObj; i++)
             minValues.push_back(std::numeric_limits<double>::max());
