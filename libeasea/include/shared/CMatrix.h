@@ -392,7 +392,7 @@ T CMatrix<T>::Det(const CMatrix<T>& x)
         return x.mat[0][0];
 
     T y=0;
-    signed char d=1;
+    int d=1;
 
     for (unsigned i=0; i<x.N; i++)
     {
