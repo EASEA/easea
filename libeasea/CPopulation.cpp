@@ -122,7 +122,7 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-  for( int i=0 ; i < populationSize ; i++ ){
+  for( int i=0 ; i < static_cast<int>(populationSize) ; i++ ){
     if (population[i]->valid == false)
     	realEvaluationNb++;
     
@@ -130,7 +130,7 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 }
 
 }
-void CPopulation::optimisePopulation(CIndividual** population, unsigned populationSize){
+void CPopulation::optimisePopulation(CIndividual**, unsigned){
 }
 
 void CPopulation::evaluateParentPopulation(){
@@ -381,6 +381,7 @@ void CPopulation::strongElitism(unsigned elitismSize, CIndividual** population, 
 
   float bestFitness;
   unsigned bestCIndividual = 0;
+  (void)(populationSize); // hmm
 
 #ifndef _WIN32
   if( elitismSize >= 5 )
@@ -414,6 +415,7 @@ void CPopulation::weakElitism(unsigned elitismSize, CIndividual** parentsPopulat
   float bestOffspringFitness = offspringPopulation[0]->getFitness();
   int bestParentIndiv = 0;
   int bestOffspringIndiv = 0;
+  (void)(outPopulationSize); // hmm
 
   for(int i=1; (unsigned)i<(*parentPopSize); i++){
         if( (params->minimizing && bestParentFitness > parentsPopulation[i]->getFitness() ) ||
