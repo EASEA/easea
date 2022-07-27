@@ -60,17 +60,18 @@ int loadParametersFile(const string& filename, char*** outputContainer){
     tmpContainer.push_back(padding);
 
     while( fgets(buffer,512,paramFile)){
-        for( size_t i=0 ; i<512 ; i++ )
+        for( size_t i=0 ; i<512 ; i++ ) {
             if( buffer[i] == '#' || buffer[i] == '\n' || buffer[i] == '\0' || buffer[i]==' '){
                 buffer[i] = '\0';
                 break;
             }
-	    std::size_t str_len;
-            if( (str_len = strlen(buffer)) ){
-                char* nLine = (char*)malloc(sizeof(char)*(str_len+1));
+	}
+	std::size_t str_len;
+        if( (str_len = strlen(buffer)) ){
+        	char* nLine = (char*)malloc(sizeof(char)*(str_len+1));
                 strcpy(nLine,buffer);
                 tmpContainer.push_back(nLine);
-            }
+        }
         }
 
         (*outputContainer) = (char**)malloc(sizeof(char*)*tmpContainer.size());
