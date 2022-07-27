@@ -40,7 +40,7 @@ public:
         auto time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time).count();
         std::cout << "[";
 
-        for (int i = 0; i < width; ++i) {
+        for (int i = 0; i < static_cast<int>(width); ++i) {
             if (i < pos) std::cout << sbComplited;
             else if (i == pos) std::cout << ">";
             else std::cout << sbIncomplited;
