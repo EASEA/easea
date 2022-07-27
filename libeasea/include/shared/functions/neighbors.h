@@ -70,23 +70,23 @@ std::vector<std::vector<size_t> > initNeighbors(const CMatrix<TType> &adjacencyM
         std::vector<std::vector<size_t> > neighbors(adjacencyMatrix.Rows());
         for (size_t i = 0; i < neighbors.size(); ++i)
         {
-                typedef std::pair<TType, size_t> _TAdjacency;
-                std::vector<_TAdjacency> adjacency(adjacencyMatrix.Cols());
-                std::vector<const _TAdjacency *> _adjacency(adjacencyMatrix.Cols());
+                typedef std::pair<TType, size_t> Adjacency_t;
+                std::vector<Adjacency_t> adjacency(adjacencyMatrix.Cols());
+                std::vector<const Adjacency_t *> adjacency_(adjacencyMatrix.Cols());
                 for (size_t j = 0; j < adjacencyMatrix.Cols(); ++j)
                 {
 		        adjacency[j].first = adjacencyMatrix[i][j];
                         adjacency[j].second = j;
-                        _adjacency[j] = &adjacency[j];
+                        adjacency_[j] = &adjacency[j];
                 }
-                std::partial_sort(_adjacency.begin(), _adjacency.begin() + nNeighbors, _adjacency.end()
-                        , [](const _TAdjacency *adjacency1, const _TAdjacency *adjacency2)->bool{return adjacency1->first < adjacency2->first;}
+                std::partial_sort(adjacency_.begin(), adjacency_.begin() + nNeighbors, adjacency_.end()
+                        , [](const Adjacency_t *adjacency1, const Adjacency_t *adjacency2)->bool{return adjacency1->first < adjacency2->first;}
                 );
-                std::vector<size_t> &_neighbors = neighbors[i];
-                _neighbors.resize(nNeighbors);
+                std::vector<size_t> &neighbors_ = neighbors[i];
+                neighbors_.resize(nNeighbors);
                 for (size_t j = 0; j < nNeighbors; ++j)
-                        _neighbors[j] = _adjacency[j]->second;
-                assert(std::find(_neighbors.begin(), _neighbors.end(), i) != _neighbors.end());
+                        neighbors_[j] = adjacency_[j]->second;
+                assert(std::find(neighbors_.begin(), neighbors_.end(), i) != neighbors_.end());
         }
         return neighbors;
 }
