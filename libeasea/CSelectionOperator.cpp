@@ -60,12 +60,12 @@ CSelectionOperator* getSelectionOperator(std::string const& selectop, int minimi
 /* ****************************************
    SelectionOperator class
 ****************************************/
-void CSelectionOperator::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
+void CSelectionOperator::initialize(CIndividual** population, float selectionPressure, size_t){
   this->population = population;
   this->currentSelectionPressure = selectionPressure;
 }
 
-size_t CSelectionOperator::selectNext(size_t populationSize){ return 0; }
+size_t CSelectionOperator::selectNext(size_t){ return 0; }
 
 /* ****************************************
    MaxDeterministic class
