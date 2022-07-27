@@ -53,33 +53,43 @@ SET(CMAKE_STATIC_LIBRARY_PREFIX="")
 target_compile_features(libeasea PUBLIC cxx_std_14)
 target_compile_features(libeasna PUBLIC cxx_std_14)
 target_compile_options(libeasea PUBLIC
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -g>
 	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -march=native -mtune=native>
-	$<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-g>
+	$<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O0 -g -fsanitize=address -fsanitize=undefined -fno-sanitize=vptr>
 
 	$<$<CXX_COMPILER_ID:MSVC>:/W3>
 	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<CXX_COMPILER_ID:MSVC>>:/O2>
-	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL /W4>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL /W4 /fsanitize=address>
 	)
 target_compile_options(libeasna PUBLIC
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-g -pedantic -Wall -Wextra -Woverloaded-virtual -Wfloat-equal -Wwrite-strings -Wpointer-arith -Wcast-qual -Wcast-align -Wshadow -Wredundant-decls -Wdouble-promotion -Winit-self -Wswitch-default>
 	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -march=native -mtune=native>
-	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-g>
+	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O0 -g -fsanitize=address -fsanitize=undefined -fno-sanitize=vptr>
 
 	$<$<CXX_COMPILER_ID:MSVC>:/W3>
 	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<CXX_COMPILER_ID:MSVC>>:/O2>
-	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL /fsanitize=address>
 	)
 target_compile_options(easena PUBLIC
-	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -w -Wno-deprecated -Wno-write-strings -fmessage-length=0>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-g -Wall -Wextra -w -Wno-deprecated -Wno-write-strings -fmessage-length=0>
 	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -march=native -mtune=native>
-	$<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-g>
+	$<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-g -fsanitize=address -fsanitize=undefined -fno-sanitize=vptr>
 
 	$<$<CXX_COMPILER_ID:MSVC>:/W3>
 	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<CXX_COMPILER_ID:MSVC>>:/O2>
-	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL /fsanitize=address>
 	)
 TARGET_LINK_LIBRARIES(easena libeasea libeasna)
+target_link_options(libeasea PUBLIC
+	$<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/fsanitize=address>
+	)
+target_link_options(libeasna PUBLIC $<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/fsanitize=address>
+	)
+target_link_options(easena PUBLIC $<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/fsanitize=address>
+	)
 target_compile_definitions(easena PUBLIC $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>) # :(
 
 ### Includes ###
