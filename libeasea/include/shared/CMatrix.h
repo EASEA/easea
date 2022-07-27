@@ -8,6 +8,7 @@
 #include <ostream>
 #include <string>
 #include <initializer_list>
+#include <limits>
 #ifndef Abs
 #define Abs(x) ((x)>=0?(x):-(x))
 #endif
