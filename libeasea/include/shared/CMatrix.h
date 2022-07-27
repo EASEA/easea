@@ -9,6 +9,7 @@
 #include <string>
 #include <initializer_list>
 #include <limits>
+#include <cmath>
 #ifndef Abs
 #define Abs(x) ((x)>=0?(x):-(x))
 #endif
@@ -413,7 +414,7 @@ template <class T>
 CMatrix<T> CMatrix<T>::Inverse() const
 {
     double det_x=Det();
-    if(abs(det_x)<std::numeric_limits<double>::epsilon())
+    if(std::abs(det_x)<std::numeric_limits<double>::epsilon())
         throw std::logic_error("Can't invert CMatrix  (determinant=0)");
 
     CMatrix<T> y(N,M);
