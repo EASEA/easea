@@ -17,6 +17,8 @@
 #include <shared/functions/dominance.h>
 #include <shared/CConstant.h>
 
+#include <random>
+
 
 namespace easea
 {
