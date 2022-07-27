@@ -17,7 +17,7 @@ CIndividual::CIndividual() : upperBound_(nullptr),
   // TODO Auto-generated constructor stub
 
 }
-CIndividual::CIndividual(CIndividual *genome) {
+CIndividual::CIndividual(CIndividual *) {
 
 }
 
