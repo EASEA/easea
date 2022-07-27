@@ -131,7 +131,7 @@ int EASNAmain(int argc, char **argv)
 			// Get the method used on error for batch retropropagation
 			if (cmdOptionExists(argv, argv+argc, "--batch.error")) {
 				batchErrorMethod = getCmdOption(argv, argv + argc, "--batch.error");
-				if (strcmp(batchErrorMethod, "average") && strcmp(batchErrorMethod, "sum")) {
+				if (strcmp(batchErrorMethod, "average") != 0 && strcmp(batchErrorMethod, "sum") != 0) {
 					std::cout << "Error : --batch.error has to be defined with 'average' or 'sum'." << std::endl;
 					exit(1);
 				}
