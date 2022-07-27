@@ -25,15 +25,15 @@ public:
     int nbVar_;           // Number of variables
     int nbObj_;           // Number of objectives
     int nbConstraints_;   // Number of constraints
-    double *objective_;      // objecives
-    CVariable **variable_;    //  variables
     double * upperBound_;     // upper bound of variable
     double * lowerBound_;     // lower bound of variable
+    double *objective_;      // objecives
     double * mstep_;
     double * cstep_;
     double constraint_;       // constraints
     int rank_;                // rank value
     double crowdingDistance_; // croawding distance
+    CVariable **variable_;    //  variables
 
 //typedef std::unique_ptr<double[]> dblPtr;
 
