@@ -174,7 +174,8 @@ void learnAndScore(
             strcpy(command, commandStr.c_str());
         }
         std::cout << std::endl << "Epoch n°" << std::to_string(i) << std::endl;
-        system(command);
+        auto t = system(command);
+	(void)(t); // hmm
         delete [] command;
         // Create TestImage set
         writeTestImageWithoutLabelCsvFile("TestImage_withoutLabel_pass.csv", dataset.test_images);
