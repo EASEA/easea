@@ -384,8 +384,9 @@ void CPopulation::strongElitism(unsigned elitismSize, CIndividual** population, 
   (void)(outPopulationSize); // hmm
 
 #ifndef _WIN32
-  if( elitismSize >= 5 )
+  if( elitismSize >= 5 ) {
 	  DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%d)",elitismSize)
+  }
 #endif
 
   //printf("MINIMIZING ? %d\n",params->minimizing);
