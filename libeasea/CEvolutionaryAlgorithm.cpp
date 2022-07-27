@@ -112,6 +112,7 @@ sig_atomic_t volatile done = 1;
 #ifndef OS_WINDOWS
 void childHandler(int signum)
 {
+	(void)(signum);
         int status;
 	ostringstream ss;
 
