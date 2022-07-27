@@ -381,7 +381,7 @@ void CPopulation::strongElitism(unsigned elitismSize, CIndividual** population, 
 
   float bestFitness;
   unsigned bestCIndividual = 0;
-  (void)(populationSize); // hmm
+  (void)(outPopulationSize); // hmm
 
 #ifndef _WIN32
   if( elitismSize >= 5 )
