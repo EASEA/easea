@@ -186,7 +186,8 @@ void learnAndScore(
             + std::string(" --compute TestImage_withoutLabel_pass.csv");
         command = new char [commandStr.length()+1];
         strcpy(command, commandStr.c_str());
-        system(command);
+        t = system(command);
+	(void)(t); // hmm
         delete [] command;
         // Compute score
         readCsvFile("TestImage_OnlyLabel.csv", labels);
@@ -195,7 +196,8 @@ void learnAndScore(
         std::cout << computeScore(labels, computedValues) << std::endl;
         labels.clear();
         computedValues.clear();
-        system("rm TestImage_withoutLabel_pass.csv");
+        t = system("rm TestImage_withoutLabel_pass.csv");
+	(void)(t);
     }
     // If there is only one arg, mnist weights are deleted, else they aren't and we write again the evaluation file.
     if (clean == 1) {
@@ -203,7 +205,8 @@ void learnAndScore(
             std::string cmdStr = std::string("rm ./") + std::to_string(i) + std::string("_weights_archi_pass.csv");
             char * cmd = new char [cmdStr.length()+1];
             strcpy(cmd, cmdStr.c_str());
-            system(cmd);
+        auto t = system(cmd);
+	(void)(t); // hmm
             delete [] cmd;
         }
     } else {
@@ -247,38 +250,47 @@ int main(int argc, char* argv[]) {
 
     // Testing memory leaks : openmp and valgrind have issues if used together
     #if defined(__linux__)
-        system("valgrind --log-file='Testing_memory_leaks_mnist.txt' ./../../easena --parse ./architecture_xor3.nz --learn.online dataset_xor3.csv --save.weights weights.csv ");
+        auto t = system("valgrind --log-file='Testing_memory_leaks_mnist.txt' ./../../easena --parse ./architecture_xor3.nz --learn.online dataset_xor3.csv --save.weights weights.csv ");
+	(void)(t);
         if (system("grep --silent 'All heap blocks were freed -- no leaks are possible' Testing_memory_leaks_mnist.txt") == 0 && system("grep --silent 'ERROR SUMMARY: 0 errors from 0 contexts' Testing_memory_leaks_mnist.txt") == 0) {
             std::cout << "No memory leaks or errors detected in online learning process !" << std::endl;
-            system("rm Testing_memory_leaks_mnist.txt");
+            t = system("rm Testing_memory_leaks_mnist.txt");
+	    (void)(t);
         } else {
             std::cout << "Warning : memory leaks or errors detected in online learning process !" << std::endl;
         }
 
-        system("valgrind --log-file='Testing_memory_leaks_mnist.txt' ./../../easena --parse ./architecture_xor3.nz --learn.batch dataset_xor3.csv --batch.size 1 --batch.error average ");
+        t = system("valgrind --log-file='Testing_memory_leaks_mnist.txt' ./../../easena --parse ./architecture_xor3.nz --learn.batch dataset_xor3.csv --batch.size 1 --batch.error average ");
+	(void)(t);
         if (system("grep --silent 'All heap blocks were freed -- no leaks are possible' Testing_memory_leaks_mnist.txt") == 0 && system("grep --silent 'ERROR SUMMARY: 0 errors from 0 contexts' Testing_memory_leaks_mnist.txt") == 0) {
             std::cout << "No memory leaks or errors detected in batch learning process !" << std::endl << std::endl;
-            system("rm Testing_memory_leaks_mnist.txt");
+            t = system("rm Testing_memory_leaks_mnist.txt");
+	    (void)(t);
         } else {
             std::cout << "Warning : memory leaks or errors detected in batch learning process !" << std::endl;
         }
 
-        system("valgrind --log-file='Testing_memory_leaks_mnist.txt' ./../../easena --parse ./architecture_xor3.nz --update.weights weights.csv");
+        t = system("valgrind --log-file='Testing_memory_leaks_mnist.txt' ./../../easena --parse ./architecture_xor3.nz --update.weights weights.csv");
+	(void)(t);
         if (system("grep --silent 'All heap blocks were freed -- no leaks are possible' Testing_memory_leaks_mnist.txt") == 0 && system("grep --silent 'ERROR SUMMARY: 0 errors from 0 contexts' Testing_memory_leaks_mnist.txt") == 0) {
             std::cout << "No memory leaks or errors detected in updating weights process !" << std::endl;
-            system("rm Testing_memory_leaks_mnist.txt");
+            t = system("rm Testing_memory_leaks_mnist.txt");
+	    (void)(t);
         } else {
             std::cout << "Warning : memory leaks or errors detected in updating weights process !" << std::endl;
         }
-        system("rm weights.csv");
+        t = system("rm weights.csv");
+	(void)(t);
     #endif
     // Free memory
     free(mnistResults);
 
     // Delete data if no args
     if (argc == 1) {
-        system("rm TrainingImage.csv");
-        system("rm TestImage_OnlyLabel.csv");
+        t = system("rm TrainingImage.csv");
+	(void)(t);
+        t = system("rm TestImage_OnlyLabel.csv");
+	(void)(t);
     }
     // Return execution time
     std::cout << std::endl;
