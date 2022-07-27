@@ -66,7 +66,7 @@ CMatrix<TType> calcAdjacencyMatrix(TIter begin, TIter end)
 template <typename TType>
 std::vector<std::vector<size_t> > initNeighbors(const CMatrix<TType> &adjacencyMatrix, const size_t nNeighbors)
 {
-	assert(adjacencyMatrix.size1() == adjacencyMatrix.size2());
+	//assert(adjacencyMatrix.size1() == adjacencyMatrix.size2()); // what are these functions ?
         std::vector<std::vector<size_t> > neighbors(adjacencyMatrix.Rows());
         for (size_t i = 0; i < neighbors.size(); ++i)
         {
