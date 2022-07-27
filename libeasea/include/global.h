@@ -12,6 +12,7 @@
 #include <vector>
 #include "define.h"
 #include "CLogFile.h"
+#include "CRandomGenerator.h"
 
 extern std::ofstream easena::log_file;
 

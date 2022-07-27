@@ -107,7 +107,7 @@ typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjec
 {
 	if (distributionIndex < 0)
 		LOG_ERROR(errorCode::value, "Wrong value of distribution index");
-	if (0 <= mutFactor && mutFactor <= 1);
+	if (0 <= mutFactor && mutFactor <= 1)
 		LOG_ERROR(errorCode::value, "Wrong value of mutation factor");
 	
 	return 2 / (1 - pow(1 - mutFactor, distributionIndex + 1));

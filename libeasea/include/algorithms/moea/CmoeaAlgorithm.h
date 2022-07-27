@@ -16,6 +16,8 @@
 #include <shared/CRandom.h>
 #include <config.h>
 
+#include <random>
+
 namespace easea
 {
 namespace algorithms

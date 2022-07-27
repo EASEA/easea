@@ -4,8 +4,8 @@
  *
  **/  
 
-#ifndef __C_GPNODE__
-#define __C_GPNODE__
+#ifndef EZ_C_GPNODE
+#define EZ_C_GPNODE
 
 #include <iostream>
 

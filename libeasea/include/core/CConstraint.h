@@ -45,12 +45,12 @@ CConstraint<TObjective>::~CConstraint(void)
 template <typename TObjective>
 bool CConstraint<TObjective>::operator ()(void) const
 {
-        for (size_t i = 0; i < m_inequality.size(); ++i)
+        for (std::size_t i = 0; i < m_inequality.size(); ++i)
         {
                 if (m_inequality[i] < 0)
                         return false;
         }
-        for (size_t i = 0; i < m_equality.size(); ++i)
+        for (std::size_t i = 0; i < m_equality.size(); ++i)
         {
                 if (m_equality[i] != 0)
                         return false;

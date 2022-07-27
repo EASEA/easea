@@ -16,6 +16,7 @@
 #include <vector>
 #include <list>
 #include <numeric>
+#include <limits>
 #include <CLogger.h>
 
 

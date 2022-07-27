@@ -95,6 +95,7 @@ bool CControlCStopingCriterion::reached(){
 }
 
 void signal_handler(int sig){
+	(void)(sig); // hmmm
   signal(SIGINT, SIG_DFL);
 #ifdef WIN32
   signal(SIGTERM, SIG_DFL);

@@ -28,8 +28,8 @@ class Caleatoire
     short flgstored;
     double hold;
   public:
-    long alea_Start(long unsigned inseed);
-    long alea_init(long unsigned inseed);
+    long alea_Start(long inseed);
+    long alea_init(long inseed);
     double alea_Gauss();
     double alea_Uniform();
 };
@@ -82,7 +82,7 @@ class CCmaes{
     double facupdateCmode;
 
     Caleatoire alea; /* random number generator */
-    int seed;
+    long seed;
   public:
     CCmaes(int lambda, int mu, int problemdim);
     ~CCmaes();

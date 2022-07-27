@@ -23,7 +23,7 @@ public:
     CQMetricsIGD();
     ~CQMetricsIGD();
 
-    double get(vector< vector<double> > takenFront, vector< vector<double> > realFront, int nbObj);
+    double get(vector< vector<double> > const& takenFront, vector< vector<double> > const& realFront, int nbObj);
 
 };
 

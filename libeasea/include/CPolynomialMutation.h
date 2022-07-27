@@ -15,6 +15,9 @@
 #include <CWrapIndividual.h>
 
 
+#include <sstream>
+#include <memory>
+
 constexpr double eta_m_ = 20.0;
 
 template<typename TIndividual>

@@ -9,7 +9,7 @@ void printCostFunctionName() {
 	std::cout << "     - Mean Squarred Error : Use another activation function on the last layer." << std::endl;
 }
 
-CostType costMatch(const std::string s) {
+CostType costMatch(const std::string& s) {
 	if (s.compare("softmax") == 0) {
 		return crossEntropy;
 	} else { 

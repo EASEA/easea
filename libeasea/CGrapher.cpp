@@ -72,8 +72,8 @@ this->valid=0;
         fprintf(this->fWrit,"set xrange[0:%d]\n",nbEval);
         fprintf(this->fWrit,"set xlabel \"Number of Evaluations\"\n");
         fprintf(this->fWrit,"set ylabel \"Fitness\"\n");*/
-                int nbEval = param->offspringPopulationSize*param->nbGen + param->parentPopulationSize;
-                fprintf(this->fWrit,"set max eval:%d\n",nbEval);
+                auto nbEval = param->offspringPopulationSize*param->nbGen + param->parentPopulationSize;
+                fprintf(this->fWrit,"set max eval:%u\n",nbEval);
                 fprintf(this->fWrit,"set title:%s\n",title);
                 if(param->remoteIslandModel){
                     fprintf(this->fWrit,"set island model\n");

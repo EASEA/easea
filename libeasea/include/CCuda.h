@@ -10,7 +10,9 @@
 
 #include <iostream>
 #include <semaphore.h>
+// NOLINTNEXTLINE
 #include <cuda.h>
+// NOLINTNEXTLINE
 #include <cuda_runtime_api.h>
 //#include <cuda_runtime_api.h>
 
@@ -36,7 +38,7 @@ struct gpuEvaluationData{
    int dimGrid;
    int dimBlock;
 
-  cudaDeviceProp gpuProp;
+  cudaDeviceProp gpuProp; // NOLINT
 
   int gpuId;
   int threadId;

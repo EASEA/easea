@@ -29,7 +29,7 @@ cxxopts::Options options("Allowed options");
 
 
 template<typename TypeVariable>
-TypeVariable setVariable(const std::string argumentName, TypeVariable defaultValue, std::unique_ptr<cxxopts::ParseResult> &vm,  std::unique_ptr<cxxopts::ParseResult>& vm_file){
+TypeVariable setVariable(const std::string& argumentName, TypeVariable defaultValue, std::unique_ptr<cxxopts::ParseResult> &vm,  std::unique_ptr<cxxopts::ParseResult>& vm_file){
 
     TypeVariable ret;
 
@@ -60,17 +60,18 @@ int loadParametersFile(const string& filename, char*** outputContainer){
     tmpContainer.push_back(padding);
 
     while( fgets(buffer,512,paramFile)){
-        for( size_t i=0 ; i<512 ; i++ )
+        for( size_t i=0 ; i<512 ; i++ ) {
             if( buffer[i] == '#' || buffer[i] == '\n' || buffer[i] == '\0' || buffer[i]==' '){
                 buffer[i] = '\0';
                 break;
             }
-            int str_len;
-            if( (str_len = strlen(buffer)) ){
-                char* nLine = (char*)malloc(sizeof(char)*(str_len+1));
+	}
+	std::size_t str_len;
+        if( (str_len = strlen(buffer)) ){
+        	char* nLine = (char*)malloc(sizeof(char)*(str_len+1));
                 strcpy(nLine,buffer);
                 tmpContainer.push_back(nLine);
-            }
+        }
         }
 
         (*outputContainer) = (char**)malloc(sizeof(char*)*tmpContainer.size());
@@ -79,7 +80,7 @@ int loadParametersFile(const string& filename, char*** outputContainer){
             (*outputContainer)[i] = tmpContainer.at(i);
 
         fclose(paramFile);
-        return tmpContainer.size();
+        return static_cast<int>(tmpContainer.size());
 }
 
 void parseArguments(const char* parametersFileName, int ac, char** av, std::unique_ptr<cxxopts::ParseResult> &vm, std::unique_ptr<cxxopts::ParseResult>& vm_file){
@@ -171,15 +172,15 @@ void parseArguments(const char* parametersFileName, int ac, char** av){
     parseArguments( parametersFileName,ac,av, vm, vm_file);
 }
 
-std::string setVariable(const std::string optionName, string defaultValue){
+std::string setVariable(const std::string& optionName, string const& defaultValue){
     return setVariable(optionName, defaultValue, vm, vm_file);
 }
 
-float setVariable(const std::string optionName, float defaultValue){
+float setVariable(const std::string& optionName, float defaultValue){
     return setVariable( optionName, defaultValue, vm, vm_file);
 }
 
-int setVariable(const std::string optionName, int defaultValue){
+int setVariable(const std::string& optionName, int defaultValue){
     return setVariable(optionName, defaultValue, vm, vm_file);
 }
 

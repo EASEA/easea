@@ -8,6 +8,8 @@
 #include <ostream>
 #include <string>
 #include <initializer_list>
+#include <limits>
+#include <cmath>
 #ifndef Abs
 #define Abs(x) ((x)>=0?(x):-(x))
 #endif
@@ -89,7 +91,7 @@ public:
                  j++;
              }
              if (M!=j)
-                 std::logic_error("Not a CMatrix");
+                 throw std::logic_error("Not a CMatrix");
 
              i++;
 
@@ -266,7 +268,10 @@ std::istream& operator>>(std::istream &is, CMatrix<TE>& x)
     TE v;
 
     is>>c;
-    c=is.peek();
+    int t = is.peek();
+    if (t == std::istream::traits_type::eof())
+	    throw std::logic_error("Bad input stream");
+    c = static_cast<char>(t);
 
     if (c!=']')
     {
@@ -389,7 +394,7 @@ T CMatrix<T>::Det(const CMatrix<T>& x)
         return x.mat[0][0];
 
     T y=0;
-    signed char d=1;
+    int d=1;
 
     for (unsigned i=0; i<x.N; i++)
     {
@@ -409,7 +414,7 @@ template <class T>
 CMatrix<T> CMatrix<T>::Inverse() const
 {
     double det_x=Det();
-    if(abs(det_x)<std::numeric_limits<double>::epsilon())
+    if(std::abs(det_x)<std::numeric_limits<double>::epsilon())
         throw std::logic_error("Can't invert CMatrix  (determinant=0)");
 
     CMatrix<T> y(N,M);

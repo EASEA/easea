@@ -11,13 +11,13 @@
 
 
 #ifdef DEBUG
-#define DEBUG_PRT(format, args...) fprintf (stdout,"***DBG***  %s-%d: "format"\n",__FILE__,__LINE__,##args)
-#define DEBUG_YACC(format, args...) fprintf (stdout,"***DBG_YACC***  %s-%d: "format"\n",__FILE__,__LINE__,##args)
+ #define DEBUG_PRT(format, ...) fprintf (stdout,"***DBG***  %s-%d: "format"\n",__FILE__,__LINE__, __VA_ARGS__)
+ #define DEBUG_YACC(format, ...) fprintf (stdout,"***DBG_YACC***  %s-%d: "format"\n",__FILE__,__LINE__, __VA_ARGS__)
 #else
-#ifndef WIN32
-#define DEBUG_PRT(format, args...)
-#define DEBUG_YACC(format, args...)
-#endif
+ #ifndef WIN32
+  #define DEBUG_PRT(format, ...)
+  #define DEBUG_YACC(format, ...)
+ #endif
 #endif
 
 #include <vector>
@@ -91,7 +91,7 @@ public:
     virtual void optimiseOffspringPopulation();
 
     CIndividual** reducePopulations(CIndividual** population, unsigned populationSize,
-                  CIndividual** reducedPopulation, unsigned obSize,int pressure);
+                  CIndividual** reducedPopulation, unsigned obSize,float pressure);
     CIndividual** reduceParentPopulation(unsigned obSize);
     CIndividual** reduceOffspringPopulation(unsigned obSize);
     void reduceTotalPopulation(CIndividual** elitPop);
@@ -130,7 +130,7 @@ public:
 
     static void reducePopulation(CIndividual** population, unsigned populationSize,
                 CIndividual** reducedPopulation, unsigned obSize,
-                CSelectionOperator* replacementOperator,int pressure);
+                CSelectionOperator* replacementOperator,float pressure);
 
     void syncOutVector();
     void syncInVector();

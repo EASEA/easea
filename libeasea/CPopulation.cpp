@@ -122,7 +122,7 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-  for( int i=0 ; i < populationSize ; i++ ){
+  for( int i=0 ; i < static_cast<int>(populationSize) ; i++ ){
     if (population[i]->valid == false)
     	realEvaluationNb++;
     
@@ -130,7 +130,7 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 }
 
 }
-void CPopulation::optimisePopulation(CIndividual** population, unsigned populationSize){
+void CPopulation::optimisePopulation(CIndividual**, unsigned){
 }
 
 void CPopulation::evaluateParentPopulation(){
@@ -158,7 +158,7 @@ void CPopulation::optimiseOffspringPopulation(){
  */
 void CPopulation::reducePopulation(CIndividual** population, unsigned populationSize,
             CIndividual** reducedPopulation, unsigned obSize,
-            CSelectionOperator* replacementOperator,int pressure){
+            CSelectionOperator* replacementOperator,float pressure){
 
 
   replacementOperator->initialize(population,pressure,populationSize);
@@ -379,16 +379,20 @@ void CPopulation::produceOffspringPopulation(){
 void CPopulation::strongElitism(unsigned elitismSize, CIndividual** population, unsigned populationSize,
        CIndividual** outPopulation, unsigned outPopulationSize){
 
-  float bestFitness = population[0]->getFitness();
+  float bestFitness;
   unsigned bestCIndividual = 0;
+  (void)(outPopulationSize); // hmm
 
 #ifndef _WIN32
-  if( elitismSize >= 5 )DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%d)",elitismSize);
+  if( elitismSize >= 5 ) {
+	  DEBUG_PRT("Warning, elitism has O(n) complexity, elitismSize is maybe too big (%d)",elitismSize)
+  }
 #endif
 
   //printf("MINIMIZING ? %d\n",params->minimizing);
   for(unsigned i = 0 ; i<elitismSize ; i++ ){
     //bestFitness = replacementOperator->getExtremum();
+    assert(population[0] && "First individual was removed");
     bestFitness = population[0]->getFitness();
     bestCIndividual = 0;
     for( unsigned j=0 ; j<populationSize-i ; j++ ){
@@ -412,6 +416,7 @@ void CPopulation::weakElitism(unsigned elitismSize, CIndividual** parentsPopulat
   float bestOffspringFitness = offspringPopulation[0]->getFitness();
   int bestParentIndiv = 0;
   int bestOffspringIndiv = 0;
+  (void)(outPopulationSize); // hmm
 
   for(int i=1; (unsigned)i<(*parentPopSize); i++){
         if( (params->minimizing && bestParentFitness > parentsPopulation[i]->getFitness() ) ||
@@ -456,6 +461,7 @@ void CPopulation::weakElitism(unsigned elitismSize, CIndividual** parentsPopulat
         bestOffspringFitness = offspringPopulation[0]->getFitness();
       bestOffspringIndiv = 0;
       for(int j=1; (unsigned)j<(*offPopSize); j++){
+	      assert(offspringPopulation[j] && "Offspring was removed");
               if( (params->minimizing && bestOffspringFitness > offspringPopulation[j]->getFitness() ) ||
                             ( !params->minimizing && bestOffspringFitness < offspringPopulation[j]->getFitness() )){
                       bestOffspringFitness = offspringPopulation[j]->getFitness();

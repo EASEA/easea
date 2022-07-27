@@ -82,3 +82,4 @@ doxygen/man
 
 # configuration file (generated)
 libeasea/include/config.h
+stack.hh

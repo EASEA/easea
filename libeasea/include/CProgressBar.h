@@ -33,20 +33,20 @@ public:
 
     }
     void display() const {
-        float progress = (float) counter / nbTotal;
-        int pos = (int) (width * progress);
+        float progress =  static_cast<float>(counter) / static_cast<float>(nbTotal);
+        int pos = static_cast<int>(static_cast<float>(width) * progress);
 
         std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
         auto time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time).count();
         std::cout << "[";
 
-        for (int i = 0; i < width; ++i) {
+        for (int i = 0; i < static_cast<int>(width); ++i) {
             if (i < pos) std::cout << sbComplited;
             else if (i == pos) std::cout << ">";
             else std::cout << sbIncomplited;
         }
-        std::cout << "] " << int(progress * 100.0) << "% "
-                  << "Eval. time: " << float(time_elapsed) / 1000.0 << "s\r";
+        std::cout << "] " << static_cast<int>(progress * 100.f) << "% "
+                  << "Eval. time: " << float(time_elapsed) / 1000.f << "s\r";
 
         std::cout.flush();
     }

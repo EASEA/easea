@@ -37,7 +37,7 @@ public:
 
         CmoIndividual(void);
         ~CmoIndividual(void);
-        virtual size_t evaluate() = 0;
+        virtual std::size_t evaluate() = 0;
         bool operator ==(const CmoIndividual<TO, TV> &individual) const;
 
 };
@@ -56,7 +56,7 @@ template <typename TObjective, typename TVariable>
 bool CmoIndividual<TObjective, TVariable>::operator ==(const CmoIndividual<TO, TV> &individual) const
 {
 
-	for (size_t i = 0; i < individual.m_mutStep.size(); i++)
+	for (std::size_t i = 0; i < individual.m_mutStep.size(); i++)
 		m_mutStep[i] = individual.m_mutStep[i];
         return m_variable == individual.m_variable;
 }
