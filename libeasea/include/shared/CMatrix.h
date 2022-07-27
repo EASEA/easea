@@ -266,7 +266,10 @@ std::istream& operator>>(std::istream &is, CMatrix<TE>& x)
     TE v;
 
     is>>c;
-    c=is.peek();
+    int t = is.peek();
+    if (t == std::istream::traits_type::eof())
+	    throw std::logic_error("Bad input stream");
+    c = static_cast<char>(t);
 
     if (c!=']')
     {
