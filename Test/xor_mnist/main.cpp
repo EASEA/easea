@@ -287,10 +287,10 @@ int main(int argc, char* argv[]) {
 
     // Delete data if no args
     if (argc == 1) {
-        t = system("rm TrainingImage.csv");
-	(void)(t);
-        t = system("rm TestImage_OnlyLabel.csv");
-	(void)(t);
+        auto v = system("rm TrainingImage.csv");
+	(void)(v);
+        v = system("rm TestImage_OnlyLabel.csv");
+	(void)(v);
     }
     // Return execution time
     std::cout << std::endl;
