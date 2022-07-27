@@ -9,9 +9,9 @@
 
 #include <CQMetricsGD.h>
 
-    CQMetricsGD::CQMetricsGD():CQMetricsAbs() {};
+    CQMetricsGD::CQMetricsGD():CQMetricsAbs() {}
 
-    CQMetricsGD::~CQMetricsGD() {};
+    CQMetricsGD::~CQMetricsGD() {}
 
     double CQMetricsGD::get(vector< vector<double> > const& takenFront, vector< vector<double> > const& realFront, int nbObj) {
 
@@ -36,4 +36,4 @@
         double metricGD = sum / static_cast<double>(normalizedTakenFront.size());
 
         return metricGD;
-    };
+    }
