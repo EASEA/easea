@@ -15,6 +15,7 @@
 
 #include <vector>
 #include <cassert>
+#include <numeric>
 #include <shared/CMatrix.h>
 
 
