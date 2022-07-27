@@ -11,12 +11,12 @@
 
 
 #ifdef DEBUG
-#define DEBUG_PRT(format, args...) fprintf (stdout,"***DBG***  %s-%d: "format"\n",__FILE__,__LINE__ __VA_OPT__(,) __VA_ARGS__)
-#define DEBUG_YACC(format, args...) fprintf (stdout,"***DBG_YACC***  %s-%d: "format"\n",__FILE__,__LINE__ __VA_OPT__(,) __VA_ARGS__)
+#define DEBUG_PRT(format, ...) fprintf (stdout,"***DBG***  %s-%d: "format"\n",__FILE__,__LINE__ __VA_OPT__(,) __VA_ARGS__)
+#define DEBUG_YACC(format, ...) fprintf (stdout,"***DBG_YACC***  %s-%d: "format"\n",__FILE__,__LINE__ __VA_OPT__(,) __VA_ARGS__)
 #else
 #ifndef WIN32
-#define DEBUG_PRT(format, args...)
-#define DEBUG_YACC(format, args...)
+#define DEBUG_PRT(format, ...)
+#define DEBUG_YACC(format, ...)
 #endif
 #endif
 
