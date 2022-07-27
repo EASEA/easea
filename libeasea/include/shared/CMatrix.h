@@ -89,7 +89,7 @@ public:
                  j++;
              }
              if (M!=j)
-                 std::logic_error("Not a CMatrix");
+                 throw std::logic_error("Not a CMatrix");
 
              i++;
 
