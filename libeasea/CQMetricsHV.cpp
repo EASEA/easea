@@ -68,7 +68,7 @@
     }
 
         double minValue = front[0][objective];
-        for (std::size_t i = 1; i < nbPoints; i++) {
+        for (int i = 1; i < nbPoints; i++) {
             double tmpValue = front[i][objective];
             if (tmpValue < minValue)
                 minValue = tmpValue;
@@ -135,7 +135,7 @@
 
         double hv = calculate(invertedFront2,static_cast<int>(invertedFront.size()),nbObj);
 
-        for(auto y = 0 ; y < invertedFront.size() ; y++ )
+        for(std::size_t y = 0 ; y < invertedFront.size() ; y++ )
             delete [] invertedFront2[y] ;
 
         delete [] invertedFront2;
