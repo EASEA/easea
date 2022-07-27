@@ -24,7 +24,7 @@
         }
 
         return ((i >= nbObj) && betterInAnyObjective);
-    };
+    }
 
     void CQMetricsHV::swap(double** front, int id_1, int id_2) {
 
@@ -32,7 +32,7 @@
 
         front[id_1] = front[id_2];
         front[id_2] = temp;
-    };
+    }
 
     int CQMetricsHV::filterNondominatedPop(double** front, int noPoints, int nbObj) {
 
@@ -58,7 +58,7 @@
         }
 
         return n;
-    };
+    }
 
     double CQMetricsHV::surfaceUnchangedTo(double** front, int nbPoints, int objective) {
 
@@ -74,7 +74,7 @@
                 minValue = tmpValue;
         }
         return minValue;
-    };
+    }
 
     int CQMetricsHV::reduceNondominatedSet(double** front, int nbPoints, int objective, double threshold) {
 
@@ -87,7 +87,7 @@
             }
         }
         return n;
-    };
+    }
 
 
 
@@ -116,7 +116,7 @@
             n = reduceNondominatedSet(front, n, nbObj - 1, distance);
         }
         return volume;
-    };
+    }
 
     double CQMetricsHV::get(vector< vector<double> > const& takenFront, vector< vector<double> > const& realFront, int nbObj) {
 
@@ -127,9 +127,9 @@
         vector< vector<double> > invertedFront = getFunctions()->getInvertedFront(normalizedFront);
 
         double ** invertedFront2 = new double*[invertedFront.size()];
-        for (auto i = 0; i < invertedFront.size(); i++) {
+        for (std::size_t i = 0; i < invertedFront.size(); i++) {
             invertedFront2[i] = new double[invertedFront[i].size()];
-            for (auto j = 0; j < invertedFront[i].size(); j++)
+            for (std::size_t j = 0; j < invertedFront[i].size(); j++)
                 invertedFront2[i][j] = invertedFront[i][j];
         }
 
@@ -141,7 +141,7 @@
         delete [] invertedFront2;
 
         return hv;
-    };
+    }
 
 
 

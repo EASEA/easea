@@ -26,7 +26,7 @@
                                                 minValues);
 
         double sum = 0.0;
-        for (auto i = 0; i < takenFront.size(); i++)
+        for (decltype(takenFront.size()) i = 0; i < takenFront.size(); i++)
             sum += power<c_pow>(getFunctions()->distanceToClosedPoint(normalizedTakenFront[i],
                                              normalizedRealFront));
 

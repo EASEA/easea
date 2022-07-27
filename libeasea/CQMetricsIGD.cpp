@@ -8,9 +8,9 @@
 
 #include <CQMetricsIGD.h>
 
-    CQMetricsIGD::CQMetricsIGD():CQMetricsAbs() {};
+    CQMetricsIGD::CQMetricsIGD():CQMetricsAbs() {}
 
-    CQMetricsIGD::~CQMetricsIGD() {};
+    CQMetricsIGD::~CQMetricsIGD() {}
 
     double CQMetricsIGD::get(vector< vector<double> > const& takenFront, vector< vector<double> > const& realFront, int nbObj) {
         vector<double> maxValues = getFunctions()->getMaxValues(realFront, nbObj);
@@ -24,7 +24,7 @@
                                                 minValues);
 
         double sum = 0.0;
-        for (auto i = 0; i < normalizedRealFront.size(); i++)
+        for (std::size_t i = 0; i < normalizedRealFront.size(); i++)
             sum += power<c_pow>(getFunctions()->distanceToClosedPoint(normalizedRealFront[i],
                                              normalizedTakenFront));
 
@@ -35,5 +35,5 @@
 
         return metricIGD;
 
-    };
+    }
 
