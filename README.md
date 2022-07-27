@@ -73,7 +73,7 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release
 4. Compile EASENA by typing:
 
 ```bash
-`cmake --build build --config Release`
+cmake --build build --config Release
 ```
 
 5. Finally install EASENA with the command:
