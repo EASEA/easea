@@ -120,7 +120,7 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
 
   int xoverP = globalRandomGenerator->random(0,stockPointCount);
   for( int i=0 ; ; )
-    if( (i+opArity[(int)dNodes[parentIndexP]->opCode])>xoverP ){
+    if( (i+static_cast<int>(opArity[(int)dNodes[parentIndexP]->opCode]))>xoverP ){
       reminderP = xoverP-i;
       break;
     }
