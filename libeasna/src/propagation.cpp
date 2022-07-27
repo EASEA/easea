@@ -274,7 +274,7 @@ void retropropagateBatch(
 		// if average, we divide the error by the batch size
 		for(int i = 0; i < neuronalNetwork.neuronsByLayers[lastLayerId]; i++) {
 			// we compute the error
-			neuronalNetwork.errors[lastLayerId][i] /= batchSize;
+			neuronalNetwork.errors[lastLayerId][i] /= static_cast<float>(batchSize);
 		}
 	}
 	// Then, for each hidden layer, starting from the end...
