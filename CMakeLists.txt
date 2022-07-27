@@ -80,6 +80,7 @@ target_compile_options(easena PUBLIC
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL>
 	)
 TARGET_LINK_LIBRARIES(easena libeasea libeasna)
+target_compile_definitions(easena PUBLIC $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>) # :(
 
 ### Includes ###
 
