@@ -21,7 +21,7 @@ void printDistributionFunctionName();
  * @return true 
  * @return false 
  */
-bool isImplementedDistributionFunction(const std::string dist);
+bool isImplementedDistributionFunction(const std::string& dist);
 
 /**
  * @brief Create a generator to use according a seed
@@ -40,6 +40,6 @@ pcg32 generateEngine(const int seed);
  * @param param2 Reference to the second parameter of the distribution
  * @return float 
  */
-float generateRandom(pcg32 &engine, const std::string dist, const float param1, const float param2 );
+float generateRandom(pcg32 &engine, const std::string& dist, const float param1, const float param2 );
 
 #endif
