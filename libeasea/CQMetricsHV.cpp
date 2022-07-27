@@ -8,9 +8,9 @@
 
 #include <CQMetricsHV.h>
 
-    CQMetricsHV::CQMetricsHV():CQMetricsAbs() {};
+    CQMetricsHV::CQMetricsHV():CQMetricsAbs() {}
 
-    CQMetricsHV::~CQMetricsHV() {};
+    CQMetricsHV::~CQMetricsHV() {}
 
     bool  CQMetricsHV::dominates(double* point1, double* point2, int nbObj) {
 
@@ -68,7 +68,7 @@
     }
 
         double minValue = front[0][objective];
-        for (auto i = 1; i < nbPoints; i++) {
+        for (std::size_t i = 1; i < nbPoints; i++) {
             double tmpValue = front[i][objective];
             if (tmpValue < minValue)
                 minValue = tmpValue;
