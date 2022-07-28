@@ -93,9 +93,9 @@ ________________________________________________________________________________
 /************************************************************************************************/
 
 static constexpr float	pMutPerGene		= 0.5;	/* 		= probabilité de mutation par individu	*/
-static constexpr int	nbProfsManquants	= 0;	/* 		= nombre de profs suposés manquants	*/
-static constexpr int	nbSallesManquantes	= 0;	/* 		= nombre de salles suposées manquantes	*/
-static constexpr int	nbCreneauxManquants	= 0;	/* 		= nombre de creneaux suposés manquants	*/
+static int	nbProfsManquants	= 0;	/* 		= nombre de profs suposés manquants	*/
+static int	nbSallesManquantes	= 0;	/* 		= nombre de salles suposées manquantes	*/
+static int	nbCreneauxManquants	= 0;	/* 		= nombre de creneaux suposés manquants	*/
 
 static clock_t	start, finish;			/* 		= permet l'estimation du temps de calcul*/
 static double	duration;			/* 		= temps de calcul			*/

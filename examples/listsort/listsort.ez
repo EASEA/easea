@@ -10,8 +10,8 @@ Operating System: Windows XP
 _________________________________________________________*/
 
 \User declarations:
-  static constexpr int _SIZE_=10;
-  static constexpr double pMutPerGene=0.4;
+  static int _SIZE_=10;
+  static double pMutPerGene=0.4;
   #include<cstring>
   inline void swap(int& a,int& b) {int c=a; a=b; b=c;}
 \end
