@@ -7,7 +7,7 @@ __________________________________________________________*/
 
 #define SIZE 1000
  
-float pMutPerGene=0.1;
+static constexpr float pMutPerGene=0.1;
 \end
 
 \User functions:
