@@ -4,6 +4,7 @@ onemax.ez // Evolve individuals containing 111111111111111111...
 __________________________________________________________*/
 
 \User declarations :
+
 #define SIZE 1000
  
 float pMutPerGene=0.1;
