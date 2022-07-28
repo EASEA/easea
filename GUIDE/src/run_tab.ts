@@ -14,10 +14,10 @@ import { Island_options_win } from './island_options_win';
 import * as fs_extra from 'fs-extra';
 import { Advanced_option_widget } from './advanced_option_widget';
 import { running_plot } from './index';
-import { ChildProcess } from 'child_process';
+import { ChildProcess, spawnSync } from 'child_process';
 import { Results_win } from './results_win';
 import ip from 'ip';
-import fs, { copyFileSync, cpSync, mkdirSync } from 'fs';
+import fs, { copyFileSync, cpSync, existsSync, mkdirSync } from 'fs';
 import { cwd, exit } from 'process';
 import * as paths from './paths';
 
@@ -55,6 +55,7 @@ export class Run_tab {
     total_runs: number = 0;
     batch_id: number = 0;
     plot_last_gen_only: boolean = true;
+    easea_logs_path: string = "";
 
     //thresholds array
     best_fit_result_thresh: number[][] = [];    // [0] = value [1] = gen
@@ -119,13 +120,16 @@ export class Run_tab {
 
         // ip address
         const ip_label = new QLabel();
-        ip_label.setText('Actual IP address : ' + ip.address());
+        // const addresse = spawnSync("curl", ["ifconfig.me"]).stdout.toString();
+        // ip_label.setText('Actual IP address : ' + addresse);
+        ip_label.setText('Actual IP address : ' + ip.address(undefined, 'ipv4'));
         ip_label.setFixedSize(300,30);
 
         // activate island model
         this.activate_island_model.setText('Activate Island Model');
         this.activate_island_model.addEventListener('stateChanged', () => {
             this.island_model = this.activate_island_model.isChecked();
+
         });
 
         // nb plots choice
@@ -206,7 +210,6 @@ export class Run_tab {
             plot_obj.image_label.setFixedSize(210, 30);
             plot_obj.image_label.setText('No graph to display');
             plot_obj.btn_widget.setEnabled(false);
-                
             
             if (this.ready === 0) {
                 new Win_alert('Please compile your file before run', 'Run error');
@@ -228,10 +231,10 @@ export class Run_tab {
                 return;
             }
 
-            if (this.island_obj.local === false) {
-                new Win_alert('Remote islands not yet implemented');
-                return;
-            }
+            // if (this.island_obj.local === false) {
+            //     new Win_alert('Remote islands not yet implemented');
+            //     return;
+            // }
 
             if (this.nb_plots > this.option_obj.nb_gen) {
                 new Win_alert('The number of plots is invalid \n(nb generations \u2265 nb plots required)', 'Run error');
@@ -245,18 +248,24 @@ export class Run_tab {
 
             this.run_results.length = 0;
 
-            this.enable_buttons(false);
-            this.progress_bar.reset();
-            this.progress_bar.setValue(0);
-            this.progress_bar.show();
-            this.results_button.hide();
-            this.plot_last_gen_only=true;
-            plot_obj.graph_option.check_gen.setChecked(true);
-
             if (this.ez_file_address) {
+                this.progress_bar.reset();
+                this.progress_bar.setValue(0);
+                this.progress_bar.show();
+                this.results_button.hide();
+                this.plot_last_gen_only=true;
+                plot_obj.graph_option.check_gen.setChecked(true);
+
                 let cmd = this.ez_file_address.substring(0, this.ez_file_address.length - 3);
 
                 if (this.batch_size > 0) {
+
+                    // remote islands model
+                    if(this.island_obj.local === false && this.activate_island_model.isChecked()){
+                        output_run.text.append("\n##### Runs launched in Remote Islands tab #####\n\n");
+                        util.read_ip_file("ip.txt");
+                        return;
+                    }
                 
                     // reset running animation & output
                     this.running_animation_movie.start();
@@ -276,7 +285,6 @@ export class Run_tab {
 
                     } catch(e) {
                         console.log(e);
-                        console.log(e);
                         exit(1);
                     }
 
@@ -292,10 +300,10 @@ export class Run_tab {
                     this.std_dev_result_thresh.length = 0;
 
                     for(let x = 0; x <= this.batch_size; x++){
-                        this.best_fit_result_thresh[x] = [];
+                        this.best_fit_result_thresh[x]  = [];
                         this.worst_fit_result_thresh[x] = [];
-                        this.avg_fit_result_thresh[x] = [];
-                        this.std_dev_result_thresh[x] = [];
+                        this.avg_fit_result_thresh[x]   = [];
+                        this.std_dev_result_thresh[x]   = [];
                     }
 
                     if(this.island_obj.local && this.activate_island_model.isChecked()){
@@ -308,15 +316,15 @@ export class Run_tab {
                         let cpt_rank = 0;
                         
                         // prepare local islands array
-                        for(let i = 1; i <= nb_files; i++){
-                            let file_name = this.dir_path + paths.dir_tmp_path + 'ip_file' + i + '.txt'
-                            let fd = fs.openSync(file_name, 'ax+');
+                        for(var i = 1; i <= nb_files; i++){
+                            var file_name = this.dir_path + paths.dir_tmp_path + 'ip_file' + i + '.txt'
+                            var fd = fs.openSync(file_name, 'ax+');
 
                             this.island_run_array[i-1] = [];
                             
-                            for(let j = 0; j < this.island_obj.nb_isl_per_run; j++){
+                            for(var j = 0; j < this.island_obj.nb_isl_per_run; j++){
                                 fs.writeFileSync(fd, '127.0.0.1:' + port_cpt + '\n', {encoding:'utf-8'});
-                                this.island_run_array[i-1][j] = [];
+                                this.island_run_array[i-1][j]    = [];
                                 this.island_run_array[i-1][j][0] = i-1;      // available for run
                                 this.island_run_array[i-1][j][1] = i-1;      // island num
                                 this.island_run_array[i-1][j][2] = port_cpt; // port associated
@@ -347,37 +355,49 @@ export class Run_tab {
                         let seconds = ((date_ob.getSeconds()<10?'0':'') + date_ob.getSeconds());
                         let time = year + '-' + month + '-' + day + '_' + hours + '-' + minutes + '-' + seconds;
                         let path = compile_obj.ez_file_address.split('/');
-                        let ez_filname = path[path.length-1];
+                        let ez_filename = path[path.length-1];
 
                         // dir creation
-                        if(i===0){
-                            this.dir_save = this.dir_path  + paths.dir_results_path + ez_filname.substring(0, ez_filname.length - 3) + '/' + time + '/';
+                        if(i === 0){
+                            var global_path = this.dir_path  + paths.dir_results_path + ez_filename.substring(0, ez_filename.length - 3) + '/' + time + '/';
+                            
                             try{
-                                mkdirSync(this.dir_save, {recursive:true});
+                                if(!existsSync(global_path))
+                                    mkdirSync(global_path, {recursive:true});
+
+                                if(this.plot_type === "2D"){
+                                    this.easea_logs_path = global_path + "easea_logs/";
+                                    if(!existsSync(this.easea_logs_path))
+                                        mkdirSync(this.easea_logs_path, {recursive:true});
+                                    
+                                    this.dir_save = global_path + 'guide_logs/';
+                                    mkdirSync(this.dir_save, {recursive:true});
+    
+                                    // move executable
+                                    var mover = spawnSync('cp', [`${this.dir_path}${ez_filename.slice(0,-3)}.prm`, this.easea_logs_path], {cwd: this.dir_path});
+                                    if(mover.status != 0){
+                                        output_run.text.append(mover.output.toString());
+                                        this.progress_bar.hide();
+                                        return;
+                                    }
+                                } else {
+                                    this.easea_logs_path = global_path;
+                                }
+    
                             } catch (e){
                                 if(e !== 'EEXIST')
-                                console.log("Error during result dir generation : " + e);
+                                    console.log("Error during result dir generation : " + e);
                             }
-                            // save logs in results dir
-                            // if(this.plot_type == "2D" && !this.island_model){
-                            //     try{
-                            //         let a = this.ez_file_address.substring(0, this.ez_file_address.length - 3);
-                            //         let n = a.split(`/`)
-                            //         cmd = this.dir_save + n[n.length-1]
-                            //         copyFileSync(a, this.dir_save + n[n.length-1]);
-                            //     } catch (e) {
-                            //         console.log(e)
-                            //     }
-                            // }
                         }
 
                         // file creation
-                        let file = this.dir_save + ez_filname.substring(0, ez_filname.length - 3) + '_' + time;
+                        let file = this.dir_save + ez_filename.substring(0, ez_filename.length - 3) + '_' + time;
                         if(!this.island_model){
                             file = file + '_run_' + (i+1) +'.log';
-
                         }
                         
+                        this.enable_buttons(false);
+
                         // prepare options
                         this.build_run_options(i);
 
@@ -388,9 +408,17 @@ export class Run_tab {
                         if(!this.island_model){
                             
                             if(i === 0){
-                                var run = output_run.run(cmd, this.nb_plots, true, file, this.options, this.dir_path, i + 1);
+                                if(this.plot_type === "3D"){
+                                    var run = output_run.run(cmd, this.nb_plots, true, file, this.options, this.dir_path, i + 1);
+                                } else {
+                                    var run = output_run.run(cmd, this.nb_plots, true, file, this.options, this.easea_logs_path, i + 1);
+                                }
                             } else {
-                                var run = output_run.run(cmd, this.nb_plots, false, file, this.options, this.dir_path, i + 1);
+                                if(this.plot_type === "3D"){
+                                    var run = output_run.run(cmd, this.nb_plots, false, file, this.options, this.dir_path, i + 1);
+                                } else {
+                                    var run = output_run.run(cmd, this.nb_plots, false, file, this.options, this.easea_logs_path, i + 1);
+                                }
                             }
 
                             if (i === 0)
@@ -419,16 +447,16 @@ export class Run_tab {
                         } else if (this.island_obj.local) {
                             running_islands.length = 0;
 
-                            for(let k = 0; k < nb_files; k++){
+                            for(var k = 0; k < nb_files; k++){
                                 if(this.island_run_array[k][0][0] < this.batch_size){
 
                                     console.log('---------------- Run subprocess ' + (k) + ' ----------------')
 
-                                    for(let l = 0; l < this.island_run_array[k].length; l++){
+                                    for(var l = 0; l < this.island_run_array[k].length; l++){
                                         if(l === 0 && k === 0){
-                                            this.run_local_islands(k, l, file, output_run, this.island_run_array[k][l][3], nb_files, true);
+                                            this.run_local_islands(k, l, this.easea_logs_path, output_run, this.island_run_array[k][l][3], nb_files, true);
                                         } else {
-                                            this.run_local_islands(k, l, file, output_run, this.island_run_array[k][l][3], nb_files, false);
+                                            this.run_local_islands(k, l, this.easea_logs_path, output_run, this.island_run_array[k][l][3], nb_files, false);
                                         }
                                     }
                                 }
@@ -560,7 +588,7 @@ export class Run_tab {
         this.options = this.options.concat(' --serverPort ' + this.island_run_array[island_group][island_num][2]);
         this.options = this.options.concat(' --ipFile ' + this.dir_path + paths.dir_tmp_path + 'ip_file' + (this.island_run_array[island_group][island_num][1] + 1) + '.txt');
         
-        var local_run = output_run.run(cmd, this.nb_plots, print, file, this.options, this.dir_path, (rank + 1));
+        var local_run = output_run.run(cmd, this.nb_plots, print, file, this.options, this.easea_logs_path, (rank + 1));
         
         if(rank === 0)
             initial_proc = local_run
@@ -740,13 +768,13 @@ export class Run_tab {
             this.options = this.options.concat(' --remoteIslandModel 0');
         }
             
-        const timestamp_seed = Math.trunc(Date.now() / 1000);
+        // const timestamp_seed = Math.trunc(Date.now() / 1000);
 
         if (!isNaN(this.option_obj.proc_tab[rank].seed_value)) {
             this.options = this.options.concat(' --seed ' + this.option_obj.proc_tab[rank].seed_value);
         } else {
             if (isNaN(this.option_obj.seed)) {
-                this.options = this.options.concat(' --seed ' + (timestamp_seed + seed_cpt));
+                this.options = this.options.concat(' --seed ' + (this.batch_id + seed_cpt));
             } else {
                 this.options = this.options.concat(' --seed ' + (this.option_obj.seed + seed_cpt));
             }

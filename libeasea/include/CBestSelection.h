@@ -43,7 +43,7 @@ public:
 	}
 	for (size_t i = current_; i< p->size(); i++){
 	     if (dominance_->match(p->get(i),p->get(best_)) < 0)
-		best_ = i;
+		best_ = static_cast<int>(i);
 	}
 	current_ = p->size();
 	TIndividual *res = p->get(best_);

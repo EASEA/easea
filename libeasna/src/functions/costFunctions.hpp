@@ -21,7 +21,7 @@ void printCostFunctionName();
  * @param s 
  * @return fucntion pointer
  */
-CostType costMatch(const std::string s);
+CostType costMatch(const std::string& s);
 
 /**
  * @brief Compute error through cross entropy formula 

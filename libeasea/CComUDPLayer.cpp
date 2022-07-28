@@ -87,7 +87,7 @@ CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::st
 	dest = *resolver.resolve(udp::v4(), ip, client_name).begin(); // throw if error (safe)
 	dest.port(port);
 	socket.open(udp::v4());
-};
+}
 
 std::string const& CComUDPClient::getClientName() const
 {
@@ -97,7 +97,7 @@ std::string const& CComUDPClient::getClientName() const
 void CComUDPClient::send(std::string const& individual)
 {
 	socket.send_to(boost::asio::buffer(individual), dest);
-};
+}
 
 std::string CComUDPClient::getIP() const
 {
@@ -131,8 +131,10 @@ bool checkValidLine(std::string const& line)
 
 	try {
 		auto p = std::stoi(port);
+		(void)(p);
 		udp::resolver resolver(CComSharedContext::get());
 		udp::endpoint ep = *resolver.resolve(udp::v4(), ip, "resolve").begin(); // throw if error (safe)
+		(void)(ep);
 	} catch (...) {
 		return false;
 	}

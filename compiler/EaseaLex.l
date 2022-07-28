@@ -2644,8 +2644,11 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
   strcpy(sEZ_FILE_NAME, sRAW_PROJECT_NAME);
   strcat(sEZ_FILE_NAME,".ez");
 
-  for (i=strlen(sRAW_PROJECT_NAME)-1;isFigure(sRAW_PROJECT_NAME[i]) || isLetter(sRAW_PROJECT_NAME[i]);i--);
-  strcpy (sPROJECT_NAME,&(sRAW_PROJECT_NAME[i+1]));
+  /* the following code is a mystery
+  // for (i=strlen(sRAW_PROJECT_NAME)-1;isFigure(sRAW_PROJECT_NAME[i]) || isLetter(sRAW_PROJECT_NAME[i]);i--);
+  // strcpy (sPROJECT_NAME,&(sRAW_PROJECT_NAME[i+1]));
+  */
+  strcpy(sPROJECT_NAME, sRAW_PROJECT_NAME);
   
   for(i=0;i<(int)strlen(sPROJECT_NAME);i++) sLOWER_CASE_PROJECT_NAME[i]=mytolower(sPROJECT_NAME[i]);
   

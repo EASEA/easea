@@ -25,7 +25,7 @@ using namespace std;
 class CQMetricsFunctions{
 public:
     /* Read Pareto front from file */
-	vector< vector<double> > readFrontFromFile(string path){
+	vector< vector<double> > readFrontFromFile(string const& path){
 
         vector< vector <double> > front;
 
@@ -55,9 +55,10 @@ public:
         return front;
     };
 
-    vector<double> getMaxValues(vector< vector<double> > front, int nbObj) {
+    vector<double> getMaxValues(vector< vector<double> > const& front, int nbObj) {
 
         vector<double> maxValues;
+	maxValues.reserve(nbObj);
 
 	    for (auto i = 0; i < nbObj; i++)
 		    maxValues.push_back(-std::numeric_limits<double>::max());
@@ -73,9 +74,10 @@ public:
 	    return maxValues;
     };
 
-    vector<double> getMinValues(vector< vector<double> > front, int nbObj) {
+    vector<double> getMinValues(vector< vector<double> > const& front, int nbObj) {
 
         vector<double> minValues;
+	minValues.reserve(nbObj);
 
        for (auto i = 0; i < nbObj; i++)
             minValues.push_back(std::numeric_limits<double>::max());
@@ -89,7 +91,7 @@ public:
         return minValues;
     };
 
-	double distance(vector<double> a, vector<double> b){
+	double distance(vector<double> const& a, vector<double> const& b){
 
         double distance = 0.0;
 
@@ -100,7 +102,7 @@ public:
         return sqrt(distance);
     };
 
-    double distanceToClosedPoint(vector<double> point, vector< vector<double> > front){
+    double distanceToClosedPoint(vector<double> const& point, vector< vector<double> > const& front){
 
         double minDistance = distance(point,front[0]);
 
@@ -113,7 +115,7 @@ public:
         return minDistance;
     };
 
-    vector< vector<double> > getNormalizedFront(vector< vector<double> > front, vector<double> maxValue, vector<double> minValue) {
+    vector< vector<double> > getNormalizedFront(vector< vector<double> > const& front, vector<double> const& maxValue, vector<double> const& minValue) {
 
         vector< vector<double> > normalizedFront;
 
@@ -127,7 +129,7 @@ public:
         return normalizedFront;
     };
 
-	vector< vector<double> > getInvertedFront(vector< vector<double> > front) {
+	vector< vector<double> > getInvertedFront(vector< vector<double> > const& front) {
 
 	vector< vector<double> > invertedFront;
 

@@ -14,7 +14,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <type_traits>
+// NOLINTNEXTLINE
 #include <cuda.h>
+// NOLINTNEXTLINE
 #include <curand_kernel.h>
 
 template <typename T>

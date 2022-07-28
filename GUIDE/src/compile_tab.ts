@@ -31,6 +31,7 @@ export class Compile {
     cdas = false;
     memetic = false;
     cmaes = false;
+    fastemo = false;
     verbose = false;
     true_line = false;
 
@@ -140,6 +141,18 @@ export class Compile {
             }
         });
 
+        const check_fastemo = new QCheckBox();
+        check_fastemo.setText('fastemo');
+        check_fastemo.addEventListener('stateChanged', () => {
+            this.fastemo = !this.fastemo;
+            if (check_fastemo.isChecked()) {
+                run_obj.nb_plot_box.text_edit.clear();
+                run_obj.nb_plot_box.widget.setEnabled(false);
+            } else {
+                run_obj.nb_plot_box.widget.setEnabled(true);
+            }
+        });
+
         const check_memetic = new QCheckBox();
         check_memetic.setText('memetic');
         check_memetic.addEventListener('stateChanged', () => {
@@ -170,6 +183,7 @@ export class Compile {
         option_layout.addWidget(check_asrea, 2, 0);
         option_layout.addWidget(check_ibea, 2, 1);
         option_layout.addWidget(check_cdas, 2, 2);
+        option_layout.addWidget(check_fastemo, 2, 3);
         option_layout.addWidget(check_memetic, 3, 0);
         option_layout.addWidget(check_cmaes, 3, 1);
 
@@ -240,6 +254,9 @@ export class Compile {
                 if (this.cmaes)
                     params.push('-cmaes');
 
+                if (this.fastemo)
+                    params.push('-fastemo');
+
                 if (this.verbose)
                     params.push('-v');
 
@@ -284,7 +301,7 @@ export class Compile {
                                 plot_obj.graph_option.nb_plots = 1;
                                 this.ready = 1;
                                 run_obj.setReady(1);
-                                if (this.nsgaii || this.nsgaiii || this.asrea || this.ibea || this.cdas) {
+                                if (this.nsgaii || this.nsgaiii || this.asrea || this.ibea || this.cdas || this.fastemo) {
                                     run_obj.plot_type = '3D';
                                     plot_obj.graph_option.axe_z_box.widget.show();
                                     plot_obj.graph_option.plots.widget.hide();

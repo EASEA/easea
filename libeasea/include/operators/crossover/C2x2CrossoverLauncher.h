@@ -15,6 +15,7 @@
 
 #include <vector>
 #include <random>
+#include <algorithm>
 #include <shared/CRandom.h>
 #include <operators/crossover/base/CCrossover.h>
 #include <operators/crossover/wrapper/CWrap2x2Crossover.h>
@@ -72,13 +73,13 @@ void C2x2CrossoverLauncher<TObjective, TVariable, TRandom>::runCrossover(std::ve
 	this->getCrossover().setLimitGen(TBase::getLimitGen());
 	this->getCrossover().setCurrentGen(TBase::getCurrentGen());
 
-        for (size_t offspring1 = 0; offspring1 < offspring.size();)
+        for (std::size_t offspring1 = 0; offspring1 < offspring.size();)
         {
-                std::random_shuffle(parent.begin(), parent.end(), [this](const size_t n)-> size_t{return std::uniform_int_distribution<size_t> (0, n - 1)(this->getRandom());});
-                for (size_t parent1 = 0; offspring1 < offspring.size() && parent1 < parent.size(); offspring1 += 2, parent1 += 2)
+                std::shuffle(parent.begin(), parent.end(), this->getRandom());
+                for (std::size_t parent1 = 0; offspring1 < offspring.size() && parent1 < parent.size(); offspring1 += 2, parent1 += 2)
                 {
-                        const size_t parent2 = (parent1 + 1) % parent.size();
-                        const size_t offspring2 = (offspring1 + 1) % offspring.size();
+                        const std::size_t parent2 = (parent1 + 1) % parent.size();
+                        const std::size_t offspring2 = (offspring1 + 1) % offspring.size();
                         (*this)(*parent[parent1], *parent[parent2], *offspring[offspring1], *offspring[offspring2]);
                 }
         }

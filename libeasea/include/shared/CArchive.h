@@ -43,7 +43,7 @@ public:
 	void updateArchive(const TI candidate);
 	void updateArchiveEpsilon(const TI candidate, bool epsilon);
 	bool m_same;
-	static bool Dominate(const TI &individual1, const TI &individual2);
+	static bool Dominate(const TI &individual1, const TI &individual2, bool is_convert);
 	static bool Equal(const TI &individual1, const TI &individual2);
 
 protected:
@@ -85,9 +85,10 @@ void CArchive<TIndividual>::setMaxSize(size_t maxSize)
 }
 
 template <typename TIndividual>
-bool CArchive<TIndividual>::Dominate(const TI &individual1, const TI &individual2)
+bool CArchive<TIndividual>::Dominate(const TI &individual1, const TI &individual2, bool is_convert)
 {
-        return easea::shared::functions::isDominated(individual1.m_objective, individual2.m_objective);
+	return easea::shared::functions::isDominated(individual1.m_objective, individual2.m_objective);
+
 }
 
 template <typename TIndividual>
@@ -113,17 +114,11 @@ void CArchive<TIndividual>::updateArchive(const TI candidate)
 
 	for (auto it = m_archive.begin(); it != m_archive.end();)
 	{
-		if (Dominate(candidate, *it)) {
+		if (Dominate(candidate, *it, false))
 			it = m_archive.erase(it);
-		} else if (Dominate(*it, candidate)) {
+		else if (Dominate(*it, candidate, false))
 			return;
-		}
-		else {
-			++it;
-		}
-		if (it != m_archive.end() && Equal(*it, candidate) == true)
-		    it = m_archive.erase(it);
-
+		else	++it;
 	}
 
 	m_archive.push_back(candidate);
@@ -148,9 +143,9 @@ void CArchive<TIndividual>::updateArchiveEpsilon(const TI candidate, bool epsilo
         if (m_archive.size() < 0) LOG_ERROR(errorCode::value, "Size of archive < 0!");
         for (auto it = m_archive.begin(); it != m_archive.end();)
         {
-                if (Dominate(candidate, *it))
+                if (Dominate(candidate, *it, true))
                         it = m_archive.erase(it);
-                else if (Dominate(*it, candidate))
+                else if (Dominate(*it, candidate, true))
                         {m_same = true; return;}
                 else    ++it;
         }
@@ -170,6 +165,7 @@ void CArchive<TIndividual>::updateArchiveEpsilon(const TI candidate, bool epsilo
 			std::sort(iFront.begin(), iFront.end(), [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;});
 		    }
 		    else{
+
 			std::sort(iFront.begin(), iFront.end(), [](TPtr individual1, TPtr individual2)->bool{return individual1->m_fitness < individual2->m_fitness;});
 		    }
 //int c = std::count_if(iFront.begin(), iFront.end(), [](TPtr i) {return i->m_fitness == 0;});

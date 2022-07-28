@@ -48,9 +48,9 @@ string getMsgType(msgType type) {
 	}
         full_msg_ = ss.str();
         std::cout << full_msg_.c_str();
-    };
+    }
 
-    Output::~Output(){};
+    Output::~Output(){}
 
 
     Exception::Exception(errorCode code, const string &msg, const string &func,
@@ -62,9 +62,9 @@ string getMsgType(msgType type) {
         << msg_ << std::endl;
 
         full_msg_ = ss.str();
-    };
+    }
 
-    Exception::~Exception() throw(){};
+    Exception::~Exception() throw(){}
 
-    const char *Exception::what() const throw(){ return full_msg_.c_str(); };
+    const char *Exception::what() const throw(){ return full_msg_.c_str(); }
 

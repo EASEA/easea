@@ -193,7 +193,7 @@ double mu = 4000;//250;//400;//4000;
 /*if (parent1.m_objective[0] == parent2.m_objective[0])
 if (parent1.m_objective[1] == parent2.m_objective[1])
 sigma = sigma*2;*/
-	m_local = kk/(sigma*sqrt(2*3.14))*exp(-1*powf((this->getCurrentGen()-mu),2)/(2*powf(sigma,2)));
+	m_local = kk/(sigma*sqrt(2*3.14))*exp(-1*pow((this->getCurrentGen()-mu),2)/(2*pow(sigma,2)));
 //m_local=(k1*0.00001*powf(1.088/0.0001, (this->getCurrentGen()/((TT)this->getLimitGen()))));
         launch(parent1.m_variable, parent2.m_variable, parent1.m_mutStep, parent2.m_mutStep, offspring1.m_variable, offspring2.m_variable);
 //	m_local = 0.0001 * powf(0.99/0.0001, (this->getCurrentGen()/(TT)this->getLimitGen()));

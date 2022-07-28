@@ -1,12 +1,14 @@
+
 EASENA -- EAsy Specification of Evolutionary and Neural Algorithms
 ===============================================
 
 <div style="text-align:center;" align="center">
 
-![Configure badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/configure.svg)
-![Build badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/build.svg)
-![Install badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/install.svg)
-![Examples badge](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/test.svg)
+| Operating System | Configure | Build | Install | Working examples |
+|------------------|:---------:|:-----:|:-------:|:----------------:|
+| Windows (msvc)   | ![Configure badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/configure-windows.svg) | ![Build badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/build-windows.svg) | ![Install badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/install-windows.svg) | ![Examples badge windows](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/test-windows.svg) |
+| Linux (gcc)   | ![Configure badge linux](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/configure-linux.svg) | ![Build badge linux](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/build-linux.svg) | ![Install badge linux](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/install-linux.svg) | ![Examples badge linux](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/test-linux.svg) |
+| MacOS (clang)   | ![Configure badge macos](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/configure-macos.svg) | ![Build badge macos](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/build-macos.svg) | ![Install badge macos](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/install-macos.svg) | ![Examples badge macos](https://raw.githubusercontent.com/EASEA/easea/badges/badges/master/test-macos.svg) |
 
 </div>
 
@@ -14,84 +16,95 @@ In this beta version, EASENA platform contains two engines within one program: E
 - The EASEA compiler (for artificial evolution) is automatically used on files using extension .ez
 - The EASNA platform (for neural networks) is automatically used on files using extension .nz
 
-## Requirements for using EASENA 
+## How to install
 
-EASENA requires at least:
-For installation EASENA and package dependencies, you will need administrator priviledges, so make sure your login is in the <tt>/etc/sudoers</tt>  or ask a system administrator to do it for you.
- 
-EASEA requires at least:
-* For linux users MUST be installed :
-  - g++ 5.0 version (or later)
-  - package dependencies : cmake, flex, bison, valgrind, gunzip, wget, r-base
-* For MacOSX users MUST be installed :
-  - g++ 5.0 version (or later)
-  - package dependencies : xcode, Command Tools, llvm, libomp, r
-* Optional (Recommended) for linux and MasOSX : 
-  - For graph results visualisation of single objective evolutionary runs :
-    - java jre 1.6 (or later) is required. You can get it here: https://www.java.com/download/.<br> Without it, an error appears at the start of easea's compiled programs but can be safely ignored.
-  - For graph results visualisation of multi-objective algorithms:
-    - r-package scatterplot3d is required. To install scatterplot3d in R shell : <br>
-       - you can run R shell by type in command line : <tt>$ r</tt>
-       - then in R shell, type following : <tt>install.packages("scatterplot3d")</tt>
-  - For using EASENA with GPU cards :
-    - CUDA SDK > 4.1. Please install CUDA using the following link: https://developer.nvidia.com/cuda-zone. Without it, you can use EASENA without GPU parallel computing. Be carefull about the compability of your CUDA toolkit and your GCC compiler !
+EASENA is tested regularly on Windows, Linux and MacOS and is available on these platforms.
 
+If you're using an ArchLinux based OS you can simply install EASENA via the [easena-git](https://aur.archlinux.org/packages/easena-git) aur package.
+Otherwise, you will need to compile this project.
 
-## Linux installation
-- Open a terminal window and install all required dependencies :<br>
-<tt>$ sudo apt-get install flex bison valgrind gunzip unzip wget cmake r-base</tt>
-- If you need, install optional dependencies as it was shown above
-- Then download zip archive with the latest version from the github Master branch : https://github.com/EASEA/easea 
-- Or clone the github repository by the following command in a command line of the terminal :<br> 
-<tt>$ git clone https://github.com/EASEA/easea.git</tt>
-- If EASENA was downloaded, in the same terminal window, cd to the directory where zip file was downloaded and expand the zip file :<br>
-<tt>$ unzip downloaded_file_name.zip</tt> 
-- Go to unziped direcory : <tt>cd easea</tt> or <tt>cd easea-master</tt>
-- To configure EASENA platform for the architecture of your computer, type in command line (from current directory):<br>
-<tt> $ cmake ./</tt> 
-- To compile the EASENA platform, type :<br>
-<tt>$ make</tt> 
-- To move the files around, type :<br>
-<tt>$ sudo make install</tt><br> 
-Typically, it will create a directory called <tt>/usr/local/easea</tt> that will contain a directory called <tt>bin</tt> and a directory called <tt>tpl</tt> 
-- Once this is done, you can modify your personal .bashrc file in your Home for saving EASEA paths for compiler and library. In order to do it, you have to add the two following lines at the end of .bashrc file :<br>
-<pre>
-export EZ_PATH=/usr/local/easena/
-export PATH=$PATH:/usr/local/easena/bin
-</pre>
+### Dependencies
 
+Compiling EASENA requires you to install `boost`, `flex`, `bison`, `openMP` and `cmake`. 
+It is also recommended to install `r` and the r-package _scatterplot3d_, along with `java` and `CUDA` if you would like to use EASENA to its fullest.
 
+#### Linux
 
-## MacOSX installation 
-First, open a terminal window and install dependencies in the command line of the terminal :
-- Install Command Tools : <tt>$ xcode-select --install </tt>
-- Install gcc by the following command : <tt>$ brew install gcc</tt>
-- Install Low Level Virtual Machine library by the following command : <tt>$ brew install llvm</tt>
-- Install libomp library by the following command : <tt>$ brew install libomp</tt>
-- Install R by the following command : <tt>$ brew install r</tt>
-- Install other package dependencies : <tt>$ brew install flex bison gunzip wget cmake</tt>
-- If you need, install optional dependencies as it was shown in section Requirements
+If your OS is up-to-date there should be no need to update your C++ compiler.
 
-The latest MacOSX Mojave system is not compliant with valgrind, which is why valgrind tests are limited to linux operating systems.
-Then configure, compile and install EASENA.
-Make sure that you are in easea or easea-master directory.<br>
-From current direcotry run in the terminal command line following commands :
-- <tt>$ cmake -DCMAKE_C_COMPILER="/usr/local/opt/gcc@9/bin/gcc-9" -DCMAKE_CXX_COMPILER="/usr/local/opt/gcc@9/bin/g++-9" .</tt>
-- <tt>$ make</tt>
-- <tt>$ sudo make install</tt>
-Once this is done, you can modify your personal .bash_profile in your Home for saving EASEA paths for compiler and library. In order to do it, you have to add the four following lines at the end of .bash_profile file :<br>
-<pre>
-export EZ_PATH=/usr/local/easena/
-export PATH=$PATH:/usr/local/easena/bin
-export LDFLAGS="-L/usr/local/opt/llvm/lib -L/usr/local/opt/libomp/lib"
-export CXX="/usr/local/opt/gcc@9/bin/g++-9"
-</pre>
+All the dependencies can be installed on *_Ubuntu_* by typing the following command:
 
-## Testing you installation
+```bash
+sudo apt install libboost-all-dev flex bison cmake gcc
+```
 
-If typing <tt>$ easena</tt> in the command line of terminal does not start the EASENA compiler, please check out the value of these variables and make sure they point to the good directories.
-If the <tt>Usage</tt> tool appears, it means the installation was successful.
+#### MacOS
 
+All the required dependencies for MacOS can be installed using [brew](https://brew.sh/). Once _brew_ is installed the following command install everything that is needed :
+
+```bash
+brew install bison flex libomp coreutils boost cmake clang
+```
+
+#### Windows
+
+Windows builds using _msvc_ are supported. The recommended way to install the required packages is to first install [chocolatey package manager](https://chocolatey.org/install).
+
+You need to install [Windows C++ compiler](https://visualstudio.microsoft.com/fr/downloads/). This can be done via _chocolatey_ with the command `choco install visualstudio2022buildtools` inside a Powershell command prompt, or via the _Visual Studio Community/Entreprise Installer_.
+
+The other dependencies can be installed using chocolatey by opening a Powershell prompt and pasting the following command :
+
+```bash
+choco install winflexbison3 boost-msvc-14.3 cmake
+```
+
+### Building and installing EASEA with CMake
+
+1. Once all dependencies are installed open either a bash shell on Linux/MacOS or a [MSBuild shell](https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line?view=msvc-170) on Windows
+
+2. Navigate to the directory you [downloaded this repository](https://stevenpcurtis.medium.com/downloading-repos-from-github-13a017951450) at
+
+3. Configure the build by typing the following command into your shell:
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+```
+
+4. Compile EASENA by typing:
+
+```bash
+cmake --build build --config Release
+```
+
+5. Finally install EASENA with the command:
+
+```bash
+cmake --install build
+```
+
+## How to use
+
+**EASENA requires you to set the _EZ_PATH_ environment variable.** *_This variable must include the trailing "/" !_*
+
+* [Set environment variables on Windows](https://docs.oracle.com/en/database/oracle/machine-learning/oml4r/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html)
+
+* [Set environment variables on MacOS](https://phoenixnap.com/kb/set-environment-variable-mac)
+
+* [Set environment variables on Linux](https://phoenixnap.com/kb/linux-set-environment-variable)
+
+Compiling a .ez file into a binary is a two steps process :
+
+1. Compile the .ez into C++ and generate the CMakeLists.txt.
+
+```bash
+$EZ_PATH/bin/easena your_ez_file.ez
+```
+
+2. Compile the C++ into a binary
+
+```bash
+cmake . && cmake --build .
+```
 
 ## ----- Congratulations, you can now use EASENA -----
 Thanks for downloading and installing EASEA/EASENA. We hope it will be useful in your work!
@@ -457,3 +470,4 @@ Finally, you can get here an example of such a json architecture file expected b
     "paramOfDist2":0.1
 }
 ```
+

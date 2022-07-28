@@ -14,6 +14,9 @@
 #include <CPseudoRandom.h>
 #include <CWrapIndividual.h>
 
+#include <sstream>
+#include <memory>
+
 
 constexpr double DEFAULT_PROBABILITY_ = 0.01;
 constexpr double DEFAULT_DELTA_ = 0.5;

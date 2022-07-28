@@ -11,6 +11,7 @@
 #include <CObjectiveComparator.h>
 #include <math.h>
 #include <limits>
+#include <memory>
 
 /* This class is used for assign the  distance between individuals.
  * This version of libeasea include only crowding distance (CD) for 2 MOAE:

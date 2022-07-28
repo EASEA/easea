@@ -8,9 +8,9 @@
 
 #include <CQMetricsHV.h>
 
-    CQMetricsHV::CQMetricsHV():CQMetricsAbs() {};
+    CQMetricsHV::CQMetricsHV():CQMetricsAbs() {}
 
-    CQMetricsHV::~CQMetricsHV() {};
+    CQMetricsHV::~CQMetricsHV() {}
 
     bool  CQMetricsHV::dominates(double* point1, double* point2, int nbObj) {
 
@@ -24,7 +24,7 @@
         }
 
         return ((i >= nbObj) && betterInAnyObjective);
-    };
+    }
 
     void CQMetricsHV::swap(double** front, int id_1, int id_2) {
 
@@ -32,7 +32,7 @@
 
         front[id_1] = front[id_2];
         front[id_2] = temp;
-    };
+    }
 
     int CQMetricsHV::filterNondominatedPop(double** front, int noPoints, int nbObj) {
 
@@ -58,7 +58,7 @@
         }
 
         return n;
-    };
+    }
 
     double CQMetricsHV::surfaceUnchangedTo(double** front, int nbPoints, int objective) {
 
@@ -68,13 +68,13 @@
     }
 
         double minValue = front[0][objective];
-        for (auto i = 1; i < nbPoints; i++) {
+        for (int i = 1; i < nbPoints; i++) {
             double tmpValue = front[i][objective];
             if (tmpValue < minValue)
                 minValue = tmpValue;
         }
         return minValue;
-    };
+    }
 
     int CQMetricsHV::reduceNondominatedSet(double** front, int nbPoints, int objective, double threshold) {
 
@@ -87,7 +87,7 @@
             }
         }
         return n;
-    };
+    }
 
 
 
@@ -116,9 +116,9 @@
             n = reduceNondominatedSet(front, n, nbObj - 1, distance);
         }
         return volume;
-    };
+    }
 
-    double CQMetricsHV::get(vector< vector<double> > takenFront, vector< vector<double> > realFront, int nbObj) {
+    double CQMetricsHV::get(vector< vector<double> > const& takenFront, vector< vector<double> > const& realFront, int nbObj) {
 
         vector<double> maxValues = getFunctions()->getMaxValues(realFront, nbObj);
         vector<double> minValues = getFunctions()->getMinValues(realFront, nbObj);
@@ -127,21 +127,21 @@
         vector< vector<double> > invertedFront = getFunctions()->getInvertedFront(normalizedFront);
 
         double ** invertedFront2 = new double*[invertedFront.size()];
-        for (auto i = 0; i < invertedFront.size(); i++) {
+        for (std::size_t i = 0; i < invertedFront.size(); i++) {
             invertedFront2[i] = new double[invertedFront[i].size()];
-            for (auto j = 0; j < invertedFront[i].size(); j++)
+            for (std::size_t j = 0; j < invertedFront[i].size(); j++)
                 invertedFront2[i][j] = invertedFront[i][j];
         }
 
-        double hv = calculate(invertedFront2,invertedFront.size(),nbObj);
+        double hv = calculate(invertedFront2,static_cast<int>(invertedFront.size()),nbObj);
 
-        for(auto y = 0 ; y < invertedFront.size() ; y++ )
+        for(std::size_t y = 0 ; y < invertedFront.size() ; y++ )
             delete [] invertedFront2[y] ;
 
         delete [] invertedFront2;
 
         return hv;
-    };
+    }
 
 
 

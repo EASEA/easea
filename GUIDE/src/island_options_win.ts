@@ -20,6 +20,7 @@ export class Island_options_win {
     local: boolean;
     nb_islands: number;
     nb_isl_per_run: number;
+    remote_ip:string[] = [];    // ip of remote islands
 
     constructor() {
         this.window = new QDialog();
@@ -180,6 +181,10 @@ export class Island_options_win {
                 if (file) {
                     this.ip_file = file
                     file_loaded.setText('IP file : ' + util.get_file_name(this.ip_file));
+
+                    this.remote_ip.length = 0;
+                    this.remote_ip = util.read_ip_file(file);
+                    console.log(this.remote_ip);
                 }
             }
 
@@ -311,7 +316,6 @@ export class Island_options_win {
             font-size: 15pt; 
             background-color: #ececec;
             border-bottom: 0.5px solid;
-            padding-bottom: 5px;
         `);
 
         return sep;

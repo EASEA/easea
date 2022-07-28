@@ -12,7 +12,7 @@
 
 class CPseudoRandom {
 private:
-    static CRandomGenerator * randomGenerator_;
+    static CRandomGenerator randomGenerator_;
 
 public:
     CPseudoRandom();

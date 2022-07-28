@@ -2,7 +2,7 @@
  * @author Clément Ligneul <clement.ligneul@etu.unistra.fr>
  */
 
-import { QWidget, QLabel, QPushButton, QTextBrowser, QGridLayout, TextInteractionFlag, QMovie, QBoxLayout, Direction } from '@nodegui/nodegui';
+import { QWidget, QLabel, QPushButton, QTextBrowser, QGridLayout, TextInteractionFlag, QMovie, QBoxLayout, Direction, QTextEdit } from '@nodegui/nodegui';
 import { spawn } from 'child_process';
 import { spawnSync } from 'child_process';
 import { running_plot, running_proc } from './index';
@@ -11,7 +11,7 @@ import * as plot_generation from './plot_generation';
 import { plot_obj, run_obj } from './index';
 import { write_in_file } from './plot_generation';
 import * as paths from './paths';
-import { chmodSync } from 'fs';
+import { write_log } from './utilities';
 
 
 require('child_process').spawn('node', ['--version'], {
@@ -43,6 +43,7 @@ export class Pseudo_term {
         this.text.setReadOnly(true);
         this.text.setTextInteractionFlags(TextInteractionFlag.NoTextInteraction);
         this.label_text.setTextInteractionFlags(TextInteractionFlag.NoTextInteraction);
+        this.text.setTabStopDistance(10);
 
         const reset_btn = new QPushButton();
         reset_btn.setText('Clear');
@@ -103,7 +104,6 @@ export class Pseudo_term {
         });
 
         return child;
-
     }
 
 
@@ -234,7 +234,8 @@ export class Pseudo_term {
 
                 // write_in_file(data, file, run_obj.batch_id.toString());
                 if(rank){
-                    write_in_file(data + '\t' + rank, file + '_island_' + (rank%run_obj.island_obj.nb_isl_per_run) + '_run_' + (Math.floor(run_obj.batch_size - rank/run_obj.island_obj.nb_isl_per_run) + 1) + '.log', run_obj.batch_id.toString(), rank);
+                    // write_in_file(data + '\t' + rank, `${file}_island_${(rank%run_obj.island_obj.nb_isl_per_run)}_run_${(Math.floor(run_obj.batch_size - rank/run_obj.island_obj.nb_isl_per_run) + 1)}.log`, run_obj.batch_id.toString(), rank);
+                    // write_log(`${file}_island_${(rank%run_obj.island_obj.nb_isl_per_run)}_run_${(Math.floor(run_obj.batch_size - rank/run_obj.island_obj.nb_isl_per_run) + 1)}.log`, rank, data.toString());
                 } else {
                     console.log('Error write_in_file : no rank');
                 }
@@ -244,19 +245,20 @@ export class Pseudo_term {
                 if (rank) {
                     let array = String(data).split('\n');
                     for (let i = 0; i < array.length; i++) {
-                        if (i > 3) {
-                            array[i] = array[i].split('          ').join('   ');
-                            array[i] = array[i].split('\t').join('   ');
-                        }
+                        // if (i > 3) {
+                        //     array[i] = array[i].split('          ').join('   ');
+                        //     array[i] = array[i].split('\t').join('   ');
+                        // }
                         if (run_obj.run_results[rank - 1]) {
                             run_obj.run_results[rank - 1] = run_obj.run_results[rank - 1].concat('\n' + array[i]);
                         } else {
                             run_obj.run_results[rank - 1] = array[i];
                         }
                     }
+                    // write run results in a file
+                    write_log(`${file}`, rank, data.toString());
                 }
                 
-                // write run results in a file                
                 // write_in_file(data + '\t' + rank, file, run_obj.batch_id.toString(), rank);
 
             // multi objectives
@@ -320,6 +322,11 @@ export class Pseudo_term {
                 run_obj.finished_label.setText('Completed Runs : ' + run_obj.remaining_proc + '/' + run_obj.total_runs);
             } else {
                 run_obj.progress_bar.setValue(run_obj.progress_bar.value() + (100 / (2 * run_obj.batch_size)));
+                
+                if(run_obj.plot_type === "3D"){
+                    var t = spawnSync("cp", ["objectives", run_obj.easea_logs_path], {cwd: dir});
+                    console.log(`${t.output}`);
+                }
 
                 run_obj.running_label.setText('Plotting results ...');
                 run_obj.running_label.show();

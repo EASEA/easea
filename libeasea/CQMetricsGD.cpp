@@ -9,11 +9,11 @@
 
 #include <CQMetricsGD.h>
 
-    CQMetricsGD::CQMetricsGD():CQMetricsAbs() {};
+    CQMetricsGD::CQMetricsGD():CQMetricsAbs() {}
 
-    CQMetricsGD::~CQMetricsGD() {};
+    CQMetricsGD::~CQMetricsGD() {}
 
-    double CQMetricsGD::get(vector< vector<double> > takenFront, vector< vector<double> > realFront, int nbObj) {
+    double CQMetricsGD::get(vector< vector<double> > const& takenFront, vector< vector<double> > const& realFront, int nbObj) {
 
         vector<double> maxValues = getFunctions()->getMaxValues(realFront, nbObj);
         vector<double> minValues = getFunctions()->getMinValues(realFront, nbObj);
@@ -26,17 +26,14 @@
                                                 minValues);
 
         double sum = 0.0;
-        for (auto i = 0; i < takenFront.size(); i++)
+        for (decltype(takenFront.size()) i = 0; i < takenFront.size(); i++)
             sum += power<c_pow>(getFunctions()->distanceToClosedPoint(normalizedTakenFront[i],
                                              normalizedRealFront));
 
 
         sum = pow(sum,1.0/c_pow);
 
-        double metricGD = sum / normalizedTakenFront.size();
+        double metricGD = sum / static_cast<double>(normalizedTakenFront.size());
 
         return metricGD;
-
-
-
-    };
+    }

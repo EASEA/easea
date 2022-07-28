@@ -112,11 +112,11 @@ sig_atomic_t volatile done = 1;
 #ifndef OS_WINDOWS
 void childHandler(int signum)
 {
-        pid_t w;
+	(void)(signum);
         int status;
 	ostringstream ss;
 
-        while((w=waitpid(-1, &status, WNOHANG))>0)
+        while(waitpid(-1, &status, WNOHANG)>0)
         {
             if(WIFEXITED(status)){
                 ss << "Display process stopped normally" << std::endl;
@@ -261,7 +261,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   if(!INSTEAD_EVAL_STEP)
     this->population->evaluateParentPopulation();
   else
-    evale_pop_chunk(population->parents, population->parentPopulationSize);
+    evale_pop_chunk(population->parents, static_cast<int>(population->parentPopulationSize));
 
   if(this->params->optimise){
         population->optimiseParentPopulation();
@@ -308,9 +308,9 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 	this->params->plotStats = 0;
 	done = 1;
     }
-int tmpElitSize =  params->elitSize;
-int tmpPrntReduceSize =  this->params->parentReductionSize;
-int tmpPrntReduct = params->parentReduction; 
+auto tmpElitSize =  params->elitSize;
+auto tmpPrntReduceSize =  this->params->parentReductionSize;
+auto tmpPrntReduct = params->parentReduction; 
 
 if (bReevaluate == true){
 params->elitSize = 0;
@@ -331,7 +331,7 @@ params->parentReduction = 1;
       population->evaluateOffspringPopulation();
     }
     else
-      evale_pop_chunk(population->offsprings, population->offspringPopulationSize);
+      evale_pop_chunk(population->offsprings, static_cast<int>(population->offspringPopulationSize));
     population->currentEvaluationNb += this->params->offspringPopulationSize;
 
     if(this->params->optimise){
@@ -395,7 +395,7 @@ params->parentReduction = 1;
     auto end = std::chrono::system_clock::now();
  
     std::chrono::duration<double> elapsed_seconds = end-start;
-    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    //std::time_t end_time = std::chrono::system_clock::to_time_t(end);
     if (this->params->printStats == 0){
 	pb.complited();
 	//std::cout << "Stopping criterion is reached " << std::endl;
@@ -635,8 +635,8 @@ currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitn
 #endif
  
 #ifdef OS_UNIX
-  double elapsedTime = res.tv_sec + 0.0;
-  double micSec = res.tv_usec + 0.0;
+  double elapsedTime = static_cast<double>(res.tv_sec) + 0.0;
+  double micSec = static_cast<double>(res.tv_usec) + 0.0;
 
   while(micSec>1){
   micSec /= 10.;
@@ -703,7 +703,7 @@ void CEvolutionaryAlgorithm::sendIndividual(){
     //unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
   
     //selecting a client randomly
-    int client = globalRandomGenerator->getRandomIntMax(this->numberOfClients);
+    int client = globalRandomGenerator->getRandomIntMax(static_cast<int>(this->numberOfClients));
     //for(int client=0; client<this->numberOfClients; client++){
     //cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to "
     auto now = std::chrono::system_clock::now();

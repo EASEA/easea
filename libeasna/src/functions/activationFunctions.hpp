@@ -28,7 +28,7 @@ void printActivationFunctionName();
  * @param activationFunctionDerivByLayers 
  */
 void activationFunctionEnumFromString(
-	const std::string s,
+	const std::string& s,
 	const int i,
 	ActivationFunction * &activationFunctionByLayers,
 	ActivationDerivFunction * &activationFunctionDerivByLayers

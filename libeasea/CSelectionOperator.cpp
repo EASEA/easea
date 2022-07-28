@@ -3,6 +3,9 @@
  *
  *  Created on: 22 juin 2009
  *      Author: maitre
+ *  ====
+ *  Updated on 26 july 2022 by Léo Chéneau
+ *
  */
 
 #include "include/CSelectionOperator.h"
@@ -16,14 +19,15 @@
 #include "include/CPopulation.h"
 #include "include/CRandomGenerator.h"
 
-float getSelectionPressure(std::string selectop){
-  int pos1 = selectop.find('(',0)+1;
-  int pos2 = selectop.find(')',0);
-  std::string press = selectop.substr(pos1,pos2-pos1);
-  return (float)atof(press.c_str());
+#include <string>
+
+float getSelectionPressure(std::string const& selectop){
+  auto pos1 = selectop.find('(',0)+1;
+  auto pos2 = selectop.find(')',0);
+  return std::stof(selectop.substr(pos1,pos2-pos1));
 }
 
-CSelectionOperator* getSelectionOperator(std::string selectop, int minimizing, CRandomGenerator* globalRandomGenerator){
+CSelectionOperator* getSelectionOperator(std::string const& selectop, int minimizing, CRandomGenerator* globalRandomGenerator){
   if(minimizing){
   if(selectop.compare("Tournament")==0)
     return (new MinTournament(globalRandomGenerator, selectop));
@@ -56,12 +60,12 @@ CSelectionOperator* getSelectionOperator(std::string selectop, int minimizing, C
 /* ****************************************
    SelectionOperator class
 ****************************************/
-void CSelectionOperator::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
+void CSelectionOperator::initialize(CIndividual** population, float selectionPressure, size_t){
   this->population = population;
   this->currentSelectionPressure = selectionPressure;
 }
 
-size_t CSelectionOperator::selectNext(size_t populationSize){ return 0; }
+size_t CSelectionOperator::selectNext(size_t){ return 0; }
 
 /* ****************************************
    MaxDeterministic class
@@ -100,9 +104,8 @@ float MinDeterministic::getExtremum(){
 /* ****************************************
    MaxRandom class
 ****************************************/
-MaxRandom::MaxRandom(CRandomGenerator* globalRandomGenerator, std::string name){
-    this->rg = globalRandomGenerator;
-    this->name = name;
+MaxRandom::MaxRandom(CRandomGenerator* globalRandomGenerator, std::string const& name_) : rg(globalRandomGenerator) {
+	this->name = name_; // bruh
 }
 
 void MaxRandom::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
@@ -110,7 +113,7 @@ void MaxRandom::initialize(CIndividual** population, float selectionPressure, si
 }
 
 size_t MaxRandom::selectNext(size_t populationSize){
-  return rg->random(0,populationSize-1);
+  return static_cast<size_t>(rg->random(0,static_cast<int>(populationSize)-1));
 }
 
 float MaxRandom::getExtremum(){
@@ -120,9 +123,8 @@ float MaxRandom::getExtremum(){
 /* ****************************************
    MinRandom class
 ****************************************/
-MinRandom::MinRandom(CRandomGenerator* globalRandomGenerator, std::string name){
-  this->rg = globalRandomGenerator;
-  this->name = name;
+MinRandom::MinRandom(CRandomGenerator* globalRandomGenerator, std::string const& name_): rg(globalRandomGenerator) {
+	this->name = name_; // bruh
 }
 
 void MinRandom::initialize(CIndividual** population, float selectionPressure, size_t populationSize){
@@ -130,7 +132,7 @@ void MinRandom::initialize(CIndividual** population, float selectionPressure, si
 }
 
 size_t MinRandom::selectNext(size_t populationSize){
-  return rg->random(0,populationSize-1);
+  return static_cast<size_t>(rg->random(0,static_cast<int>(populationSize)-1));
 }
 
 float MinRandom::getExtremum(){
@@ -154,9 +156,9 @@ size_t MinTournament::selectNext(size_t populationSize){
   float bestFitness = FLT_MAX;
 
   //std::cout << "MinTournament selection " ;
-  if( currentSelectionPressure >= 2 ){
-    for( size_t i = 0 ; i<currentSelectionPressure ; i++ ){
-      size_t selectedIndex = rg->getRandomIntMax(populationSize);
+  if( currentSelectionPressure >= 2.f ){
+    for( size_t i = 0 ; static_cast<float>(i) < currentSelectionPressure ; i++ ){
+      auto selectedIndex = rg->getRandomIntMax(static_cast<int>(populationSize));
       //std::cout << selectedIndex << " ";
       float currentFitness = population[selectedIndex]->getFitness();
 
@@ -167,9 +169,9 @@ size_t MinTournament::selectNext(size_t populationSize){
 
     }
   }
-  else if( currentSelectionPressure <= 1 && currentSelectionPressure > 0 ){
-    size_t i1 = rg->getRandomIntMax(populationSize);
-    size_t i2 = rg->getRandomIntMax(populationSize);
+  else if( currentSelectionPressure <= 1.f && currentSelectionPressure > 0.f ){
+    auto i1 = rg->getRandomIntMax(static_cast<int>(populationSize));
+    auto i2 = rg->getRandomIntMax(static_cast<int>(populationSize));
 
     if( rg->tossCoin(currentSelectionPressure) ){
       if( population[i1]->getFitness() < population[i2]->getFitness() ){
@@ -208,9 +210,9 @@ size_t MaxTournament::selectNext(size_t populationSize){
   float bestFitness = -FLT_MAX;
 
   //std::cout << "MinTournament selection " ;
-  if( currentSelectionPressure >= 2 ){
-    for( size_t i = 0 ; i<currentSelectionPressure ; i++ ){
-      size_t selectedIndex = rg->getRandomIntMax(populationSize);
+  if( currentSelectionPressure >= 2.f ){
+    for( size_t i = 0 ; static_cast<float>(i) < currentSelectionPressure ; i++ ){
+      auto selectedIndex = rg->getRandomIntMax(static_cast<int>(populationSize));
       //std::cout << selectedIndex << " ";
       float currentFitness = population[selectedIndex]->getFitness();
 
@@ -221,9 +223,9 @@ size_t MaxTournament::selectNext(size_t populationSize){
 
     }
   }
-  else if( currentSelectionPressure <= 1 && currentSelectionPressure > 0 ){
-    size_t i1 = rg->getRandomIntMax(populationSize);
-    size_t i2 = rg->getRandomIntMax(populationSize);
+  else if( currentSelectionPressure <= 1.f && currentSelectionPressure > 0.f ){
+    auto i1 = rg->getRandomIntMax(static_cast<int>(populationSize));
+    auto i2 = rg->getRandomIntMax(static_cast<int>(populationSize));
 
     if( rg->tossCoin(currentSelectionPressure) ){
       if( population[i1]->getFitness() > population[i2]->getFitness() ){

@@ -23,7 +23,7 @@ double power<1>(const double& m){
 }
 template <>
 inline
-double power<0>(const double& m){
+double power<0>(const double&){
   return 1.0;
 }
 /* Metaprogrammation => condition in compiling time */

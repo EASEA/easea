@@ -2,7 +2,7 @@
  * @author Clément Ligneul <clement.ligneul@etu.unistra.fr>
  */
 
-import { AlignmentFlag, Orientation, WindowType, QDialog, QGridLayout, QLabel, QPlainTextEdit, QPushButton, QSlider, QWidget, TickPosition, QBoxLayout, QTabWidget, QIcon, QScrollArea, QTableWidget, QTableWidgetItem, ScrollBarPolicy, ItemFlag, SizeConstraint, SortOrder } from "@nodegui/nodegui";
+import { AlignmentFlag, Orientation, WindowType, QDialog, QGridLayout, QLabel, QPlainTextEdit, QPushButton, QSlider, QWidget, TickPosition, QBoxLayout, QTabWidget, QIcon, QScrollArea, QTableWidget, QTableWidgetItem, ScrollBarPolicy, ItemFlag, SizeConstraint, SortOrder, QTextBrowser } from "@nodegui/nodegui";
 import { general_css } from "./style";
 import { plot_obj, run_obj } from ".";
 import * as util from "./utilities"
@@ -19,7 +19,7 @@ export class Results_win {
     results_widget: QWidget;
     results_layout: QBoxLayout;
     slider: QSlider;
-    console: QPlainTextEdit;
+    console: QTextBrowser;
     run_label: QLabel;
 
     // thresholds
@@ -56,9 +56,10 @@ export class Results_win {
 
         this.slider = new QSlider();
 
-        this.console = new QPlainTextEdit();
+        this.console = new QTextBrowser();
         this.console.setFixedSize(1000, 450);
         this.console.setReadOnly(true);
+        this.console.setTabStopDistance(10);
 
         // thresholds tab
         this.threshold_widget = new QWidget();

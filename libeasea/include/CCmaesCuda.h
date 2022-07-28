@@ -29,8 +29,8 @@ class CaleatoireCuda
     short flgstored;
     float hold;
   public:
-    long alea_Start(long unsigned inseed);
-    long alea_init(long unsigned inseed);
+    long alea_Start(long inseed);
+    long alea_init(long inseed);
     float alea_Gauss();
     float alea_Uniform();
 };
@@ -84,7 +84,7 @@ class CCmaesCuda{
     float facupdateCmode;
 
     CaleatoireCuda alea; /* random number generator */
-    int seed;
+    long seed;
   public:
     CCmaesCuda(int lambda, int mu, int problemdim);
     ~CCmaesCuda();
