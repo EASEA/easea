@@ -1906,7 +1906,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GENOME_ANALYSIS>[0-9]+ {yylval.dValue=atoi(yytext); return NUMBER;}
 
  /*identifier*/
-<GENOME_ANALYSIS>[a-zA-Z_][a-zA-Z0-9_]*    { yylval.pSymbol = new CSymbol(yytext);
+<GENOME_ANALYSIS>[a-zA-Z_:][a-zA-Z0-9_:]*    { yylval.pSymbol = new CSymbol(yytext);
   return IDENTIFIER; }
 <GET_METHODS>[^\}]*   {BEGIN GENOME_ANALYSIS; return END_METHODS;}
 
@@ -2433,7 +2433,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GET_PARAMETERS>[0-9]+ {yylval.dValue=atof(yytext); return NUMBER2;}
 
  /* identifier */
-<GET_PARAMETERS>[a-zA-Z_][a-zA-Z0-9_]*    {
+<GET_PARAMETERS>[a-zA-Z_:][a-zA-Z0-9_:]*    {
   yylval.pSymbol = new CSymbol(yytext);
   return IDENTIFIER2;}
  /* end of .ez file : resume tpl analysis */

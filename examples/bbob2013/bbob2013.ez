@@ -8,7 +8,7 @@ __________________________________________________________*/
 \User declarations :
 #define SIZE 2
 #define DIM SIZE
-float pMutPerGene=0.1;
+static constexpr float pMutPerGene=0.1;
 
 #include "benchmarksdeclare.h"
  

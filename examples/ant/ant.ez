@@ -2,19 +2,19 @@
  
   \User declarations:
   #include <cstring>
-  int nbEvalTotal = 0; //Le nombre d'evaluations
-  short nbPasMax = 600; //Le nombre max de mouvements autorises
-  double pMutPerGene=0.05; // La probabilité de muter un gene
+  static int nbEvalTotal = 0; //Le nombre d'evaluations
+  static constexpr short nbPasMax = 600; //Le nombre max de mouvements autorises
+  static constexpr double pMutPerGene=0.05; // La probabilité de muter un gene
   
   enum symboles {food_ahead, progn2, progn3, LEFT, RIGHT, MOVE}; //L'ensemble des valeurs que peut prendre un noeud de l'arbre
   enum orientations {nord, est, sud, ouest}; //Les 4 orientations possibles
   
-  int profondeurMax = 2; //La profondeur max d'un arbre a sa cration (racine = 0)
-  int profondeurMax1 = 9; //La profondeur max d'un arbre au cours de l'évolution
+  static constexpr int profondeurMax = 2; //La profondeur max d'un arbre a sa cration (racine = 0)
+  static constexpr int profondeurMax1 = 9; //La profondeur max d'un arbre au cours de l'évolution
   
-  int taille = 32; //taille de la grille
-  int EZ_SIZE=0;//taille d'un individu 
-  int carte[32][32]; //la grille
+  static constexpr int taille = 32; //taille de la grille
+  static int EZ_SIZE=0;//taille d'un individu 
+  static int carte[32][32]; //la grille
   inline void swap(int& a,int& b) {int c=a; a=b; b=c;}
   \end
   
