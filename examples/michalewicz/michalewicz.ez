@@ -16,7 +16,7 @@ __________________________________________________________*/
 #define PI 3.141592654
 
  
-float pMutPerGene=0.02;
+static constexpr float pMutPerGene=0.02;
 \end
 
 \User functions:
