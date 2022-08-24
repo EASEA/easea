@@ -58,6 +58,14 @@ The other dependencies can be installed using chocolatey by opening a Powershell
 choco install winflexbison3 boost-msvc-14.3 cmake
 ```
 
+Some users have reported issues with the latest version of Boost. This software is guaranteed to run on Boost 1.79.0. 
+To install this version specifically it is recommended to uninstall the latest version and reinstall Boost 1.79.0 :
+
+```bash
+choco uninstall boost-msvc-14.3
+choco install boost-msvc-14.3 --version 1.79.0
+```
+
 ### Building and installing EASEA with CMake
 
 1. Once all dependencies are installed open either a bash shell on Linux/MacOS or a [MSBuild shell](https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line?view=msvc-170) on Windows
