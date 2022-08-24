@@ -706,17 +706,17 @@ IndividualImpl::~IndividualImpl(){
 
 
 float IndividualImpl::evaluate(){
-  float ERROR; 
+  float error; 
  float sum = 0;
   \INSERT_GENOME_EVAL_HDR
 
    for( int i=0 ; i<NO_FITNESS_CASES ; i++ ){
      float EVOLVED_VALUE = recEval(this->root,inputs[i]);
      \INSERT_GENOME_EVAL_BDY
-     sum += ERROR;
+     sum += error;
    }
   this->valid = true;
-  ERROR = sum;
+  error = sum;
   \INSERT_GENOME_EVAL_FTR    
 }
 
