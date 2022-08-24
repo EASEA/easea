@@ -61,7 +61,8 @@ for edir in $all_examples; do
 
 	# Convert args if CUDA not available
 	if [[ "$2" == "--no-cuda" ]]; then
-		EASEA_ARGS=$(echo $EASEA_ARGS | $SED 's/\(cuda_\|-cuda\|_cuda\)//')
+		EASEA_ARGS=$(echo $EASEA_ARGS | $SED 's/\(cuda_\|_cuda\)//')
+		EASEA_ARGS=$(echo $EASEA_ARGS | $SED 's/\(-cuda\)//')
 	fi
 
 	# build
