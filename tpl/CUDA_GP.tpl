@@ -291,7 +291,7 @@ EvaluatePostFixIndividuals( const float * k_progs, const int maxprogssize,  cons
   for( int index = bid; index<popsize ; index+=gridDim.x ){
     //    int index;   // index of the prog processed by the block 
     float sum = 0.0;
-    float ERROR;
+    float error;
 
     // index = bid; // one program per block => block ID = program number
  
@@ -321,11 +321,11 @@ EvaluatePostFixIndividuals( const float * k_progs, const int maxprogssize,  cons
       \INSERT_GENOME_EVAL_BDY_GPU;
 
     
-      if (!(ERROR < BIG_NUMBER)) ERROR = BIG_NUMBER;
-      else if (ERROR < PROBABLY_ZERO) ERROR = 0.0;
+      if (!(error < BIG_NUMBER)) error = BIG_NUMBER;
+      else if (error < PROBABLY_ZERO) error = 0.0;
     
     
-      sum += ERROR; // sum raw error on all training cases
+      sum += error; // sum raw error on all training cases
     
     } // LOOP ON TRAINING CASES
   
@@ -338,7 +338,7 @@ EvaluatePostFixIndividuals( const float * k_progs, const int maxprogssize,  cons
       for (int i = 1; i < NUMTHREAD; i++) {
 	tmpresult[0] += tmpresult[i];
       }    
-      ERROR = tmpresult[0];
+      error = tmpresult[0];
       \INSERT_GENOME_EVAL_FTR_GPU;
     }  
     // here results and hits have been stored in their respective array: we can leave
