@@ -365,12 +365,13 @@ void CPopulation::produceOffspringPopulation(){
 
 			child->boundChecking();
 
-			offsprings[actualOffspringPopulationSize++] = child;
+			offsprings[actualOffspringPopulationSize + i] = child;
 		}
 
 		delete[](ps);
 	}
 	this->cstats->currentNumberOfImmigrantReproductions += sum;
+	actualOffspringPopulationSize += offspringPopulationSize;
 }
 
 
