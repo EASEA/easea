@@ -62,7 +62,7 @@ void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgori
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 
-extern void evale_pop_chunk(CIndividual** pop, int popSize);
+extern void evale_pop_chunk(std::vector<CIndividual_ptr> const& pop);
 extern bool INSTEAD_EVAL_STEP;
 extern bool bReevaluate;
 std::ofstream easena::log_file; 
@@ -211,7 +211,7 @@ void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
 
 /* MAIN FUNCTION TO RUN THE EVOLUTIONARY LOOP */
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
-  CIndividual** elitistPopulation = NULL;
+  std::vector<CIndividual_ptr> elitistPopulation;
     
 #ifdef OS_WINDOWS
 
@@ -261,7 +261,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   if(!INSTEAD_EVAL_STEP)
     this->population->evaluateParentPopulation();
   else
-    evale_pop_chunk(population->parents, static_cast<int>(population->parentPopulationSize));
+    evale_pop_chunk(population->parents);
 
   if(this->params->optimise){
         population->optimiseParentPopulation();
@@ -277,12 +277,11 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   }
 
   showPopulationStats(begin);
-  bBest = population->Best;
   currentGeneration += 1;
 
   //Initialize elitPopulation
   if(params->elitSize)
-    elitistPopulation = (CIndividual**)malloc(params->elitSize*sizeof(CIndividual*)); 
+    elitistPopulation.resize(params->elitSize);
 
   // EVOLUTIONARY LOOP
 // auto start = std::chrono::system_clock::now();
@@ -331,7 +330,7 @@ params->parentReduction = 1;
       population->evaluateOffspringPopulation();
     }
     else
-      evale_pop_chunk(population->offsprings, static_cast<int>(population->offspringPopulationSize));
+      evale_pop_chunk(population->offsprings);
     population->currentEvaluationNb += this->params->offspringPopulationSize;
 
     if(this->params->optimise){
@@ -346,12 +345,12 @@ params->parentReduction = 1;
     if(params->elitSize && this->params->parentPopulationSize>=params->elitSize){
   /* STRONG ELITISM */
   if(params->strongElitism){
-    population->strongElitism(params->elitSize, population->parents, this->params->parentPopulationSize, elitistPopulation, params->elitSize);
+    population->strongElitism(params->elitSize, population->parents, elitistPopulation);
     population->actualParentPopulationSize -= params->elitSize;
   }
   /* WEAK ELITISM */
   else{
-    population->weakElitism(params->elitSize, population->parents, population->offsprings, &(population->actualParentPopulationSize), &(population->actualOffspringPopulationSize), elitistPopulation, params->elitSize);
+    population->weakElitism(params->elitSize, population->parents, population->actualParentPopulationSize, population->offsprings,  population->actualOffspringPopulationSize, elitistPopulation);
   }
   }
     
@@ -370,10 +369,9 @@ params->parentReduction = 1;
     TIME_END(reduction);
     TIME_ACC(reduction);
 
-    population->sortParentPopulation();
+    population->sortPopulation(population->parents);
     //if( this->params->printStats  || this->params->generateCSVFile )
     showPopulationStats(begin); // (always calculate stats)
-    bBest = population->Best;
     EASEAEndGenerationFunction(this);
 
     //Receiving individuals if cluster island model
@@ -399,9 +397,9 @@ params->parentReduction = 1;
     if (this->params->printStats == 0){
 	pb.complited();
 	//std::cout << "Stopping criterion is reached " << std::endl;
-	std::cout << "Best fitness: " << population->Best->getFitness() << std::endl;
+	std::cout << "Best fitness: " << population->Best.get()->getFitness() << std::endl;
 	std::cout << "Best individual: " << std::endl;
-	 population->Best->printOn(std::cout);
+	 population->Best.get()->printOn(std::cout);
     }
     else{
 	
@@ -410,7 +408,7 @@ params->parentReduction = 1;
 	stream << "Seed: " << params->seed; 
 	LOG_MSG(msgType::INFO, stream.str());
 	stream.str("");
-	stream << "Best fitness: " << population->Best->getFitness();
+	stream << "Best fitness: " << population->Best.get()->getFitness();
 	LOG_MSG(msgType::INFO, stream.str());
 	stream.str("");
 	stream << "Elapsed time: " << elapsed_seconds.count();
@@ -454,9 +452,9 @@ if (params->isLogg == 1){
     
     logg("_____________________________________________________");
     logg("Result: ");
-    logg("Best fitness: ", population->Best->getFitness());
+    logg("Best fitness: ", population->Best.get()->getFitness());
     logg("Best individual: ");
-    logg(population->Best->serialize());
+    logg(population->Best.get()->serialize());
 //    population->Best->printOn(std::cout);
     logg("\n");
     logg("Elapsed time: ", elapsed_seconds.count(), " s");
@@ -468,7 +466,7 @@ if (params->isLogg == 1){
               << "elapsed time: " << elapsed_seconds.count() << "s\n";*/
 
   if(this->params->printFinalPopulation){
-    population->sortParentPopulation();
+    population->sortPopulation(population->parents);
     std::cout << *population << std::endl;
   }
 
@@ -485,10 +483,7 @@ if (params->isLogg == 1){
   generatePlotScript();
 
   if(this->params->generateRScript)
-  generateRScript();
-  
-  if(params->elitSize)
-    free(elitistPopulation);
+  generateRScript(); 
 
   if(this->params->plotStats){
       delete this->grapher;
@@ -520,13 +515,13 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 
     // here we are looking for the smaller individual's fitness if we are minimizing
     // or the greatest one if we are not
-    if( (params->minimizing && population->parents[i]->getFitness()<population->Best->getFitness()) ||
-    (!params->minimizing && population->parents[i]->getFitness()>population->Best->getFitness()))
+    if( (params->minimizing && population->parents[i]->getFitness()<population->Best.get()->getFitness()) ||
+    (!params->minimizing && population->parents[i]->getFitness()>population->Best.get()->getFitness()))
       population->Best=population->parents[i];
 
     // keep track of worst individual too, for statistical purposes
-    if( (params->minimizing && population->parents[i]->getFitness() > population->Worst->getFitness()) ||
-    (!params->minimizing && population->parents[i]->getFitness() < population->Worst->getFitness()))
+    if( (params->minimizing && population->parents[i]->getFitness() > population->Worst.get()->getFitness()) ||
+    (!params->minimizing && population->parents[i]->getFitness() < population->Worst.get()->getFitness()))
       population->Worst=population->parents[i];
 
     if( params->remoteIslandModel && population->parents[i]->isImmigrant){
@@ -567,7 +562,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
 #ifdef OS_WINDOWS
     printf("%7u\t%10.3f\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,duration,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
 #else
-      printf("%7u\t%10ld.%03ds\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/1000,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+      printf("%7u\t%10ld.%03ds\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/1000,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best.get()->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst.get()->getFitness());
 #endif
   }
 
@@ -616,10 +611,10 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   //else
   //  fprintf(this->grapher->fWrit,"replot\n");
     fprintf(this->grapher->fWrit,"add coordinate:%u;%f;%f;%f\n",population->
-currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitness, this->cstats->currentStdDev);
+currentEvaluationNb, population->Best.get()->fitness, this->cstats->currentAverageFitness, this->cstats->currentStdDev);
 
     if(this->params->remoteIslandModel){
-        if(population->Best->isImmigrant){
+        if(population->Best.get()->isImmigrant){
             fprintf(this->grapher->fWrit,"set immigrant\n");
         }
         fprintf(this->grapher->fWrit,"add stat:%u;%u;%u\n",currentGeneration, this->cstats->currentNumberOfImmigrants, this->cstats->currentNumberOfImmigrantReproductions);

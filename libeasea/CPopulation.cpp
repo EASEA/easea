@@ -35,42 +35,25 @@ float CPopulation::parentReductionPressure;
 float CPopulation::offspringReductionPressure;
 
 
-extern float* pEZ_MUT_PROB;
-extern float* pEZ_XOVER_PROB;
-extern CIndividual** pPopulation;
-extern CIndividual* bBest;
+//extern float* pEZ_MUT_PROB;
+//extern float* pEZ_XOVER_PROB;
+//extern CIndividual** pPopulation;
+//extern CIndividual* bBest;
 
-CPopulation::CPopulation() {
+/*CPopulation::CPopulation() : Best(std::make_unique<CIndividual>(nullptr)) {
 
-}
+}*/
 
 CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
            float pCrossover, float pMutation, float pMutationPerGene,
-           CRandomGenerator* rg, Parameters* params, CStats* cstats){
+           CRandomGenerator* rg, Parameters* params, CStats* cstats) : parents(parentPopulationSize), offsprings(offspringPopulationSize), parentPopulationSize(parentPopulationSize), offspringPopulationSize(offspringPopulationSize), actualParentPopulationSize(0), actualOffspringPopulationSize(0), pCrossover(pCrossover), pMutation(pMutation), currentEvaluationNb(0), realEvaluationNb(0), params(params), cstats(cstats), rg(rg), pMutationPerGene(pMutationPerGene), Best(parents[0]), Worst(parents[0]) {
 
-  this->parents     = new CIndividual*[parentPopulationSize];
-  this->offsprings  = new CIndividual*[offspringPopulationSize];
+  //pEZ_MUT_PROB = &this->pMutation;
+  //pEZ_XOVER_PROB = &this->pCrossover;
 
-  this->parentPopulationSize     = parentPopulationSize;
-  this->offspringPopulationSize  = offspringPopulationSize;
+  //pPopulation = parents;
+  //bBest = Best;
 
-  this->actualParentPopulationSize    = 0;
-  this->actualOffspringPopulationSize = 0;
-
-  this->pCrossover       = pCrossover;
-  this->pMutation        = pMutation;
-  pEZ_MUT_PROB = &this->pMutation;
-  pEZ_XOVER_PROB = &this->pCrossover;
-  this->pMutationPerGene = pMutationPerGene;
-  pPopulation = parents;
-  bBest = Best;
-
-  this->rg = rg;
-
-  this->currentEvaluationNb = 0;
-  this->realEvaluationNb = 0;
-  this->params = params;
-  this->cstats = cstats;
 }
 
 void CPopulation::syncInVector(){

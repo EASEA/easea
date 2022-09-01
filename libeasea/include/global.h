@@ -21,10 +21,10 @@ extern std::ofstream easena::log_file;
 class CIndividual;
 
 extern bool bReevaluate;
-extern CIndividual** pPopulation;
-extern CIndividual* bBest;
-extern float* pEZ_MUT_PROB;
-extern float* pEZ_XOVER_PROB;
+//extern CIndividual** pPopulation;
+//extern CIndividual* bBest;
+//extern float* pEZ_MUT_PROB;
+//extern float* pEZ_XOVER_PROB;
 extern unsigned *EZ_NB_GEN;
 extern int EZ_POP_SIZE;
 extern int OFFSPRING_SIZE;

@@ -39,6 +39,10 @@ class CPopulation {
 
 public:
 
+    std::vector<CIndividual_ptr> parents;
+    std::vector<CIndividual_ptr> offsprings;
+    std::vector<CIndividual_ptr> pop_vect;
+
     float pCrossover;
     float pMutation;
     float pMutationPerGene;
@@ -48,18 +52,17 @@ public:
     float currentAverageFitness;
     float currentSTDEV;
 
-    std::vector<CIndividual_ptr> parents;
-    std::vector<CIndividual_ptr> offsprings;
-
     unsigned parentPopulationSize;
     unsigned offspringPopulationSize;
+
+    unsigned actualParentPopulationSize;
+    unsigned actualOffspringPopulationSize;
 
     static CSelectionOperator* selectionOperator;
     static CSelectionOperator* replacementOperator;
     static CSelectionOperator* parentReductionOperator;
     static CSelectionOperator* offspringReductionOperator;
 
-    std::vector<CIndividual_ptr> pop_vect;
     unsigned currentEvaluationNb;
     unsigned realEvaluationNb;
     CRandomGenerator* rg;
@@ -67,7 +70,7 @@ public:
     CStats* cstats;
 
   public:
-    CPopulation();
+    //CPopulation();
 
     CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
                 float pCrossover, float pMutation, float pMutationPerGene,
@@ -82,11 +85,9 @@ public:
     virtual void evaluateParentPopulation();
     virtual void optimiseParentPopulation();
 
-    void strongElitism(unsigned elitismSize, std::vector<CIndividual_ptr> const& population,
-         std::vector<CIndividual_ptr>& outPopulation, unsigned outPopulationSize);
+    void strongElitism(unsigned elitismSize, std::vector<CIndividual_ptr> const& population, std::vector<CIndividual_ptr>& outPopulation);
 
-    void weakElitism(unsigned elitismSize, std::vector<CIndividual_ptr> const& parentsPopulation,
-         std::vector<CIndividual_ptr> const&, std::vector<CIndividual_ptr>&);
+    void weakElitism(unsigned elitismSize, std::vector<CIndividual_ptr> const& parentsPopulation, unsigned& actualParentPopulationSize, std::vector<CIndividual_ptr> const& offspringPopulation, unsigned& actualOffspringPopulationSize, std::vector<CIndividual_ptr>& outPopulation);
 
     virtual void evaluateOffspringPopulation();
     virtual void optimiseOffspringPopulation();
