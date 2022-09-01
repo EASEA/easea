@@ -560,8 +560,8 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
     if(currentGeneration==0){
 
       printf("------------------------------------------------------------------------------------------------\n");
-      printf("|GENER.|    ELAPSED    |    PLANNED    |     ACTUAL    |BEST INDIVIDUAL|  AVG  | WORST | STAND |\n");
-      printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|FITNESS|  DEV  |\n");
+      printf("|GENER.|    ELAPSED    |    PLANNED    |     ACTUAL    |BEST INDIVIDUAL|  AVG  | STAND | WORST |\n");
+      printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|  DEV  |FITNESS|\n");
       printf("------------------------------------------------------------------------------------------------\n");
     }
 #ifdef OS_WINDOWS
