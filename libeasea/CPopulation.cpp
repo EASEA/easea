@@ -325,45 +325,54 @@ void CPopulation::reduceTotalPopulation(CIndividual** elitPop){
 
 
 void CPopulation::produceOffspringPopulation(){
+	const unsigned crossoverArrity = CIndividual::getCrossoverArrity();
+	selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
 
-  unsigned crossoverArrity = CIndividual::getCrossoverArrity();
-  CIndividual* p1;
-  CIndividual** ps = new CIndividual*[crossoverArrity]();
-  CIndividual* child;
+	int sum = 0;
+#ifdef USE_OPENMP
+#pragma omp parallel
+	{
+		CIndividual** ps = new CIndividual*[crossoverArrity]();
+		CIndividual* p1;
+		CIndividual* child;
 
-  selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
+#pragma omp for private(p1) private(child) reduction(+:sum)
+#endif
+		for( int i=0 ; i<offspringPopulationSize ; i++ ){
+			unsigned index = selectionOperator->selectNext(parentPopulationSize);
+			p1 = parents[index];
 
-  for( unsigned i=0 ; i<offspringPopulationSize ; i++ ){
-    unsigned index = selectionOperator->selectNext(parentPopulationSize);
-    p1 = parents[index];
+			//Check if Any Immigrants will reproduce
+			if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
+				++sum;
+			}
 
-    //Check if Any Immigrants will reproduce
-    if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
-        this->cstats->currentNumberOfImmigrantReproductions++;
-    }
+			if( rg->tossCoin(pCrossover) ){
+				for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
+					index = selectionOperator->selectNext(parentPopulationSize);
+					ps[j] = parents[index];
+					if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
+						++sum;
+					}
+				}
+				child = p1->crossover(ps);
+			}
+			else child = parents[index]->clone();//new CIndividual(*parents[index]);
 
-    if( rg->tossCoin(pCrossover) ){
-      for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
-      index = selectionOperator->selectNext(parentPopulationSize);
-      ps[j] = parents[index];
-        if( this->params->remoteIslandModel && parents[index]->isImmigrant ){
-            this->cstats->currentNumberOfImmigrantReproductions++;
-        }
-      }
-      child = p1->crossover(ps);
-    }
-    else child = parents[index]->clone();//new CIndividual(*parents[index]);
+			if( rg->tossCoin(pMutation) ){
+				child->mutate(pMutationPerGene);
+			}
 
-    if( rg->tossCoin(pMutation) ){
-      child->mutate(pMutationPerGene);
-    }
+			child->boundChecking();
 
-    child->boundChecking();
+			offsprings[actualOffspringPopulationSize + i] = child;
+		}
 
-    offsprings[actualOffspringPopulationSize++] = child;
-  }
-  delete[](ps);
-  }
+		delete[](ps);
+	}
+	this->cstats->currentNumberOfImmigrantReproductions += sum;
+	actualOffspringPopulationSize += offspringPopulationSize;
+}
 
 
 
