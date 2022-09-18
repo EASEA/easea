@@ -756,7 +756,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       //TAG THE INDIVIDUAL AS IMMIGRANT
       this->population->parents[index]->isImmigrant = true;
 
-      //cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
+      //cout << "DBG: new Individual with fitness=" << this->population->parents[index]->getFitness() << " :" << this->population->parents[index]->serialize() << endl;
     }
   }
 }

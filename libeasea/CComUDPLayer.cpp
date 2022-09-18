@@ -38,6 +38,7 @@ std::vector<char> CComUDPServer::consume()
 		throw std::runtime_error("No data");
 	auto ret = recv_queue.front();
 	recv_queue.pop();
+	//std::cout << "DBG: data was consumed! -- Queue size=" << recv_queue.size() << "\n";
 	return ret;
 }
 
@@ -56,15 +57,16 @@ void CComUDPServer::handle_receive(const boost::system::error_code& error, std::
 	} else if (bytes_transfered != 0) {
 		//std::cerr << "Appending message to buffer" << std::endl;
 		std::vector<char> tmp(recv_buffer.begin(), recv_buffer.begin() + bytes_transfered);
+		print_stats(tmp);
 		recv_queue.push(std::move(tmp));
-		print_stats();
 	}
 	start_receive();
+	//std::cout << "DBG: data was appended! -- Queue size=" << recv_queue.size() << "\n";
 }
 
-void CComUDPServer::print_stats() const
+void CComUDPServer::print_stats(std::vector<char> const& received) const
 {
-	std::istringstream iss(recv_queue.front().data());
+	std::istringstream iss(received.data());
 	std::string tmp, last;
 	while (std::getline(iss, tmp, ' ')) {
 		last = std::move(tmp);
@@ -77,7 +79,7 @@ void CComUDPServer::print_stats() const
 	std::stringstream ss;
 	std::cout << "[" << fmt << "]"
 		  << " Received individual (fitness = " << last << ") from " << last_endpoint.address().to_string()
-		  << ":" << last_endpoint.port();
+		  << ":" << last_endpoint.port() << "\n";
 }
 
 CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::string client_name_)

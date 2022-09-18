@@ -99,8 +99,10 @@ class CComUDPServer
 
 	/**
 	 * @brief Print stats of received individual
+	 *
+	 * @param received Data received.
 	 */
-	void print_stats() const;
+	void print_stats(std::vector<char> const& received) const;
 };
 
 class CComUDPClient
