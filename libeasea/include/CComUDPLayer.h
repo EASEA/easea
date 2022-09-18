@@ -176,9 +176,10 @@ bool checkValidLine(std::string const& line);
  * @brief Parse a config file and create associated clients
  *
  * @param file_name Path to config file
+ * @param thisPort port used by this instance
  *
  * @return A list of client generated from the config
  */
-std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name);
+std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name, int thisPort);
 
 #endif /* CCOMUDPLAYER_H_ */

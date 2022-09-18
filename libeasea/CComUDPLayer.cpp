@@ -115,7 +115,7 @@ bool isLocalMachine(std::string const& address)
 {
 	try {
 		udp::resolver resolver(CComSharedContext::get());
-		udp::endpoint ep = *resolver.resolve(udp::v4(), address, "resolve").begin(); // throw if error (safe)
+		udp::endpoint ep = *resolver.resolve(udp::v4(), address, "").begin(); // throw if error (safe)
 		return ep.address().is_loopback();
 	} catch (...) {
 		return false;
@@ -155,7 +155,7 @@ std::unique_ptr<CComUDPClient> parse_line(std::string const& line)
 	return std::make_unique<CComUDPClient>(ip, p, "");
 }
 
-std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name)
+std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name, int thisPort)
 {
 	std::ifstream ip_file(file_name);
 	std::vector<std::unique_ptr<CComUDPClient>> ret;
@@ -164,7 +164,10 @@ std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_n
 	int idx = 1;
 	while (std::getline(ip_file, tmp)) {
 		try {
-			ret.push_back(parse_line(tmp));
+			auto ptr = parse_line(tmp);
+			//std::cout << "DBG: srv on port " << thisPort << " -- client " << idx << " IP=" << ptr->getIP() << " on port " << ptr->getPort() << ", is local ? " << isLocalMachine(ptr->getIP()) << "\n";
+			if (!(ptr->getPort() == thisPort && isLocalMachine(ptr->getIP())))
+				ret.push_back(std::move(ptr));
 		} catch (std::exception const& e) {
 			std::cerr << "Error while reading ip file on line " << idx << ": " << tmp
 				  << "\nError: " << e.what();

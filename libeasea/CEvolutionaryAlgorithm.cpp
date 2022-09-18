@@ -688,7 +688,7 @@ void CEvolutionaryAlgorithm::initializeClients(){
 }
 
 void CEvolutionaryAlgorithm::refreshClient(){
-    this->Clients = parse_file(this->params->ipFile);
+    this->Clients = parse_file(this->params->ipFile, this->params->serverPort);
     this->numberOfClients = Clients.size();
 
     cout << "ip file : " << this->params->ipFile << " contains " << numberOfClients << " client ip(s)" << endl;
