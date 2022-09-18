@@ -688,7 +688,7 @@ void CEvolutionaryAlgorithm::initializeClients(){
 }
 
 void CEvolutionaryAlgorithm::refreshClient(){
-    this->Clients = parse_file(this->params->ipFile);
+    this->Clients = parse_file(this->params->ipFile, this->params->serverPort);
     this->numberOfClients = Clients.size();
 
     cout << "ip file : " << this->params->ipFile << " contains " << numberOfClients << " client ip(s)" << endl;
@@ -756,7 +756,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       //TAG THE INDIVIDUAL AS IMMIGRANT
       this->population->parents[index]->isImmigrant = true;
 
-      //cout << "new Individual :" << this->population->parents[index]->serialize() << endl;
+      //cout << "DBG: new Individual with fitness=" << this->population->parents[index]->getFitness() << " :" << this->population->parents[index]->serialize() << endl;
     }
   }
 }
