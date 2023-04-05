@@ -86,6 +86,9 @@ int main(int argc, char** argv){
 #include <problems/CProblem.h>
 #include <operators/crossover/continuous/CdeCrossover.h>
 
+#define NB_OBJECTIVES 1
+#define NB_CONSTRAINTS 0
+
 
 #include "config.h"
 #ifdef USE_OPENMP
@@ -111,6 +114,8 @@ typedef TP::TO TO;
 typedef typename easea::Individual<TT, TV> TIndividual;
 typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 typedef easea::algorithms::cde::Ccde< TIndividual, TRandom &> TAlgorithm;
+typedef easea::operators::crossover::continuous::de::CdeCrossover<TT, TRandom &> TCrossover;
+
 TAlgorithm *m_algorithm;
 size_t m_popSize = -1;
 std::time_t m_seed = std::time(nullptr);
