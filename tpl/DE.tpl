@@ -83,6 +83,9 @@ int main(int argc, char** argv){
 #include <operators/crossover/C3x1CrossoverLauncher.h>
 #include <variables/continuous/uniform.h>
 #include <algorithms/soea/Ccde.h>
+#include <problems/CProblem.h>
+#include <operators/crossover/continuous/CdeCrossover.h>
+
 
 #include "config.h"
 #ifdef USE_OPENMP
