@@ -27,6 +27,7 @@ Reformated on june 2022 by Léo Chéneau to improved portability with Windows
 #define STD 5
 #define CMAES 6
 #define MEMETIC 7
+#define DE 30
 
 #define STD_FLAVOR_SO 0
 #define STD_FLAVOR_MO 1

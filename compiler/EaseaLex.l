@@ -2587,6 +2587,8 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       strcat(sTemp,"STD.tpl");
     else if (TARGET_FLAVOR == CMAES)
       strcat(sTemp,"CMAES.tpl");
+    else if (TARGET_FLAVOR == DE)
+	strcat(sTemp,"DE.tpl");
     else if (TARGET_FLAVOR == FLAVOR_GP)
       strcat(sTemp,"GP.tpl");
     else if (TARGET_FLAVOR == QAES)
