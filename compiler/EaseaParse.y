@@ -827,6 +827,10 @@ int easeaParse(int argc, char *argv[]){
       printf("Compiled with DE template\n");
       TARGET_FLAVOR = DE;
     }
+    else if (!mystricmp(sTemp,"gde"))  {
+           printf("Compiled with GDE template\n");
+           TARGET_FLAVOR = GDE;
+    }
     else if (!mystricmp(sTemp,"qaes"))  {
       printf("Compiled with QAES template\n");
       TARGET_FLAVOR = QAES;

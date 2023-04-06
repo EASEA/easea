@@ -24,8 +24,6 @@
 #include <shared/CRandom.h>
 #include <shared/CConstant.h>
 #include <shared/functions/breeding.h>
-//#include <shared/functions/crowdingDistance.h>
-//#include <shared/functions/dominance.h>
 #include <config.h>
 
 
@@ -47,20 +45,14 @@ public:
         typedef CmoeaAlgorithm<TPopulation, TRandom> TBase;
         typedef typename TBase::TP TP;
         typedef typename easea::operators::crossover::CWrap3x1Crossover<TO, TV>::TC TC;
-//        typedef typename easea::operators::mutation::CWrapMutation<TO, TV>::TM TM;
 
         Ccde(TRandom random, TP &problem, const std::vector<TV> &initial, TC &crossover);
         ~Ccde(void);
         TI runBreeding(const TPopulation &parent, const size_t index);
-    //    static const TIndividual *isoOmpete(const std::vector<const TIndividual *>&competition);
 
 
 protected:
-//        static bool Dominate(const TI *individual1, const TI *individual2);
         void makeOneGeneration(void);
-    //    template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
-    //    template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
-//        static const TI *comparer(const std::vector<const TI *> &comparator);
 private:
     std::uniform_int_distribution<size_t> m_distribution;
 };

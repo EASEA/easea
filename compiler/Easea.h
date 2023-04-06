@@ -28,6 +28,7 @@ Reformated on june 2022 by Léo Chéneau to improved portability with Windows
 #define CMAES 6
 #define MEMETIC 7
 #define DE 30
+#define GDE 31
 
 #define STD_FLAVOR_SO 0
 #define STD_FLAVOR_MO 1

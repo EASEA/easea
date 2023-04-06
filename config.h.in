@@ -10,6 +10,7 @@
 
 #ifdef USE_OPENMP
   #define EASEA_PRAGMA_OMP_PARALLEL _Pragma("omp parallel for schedule(runtime)")
+  #define EASEA_PRAGMA_OMP_CRITICAL _Pragma("omp critical")
   #define EASEA_PRAGMA_OMP_ATOMIC   _Pragma("omp atomic")
 #else
   #define OMP_NUM_THREADS 1
