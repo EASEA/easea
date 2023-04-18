@@ -57,7 +57,7 @@ float fMIGRATION_PROBABILITY=0.0;
 char sIP_FILE[128]; //remote island model
 int nPOP_SIZE, nOFF_SIZE, nARCH_SIZE;
 float fSURV_PAR_SIZE=-1.0, fSURV_OFF_SIZE=-1.0;
-char *nGENOME_NAME;
+const char *nGENOME_NAME;
 int nPROBLEM_DIM;
 int nNB_GEN=0;
 int nNB_OPT_IT=0;
@@ -88,7 +88,7 @@ char* concat_delete(char* lhs, char* rhs) {
 	return ret;
 }
 
-char* sdup(char* str) {
+char* sdup(const char* str) {
 	int len = strlen(str)+1;
 	char* ret = new char[len];
 	memcpy(ret, str, len);
@@ -106,6 +106,10 @@ char* itos(int n) {
 %code provides {
 // forward references
 class CSymbol;
+}
+
+%code requires {
+#include <memory>
 }
 
 // attribute type
@@ -245,15 +249,15 @@ ClassDeclarations
   
 ClassDeclaration
   : Symbol {
-      pCURRENT_CLASS=SymbolTable.insert($1);  
-      pCURRENT_CLASS->pSymbolList=new CLList<CSymbol *>();
+      auto sym = std::unique_ptr<CSymbol>{$1};
+      pCURRENT_CLASS=SymbolTable.insert(std::move(sym));  
       $1->ObjectType=oUserClass;
-      //DEBUG_PRT("Yacc Symbol declaration %s %d",$1->sName,$1->nSize);
+      //DEBUG_PRT("Yacc Symbol declaration %s %d",$1->sName.c_str(),$1->nSize);
       pCLASSES[nClasses_nb++] = $1;
     }
   '{' VariablesDeclarations '}' {
-      if (bVERBOSE) printf("Class %s declared for %d bytes.\n\n",$1->sName,$1->nSize);
-      //DEBUG_PRT("Yacc variable declaration %s %d",$1->sName,$1->nSize);
+      if (bVERBOSE) printf("Class %s declared for %d bytes.\n\n",$1->sName.c_str(),$1->nSize);
+      //DEBUG_PRT("Yacc variable declaration %s %d",$1->sName.c_str(),$1->nSize);
     }                       
   ;
 
@@ -271,9 +275,8 @@ VariablesDeclaration
 
 MethodsDeclaration
   : METHODS END_METHODS{
-    pCURRENT_CLASS->sString = new char[strlen($2) + 1];
-    strcpy(pCURRENT_CLASS->sString, $2);      
-    if (bVERBOSE) printf("\n    The following methods have been declared:\n\n%s\n\n",pCURRENT_CLASS->sString);
+    pCURRENT_CLASS->sString = std::string($2);
+    if (bVERBOSE) printf("\n    The following methods have been declared:\n\n%s\n\n",pCURRENT_CLASS->sString.c_str());
     }
   ;
 
@@ -304,28 +307,28 @@ BaseType
   
 UserType
   : Symbol {  
-      CSymbol *pSym=SymbolTable.find($1->sName);
+      CSymbol *pSym=SymbolTable.find($1->sName.c_str());
       if (pSym==NULL) {
-        /*fprintf(stderr,"\n%s - Error line %d: Class \"%s\" was not defined.\n",sEZ_FILE_NAME,yylineno,$1->sName);
+        /*fprintf(stderr,"\n%s - Error line %d: Class \"%s\" was not defined.\n",sEZ_FILE_NAME,yylineno,$1->sName.c_str());
         fprintf(stderr,"Only base types (bool, int, float, double, char) or new user classes defined\nwithin the \"User classes\" sections are allowed.\n");
         exit(1);*/
-	auto pNewBaseType=new CSymbol($1->sName);
+	auto pNewBaseType=std::make_unique<CSymbol>($1->sName.c_str());
   	pNewBaseType->nSize=0;
   	pNewBaseType->ObjectType=oObject;
-  	SymbolTable.insert(pNewBaseType);
-	pSym = SymbolTable.find($1->sName);
+  	SymbolTable.insert(std::move(pNewBaseType));
+	pSym = SymbolTable.find($1->sName.c_str());
       }       
       else $$=pSym;
     }
   | Symbol '<' Template {
-      char* buf = concat_delete(concat_delete(sdup($1->sName), sdup("<")), $3);
+      char* buf = concat_delete(concat_delete(sdup($1->sName.c_str()), sdup("<")), $3);
       CSymbol *pSym=SymbolTable.find(buf);
       if (pSym==NULL) {
         fprintf(stderr, "DEBUG: %s\n", buf);
-	auto pNewBaseType=new CSymbol(buf);
+	auto pNewBaseType=std::make_unique<CSymbol>(buf);
   	pNewBaseType->nSize=0;
   	pNewBaseType->ObjectType=oObject;
-  	SymbolTable.insert(pNewBaseType);
+  	SymbolTable.insert(std::move(pNewBaseType));
 	pSym = SymbolTable.find(buf);
       }
       $$=pSym;
@@ -333,8 +336,8 @@ UserType
   ;
 
 TemplateType
-  : BaseType { $$ = sdup($1->sName); }
-  | UserType { $$ = sdup($1->sName); }
+  : BaseType { $$ = sdup($1->sName.c_str()); }
+  | UserType { $$ = sdup($1->sName.c_str()); }
   | NUMBER { $$ = itos($1); }
 
 TemplateList
@@ -365,8 +368,8 @@ Object
         $1->ObjectType=oObject;
         $1->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
         pCURRENT_CLASS->nSize+=$1->nSize;
-        pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($1));
-        if (bVERBOSE) printf("    %s variable declared (%d bytes)\n",$1->sName,$1->nSize);
+        pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)$1);
+        if (bVERBOSE) printf("    %s variable declared (%d bytes)\n",$1->sName.c_str(),$1->nSize);
     } 
   | '*' Symbol {
       $2->nSize=sizeof (char *);
@@ -375,8 +378,8 @@ Object
       $2->ObjectType=oPointer;
       $2->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
       pCURRENT_CLASS->nSize+=$2->nSize;
-      pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($2));
-      if (bVERBOSE) printf("    %s pointer declared (%d bytes)\n",$2->sName,$2->nSize);
+      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($2));
+      if (bVERBOSE) printf("    %s pointer declared (%d bytes)\n",$2->sName.c_str(),$2->nSize);
     }
   | '0' Symbol {
       $2->nSize=sizeof (char *);
@@ -385,8 +388,8 @@ Object
       $2->ObjectType=oPointer;
       $2->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
       pCURRENT_CLASS->nSize+=$2->nSize;
-      pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($2));
-      if (bVERBOSE) printf("    %s NULL pointer declared (%d bytes)\n",$2->sName,$2->nSize);
+      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($2));
+      if (bVERBOSE) printf("    %s NULL pointer declared (%d bytes)\n",$2->sName.c_str(),$2->nSize);
     }
   | '*''*' Symbol {
       $3->nSize=sizeof (char *);
@@ -395,17 +398,17 @@ Object
       $3->ObjectType=oPointer;
       $3->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
       pCURRENT_CLASS->nSize+=$3->nSize;
-      pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($3));
-      if (bVERBOSE) printf("    %s pointer of pointer declared (%d bytes)\n",$3->sName,$3->nSize);
+      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($3));
+      if (bVERBOSE) printf("    %s pointer of pointer declared (%d bytes)\n",$3->sName.c_str(),$3->nSize);
       fprintf(stderr,"Pointer of pointer doesn't work properly yet\n");
       exit(-1);
     }
 
   | Symbol  '[' Expr ']' {
-      if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
-if((TARGET_FLAVOR==QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
-if((TARGET_FLAVOR==CUDA_QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
-if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { nGENOME_NAME=$1->sName; nPROBLEM_DIM=(int)$3;}
+      if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { nGENOME_NAME=$1->sName.c_str(); nPROBLEM_DIM=(int)$3;}
+if((TARGET_FLAVOR==QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { nGENOME_NAME=$1->sName.c_str(); nPROBLEM_DIM=(int)$3;}
+if((TARGET_FLAVOR==CUDA_QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { nGENOME_NAME=$1->sName.c_str(); nPROBLEM_DIM=(int)$3;}
+if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { nGENOME_NAME=$1->sName.c_str(); nPROBLEM_DIM=(int)$3;}
 
       //printf("DEBUG : size of $3 %d nSize %d\n",(int)$3,pCURRENT_TYPE->nSize);
 
@@ -415,21 +418,21 @@ if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Gen
       $1->ObjectType=oArray;
       $1->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
       pCURRENT_CLASS->nSize+=$1->nSize;
-      pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($1));
-      if (bVERBOSE) printf("    %s array declared (%d bytes)\n",$1->sName,$1->nSize);
+      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($1));
+      if (bVERBOSE) printf("    %s array declared (%d bytes)\n",$1->sName.c_str(),$1->nSize);
     }
   | '*' Symbol  '[' Expr ']' {
 
     // this is for support of pointer array. This should be done in a more generic way in a later version
-      if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) { 
-	nGENOME_NAME=$2->sName; nPROBLEM_DIM=(int)$4;
+      if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { 
+	nGENOME_NAME=$2->sName.c_str(); nPROBLEM_DIM=(int)$4;
       }
-if((TARGET_FLAVOR==QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) {
-    nGENOME_NAME=$2->sName; nPROBLEM_DIM=(int)$4;}
-if((TARGET_FLAVOR==CUDA_QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) {
-        nGENOME_NAME=$2->sName; nPROBLEM_DIM=(int)$4;}
-if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Genome")==0) {
-      nGENOME_NAME=$2->sName; nPROBLEM_DIM=(int)$4;
+if((TARGET_FLAVOR==QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) {
+    nGENOME_NAME=$2->sName.c_str(); nPROBLEM_DIM=(int)$4;}
+if((TARGET_FLAVOR==CUDA_QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) {
+        nGENOME_NAME=$2->sName.c_str(); nPROBLEM_DIM=(int)$4;}
+if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) {
+      nGENOME_NAME=$2->sName.c_str(); nPROBLEM_DIM=(int)$4;
 
 }
 
@@ -442,10 +445,10 @@ if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName,"Gen
       $2->ObjectType=oArrayPointer;
       $2->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
       pCURRENT_CLASS->nSize+=$2->nSize;
-      pCURRENT_CLASS->pSymbolList->addFirst((CSymbol *)($2));
+      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($2));
 
       printf("DEBUG : size of $4 %d nSize %d\n",(int)$4,pCURRENT_TYPE->nSize);
-      if (bVERBOSE) printf("    %s array of pointers declared (%d bytes)\n",$2->sName,$2->nSize);
+      if (bVERBOSE) printf("    %s array of pointers declared (%d bytes)\n",$2->sName.c_str(),$2->nSize);
     }
   ;  
 
@@ -469,14 +472,12 @@ BaseConstructorParameter
   
 GenomeDeclarationSection
   : GENOME {
-    ////DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName);
-      if (bVERBOSE) printf ("\nGenome declaration analysis :\n\n");
+    ////DEBUG_PRT("Yacc genome decl %s",$1.pSymbol->sName.c_str());
       pGENOME=new CSymbol("Genome");
-      pCURRENT_CLASS=SymbolTable.insert(pGENOME);  
-      pGENOME->pSymbolList=new CLList<CSymbol *>();
+      auto uptr = std::unique_ptr<CSymbol>(pGENOME);
+      pCURRENT_CLASS=SymbolTable.insert(std::move(uptr));
       pGENOME->ObjectType=oUserClass;
       pGENOME->ObjectQualifier=0;
-      pGENOME->sString=NULL;
     }
 '{' VariablesDeclarations '}' {}
   ;
@@ -555,8 +556,8 @@ Parameter
   |  ARCH_SIZE NUMBER2
       {nARCH_SIZE=(int)$2;}
   |  SELECTOR IDENTIFIER2{
-      strcpy(sSELECTOR, $2->sName);
-      strcpy(sSELECTOR_OPERATOR, $2->sName);
+      strcpy(sSELECTOR, $2->sName.c_str());
+      strcpy(sSELECTOR_OPERATOR, $2->sName.c_str());
       switch (TARGET) {
       case CUDA:
       case STD:
@@ -565,8 +566,8 @@ Parameter
       }
     }
   |  SELECTOR IDENTIFIER2 NUMBER2 {
-      sprintf(sSELECTOR, $2->sName);   
-      sprintf(sSELECTOR_OPERATOR, $2->sName);   
+      sprintf(sSELECTOR, "%s", $2->sName.c_str());   
+      sprintf(sSELECTOR_OPERATOR, "%s", $2->sName.c_str());   
       switch (TARGET) {
       case CUDA:
       case STD:
@@ -575,8 +576,8 @@ Parameter
       }
     }
   |  RED_PAR IDENTIFIER2{
-        sprintf(sRED_PAR, $2->sName);
-	sprintf(sRED_PAR_OPERATOR, $2->sName);
+        sprintf(sRED_PAR, "%s", $2->sName.c_str());
+	sprintf(sRED_PAR_OPERATOR, "%s", $2->sName.c_str());
         switch (TARGET) {
 	case CUDA:
 	case STD:
@@ -585,8 +586,8 @@ Parameter
 	}
     }
 |  RED_PAR IDENTIFIER2 NUMBER2 {
-        sprintf(sRED_PAR, $2->sName);
-	sprintf(sRED_PAR_OPERATOR, $2->sName);
+        sprintf(sRED_PAR, "%s", $2->sName.c_str());
+	sprintf(sRED_PAR_OPERATOR, "%s", $2->sName.c_str());
         switch (TARGET) {
 	case CUDA :
 	case STD:
@@ -595,8 +596,8 @@ Parameter
 	}
     }
   |  RED_OFF IDENTIFIER2{
-	sprintf(sRED_OFF, $2->sName);
-	sprintf(sRED_OFF_OPERATOR, $2->sName);
+	sprintf(sRED_OFF, "%s", $2->sName.c_str());
+	sprintf(sRED_OFF_OPERATOR, "%s", $2->sName.c_str());
       switch (TARGET) {
       case STD:
       case CUDA:
@@ -605,16 +606,16 @@ Parameter
       }
     }
   |  RED_OFF IDENTIFIER2 NUMBER2 {
-        sprintf(sRED_OFF, $2->sName);
-	sprintf(sRED_OFF_OPERATOR, $2->sName);
+        sprintf(sRED_OFF, "%s", $2->sName.c_str());
+	sprintf(sRED_OFF_OPERATOR, "%s", $2->sName.c_str());
         switch (TARGET) {
 	case STD:
 	case CUDA:
 	  pickupSTDSelectorArgument(sRED_OFF,&fRED_OFF_PRM,sEZ_FILE_NAME,$3);
        }}
   |  RED_FINAL IDENTIFIER2{
-        sprintf(sRED_FINAL, $2->sName);
-        sprintf(sRED_FINAL_OPERATOR, $2->sName);
+        sprintf(sRED_FINAL, "%s", $2->sName.c_str());
+        sprintf(sRED_FINAL_OPERATOR, "%s", $2->sName.c_str());
         switch (TARGET) {
 	case CUDA:
 	case STD:
@@ -622,8 +623,8 @@ Parameter
 	  break;
        }}
   |  RED_FINAL IDENTIFIER2 NUMBER2 {
-        sprintf(sRED_FINAL, $2->sName);
-        sprintf(sRED_FINAL_OPERATOR, $2->sName);
+        sprintf(sRED_FINAL, "%s", $2->sName.c_str());
+        sprintf(sRED_FINAL_OPERATOR, "%s", $2->sName.c_str());
         switch (TARGET) {
 	case CUDA :
 	case STD:
@@ -637,8 +638,8 @@ Parameter
   |  SURVOFF NUMBER2 {fSURV_OFF_SIZE=(float)$2;}
   |  SURVOFF NUMBER2 '%' {fSURV_OFF_SIZE=(float)($2/100);}
   |  MINIMAXI IDENTIFIER2 {
-      if ((!mystricmp($2->sName,"Maximise")) || (!mystricmp($2->sName,"Maximize"))) nMINIMISE=0;
-      else if ((!mystricmp($2->sName,"Minimise")) || (!mystricmp($2->sName,"Minimize"))) nMINIMISE=1;
+      if ((!mystricmp($2->sName.c_str(),"Maximise")) || (!mystricmp($2->sName.c_str(),"Maximize"))) nMINIMISE=0;
+      else if ((!mystricmp($2->sName.c_str(),"Minimise")) || (!mystricmp($2->sName.c_str(),"Minimize"))) nMINIMISE=1;
       else {
          fprintf(stderr,"\n%s - Error line %d: The evaluator goal default parameter can only take\n",sEZ_FILE_NAME,yylineno);
          fprintf(stderr,"two values : maximi[sz]e or minimi[sz]e.\n",sEZ_FILE_NAME,yylineno);
@@ -652,31 +653,31 @@ Parameter
         nELITE=(int)$2*nPOP_SIZE/100;
         }
   |  ELITISM IDENTIFIER2{
-      if (!mystricmp($2->sName,"Weak")) bELITISM=0;
-      else if (!mystricmp($2->sName,"Strong")) bELITISM=1;
+      if (!mystricmp($2->sName.c_str(),"Weak")) bELITISM=0;
+      else if (!mystricmp($2->sName.c_str(),"Strong")) bELITISM=1;
       else {
          fprintf(stderr,"\n%s - Warning line %d: Elitism must be \"Strong\" or \"Weak\".\nDefault value \"Strong\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bELITISM=1;
        }}
   | BALDWINISM IDENTIFIER2{
-      if (!mystricmp($2->sName,"False")) bBALDWINISM=0;
-      else if (!mystricmp($2->sName,"True")) bBALDWINISM=1;
+      if (!mystricmp($2->sName.c_str(),"False")) bBALDWINISM=0;
+      else if (!mystricmp($2->sName.c_str(),"True")) bBALDWINISM=1;
       else {
          fprintf(stderr,"\n%s - Warning line %d: Baldwinism must be \"True\" or \"False\".\nDefault value \"True\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bBALDWINISM=1;
        }}
 
   | REMOTE_ISLAND_MODEL IDENTIFIER2{
-	if (!mystricmp($2->sName,"False")) bREMOTE_ISLAND_MODEL=0;
-	else if (!mystricmp($2->sName,"True")) bREMOTE_ISLAND_MODEL=1;
+	if (!mystricmp($2->sName.c_str(),"False")) bREMOTE_ISLAND_MODEL=0;
+	else if (!mystricmp($2->sName.c_str(),"True")) bREMOTE_ISLAND_MODEL=1;
 	else {
 	  fprintf(stderr,"\n%s - Warning line %d: remote island model must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n",sEZ_FILE_NAME,yylineno);nWARNINGS++;
 	  bREMOTE_ISLAND_MODEL=0;
 	}}
   | IP_FILE IDENTIFIER2'.'IDENTIFIER2{
-        sprintf(sIP_FILE, $2->sName);
+        sprintf(sIP_FILE, $2->sName.c_str());
 	strcat(sIP_FILE,".");
-	strcat(sIP_FILE,$4->sName);
+	strcat(sIP_FILE,$4->sName.c_str());
 	}
   | MIGRATION_PROBABILITY NUMBER2{
 	fMIGRATION_PROBABILITY=(float)$2;
@@ -685,50 +686,50 @@ Parameter
       nSERVER_PORT=(int)$2;
     }
   | PRINT_STATS IDENTIFIER2{
-      if (!mystricmp($2->sName,"False")) bPRINT_STATS=0;
-      else if (!mystricmp($2->sName,"True")) bPRINT_STATS=1;
+      if (!mystricmp($2->sName.c_str(),"False")) bPRINT_STATS=0;
+      else if (!mystricmp($2->sName.c_str(),"True")) bPRINT_STATS=1;
       else {
          fprintf(stderr,"\n%s - Warning line %d: Print stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bPRINT_STATS=0;
        }}
   | PLOT_STATS IDENTIFIER2{
-      if (!mystricmp($2->sName,"False")) bPLOT_STATS=0;
-      else if (!mystricmp($2->sName,"True")) bPLOT_STATS=1;
+      if (!mystricmp($2->sName.c_str(),"False")) bPLOT_STATS=0;
+      else if (!mystricmp($2->sName.c_str(),"True")) bPLOT_STATS=1;
       else {
          fprintf(stderr,"\n%s - Warning line %d: Generate stats must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bPLOT_STATS=0;
        }}
   | GENERATE_CSV_FILE IDENTIFIER2{
-      if (!mystricmp($2->sName,"False")) bGENERATE_CSV_FILE=0;
-      else if (!mystricmp($2->sName,"True")) bGENERATE_CSV_FILE=1;
+      if (!mystricmp($2->sName.c_str(),"False")) bGENERATE_CSV_FILE=0;
+      else if (!mystricmp($2->sName.c_str(),"True")) bGENERATE_CSV_FILE=1;
       else {
          fprintf(stderr,"\n%s - Warning line %d: Generate csv file must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bGENERATE_CSV_FILE=0;
        }}
   | GENERATE_GNUPLOT_SCRIPT IDENTIFIER2{
-      if (!mystricmp($2->sName,"False")) bGENERATE_GNUPLOT_SCRIPT=0;
-      else if (!mystricmp($2->sName,"True")) bGENERATE_GNUPLOT_SCRIPT=1;
+      if (!mystricmp($2->sName.c_str(),"False")) bGENERATE_GNUPLOT_SCRIPT=0;
+      else if (!mystricmp($2->sName.c_str(),"True")) bGENERATE_GNUPLOT_SCRIPT=1;
       else {
          fprintf(stderr,"\n%s - Warning line %d: Generate gnuplot script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bGENERATE_GNUPLOT_SCRIPT=0;
        }}
   | GENERATE_R_SCRIPT IDENTIFIER2{
-      if (!mystricmp($2->sName,"False")) bGENERATE_R_SCRIPT=0;
-      else if (!mystricmp($2->sName,"True")) bGENERATE_R_SCRIPT=1;
+      if (!mystricmp($2->sName.c_str(),"False")) bGENERATE_R_SCRIPT=0;
+      else if (!mystricmp($2->sName.c_str(),"True")) bGENERATE_R_SCRIPT=1;
       else {
          fprintf(stderr,"\n%s - Warning line %d: Generate R script must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bGENERATE_R_SCRIPT=0;
        }}
   | SAVE_POPULATION IDENTIFIER2{
-      if (!mystricmp($2->sName,"False")) bSAVE_POPULATION=0;
-      else if (!mystricmp($2->sName,"True")) bSAVE_POPULATION=1;
+      if (!mystricmp($2->sName.c_str(),"False")) bSAVE_POPULATION=0;
+      else if (!mystricmp($2->sName.c_str(),"True")) bSAVE_POPULATION=1;
       else {
          fprintf(stderr,"\n%s - Warning line %d: SavePopulation must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bSAVE_POPULATION=0;
        }}
   | START_FROM_FILE IDENTIFIER2{
-      if (!mystricmp($2->sName,"False")) bSTART_FROM_FILE=0;
-      else if (!mystricmp($2->sName,"True")) bSTART_FROM_FILE=1;
+      if (!mystricmp($2->sName.c_str(),"False")) bSTART_FROM_FILE=0;
+      else if (!mystricmp($2->sName.c_str(),"True")) bSTART_FROM_FILE=1;
       else {
          fprintf(stderr,"\n%s - Warning line %d: StartFromFile must be \"True\" or \"False\".\nDefault value \"False\" inserted.\n.",sEZ_FILE_NAME,yylineno);nWARNINGS++;
          bSTART_FROM_FILE=0;
@@ -745,11 +746,11 @@ Parameter
   
 Expr
   : IDENTIFIER '=' Expr { 
-      if (SymbolTable.find($1->sName)==NULL){
-         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,$1->sName);
+      if (SymbolTable.find($1->sName.c_str())==NULL){
+         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,$1->sName.c_str());
          exit(1);
       }
-      $$ = CEASEAParser_assign(SymbolTable.find($1->sName), $3);
+      $$ = CEASEAParser_assign(SymbolTable.find($1->sName.c_str()), $3);
     }
   | Expr '+' Expr                    { $$ = $1 + $3; }
   | Expr '-' Expr                     { $$ = $1 - $3; }
@@ -762,11 +763,11 @@ Expr
   | '-' Expr %prec UMINUS { $$ = -$2; }
   | NUMBER                         { $$ = $1; }
   | IDENTIFIER{
-      if (SymbolTable.find($1->sName)==NULL){
-         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,$1->sName);
+      if (SymbolTable.find($1->sName.c_str())==NULL){
+         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,$1->sName.c_str());
          exit(1);
       }
-      $$ = (SymbolTable.find($1->sName))->dValue;
+      $$ = (SymbolTable.find($1->sName.c_str()))->dValue;
     }
   ;
 
@@ -920,45 +921,27 @@ int easeaParse(int argc, char *argv[]){
 /////////////////////////////////////////////////////////////////////////////
 // EASEAParser commands
 
+#define helper_create(sym) { auto ptr = std::make_unique<CSymbol>(#sym); ptr->nSize = sizeof(sym); ptr->ObjectType = oBaseClass; SymbolTable.insert(std::move(ptr)); }
+
 int CEASEAParser_create()
 {
-  CSymbol *pNewBaseType;
+  helper_create(bool);
+  helper_create(int);
+  helper_create(double);
+  helper_create(float);
+  helper_create(char);
+  helper_create(char*);
 
-  pNewBaseType=new CSymbol("bool");
-  pNewBaseType->nSize=sizeof(bool);   
-  pNewBaseType->ObjectType=oBaseClass;
-  SymbolTable.insert(pNewBaseType);
-
-  pNewBaseType=new CSymbol("int");
-  pNewBaseType->nSize=sizeof(int);   
-  pNewBaseType->ObjectType=oBaseClass;
-  SymbolTable.insert(pNewBaseType);
-
-  pNewBaseType=new CSymbol("double");
-  pNewBaseType->nSize=sizeof(double);   
-  pNewBaseType->ObjectType=oBaseClass;
-  SymbolTable.insert(pNewBaseType);
-
-  pNewBaseType=new CSymbol("float");
-  pNewBaseType->nSize=sizeof(float);   
-  pNewBaseType->ObjectType=oBaseClass;
-  SymbolTable.insert(pNewBaseType);
-
-  pNewBaseType=new CSymbol("char");
-  pNewBaseType->nSize=sizeof(char);   
-  pNewBaseType->ObjectType=oBaseClass;
-  SymbolTable.insert(pNewBaseType);
-
-  pNewBaseType=new CSymbol("pointer");
-  pNewBaseType->nSize=sizeof(char *);   
-  pNewBaseType->ObjectType=oBaseClass;
-  SymbolTable.insert(pNewBaseType);
+  auto ptr = std::make_unique<CSymbol>("pointer");
+  ptr->nSize=sizeof(char *);   
+  ptr->ObjectType=oBaseClass;
+  SymbolTable.insert(std::move(ptr));
 
 
   //if (!yycreate(&EASEALexer)) {
   //  return 0;
   //}
-  if (!CEASEALexer_create(&SymbolTable)) {
+  if (!CEASEALexer_create(std::move(SymbolTable))) {
     return 0;
   }
   return 1; // success

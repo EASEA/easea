@@ -36,6 +36,9 @@ using ssize_t = signed long long;
 #endif
 
 #include "debug.h"
+#include <memory>
+#include <vector>
+#include <algorithm>
 //#include <iostream>
 //#include <sstream>
 
@@ -183,7 +186,7 @@ void yyreset()
 
 
 
-  CSymbolTable *pSymbolTable;   // the symbol table
+  CSymbolTable pSymbolTable;   // the symbol table
   bool bSymbolInserted,bWithinEvaluator, bWithinOptimiser;  // used to change evalutor type from double to float 
   bool bInitFunction,bDisplayFunction,bFunction, bNotFinishedYet, bWithinEO_Function;
   bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
@@ -193,12 +196,10 @@ void yyreset()
   bool bIsParentReduce, bIsOffspringReduce, bEndGeneration, bBeginGeneration, bEndGenerationFunction, bBeginGenerationFunction, bGenerationFunctionBeforeReplacement;
   bool bGPOPCODE_ANALYSIS,bCOPY_GP_EVAL_GPU;
   
-  CSymbol *pASymbol;
+  std::unique_ptr<CSymbol> pASymbol;
 
   unsigned iGP_OPCODE_FIELD, accolade_counter;
-  OPCodeDesc* opDesc[512];
-  unsigned iNoOp;
-
+  std::vector<OPCodeDesc> opDesc;
   
   unsigned iCOPY_GP_EVAL_STATUS;
   bool bIsCopyingGPEval;
@@ -327,22 +328,25 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_GP_OPCODE_DECL" {
   
   fprintf(fpOutputFile,"enum OPCODE              {"); 
-  for( unsigned i=0 ; i<iNoOp ; i++ ){
-    fprintf(fpOutputFile,"%s,",opDesc[i]->opcode->c_str());
+  for (auto const& op : opDesc) {
+    fprintf(fpOutputFile,"%s,",op.opcode.c_str());
   }
   fprintf(fpOutputFile,"OPCODE_SIZE, OP_RETURN};\n");
 
 
   fprintf(fpOutputFile,"const char* opCodeName[]={"); 
-  for( unsigned i=0 ; i<iNoOp ; i++ ){
-    fprintf(fpOutputFile,"%s",opDesc[i]->realName->c_str());
-    if( i<(iNoOp-1) )fprintf(fpOutputFile,",");
+  bool first = true;
+  for (auto const& op : opDesc) {
+    fprintf(fpOutputFile,"%s",op.realName.c_str());
+    if( !first )fprintf(fpOutputFile,",");
+    first = false;
   }
   fprintf(fpOutputFile,"};\n"); 
   fprintf(fpOutputFile,"unsigned opArity[]=     {"); 
-  for( unsigned i=0 ; i<iNoOp ; i++ ){
-    fprintf(fpOutputFile,"%d",opDesc[i]->arity);
-    if( i<(iNoOp-1) )fprintf(fpOutputFile,",");
+  for (auto const& op : opDesc) {
+    fprintf(fpOutputFile,"%d",op.arity);
+    if( !first )fprintf(fpOutputFile,",");
+    first = false;
   }
   fprintf(fpOutputFile,"};\n"); 
 
@@ -350,25 +354,25 @@ exponent  ([Ee][+-]?[0-9]+)
   // count the number of variable (arity zero and non-erc operator)
   unsigned var_len = 0;
   for( unsigned i=0 ; i<iNoOp ; i++ ){
-    if( opDesc[i]->arity==0 && !opDesc[i]->isERC ) var_len++;
+    if( op.arity==0 && !op.isERC ) var_len++;
   }
   if( bVERBOSE ) printf("var length is %d\n",var_len);
   fprintf(fpOutputFile,"#define VAR_LEN %d\n",var_len); */
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GP_GPU_SWITCH" {
-  for( unsigned i=0 ; i<iNoOp ; i++ ){
-    fprintf(fpOutputFile,"    case %s :\n",opDesc[i]->opcode->c_str());
-    fprintf(fpOutputFile,"      %s",opDesc[i]->gpuCodeStream.str().c_str());
+  for (auto const& op : opDesc) {
+    fprintf(fpOutputFile,"    case %s :\n",op.opcode.c_str());
+    fprintf(fpOutputFile,"      %s",op.gpuCodeStream.str().c_str());
     fprintf(fpOutputFile,"      break;\n");
 
   }
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GP_CPU_SWITCH" {
-  for( unsigned i=0 ; i<iNoOp ; i++ ){
-    fprintf(fpOutputFile,"  case %s :\n",opDesc[i]->opcode->c_str());
-    fprintf(fpOutputFile,"    %s\n",opDesc[i]->cpuCodeStream.str().c_str());
+  for (auto const& op : opDesc) {
+    fprintf(fpOutputFile,"  case %s :\n",op.opcode.c_str());
+    fprintf(fpOutputFile,"    %s\n",op.cpuCodeStream.str().c_str());
     fprintf(fpOutputFile,"    break;\n");
   }
  }
@@ -396,7 +400,13 @@ exponent  ([Ee][+-]?[0-9]+)
     yypop_buffer_state();
     bGPOPCODE_ANALYSIS = false;
     
-    OPCodeDesc::sort(opDesc,iNoOp);
+    std::sort(opDesc.begin(), opDesc.end(), [](auto const& lhs, auto const& rhs) {
+    if (lhs.arity == rhs.arity && lhs.arity == 0) {
+    	return lhs.isERC - rhs.isERC;
+    } else {
+    	return static_cast<int>(lhs.arity) - static_cast<int>(rhs.arity);
+    }
+    });
     /*for( unsigned i=0 ; i<iNoOp ; i++ ){
       opDesc[i]->show();
       }*/
@@ -426,8 +436,9 @@ exponent  ([Ee][+-]?[0-9]+)
       fprintf(stderr,"Error, OP_CODE name must be given first\n");
       exit(-1);
     }
-    opDesc[iNoOp] = new OPCodeDesc();
-    opDesc[iNoOp]->opcode = new string(yytext);
+    auto op = OPCodeDesc{};
+    op.opcode = std::string(yytext);
+    opDesc.push_back(std::move(op));
   }
 
 <GP_RULE_ANALYSIS>"//".*"\n" {}
@@ -437,7 +448,7 @@ exponent  ([Ee][+-]?[0-9]+)
     fprintf(stderr,"Error, op code real name must be given at the second place\n");
     exit(-1);
   }
-  opDesc[iNoOp]->realName = new string(yytext);
+  opDesc.back().realName = std::string(yytext);
  }
 
 
@@ -448,17 +459,16 @@ exponent  ([Ee][+-]?[0-9]+)
   }
   char* endptr;
   
-  opDesc[iNoOp]->arity = strtol(yytext,&endptr,10);
+  opDesc.back().arity = strtol(yytext,&endptr,10);
   if( endptr==yytext ){
     fprintf(stderr, "warning, unable to translate this arity %s assuming 0\n",yytext);
-    opDesc[iNoOp]->arity = 0;
+    opDesc.back().arity = 0;
   }
  }
 
 <GP_RULE_ANALYSIS>[ \t\n] {}
 <GP_RULE_ANALYSIS>";"  {
   iGP_OPCODE_FIELD = 0;
-  iNoOp++;
  }
 
 <GP_RULE_ANALYSIS>"," {
@@ -473,11 +483,11 @@ exponent  ([Ee][+-]?[0-9]+)
   }
   accolade_counter=1;
 
-//  printf("arity : %d\n",opDesc[iNoOp]->arity);
-  if( opDesc[iNoOp]->arity>=2 )
-    opDesc[iNoOp]->gpuCodeStream << "OP2 = stack[--sp];\n      ";
-  if( opDesc[iNoOp]->arity>=1 )
-    opDesc[iNoOp]->gpuCodeStream << "OP1 = stack[--sp];\n      ";
+//  printf("arity : %d\n",opDesc.back().arity);
+  if( opDesc.back().arity>=2 )
+    opDesc.back().gpuCodeStream << "OP2 = stack[--sp];\n      ";
+  if( opDesc.back().arity>=1 )
+    opDesc.back().gpuCodeStream << "OP1 = stack[--sp];\n      ";
 
   BEGIN GP_COPY_OPCODE_CODE;
  }
@@ -488,20 +498,20 @@ exponent  ([Ee][+-]?[0-9]+)
  */
 <GP_COPY_OPCODE_CODE>"{" {
   accolade_counter++;
-  opDesc[iNoOp]->cpuCodeStream << "{";
-  opDesc[iNoOp]->gpuCodeStream << "{";
+  opDesc.back().cpuCodeStream << "{";
+  opDesc.back().gpuCodeStream << "{";
  }
 
 <GP_COPY_OPCODE_CODE>"}" {
   accolade_counter--;
   if( accolade_counter==0 ){
-    opDesc[iNoOp]->gpuCodeStream << "\n      stack[sp++] = RESULT;\n";
+    opDesc.back().gpuCodeStream << "\n      stack[sp++] = RESULT;\n";
 
     BEGIN GP_RULE_ANALYSIS;
   }
   else{
-    opDesc[iNoOp]->cpuCodeStream << "}";
-    opDesc[iNoOp]->gpuCodeStream << "}";
+    opDesc.back().cpuCodeStream << "}";
+    opDesc.back().gpuCodeStream << "}";
   }
  }
 
@@ -509,26 +519,26 @@ exponent  ([Ee][+-]?[0-9]+)
   char* endptr;
   unsigned no_input = strtol(yytext+strlen("INPUT["),&endptr,10);
 //  printf("input no : %d\n",no_input);
-  opDesc[iNoOp]->cpuCodeStream << "input["<< no_input <<"]" ;
-  opDesc[iNoOp]->gpuCodeStream << "input["<< no_input << "]";  
+  opDesc.back().cpuCodeStream << "input["<< no_input <<"]" ;
+  opDesc.back().gpuCodeStream << "input["<< no_input << "]";  
  }
 
 <GP_COPY_OPCODE_CODE>"ERC" {
-  opDesc[iNoOp]->isERC = true;
-  opDesc[iNoOp]->cpuCodeStream << "root->erc_value" ;
-  opDesc[iNoOp]->gpuCodeStream << "k_progs[start_prog++];" ;
+  opDesc.back().isERC = true;
+  opDesc.back().cpuCodeStream << "root->erc_value" ;
+  opDesc.back().gpuCodeStream << "k_progs[start_prog++];" ;
 //  printf("ERC matched\n");
 }
 
 <GP_COPY_OPCODE_CODE>\n {
-  opDesc[iNoOp]->cpuCodeStream << "\n  ";
-  opDesc[iNoOp]->gpuCodeStream << "\n    ";
+  opDesc.back().cpuCodeStream << "\n  ";
+  opDesc.back().gpuCodeStream << "\n    ";
  }
 
 
 <GP_COPY_OPCODE_CODE>. {
-  opDesc[iNoOp]->cpuCodeStream << yytext;
-  opDesc[iNoOp]->gpuCodeStream << yytext;
+  opDesc.back().cpuCodeStream << yytext;
+  opDesc.back().gpuCodeStream << yytext;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_HDR" { 
@@ -768,12 +778,10 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_CLASSES"  {
   if (bVERBOSE) printf ("Inserting User classes.\n");
   fprintf (fpOutputFile,"// User classes\n");
-  CListItem<CSymbol*> *pSym;
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem())
-    if ((pSym->Object->pType->ObjectType==oUserClass)&&(!pSym->Object->pType->bAlreadyPrinted)){
+  for (auto const& sym : pGENOME->pSymbolList)
+    if ((sym->pType->ObjectType==oUserClass)&&(!sym->pType->bAlreadyPrinted)){
       //DEBUG_PRT_PRT("%p",pSym->Object->pType);
-      pSym->Object->pType->printClasses(fpOutputFile);
+      sym->pType->printClasses(fpOutputFile);
     }
 
   if( TARGET == CUDA ){
@@ -789,13 +797,11 @@ exponent  ([Ee][+-]?[0-9]+)
   }
  }
 <TEMPLATE_ANALYSIS>"\\GENOME_CTOR"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome constructor.\n");
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-    if (pSym->Object->ObjectType==oPointer){
-      fprintf(fpOutputFile,"    %s=NULL;\n",pSym->Object->sName);
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectQualifier==1) continue; // 1=Static
+    if (sym->ObjectType==oPointer){
+      fprintf(fpOutputFile,"    %s=NULL;\n",sym->sName.c_str());
     }
   }
  }
@@ -805,11 +811,9 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bVERBOSE) printf ("Inserting default genome size.\n");
   if( !genomeSizeValidity ){
     if (bVERBOSE) printf ("\tComputing default genome size.\n");  
-    CListItem<CSymbol*> *pSym;
-    pGENOME->pSymbolList->reset();
-    while (pSym=pGENOME->pSymbolList->walkToNextItem()){
+    for (auto const& sym : pGENOME->pSymbolList){
       //DEBUG_PRT_PRT("%s has size : %lu",pSym->Object->sName,pSym->Object->nSize);
-      size_of_genome+=pSym->Object->nSize;
+      size_of_genome+=sym->nSize;
     }
     //DEBUG_PRT_PRT("Total genome size is %lu",size_of_genome); 
     genomeSize = size_of_genome;
@@ -822,16 +826,14 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <TEMPLATE_ANALYSIS>"\\COPY_CUDA_BUFFER" {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome constructor.\n");
-  pGENOME->pSymbolList->reset();
 
   fprintf(fpOutputFile,"\tmemcpy(GENOME_ACCESS(id,buffer),this,Individual::sizeOfGenome);");
 
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-    if (pSym->Object->ObjectType==oPointer){
-      fprintf(fpOutputFile,"    %s=NULL;\n",pSym->Object->sName);
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectQualifier==1) continue; // 1=Static
+    if (sym->ObjectType==oPointer){
+      fprintf(fpOutputFile,"    %s=NULL;\n",sym->sName.c_str());
     }
   }
   
@@ -862,70 +864,65 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME"  {        
-  if (pGENOME->sString) {
+  if (pGENOME->sString != "") {
     if (bVERBOSE) printf ("Inserting Methods into Genome Class.\n");
     fprintf(fpOutputFile,"// User-defined methods:\n\n");
-    fprintf(fpOutputFile,"%s\n",pGENOME->sString);
+    fprintf(fpOutputFile,"%s\n",pGENOME->sString.c_str());
   }
   if (bVERBOSE) printf ("Inserting genome.\n");
   pGENOME->print(fpOutputFile);
  }                                            
 <TEMPLATE_ANALYSIS>"\\ASSIGNMENT_OP"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default assignment constructor.\n");
   fprintf (fpOutputFile,"// Memberwise assignment\n");             
-  pGENOME->pSymbolList->reset();                                      
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-    if (pSym->Object->ObjectType==oObject)
-      fprintf(fpOutputFile,"    %s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName);
-    if (pSym->Object->ObjectType==oPointer)
-      fprintf(fpOutputFile,"    %s=new %s(*(genome.%s));\n",pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-    if (pSym->Object->ObjectType==oArray){
-      fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-      fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+  
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectQualifier==1) continue; // 1=Static
+    if (sym->ObjectType==oObject)
+      fprintf(fpOutputFile,"    %s=genome.%s;\n",sym->sName.c_str(),sym->sName.c_str());
+    if (sym->ObjectType==oPointer)
+      fprintf(fpOutputFile,"    %s=new %s(*(genome.%s));\n",sym->sName.c_str(),sym->pType->sName.c_str(),sym->sName.c_str());
+    if (sym->ObjectType==oArray){
+      fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sym->pType->nSize);
+      fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",sym->sName.c_str(),sym->sName.c_str());
     }
   }
  }
 <TEMPLATE_ANALYSIS>"\\CLONE"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default clone method.\n");
   fprintf (fpOutputFile,"// Memberwise Cloning\n");             
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-      if (pSym->Object->ObjectType==oObject)
-	fprintf(fpOutputFile,"    %s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName);
-      if (pSym->Object->ObjectType==oPointer)
-	fprintf(fpOutputFile,"    %s=(genome.%s ? new %s(*(genome.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-      if (pSym->Object->ObjectType==oArray){
-	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-	fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectQualifier==1) continue; // 1=Static
+      if (sym->ObjectType==oObject)
+	fprintf(fpOutputFile,"    %s=genome.%s;\n",sym->sName.c_str(),sym->sName.c_str());
+      if (sym->ObjectType==oPointer)
+	fprintf(fpOutputFile,"    %s=(genome.%s ? new %s(*(genome.%s)) : NULL);\n",sym->sName.c_str(),sym->sName.c_str(),sym->pType->sName.c_str(),sym->sName.c_str());
+      if (sym->ObjectType==oArray){
+	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sym->pType->nSize);
+	fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",sym->sName.c_str(),sym->sName.c_str());
       }
   }
  }
 
 <TEMPLATE_ANALYSIS>"\\COPY_CTOR"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default copy constructor.\n");
   fprintf (fpOutputFile,"// Memberwise copy\n");             
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-      if (pSym->Object->ObjectType==oObject)
-	fprintf(fpOutputFile,"    %s=genome.%s;\n",pSym->Object->sName,pSym->Object->sName);
-      if (pSym->Object->ObjectType==oPointer)
-	fprintf(fpOutputFile,"    %s=(genome.%s ? new %s(*(genome.%s)) : NULL);\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-      if (pSym->Object->ObjectType==oArray){
-	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-	fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectQualifier==1) continue; // 1=Static
+      if (sym->ObjectType==oObject)
+	fprintf(fpOutputFile,"    %s=genome.%s;\n",sym->sName.c_str(),sym->sName.c_str());
+      if (sym->ObjectType==oPointer)
+	fprintf(fpOutputFile,"    %s=(genome.%s ? new %s(*(genome.%s)) : NULL);\n",sym->sName.c_str(),sym->sName.c_str(),sym->pType->sName.c_str(),sym->sName.c_str());
+      if (sym->ObjectType==oArray){
+	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sym->pType->nSize);
+	fprintf(fpOutputFile,"       %s[EASEA_Ndx]=genome.%s[EASEA_Ndx];}\n",sym->sName.c_str(),sym->sName.c_str());
       }
-      else if( pSym->Object->ObjectType==oArrayPointer ){ 
+      else if( sym->ObjectType==oArrayPointer ){ 
 	// here we handle array of pointer (developped for Tree GP)
-	fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
-	fprintf(fpOutputFile,"      if(genome.%s[EASEA_Ndx]) %s[EASEA_Ndx] = new %s(*(genome.%s[EASEA_Ndx]));\n",pSym->Object->sName,
-		pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
-	fprintf(fpOutputFile,"      else %s[EASEA_Ndx] = NULL;\n",pSym->Object->sName);
+	fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sizeof(char*));
+	fprintf(fpOutputFile,"      if(genome.%s[EASEA_Ndx]) %s[EASEA_Ndx] = new %s(*(genome.%s[EASEA_Ndx]));\n",sym->sName.c_str(),
+		sym->sName.c_str(),sym->pType->sName.c_str(),sym->sName.c_str());
+	fprintf(fpOutputFile,"      else %s[EASEA_Ndx] = NULL;\n",sym->sName.c_str());
 	
       }
       
@@ -933,100 +930,86 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <TEMPLATE_ANALYSIS>"\\GENOME_SERIAL"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome serializer.\n");
   fprintf (fpOutputFile,"// Memberwise serialization\n");
-  pGENOME->pSymbolList->reset();
   pGENOME->serializeIndividual(fpOutputFile, "this");
   //fprintf(fpOutputFile,"\tEASEA_Line << endl;\n");
  }
 
 <TEMPLATE_ANALYSIS>"\\GENOME_DESERIAL"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Inserting default genome deserializer.\n");
   fprintf (fpOutputFile,"// Memberwise deserialization\n");
-  pGENOME->pSymbolList->reset();
   pGENOME->deserializeIndividual(fpOutputFile, "this");
  }
 
 <TEMPLATE_ANALYSIS>"\\COPY_CUDA_CTOR"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default copy constructor.\n");
   fprintf (fpOutputFile,"// Memberwise copy\n");             
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-      if (pSym->Object->ObjectType==oObject)
-	fprintf(fpOutputFile,"    dest->%s=src->%s;\n",pSym->Object->sName,pSym->Object->sName);
-      if (pSym->Object->ObjectType==oArray){
-	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-	fprintf(fpOutputFile,"       dest->%s[EASEA_Ndx]=src->%s[EASEA_Ndx];}\n",pSym->Object->sName,pSym->Object->sName);
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectQualifier==1) continue; // 1=Static
+      if (sym->ObjectType==oObject)
+	fprintf(fpOutputFile,"    dest->%s=src->%s;\n",sym->sName.c_str(),sym->sName.c_str());
+      if (sym->ObjectType==oArray){
+	fprintf(fpOutputFile,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sym->pType->nSize);
+	fprintf(fpOutputFile,"       dest->%s[EASEA_Ndx]=src->%s[EASEA_Ndx];}\n",sym->sName.c_str(),sym->sName.c_str());
       }
   }
  }
 
 <TEMPLATE_ANALYSIS>"\\GENOME_DTOR"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default destructor.\n");
   fprintf (fpOutputFile,"// Destructing pointers\n");             
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    if (pSym->Object->ObjectType==oPointer){
-      fprintf(fpOutputFile,"  if (%s) delete %s;\n  %s=NULL;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->sName);
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectType==oPointer){
+      fprintf(fpOutputFile,"  if (%s) delete %s;\n  %s=NULL;\n",sym->sName.c_str(),sym->sName.c_str(),sym->sName.c_str());
     }
-    else if( pSym->Object->ObjectType==oArrayPointer ){ 
+    else if( sym->ObjectType==oArrayPointer ){ 
       // here we handle array of pointer (developped for Tree GP)
-      fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
-      fprintf(fpOutputFile,"      if(%s[EASEA_Ndx]) delete %s[EASEA_Ndx];\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sizeof(char*));
+      fprintf(fpOutputFile,"      if(%s[EASEA_Ndx]) delete %s[EASEA_Ndx];\n",sym->sName.c_str(),sym->sName.c_str(),sym->pType->sName.c_str(),sym->sName.c_str());
     }
   }
  }
 
 <TEMPLATE_ANALYSIS>"\\EQUAL"  {       
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default diversity test.\n");
   fprintf (fpOutputFile,"// Default diversity test (required by GALib)\n");             
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()) {
-    if (pSym->Object->ObjectType==oObject)
-      fprintf(fpOutputFile,"  if (%s!=genome.%s) return 0;\n",pSym->Object->sName,pSym->Object->sName);
-    if (pSym->Object->ObjectType==oPointer)
-      fprintf(fpOutputFile,"  if (*%s!=*(genome.%s)) return 0;\n",pSym->Object->sName,pSym->Object->sName);
-    if (pSym->Object->ObjectType==oArray){
-      fprintf(fpOutputFile,"  {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-      fprintf(fpOutputFile,"     if (%s[EASEA_Ndx]!=genome.%s[EASEA_Ndx]) return 0;}\n",pSym->Object->sName,pSym->Object->sName);
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectType==oObject)
+      fprintf(fpOutputFile,"  if (%s!=genome.%s) return 0;\n",sym->sName.c_str(),sym->sName.c_str());
+    if (sym->ObjectType==oPointer)
+      fprintf(fpOutputFile,"  if (*%s!=*(genome.%s)) return 0;\n",sym->sName.c_str(),sym->sName.c_str());
+    if (sym->ObjectType==oArray){
+      fprintf(fpOutputFile,"  {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sym->pType->nSize);
+      fprintf(fpOutputFile,"     if (%s[EASEA_Ndx]!=genome.%s[EASEA_Ndx]) return 0;}\n",sym->sName.c_str(),sym->sName.c_str());
     }
-    else if( pSym->Object->ObjectType==oArrayPointer ){ 
+    else if( sym->ObjectType==oArrayPointer ){ 
       // here we handle array of pointer (developped for Tree GP)
-      fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/sizeof(char*));
-      fprintf(fpOutputFile,"      if(%s[EASEA_Ndx] != genome.%s[EASEA_Ndx]) return 0;\n",pSym->Object->sName,pSym->Object->sName,pSym->Object->pType->sName,pSym->Object->sName);
+      fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sizeof(char*));
+      fprintf(fpOutputFile,"      if(%s[EASEA_Ndx] != genome.%s[EASEA_Ndx]) return 0;\n",sym->sName.c_str(),sym->sName.c_str(),sym->pType->sName.c_str(),sym->sName.c_str());
     }
     
   }
  }
 <TEMPLATE_ANALYSIS>"\\COMPARE"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default genome comparator.\n");
   fprintf (fpOutputFile,"// Default genome comparator (required by GALib)\n");             
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()) {
-    if (pSym->Object->ObjectType==oObject)
-      fprintf(fpOutputFile,"  if (sis.%s!=bro.%s) diff++;\n",pSym->Object->sName,pSym->Object->sName);
-    if (pSym->Object->ObjectType==oPointer)
-      fprintf(fpOutputFile,"  if (*(sis.%s)!=*(bro.%s)) diff++;\n",pSym->Object->sName,pSym->Object->sName);
-    if (pSym->Object->ObjectType==oArray){
-      fprintf(fpOutputFile,"  {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
-      fprintf(fpOutputFile,"     if (sis.%s[EASEA_Ndx]!=bro.%s[EASEA_Ndx]) diff++;}\n",pSym->Object->sName,pSym->Object->sName);
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectType==oObject)
+      fprintf(fpOutputFile,"  if (sis.%s!=bro.%s) diff++;\n",sym->sName.c_str(),sym->sName.c_str());
+    if (sym->ObjectType==oPointer)
+      fprintf(fpOutputFile,"  if (*(sis.%s)!=*(bro.%s)) diff++;\n",sym->sName.c_str(),sym->sName.c_str());
+    if (sym->ObjectType==oArray){
+      fprintf(fpOutputFile,"  {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sym->pType->nSize);
+      fprintf(fpOutputFile,"     if (sis.%s[EASEA_Ndx]!=bro.%s[EASEA_Ndx]) diff++;}\n",sym->sName.c_str(),sym->sName.c_str());
     }
   }
  }
 <TEMPLATE_ANALYSIS>"\\READ"  {
-  CListItem<CSymbol*> *pSym;
   if (bVERBOSE) printf ("Creating default read command.\n");
   fprintf (fpOutputFile,"// Default read command\n");             
-  pGENOME->pSymbolList->reset();
-  while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-    if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
+  for (auto const& sym : pGENOME->pSymbolList){
+    if (sym->ObjectQualifier==1) continue; // 1=Static
   }
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_DISPLAY"  {        
@@ -1045,25 +1028,23 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <TEMPLATE_ANALYSIS>"\\WRITE"  {
-  CListItem<CSymbol*> *pSym;
   if (!bDisplayFunction){
     if (bVERBOSE) printf ("*** Creating default display function. ***\n");
     fprintf (fpOutputFile,"// Default display function\n");
-    pGENOME->pSymbolList->reset();
-    while (pSym=pGENOME->pSymbolList->walkToNextItem()){
-      if (pSym->Object->ObjectQualifier==1) continue; // 1=Static
-	if (pSym->Object->ObjectType==oObject){
+   for (auto const& sym : pGENOME->pSymbolList){
+      if (sym->ObjectQualifier==1) continue; // 1=Static
+	if (sym->ObjectType==oObject){
 	  if (bDisplayFunction) printf("//");
 	}
-	if (pSym->Object->ObjectType==oArray){
+	if (sym->ObjectType==oArray){
 	  if (bDisplayFunction) printf("//");
 	  if (bDisplayFunction) printf("//");
-	  fprintf(fpOutputFile,"   for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",pSym->Object->nSize/pSym->Object->pType->nSize);
+	  fprintf(fpOutputFile,"   for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sym->pType->nSize);
 	  if (bDisplayFunction) printf("//");
 	  if (bDisplayFunction) printf("//");
-	  fprintf(fpOutputFile,"  os << \"\\n\";\n",pSym->Object->sName);
+	  fprintf(fpOutputFile,"  os << \"\\n\";\n",sym->sName.c_str());
 	}         
-	if (pSym->Object->ObjectType==oPointer){
+	if (sym->ObjectType==oPointer){
 	  if (bDisplayFunction) printf("//");
 	}
     }
@@ -1817,7 +1798,8 @@ if(OPERATING_SYSTEM=WINDOWS)
  /* Looking for an identifier */
 <MACRO_IDENTIFIER>[a-zA-Z0-9_]* {
   fprintf(fpOutputFile,"%s",yytext);
-  pASymbol = new CSymbol(yytext); pASymbol->ObjectType=oMacro;
+  pASymbol = std::make_unique<CSymbol>(yytext); // LEAK here
+  pASymbol->ObjectType=oMacro;
   BEGIN MACRO_DEFINITION; }
 
  /* If no identifier was found, we're not interested */
@@ -1832,21 +1814,17 @@ if(OPERATING_SYSTEM=WINDOWS)
 <MACRO_DEFINITION>[ \t]*  {fprintf(fpOutputFile,"%s",yytext);}
 <MACRO_DEFINITION>-?[0-9]+"."[0-9]*{exponent}?|-?"."[0-9]+{exponent}?|-?[0-9]+{exponent} {fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = myStrtod();
-  pSymbolTable->insert(pASymbol);
-  bSymbolInserted=1;
+  pSymbolTable.insert(std::move(pASymbol));
   BEGIN COPY;}
 <MACRO_DEFINITION>-?[0-9]+           {fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = atoi(yytext);
-  pSymbolTable->insert(pASymbol);
-  bSymbolInserted=1;
+  pSymbolTable.insert(std::move(pASymbol));
   BEGIN COPY;}
   /*If no number was found, we're not interested*/
   /* old rule : <MACRO_DEFINITION>\/.|\n 
    * I don't understand why there is a "\/"...
    */
 <MACRO_DEFINITION>.|\n {
-  if (!bSymbolInserted) delete pASymbol;
-  else bSymbolInserted=0;
   putc(yytext[0],fpOutputFile);
   BEGIN COPY;}
 
@@ -1872,7 +1850,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
  /*keywords*/
 <GENOME_ANALYSIS>"bool"                  {
-  yylval.pSymbol = pSymbolTable->find("bool");
+  yylval.pSymbol = pSymbolTable.find("bool");
   return BOOL;}
 <GENOME_ANALYSIS>"boolean"            {
     yylval.pSymbol = new CSymbol(yytext);
@@ -1886,12 +1864,12 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 
 <GENOME_ANALYSIS>"static"                  {return STATIC;}
-<GENOME_ANALYSIS>"int"                  {yylval.pSymbol = pSymbolTable->find("int"); return INT;}
-<GENOME_ANALYSIS>"double"                  {yylval.pSymbol = pSymbolTable->find("double"); return DOUBLE;}
-<GENOME_ANALYSIS>"float"                  {yylval.pSymbol = pSymbolTable->find("float"); return FLOAT;}
-<GENOME_ANALYSIS>"char"                  {yylval.pSymbol = pSymbolTable->find("char"); return CHAR;}
-<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}
- /*<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}*/
+<GENOME_ANALYSIS>"int"                  {yylval.pSymbol = pSymbolTable.find("int"); return INT;}
+<GENOME_ANALYSIS>"double"                  {yylval.pSymbol = pSymbolTable.find("double"); return DOUBLE;}
+<GENOME_ANALYSIS>"float"                  {yylval.pSymbol = pSymbolTable.find("float"); return FLOAT;}
+<GENOME_ANALYSIS>"char"                  {yylval.pSymbol = pSymbolTable.find("char"); return CHAR;}
+<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable.find("pointer"); return POINTER;}
+ /*<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable.find("pointer"); return POINTER;}*/
  /*Back to the template file*/
 <GENOME_ANALYSIS>"\\end"   {rewind(fpGenomeFile);yyin = fpTemplateFile;yypop_buffer_state();BEGIN TEMPLATE_ANALYSIS;}
   
@@ -2434,7 +2412,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
  /* identifier */
 <GET_PARAMETERS>[a-zA-Z_:][a-zA-Z0-9_:]*    {
-  yylval.pSymbol = new CSymbol(yytext);
+  yylval.pSymbol = new CSymbol(yytext); // LEAK here
   return IDENTIFIER2;}
  /* end of .ez file : resume tpl analysis */
  /* switch back to .tpl file and analyser */
@@ -2492,7 +2470,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 /////////////////////////////////////////////////////////////////////////////
 // EASEALexer commands
 
-int CEASEALexer_create(CSymbolTable* pSymTable)
+int CEASEALexer_create(CSymbolTable&& pSymTable)
 { 
   int i;
   char sTemp[1000];
@@ -2506,7 +2484,7 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
   //assert(pParser != NULL);
   //assert(pSymTable != NULL);
   
-  pSymbolTable = pSymTable;
+  pSymbolTable = std::move(pSymTable);
   //if (!yycreate(pParser)) return 0;    
 
   if (bVERBOSE) {
