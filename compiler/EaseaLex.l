@@ -1884,7 +1884,16 @@ if(OPERATING_SYSTEM=WINDOWS)
 <GENOME_ANALYSIS>[0-9]+ {yylval.dValue=atoi(yytext); return NUMBER;}
 
  /*identifier*/
-<GENOME_ANALYSIS>[a-zA-Z_:][a-zA-Z0-9_:]*    { yylval.pSymbol = new CSymbol(yytext);
+<GENOME_ANALYSIS>[a-zA-Z_:][a-zA-Z0-9_:]*    {
+    auto existing = pSymbolTable.find(yytext);
+    if (existing) {
+    	yylval.pSymbol = existing;
+    } else {
+    	yylval.pSymbol = new CSymbol(yytext);
+	auto uptr = std::unique_ptr<CSymbol>(yylval.pSymbol);
+	pSymbolTable.insert(std::move(uptr));
+    }
+
   return IDENTIFIER; }
 <GET_METHODS>[^\}]*   {BEGIN GENOME_ANALYSIS; return END_METHODS;}
 
@@ -2412,7 +2421,14 @@ if(OPERATING_SYSTEM=WINDOWS)
 
  /* identifier */
 <GET_PARAMETERS>[a-zA-Z_:][a-zA-Z0-9_:]*    {
-  yylval.pSymbol = new CSymbol(yytext); // LEAK here
+  auto existing = pSymbolTable.find(yytext);
+    if (existing) {
+    	yylval.pSymbol = existing;
+    } else {
+    	yylval.pSymbol = new CSymbol(yytext);
+	auto uptr = std::unique_ptr<CSymbol>(yylval.pSymbol);
+	pSymbolTable.insert(std::move(uptr));
+    }
   return IDENTIFIER2;}
  /* end of .ez file : resume tpl analysis */
  /* switch back to .tpl file and analyser */

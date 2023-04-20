@@ -860,7 +860,7 @@ void CSymbol::printAllSymbols(FILE* fp, char* sCompleteName, EObjectType FatherT
 CSymbol* CSymbolTable::insert(std::unique_ptr<CSymbol>&& symbol)
 {
 	auto h = symbol->sName;
-	//hashmap.insert(std::make_pair(h, symbol));
+	hashmap.insert(std::make_pair(h, std::move(symbol)));
 	return hashmap.at(h).get();
 }
 

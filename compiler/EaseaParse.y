@@ -746,11 +746,7 @@ Parameter
   
 Expr
   : IDENTIFIER '=' Expr { 
-      if (SymbolTable.find($1->sName.c_str())==NULL){
-         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,$1->sName.c_str());
-         exit(1);
-      }
-      $$ = CEASEAParser_assign(SymbolTable.find($1->sName.c_str()), $3);
+      $$ = CEASEAParser_assign($1, $3);
     }
   | Expr '+' Expr                    { $$ = $1 + $3; }
   | Expr '-' Expr                     { $$ = $1 - $3; }
@@ -763,11 +759,7 @@ Expr
   | '-' Expr %prec UMINUS { $$ = -$2; }
   | NUMBER                         { $$ = $1; }
   | IDENTIFIER{
-      if (SymbolTable.find($1->sName.c_str())==NULL){
-         fprintf(stderr,"\n%s - Error line %d: Symbol \"%s\" not found.\n",sEZ_FILE_NAME,yylineno,$1->sName.c_str());
-         exit(1);
-      }
-      $$ = (SymbolTable.find($1->sName.c_str()))->dValue;
+      $$ = $1->dValue;
     }
   ;
 
