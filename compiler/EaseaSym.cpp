@@ -466,7 +466,7 @@ void CSymbol::print(FILE* fp)
 				(int)(sym->nSize / sizeof(char*)));
 	}
 
-	if (sName == "Genome")
+	if (sName != "Genome")
 		fprintf(fp, "};\n");
 
 	return;
@@ -490,7 +490,7 @@ void CSymbol::printClasses(FILE* fp)
 void CSymbol::printUC(FILE* fp)
 {
 	//DEBUG_PRT("print user classes definitions");
-	if (sName == "Genome" &&
+	if (sName != "Genome" &&
 	    (TARGET == CUDA || TARGET == STD)) // If we are printing a user class other than the genome
 	{
 		fprintf(fp, "\nclass %s;\n", sName.c_str()); // class  header
