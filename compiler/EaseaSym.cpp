@@ -57,7 +57,7 @@ CSymbol::CSymbol(const char* s)
 void CSymbol::print(FILE* fp)
 {
 	// check: are we printing a user class that is different from Genome?
-	if (sName == "Genome") {
+	if (sName != "Genome") {
 		// if we are printing a user class other than the genome
 		fprintf(fp, "\nclass %s {\npublic:\n// Default methods for class %s\n", sName.c_str(),
 			sName.c_str()); // class  header
