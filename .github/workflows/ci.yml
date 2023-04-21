@@ -115,7 +115,6 @@ jobs:
           brew install bison libomp coreutils boost gnu-sed cmake
           export PATH="$(brew --prefix bison)/bin:$PATH"
           export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH"
-          find /usr/local -xdev -name '*libomp*'
 
       - name: CMake configure
         id: cmake-configure
