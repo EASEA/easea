@@ -249,11 +249,12 @@ ClassDeclarations
   
 ClassDeclaration
   : Symbol {
-      auto sym = std::unique_ptr<CSymbol>{$1};
-      pCURRENT_CLASS=SymbolTable.insert(std::move(sym));  
       $1->ObjectType=oUserClass;
-      //DEBUG_PRT("Yacc Symbol declaration %s %d",$1->sName.c_str(),$1->nSize);
       pCLASSES[nClasses_nb++] = $1;
+      //auto sym = std::unique_ptr<CSymbol>{$1};
+      pCURRENT_CLASS = $1;
+      //pCURRENT_CLASS=SymbolTable.insert(std::move(sym));  
+      //DEBUG_PRT("Yacc Symbol declaration %s %d",$1->sName.c_str(),$1->nSize);
     }
   '{' VariablesDeclarations '}' {
       if (bVERBOSE) printf("Class %s declared for %d bytes.\n\n",$1->sName.c_str(),$1->nSize);
@@ -933,7 +934,7 @@ int CEASEAParser_create()
   //if (!yycreate(&EASEALexer)) {
   //  return 0;
   //}
-  if (!CEASEALexer_create(std::move(SymbolTable))) {
+  if (!CEASEALexer_create(&SymbolTable)) {
     return 0;
   }
   return 1; // success

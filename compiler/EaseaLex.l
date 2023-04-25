@@ -186,7 +186,7 @@ void yyreset()
 
 
 
-  CSymbolTable pSymbolTable;   // the symbol table
+  CSymbolTable* pSymbolTable;   // the symbol table
   bool bSymbolInserted,bWithinEvaluator, bWithinOptimiser;  // used to change evalutor type from double to float 
   bool bInitFunction,bDisplayFunction,bFunction, bNotFinishedYet, bWithinEO_Function;
   bool bDoubleQuotes,bWithinDisplayFunction,bWithinInitialiser,bWithinMutator,bWithinXover;
@@ -1814,11 +1814,11 @@ if(OPERATING_SYSTEM=WINDOWS)
 <MACRO_DEFINITION>[ \t]*  {fprintf(fpOutputFile,"%s",yytext);}
 <MACRO_DEFINITION>-?[0-9]+"."[0-9]*{exponent}?|-?"."[0-9]+{exponent}?|-?[0-9]+{exponent} {fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = myStrtod();
-  pSymbolTable.insert(std::move(pASymbol));
+  pSymbolTable->insert(std::move(pASymbol));
   BEGIN COPY;}
 <MACRO_DEFINITION>-?[0-9]+           {fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = atoi(yytext);
-  pSymbolTable.insert(std::move(pASymbol));
+  pSymbolTable->insert(std::move(pASymbol));
   BEGIN COPY;}
   /*If no number was found, we're not interested*/
   /* old rule : <MACRO_DEFINITION>\/.|\n 
@@ -1850,7 +1850,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
  /*keywords*/
 <GENOME_ANALYSIS>"bool"                  {
-  yylval.pSymbol = pSymbolTable.find("bool");
+  yylval.pSymbol = pSymbolTable->find("bool");
   return BOOL;}
 <GENOME_ANALYSIS>"boolean"            {
     yylval.pSymbol = new CSymbol(yytext);
@@ -1864,12 +1864,12 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 
 <GENOME_ANALYSIS>"static"                  {return STATIC;}
-<GENOME_ANALYSIS>"int"                  {yylval.pSymbol = pSymbolTable.find("int"); return INT;}
-<GENOME_ANALYSIS>"double"                  {yylval.pSymbol = pSymbolTable.find("double"); return DOUBLE;}
-<GENOME_ANALYSIS>"float"                  {yylval.pSymbol = pSymbolTable.find("float"); return FLOAT;}
-<GENOME_ANALYSIS>"char"                  {yylval.pSymbol = pSymbolTable.find("char"); return CHAR;}
-<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable.find("pointer"); return POINTER;}
- /*<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable.find("pointer"); return POINTER;}*/
+<GENOME_ANALYSIS>"int"                  {yylval.pSymbol = pSymbolTable->find("int"); return INT;}
+<GENOME_ANALYSIS>"double"                  {yylval.pSymbol = pSymbolTable->find("double"); return DOUBLE;}
+<GENOME_ANALYSIS>"float"                  {yylval.pSymbol = pSymbolTable->find("float"); return FLOAT;}
+<GENOME_ANALYSIS>"char"                  {yylval.pSymbol = pSymbolTable->find("char"); return CHAR;}
+<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}
+ /*<GENOME_ANALYSIS>"pointer"                  {yylval.pSymbol = pSymbolTable->find("pointer"); return POINTER;}*/
  /*Back to the template file*/
 <GENOME_ANALYSIS>"\\end"   {rewind(fpGenomeFile);yyin = fpTemplateFile;yypop_buffer_state();BEGIN TEMPLATE_ANALYSIS;}
   
@@ -1885,13 +1885,13 @@ if(OPERATING_SYSTEM=WINDOWS)
 
  /*identifier*/
 <GENOME_ANALYSIS>[a-zA-Z_:][a-zA-Z0-9_:]*    {
-    auto existing = pSymbolTable.find(yytext);
+    auto existing = pSymbolTable->find(yytext);
     if (existing) {
     	yylval.pSymbol = existing;
     } else {
     	yylval.pSymbol = new CSymbol(yytext);
 	auto uptr = std::unique_ptr<CSymbol>(yylval.pSymbol);
-	pSymbolTable.insert(std::move(uptr));
+	pSymbolTable->insert(std::move(uptr));
     }
 
   return IDENTIFIER; }
@@ -2421,13 +2421,13 @@ if(OPERATING_SYSTEM=WINDOWS)
 
  /* identifier */
 <GET_PARAMETERS>[a-zA-Z_:][a-zA-Z0-9_:]*    {
-  auto existing = pSymbolTable.find(yytext);
+  auto existing = pSymbolTable->find(yytext);
     if (existing) {
     	yylval.pSymbol = existing;
     } else {
     	yylval.pSymbol = new CSymbol(yytext);
 	auto uptr = std::unique_ptr<CSymbol>(yylval.pSymbol);
-	pSymbolTable.insert(std::move(uptr));
+	pSymbolTable->insert(std::move(uptr));
     }
   return IDENTIFIER2;}
  /* end of .ez file : resume tpl analysis */
@@ -2486,7 +2486,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 /////////////////////////////////////////////////////////////////////////////
 // EASEALexer commands
 
-int CEASEALexer_create(CSymbolTable&& pSymTable)
+int CEASEALexer_create(CSymbolTable* pSymTable)
 { 
   int i;
   char sTemp[1000];
@@ -2498,9 +2498,9 @@ int CEASEALexer_create(CSymbolTable&& pSymTable)
 //  OPERATING_SYSTEM=OTHER_SYSTEM;
 #endif
   //assert(pParser != NULL);
-  //assert(pSymTable != NULL);
+  assert(pSymTable != NULL);
   
-  pSymbolTable = std::move(pSymTable);
+  pSymbolTable = pSymTable;
   //if (!yycreate(pParser)) return 0;    
 
   if (bVERBOSE) {
