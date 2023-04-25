@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <limits>
+#include <cassert>
 
 CRandomGenerator::CRandomGenerator(unsigned int seed_) : seed(seed_), engine(seed_)
 {
@@ -21,6 +22,7 @@ CRandomGenerator::CRandomGenerator() : CRandomGenerator(std::random_device{}())
 
 int CRandomGenerator::randInt(int min, int max)
 {
+	assert(min != max - 1 && "integer range [a; a[ is impossible.");
 	std::uniform_int_distribution<int> dis(min, max - 1);
 	return dis(engine);
 }
