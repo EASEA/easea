@@ -116,7 +116,6 @@ jobs:
           export PATH="$(brew --prefix bison)/bin:$PATH"
           export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH"
           find /usr/local -xdev -name 'omp.h'
-          find /opt/homebrew -xdev -name 'omp.h'
 
       - name: CMake configure
         id: cmake-configure
