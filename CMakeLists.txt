@@ -145,7 +145,7 @@ if (OpenMP_CXX_FOUND)
 	#endif()
 else ()
   	# Disable warnings for all the unknown OpenMP pragmas.
-  	target_compile_options(libeasna $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-unknown-pragmas>)
+	target_compile_options(libeasna PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-unknown-pragmas>)
 endif ()
 
 ## Boost (asio)
