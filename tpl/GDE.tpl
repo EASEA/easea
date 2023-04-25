@@ -240,7 +240,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 	int nbCPUThreads = setVariable("nbCPUThreads", 1);
 	this->isLogg = setVariable("isLogg", 1);
+	#ifdef USE_OPENMP
 	omp_set_num_threads(nbCPUThreads);
+	#endif
 
         parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
         offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);

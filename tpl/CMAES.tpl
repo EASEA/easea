@@ -275,7 +275,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->minimizing =1;
         this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 	int nbCPUThreads = setVariable("nbCPUThreads", 1);
+	#ifdef USE_OPENMP
 	omp_set_num_threads(nbCPUThreads);
+	#endif
 
         seed = setVariable("seed",(int)time(0));
         globalRandomGenerator = new CRandomGenerator(seed);

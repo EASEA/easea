@@ -291,7 +291,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->randomGenerator = globalRandomGenerator;
 
 	int nbCPUThreads = setVariable("nbCPUThreads", 1);
+	#ifdef USE_OPENMP
 	omp_set_num_threads(nbCPUThreads);
+	#endif
 
 /*	selectionOperator = getSelectionOperator(setVariable("selectionOperator","\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
 	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
