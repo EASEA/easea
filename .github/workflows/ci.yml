@@ -115,11 +115,10 @@ jobs:
           brew install bison libomp coreutils boost gnu-sed cmake
           export PATH="$(brew --prefix bison)/bin:$PATH"
           export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$PATH"
-          find /usr/local -xdev -name 'omp.h'
 
       - name: CMake configure
         id: cmake-configure
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_OPENMP=OFF
         shell: bash
 
       - name: CMake build
