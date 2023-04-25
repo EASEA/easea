@@ -368,8 +368,10 @@ void CPopulation::produceOffspringPopulation(){
 			offsprings[actualOffspringPopulationSize + i] = child;
 		}
 
+#ifdef USE_OPENMP
 		delete[](ps);
 	}
+#endif
 	this->cstats->currentNumberOfImmigrantReproductions += sum;
 	actualOffspringPopulationSize += offspringPopulationSize;
 }
