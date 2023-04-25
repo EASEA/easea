@@ -331,8 +331,8 @@ void CPopulation::produceOffspringPopulation(){
 	int sum = 0;
 #ifdef USE_OPENMP
 #pragma omp parallel
-	{
 #endif
+	{
 		CIndividual** ps = new CIndividual*[crossoverArrity]();
 		CIndividual* p1;
 		CIndividual* child;
@@ -371,9 +371,7 @@ void CPopulation::produceOffspringPopulation(){
 		}
 
 		delete[](ps);
-#ifdef USE_OPENMP
 	}
-#endif
 	this->cstats->currentNumberOfImmigrantReproductions += sum;
 	actualOffspringPopulationSize += offspringPopulationSize;
 }
