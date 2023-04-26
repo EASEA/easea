@@ -402,11 +402,11 @@ exponent  ([Ee][+-]?[0-9]+)
     bGPOPCODE_ANALYSIS = false;
     
     std::sort(opDesc.begin(), opDesc.end(), [](auto const& lhs, auto const& rhs) {
-    if (lhs.arity == rhs.arity && lhs.arity == 0) {
+    /*if (lhs.arity == rhs.arity && lhs.arity == 0) {
     	return lhs.isERC - rhs.isERC;
     } else {
     	return static_cast<int>(lhs.arity) - static_cast<int>(rhs.arity);
-    }
+    }*/ return lhs.arity < rhs.arity;
     });
     /*for( unsigned i=0 ; i<iNoOp ; i++ ){
       opDesc[i]->show();
