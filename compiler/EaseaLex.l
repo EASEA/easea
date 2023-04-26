@@ -196,7 +196,7 @@ void yyreset()
   bool bIsParentReduce, bIsOffspringReduce, bEndGeneration, bBeginGeneration, bEndGenerationFunction, bBeginGenerationFunction, bGenerationFunctionBeforeReplacement;
   bool bGPOPCODE_ANALYSIS,bCOPY_GP_EVAL_GPU;
   
-  std::unique_ptr<CSymbol> pASymbol;
+  CSymbol* pASymbol;
 
   unsigned iGP_OPCODE_FIELD, accolade_counter;
   std::vector<OPCodeDesc> opDesc;
@@ -1798,8 +1798,10 @@ if(OPERATING_SYSTEM=WINDOWS)
  /* Looking for an identifier */
 <MACRO_IDENTIFIER>[a-zA-Z0-9_]* {
   fprintf(fpOutputFile,"%s",yytext);
-  pASymbol = std::make_unique<CSymbol>(yytext); // LEAK here
+  auto uptr = std::make_unique<CSymbol>(yytext); // LEAK here
+  pASymbol = uptr.get();
   pASymbol->ObjectType=oMacro;
+  pSymbolTable->insert(std::move(uptr));
   BEGIN MACRO_DEFINITION; }
 
  /* If no identifier was found, we're not interested */
@@ -1812,13 +1814,11 @@ if(OPERATING_SYSTEM=WINDOWS)
 
  /*gobbles up spaces and tabs*/
 <MACRO_DEFINITION>[ \t]*  {fprintf(fpOutputFile,"%s",yytext);}
-<MACRO_DEFINITION>-?[0-9]+"."[0-9]*{exponent}?|-?"."[0-9]+{exponent}?|-?[0-9]+{exponent} {fprintf(fpOutputFile,"%s",yytext);
-  pASymbol->dValue = myStrtod();
-  pSymbolTable->insert(std::move(pASymbol));
-  BEGIN COPY;}
 <MACRO_DEFINITION>-?[0-9]+           {fprintf(fpOutputFile,"%s",yytext);
   pASymbol->dValue = atoi(yytext);
-  pSymbolTable->insert(std::move(pASymbol));
+  BEGIN COPY;}
+<MACRO_DEFINITION>-?[0-9]*([0-9]\.?|\.[0-9])[0-9]*([Ee][-+]?[0-9]+) {fprintf(fpOutputFile,"%s",yytext);
+  pASymbol->dValue = myStrtod();
   BEGIN COPY;}
   /*If no number was found, we're not interested*/
   /* old rule : <MACRO_DEFINITION>\/.|\n 
