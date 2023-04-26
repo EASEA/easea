@@ -185,11 +185,11 @@ jobs:
       - name: Installing Boost 1.79
         run: choco install boost-msvc-14.3 --version 1.79.0
 
-      - name: Installing CUDA
-        uses: Jimver/cuda-toolkit@v0.2.10
-        id: cuda-toolkit
-        with:
-          cuda: '12.1.0'
+          #- name: Installing CUDA
+          #  uses: Jimver/cuda-toolkit@v0.2.10
+          #  id: cuda-toolkit
+          #  with:
+          #    cuda: '12.1.0'
 
       - name: CMake configure
         id: cmake-configure
