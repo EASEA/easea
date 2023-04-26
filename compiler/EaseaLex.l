@@ -337,16 +337,17 @@ exponent  ([Ee][+-]?[0-9]+)
   fprintf(fpOutputFile,"const char* opCodeName[]={"); 
   bool first = true;
   for (auto const& op : opDesc) {
-    fprintf(fpOutputFile,"%s",op.realName.c_str());
     if( !first )fprintf(fpOutputFile,",");
     first = false;
+    fprintf(fpOutputFile,"%s",op.realName.c_str());
   }
   fprintf(fpOutputFile,"};\n"); 
   fprintf(fpOutputFile,"unsigned opArity[]=     {"); 
+  first = true;
   for (auto const& op : opDesc) {
-    fprintf(fpOutputFile,"%d",op.arity);
     if( !first )fprintf(fpOutputFile,",");
     first = false;
+    fprintf(fpOutputFile,"%d",op.arity);
   }
   fprintf(fpOutputFile,"};\n"); 
 
@@ -1674,7 +1675,11 @@ if(OPERATING_SYSTEM=WINDOWS)
  /****************************************
   *  Basic copy to cpp file with minor changes
   ****************************************/
-
+<COPY>"//".*                                    { fprintf(fpOutputFile, "%s", yytext); }
+<COPY>[/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]       { fprintf(fpOutputFile, "%s", yytext); }
+<COPY>[/][*]                                    { fprintf(stderr,"\n%s - Error line %d: Unterminated comment.\n",sEZ_FILE_NAME,yylineno);
+  exit (1);
+ }
 <COPY>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 <COPY>"\\\""  {fprintf(fpOutputFile,"\\\"");}
 
