@@ -361,46 +361,49 @@ Objects
   
 Object
   : Symbol {
-//      CSymbol *pSym;
-//      pSym=$1;
-        $1->nSize=pCURRENT_TYPE->nSize;
-        $1->pClass=pCURRENT_CLASS;
-        $1->pType=pCURRENT_TYPE;
-        $1->ObjectType=oObject;
-        $1->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
-        pCURRENT_CLASS->nSize+=$1->nSize;
-        pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)$1);
-        if (bVERBOSE) printf("    %s variable declared (%d bytes)\n",$1->sName.c_str(),$1->nSize);
+
+      auto uptr = std::make_unique<CSymbol>($1->sName.c_str());
+        uptr->nSize=pCURRENT_TYPE->nSize;
+        uptr->pClass=pCURRENT_CLASS;
+        uptr->pType=pCURRENT_TYPE;
+        uptr->ObjectType=oObject;
+        uptr->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+        pCURRENT_CLASS->nSize+=uptr->nSize;
+        if (bVERBOSE) printf("    %s variable declared (%d bytes)\n",uptr->sName.c_str(),uptr->nSize);
+        pCURRENT_CLASS->pSymbolList.push_front(std::move(uptr));
     } 
   | '*' Symbol {
-      $2->nSize=sizeof (char *);
-      $2->pClass=pCURRENT_CLASS;
-      $2->pType=pCURRENT_TYPE;
-      $2->ObjectType=oPointer;
-      $2->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
-      pCURRENT_CLASS->nSize+=$2->nSize;
-      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($2));
-      if (bVERBOSE) printf("    %s pointer declared (%d bytes)\n",$2->sName.c_str(),$2->nSize);
+      auto uptr = std::make_unique<CSymbol>($2->sName.c_str());
+      uptr->nSize=sizeof (char *);
+      uptr->pClass=pCURRENT_CLASS;
+      uptr->pType=pCURRENT_TYPE;
+      uptr->ObjectType=oPointer;
+      uptr->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+      pCURRENT_CLASS->nSize+=uptr->nSize;
+      if (bVERBOSE) printf("    %s pointer declared (%d bytes)\n",uptr->sName.c_str(),uptr->nSize);
+      pCURRENT_CLASS->pSymbolList.push_front(std::move(uptr));
     }
   | '0' Symbol {
-      $2->nSize=sizeof (char *);
-      $2->pClass=pCURRENT_CLASS;
-      $2->pType=pCURRENT_TYPE;
-      $2->ObjectType=oPointer;
-      $2->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
-      pCURRENT_CLASS->nSize+=$2->nSize;
-      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($2));
-      if (bVERBOSE) printf("    %s NULL pointer declared (%d bytes)\n",$2->sName.c_str(),$2->nSize);
+      auto uptr = std::make_unique<CSymbol>($2->sName.c_str());
+      uptr->nSize=sizeof (char *);
+      uptr->pClass=pCURRENT_CLASS;
+      uptr->pType=pCURRENT_TYPE;
+      uptr->ObjectType=oPointer;
+      uptr->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+      pCURRENT_CLASS->nSize+=uptr->nSize;
+      if (bVERBOSE) printf("    %s NULL pointer declared (%d bytes)\n",uptr->sName.c_str(),uptr->nSize);
+      pCURRENT_CLASS->pSymbolList.push_front(std::move(uptr));
     }
   | '*''*' Symbol {
-      $3->nSize=sizeof (char *);
-      $3->pClass=pCURRENT_CLASS;
-      $3->pType=pCURRENT_TYPE;
-      $3->ObjectType=oPointer;
-      $3->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
-      pCURRENT_CLASS->nSize+=$3->nSize;
-      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($3));
-      if (bVERBOSE) printf("    %s pointer of pointer declared (%d bytes)\n",$3->sName.c_str(),$3->nSize);
+      auto uptr = std::make_unique<CSymbol>($3->sName.c_str());
+      uptr->nSize=sizeof (char *);
+      uptr->pClass=pCURRENT_CLASS;
+      uptr->pType=pCURRENT_TYPE;
+      uptr->ObjectType=oPointer;
+      uptr->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+      pCURRENT_CLASS->nSize+=uptr->nSize;
+      if (bVERBOSE) printf("    %s pointer of pointer declared (%d bytes)\n",uptr->sName.c_str(),uptr->nSize);
+      pCURRENT_CLASS->pSymbolList.push_front(std::move(uptr));
       fprintf(stderr,"Pointer of pointer doesn't work properly yet\n");
       exit(-1);
     }
@@ -413,14 +416,15 @@ if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_st
 
       //printf("DEBUG : size of $3 %d nSize %d\n",(int)$3,pCURRENT_TYPE->nSize);
 
-      $1->nSize=pCURRENT_TYPE->nSize*(int)$3;
-      $1->pClass=pCURRENT_CLASS;
-      $1->pType=pCURRENT_TYPE;
-      $1->ObjectType=oArray;
-      $1->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
-      pCURRENT_CLASS->nSize+=$1->nSize;
-      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($1));
-      if (bVERBOSE) printf("    %s array declared (%d bytes)\n",$1->sName.c_str(),$1->nSize);
+      auto uptr = std::make_unique<CSymbol>($1->sName.c_str());
+      uptr->nSize=pCURRENT_TYPE->nSize*(int)$3;
+      uptr->pClass=pCURRENT_CLASS;
+      uptr->pType=pCURRENT_TYPE;
+      uptr->ObjectType=oArray;
+      uptr->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+      pCURRENT_CLASS->nSize+=uptr->nSize;
+      if (bVERBOSE) printf("    %s array declared (%d bytes)\n",uptr->sName.c_str(),uptr->nSize);
+      pCURRENT_CLASS->pSymbolList.push_front(std::move(uptr));
     }
   | '*' Symbol  '[' Expr ']' {
 
@@ -440,16 +444,15 @@ if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_st
       
       //pCURRENT_CLASS->nSize
 
-      $2->nSize=sizeof(char*)*(int)$4;
-      $2->pClass=pCURRENT_CLASS;
-      $2->pType=pCURRENT_TYPE;
-      $2->ObjectType=oArrayPointer;
-      $2->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
-      pCURRENT_CLASS->nSize+=$2->nSize;
-      pCURRENT_CLASS->pSymbolList.push_front((CSymbol *)($2));
-
-      printf("DEBUG : size of $4 %d nSize %d\n",(int)$4,pCURRENT_TYPE->nSize);
-      if (bVERBOSE) printf("    %s array of pointers declared (%d bytes)\n",$2->sName.c_str(),$2->nSize);
+      auto uptr = std::make_unique<CSymbol>($2->sName.c_str());
+      uptr->nSize=sizeof(char*)*(int)$4;
+      uptr->pClass=pCURRENT_CLASS;
+      uptr->pType=pCURRENT_TYPE;
+      uptr->ObjectType=oArrayPointer;
+      uptr->ObjectQualifier=pCURRENT_TYPE->ObjectQualifier;
+      pCURRENT_CLASS->nSize+=uptr->nSize;
+      if (bVERBOSE) printf("    %s array of pointers declared (%d bytes)\n",uptr->sName.c_str(),uptr->nSize);
+      pCURRENT_CLASS->pSymbolList.push_front(std::move(uptr));
     }
   ;  
 

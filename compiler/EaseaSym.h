@@ -51,7 +51,7 @@ class CSymbol
 	int ObjectQualifier; // 0=Normal, 1=Static, 2=oObservable, ...
 	CSymbol* pType; // pointer to the variable/array/.. type
 	CSymbol* pClass; // pointer to the variable class in which it is defined.
-	std::list<CSymbol*> pSymbolList; // pointer on a list of class members (if the symbol is a class)
+	std::list<std::unique_ptr<CSymbol>> pSymbolList; // pointer on a list of class members (if the symbol is a class)
 		// pointer on the class (if the symbol is a variable)
 
 	// Operations
