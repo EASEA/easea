@@ -720,6 +720,8 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
   // ********************
   // Problem specific part
   \INSERT_MUTATOR
+
+  return 0;
 }
 
 void ParametersImpl::setDefaultParameters(int argc, char** argv){

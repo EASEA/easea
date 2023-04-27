@@ -286,6 +286,8 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
                 sum += cma->B[i][j] * cma->rgdTmp[j];
         this->\GENOME_NAME[i] = (float)(cma->rgxmean[i] + cma->sigma * sum);
   }
+
+  return 0;
 }
 
 

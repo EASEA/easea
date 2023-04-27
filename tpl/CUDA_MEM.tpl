@@ -288,6 +288,8 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
   // ********************
   // Problem specific part
   \INSERT_MUTATOR
+
+  return 0;
 }
 
 __device__ __host__ inline IndividualImpl* INDIVIDUAL_ACCESS(void* buffer,unsigned id){

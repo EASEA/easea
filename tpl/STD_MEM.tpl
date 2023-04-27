@@ -220,6 +220,8 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
   // ********************
   // Problem specific part
   \INSERT_MUTATOR
+
+  return 0;
 }
 
 void IndividualImpl::optimiser(int currentIteration){
