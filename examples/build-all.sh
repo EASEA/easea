@@ -114,8 +114,8 @@ for edir in $all_examples; do
 	fi
 
 	# clean
-	# make clean easeaclean >/dev/null
-	# rm -rf *.log
+	make clean easeaclean >/dev/null 2>/dev/null
+	rm -rf *.log *.prm CMakeLists.txt CMakeFiles CMakeCache 
 done
 
 # Stats
