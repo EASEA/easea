@@ -92,13 +92,13 @@ ________________________________________________________________________________
 /***************///             DECLARATION DES VARIABLES GLOBALES               ///*************/
 /************************************************************************************************/
 
-static constexpr float	pMutPerGene		= 0.5;	/* 		= probabilité de mutation par individu	*/
-static int	nbProfsManquants	= 0;	/* 		= nombre de profs suposés manquants	*/
-static int	nbSallesManquantes	= 0;	/* 		= nombre de salles suposées manquantes	*/
-static int	nbCreneauxManquants	= 0;	/* 		= nombre de creneaux suposés manquants	*/
+float	pMutPerGene		= 0.5;	/* 		= probabilité de mutation par individu	*/
+int	nbProfsManquants	= 0;	/* 		= nombre de profs suposés manquants	*/
+int	nbSallesManquantes	= 0;	/* 		= nombre de salles suposées manquantes	*/
+int	nbCreneauxManquants	= 0;	/* 		= nombre de creneaux suposés manquants	*/
 
-static clock_t	start, finish;			/* 		= permet l'estimation du temps de calcul*/
-static double	duration;			/* 		= temps de calcul			*/
+clock_t	start, finish;			/* 		= permet l'estimation du temps de calcul*/
+double	duration;			/* 		= temps de calcul			*/
 
 /* -------------------------------------------------------------------------------------------- */
 \end
@@ -928,7 +928,7 @@ for (int i=0; i<NBCOURS; i++)
 	Genome.cours[i].creneau = r;
 }
 
-
+return nb;
 
 \end
 /* -------------------------------------------------------------------------------------------- */

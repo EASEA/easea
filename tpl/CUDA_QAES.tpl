@@ -920,7 +920,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-void IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 
@@ -1208,7 +1208,7 @@ public:
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	void mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene);
 
 	void boundChecking();
 

@@ -651,6 +651,8 @@ exponent  ([Ee][+-]?[0-9]+)
   }
  }
 
+<COPY_GP_EVAL>ERROR { if( bIsCopyingGPEval ) fprintf(fpOutputFile, "error"); /* windows.h compatibility */ }
+
 <COPY_GP_EVAL>. {
   if( bIsCopyingGPEval ) fprintf(fpOutputFile,"%s",yytext);
  }

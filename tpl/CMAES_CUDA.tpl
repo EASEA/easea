@@ -273,7 +273,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-void IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 

@@ -33,7 +33,7 @@
 //#define PMUTVAR 1     // 1)EXP, 2)INVERSE(default)
                       // You have to set mutation probability for the initial value.
 //#define FILES2
-#define FITNESS 6    // 1) sum sqrt(abs(error)) 2) sum abs(error), 3) sum error*error,
+#define FITNESS 6    // 1) sum sqrt(abs(ERROR)) 2) sum abs(ERROR), 3) sum ERROR*ERROR,
                      // 4) sqrt of 1, 5) sqrt of 2, 6) sqrt of 3 (default)
 #define MUTATOR 5    // 1) ch opCode or ERC, select height 
                      // 2) ch ERC value, select an erc node
@@ -188,7 +188,7 @@
     printSolution();
 #endif    
 
-    //free_data(); // Better fix required
+    free_data();
 }
 \end
 
@@ -300,10 +300,10 @@ GenomeClass {
 \GenomeClass::mutator : // Must return the number of mutations
 {
 #ifdef MUTATOR // See mutator.add
-    mutator(&Genome, pMutationPerGene);
+    return mutator(&Genome, pMutationPerGene);
 #else
     simple_mutator(&Genome);
-    
+    return 1;
 #endif
 }
 \end
@@ -351,14 +351,14 @@ float expected_value = OUTPUT;
 
 #ifdef FITNESS
 #if FITNESS==1 || FITNESS==4
-error = sqrt(abs(expected_value-EVOLVED_VALUE));
+ERROR = sqrt(abs(expected_value-EVOLVED_VALUE));
 #elif FITNESS==2 || FITNESS==5
-error = abs(expected_value-EVOLVED_VALUE);
+ERROR = abs(expected_value-EVOLVED_VALUE);
 #else
-error = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
+ERROR = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
 #endif
 #else
-error = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
+ERROR = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
 #endif
 
 \end
@@ -367,12 +367,12 @@ error = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
 
 #ifdef FITNESS
 #if FITNESS==1 || FITNESS==2 || FITNESS==3
-return error;
+return ERROR;
 #else
-return sqrt(error);
+return sqrt(ERROR);
 #endif
 #else
-return sqrt(error);
+return sqrt(ERROR);
 #endif
 
 \end

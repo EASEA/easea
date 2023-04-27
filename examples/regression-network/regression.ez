@@ -122,7 +122,7 @@ GenomeClass {
 {
   simple_mutator(&Genome);
 
-  
+  return 1;
 }
 \end
 
@@ -146,11 +146,11 @@ OP_DIV, "/", 2, {
 
 \GenomeClass::evaluator for each fc :
 float expected_value = OUTPUT;
-error = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
+ERROR = (expected_value-EVOLVED_VALUE)*(expected_value-EVOLVED_VALUE);
 \end
 
 \GenomeClass::evaluator accumulator :
-return sqrtf(error);
+return sqrtf(ERROR);
 \end
 
 

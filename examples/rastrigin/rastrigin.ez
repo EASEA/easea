@@ -17,7 +17,7 @@ __________________________________________________________*/
 #define PI 3.141592654
 
  
-static constexpr float pMutPerGene=0.3;
+float pMutPerGene=0.3;
 
 
 \end
@@ -131,7 +131,7 @@ GenomeClass {
        	Genome.x[i] = MIN(X_MAX,Genome.x[i]);              // pour eviter les depassements
        	Genome.x[i] = MAX(X_MIN,Genome.x[i]);
     	}
-
+return NbMut;
 \end
 
 \GenomeClass::evaluator : // Returns the score

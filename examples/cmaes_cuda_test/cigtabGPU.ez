@@ -14,7 +14,7 @@ __________________________________________________________*/
 #define PI 3.141592654
 
  
-static constexpr float pMutPerGene=0.1;
+float pMutPerGene=0.1;
 
 \end
 
@@ -88,13 +88,19 @@ GenomeClass {
 \GenomeClass::crossover :
 \end
 
-\GenomeClass::mutator : 
+\GenomeClass::mutator : // Must return the number of mutations
+  int NbMut=0;
+return NbMut;
 \end
 
 \GenomeClass::evaluator : // Returns the score
   float Score= 0.0;
   Score= rosenbrock(Genome.x, SIZE);
   return Score;
+\end
+
+\User Makefile options: 
+CPPFLAGS+=
 \end
 
 \Default run parameters :        // Please let the parameters appear in this order
