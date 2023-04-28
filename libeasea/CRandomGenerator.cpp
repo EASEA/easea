@@ -22,9 +22,13 @@ CRandomGenerator::CRandomGenerator() : CRandomGenerator(std::random_device{}())
 
 int CRandomGenerator::randInt(int min, int max)
 {
-	assert(min != max - 1 && "integer range [a; a[ is impossible.");
-	std::uniform_int_distribution<int> dis(min, max - 1);
-	return dis(engine);
+	//assert(min != max - 1 && "integer range [a; a[ is impossible.");
+	if (min != max) {
+		std::uniform_int_distribution<int> dis(min, max - 1);
+		return dis(engine);
+	} else {
+		return min;
+	}
 }
 
 int CRandomGenerator::randInt()
