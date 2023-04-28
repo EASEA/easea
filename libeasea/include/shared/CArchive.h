@@ -112,13 +112,16 @@ void CArchive<TIndividual>::updateArchive(const TI candidate)
 { 
 	if (m_archive.size() < 0) LOG_ERROR(errorCode::value, "Size of archive < 0!");
 
+	// NOTE: this is tested and works as intended
 	for (auto it = m_archive.begin(); it != m_archive.end();)
 	{
-		if (Dominate(candidate, *it, false))
+		if (Dominate(candidate, *it, false)) {
 			it = m_archive.erase(it);
-		else if (Dominate(*it, candidate, false))
+		} else if (Dominate(*it, candidate, false)) {
 			return;
-		else	++it;
+		} else {
+			++it;
+		}
 	}
 
 	m_archive.push_back(candidate);
