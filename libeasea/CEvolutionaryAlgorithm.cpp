@@ -1,6 +1,3 @@
-//#ifdef OS_WINDOWS
-//#pragma comment(lib, "WinMM.lib")
-//#endif
 /*
  * CEvolutionaryAlgorithm.cpp
  *
@@ -13,16 +10,6 @@
 
 #include "include/CEvolutionaryAlgorithm.h"
 #include "config.h"
-#ifndef OS_WINDOWS
-#include <sys/time.h>
-#include <sys/wait.h>
-#endif
-#ifdef OS_WINDOWS
-#define OS_WINDOWS_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <mmsystem.h>
-#endif
 
 #include <stdio.h>
 #include <time.h>
@@ -108,32 +95,6 @@ easena::log_stream logg;
 /*****
  * REAL CONSTRUCTOR
  */
-sig_atomic_t volatile done = 1;
-#ifndef OS_WINDOWS
-void childHandler(int signum)
-{
-	(void)(signum);
-        int status;
-	ostringstream ss;
-
-        while(waitpid(-1, &status, WNOHANG)>0)
-        {
-            if(WIFEXITED(status)){
-                ss << "Display process stopped normally" << std::endl;
-		LOG_MSG(msgType::WARNING, ss.str());
-		done = 0;
-            } else if (WIFSIGNALED(status)){
-                ss << "Display process stopped by a signal" << std::endl;
-		LOG_MSG(msgType::WARNING, ss.str());
-                done = 0;
-            } else if (WIFSTOPPED(status)){
-                 ss << "Display process stopped by a signal" << std::endl;
-		 LOG_MSG(msgType::WARNING, ss.str());
-                 done = 0;
-        }
-}//!WIFEXITED(status) && !WIFSIGNALED(status));
-}
-#endif
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	
@@ -143,9 +104,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 
 	this->params = params;
 	this->cstats = new CStats();
-#ifndef OS_WINDOWS
-	signal(SIGCHLD, childHandler);
-#endif
+
 	CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
         params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
@@ -176,7 +135,6 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     fichier.append(".r");
     remove(fichier.c_str());
   }
-  //#ifndef OS_WINDOWS 
   if(params->plotStats){
         string str = "Plotting of the evolution of ";;
         string str2 = this->params->outputFilename;
@@ -184,7 +142,6 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     //this->grapher = new CGrapher((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize, (char*)str.c_str());
     this->grapher = new CGrapher(this->params, (char*)str.c_str());
   }
-  //#endif
 
 
   // INITIALIZE SERVER OBJECT ISLAND MODEL
@@ -294,11 +251,6 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     }
 
     EASEABeginningGenerationFunction(this);
-    if (done == 0){
-        delete this->grapher;
-	this->params->plotStats = 0;
-	done = 1;
-    }
 auto tmpElitSize =  params->elitSize;
 auto tmpPrntReduceSize =  this->params->parentReductionSize;
 auto tmpPrntReduct = params->parentReduction; 
@@ -377,12 +329,7 @@ params->parentReduction = 1;
   this->params->parentReductionSize = tmpPrntReduceSize;
  params->parentReduction = tmpPrntReduct ;
   }
-//#ifdef OS_UNIX
-  //if(this->params->plotStats && this->grapher->valid){
-    //outputGraph();
-    //delete this->grapher;
-  //}
-//#endif
+
     auto end = std::chrono::system_clock::now();
  
     std::chrono::duration<double> elapsed_seconds = end-start;
@@ -575,7 +522,6 @@ void CEvolutionaryAlgorithm::showPopulationStats(std::chrono::time_point<std::ch
         }
   }
   //print grapher
-  #ifndef OS_WINDOWS
   if(this->params->plotStats && this->grapher->valid){
   //if(currentGeneration==0)
   //  fprintf(this->grapher->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
@@ -598,7 +544,6 @@ currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitn
     }
   fflush(this->grapher->fWrit);
  }
-#endif
 
   params->timeCriterion->setElapsedTime(elapsed_s);
 
