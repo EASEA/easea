@@ -7,9 +7,9 @@
 
 #ifndef CEVOLUTIONARYALGORITHM_H_
 #define CEVOLUTIONARYALGORITHM_H_
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
-#include <time.h>
+#include <chrono>
 #include "CSelectionOperator.h"
 #include "CPopulation.h"
 #include "CStoppingCriterion.h"
@@ -58,7 +58,7 @@ public:
   void refreshClient();
 
 
-  void showPopulationStats(struct timeval beginTime);
+  void showPopulationStats(std::chrono::time_point<std::chrono::system_clock> const& beginTime);
   void generatePlotScript();
   void generateRScript();
 
