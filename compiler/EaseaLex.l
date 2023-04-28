@@ -1712,6 +1712,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"\""  {(bDoubleQuotes ? bDoubleQuotes=0:bDoubleQuotes=1); fprintf(fpOutputFile,"\"");}
 <COPY>"\\\""  {fprintf(fpOutputFile,"\\\"");}
 
+<COPY>"CMAKE_TARGET" { fprintf(fpOutputFile, "%s", sRAW_PROJECT_NAME); }
 <COPY>"currentGeneration"|"currentGeneration"/[ \t\n]*"==" {if (bDoubleQuotes) fprintf(fpOutputFile,"currentGeneration");
   else if(TARGET == STD) fprintf(fpOutputFile,"(*EZ_current_generation)");
     } // local genome name
