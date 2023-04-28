@@ -212,7 +212,7 @@ void yyreset()
 %}                                                     
                                          
 %start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
-%start COPY_USER_DECLARATIONS COPY_USER_CUDA COPY_INITIALISATION_FUNCTION ANALYSE_USER_CLASSES
+%start COPY_USER_DECLARATIONS COPY_USER_CUDA COPY_INITIALISATION_FUNCTION COPY_USER_CMAKE ANALYSE_USER_CLASSES
 %start COPY_EO_INITIALISER COPY_GP_OPCODE
 %start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_OPTIMISER COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
@@ -256,6 +256,16 @@ exponent  ([Ee][+-]?[0-9]+)
   case UNKNOWN_OS : fprintf(fpOutputFile,"UNKNOWN_OS"); break;
   }
  }
+
+<TEMPLATE_ANALYSIS>"\\INSERT_USER_CMAKE" {
+  if (bVERBOSE) printf ("Inserting user custom CMake code.\n");
+  rewind(fpGenomeFile);
+  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
+  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  lineCounter=1;
+  BEGIN COPY_USER_CMAKE;
+ }
+
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_DECLARATIONS"  {
   if (bVERBOSE) printf ("Inserting user declarations.\n");
   yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
@@ -1470,6 +1480,23 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_CUDA>\n {
   lineCounter++;
  }                
+
+<COPY_USER_CMAKE>"\\User"[ \t\n]+[Cc][Mm][Aa][Kk][Ee][^ \t\n]*[ \t\n]*":" {
+  fprintf (fpOutputFile,"# User CMAKE\n"); 
+  BEGIN COPY;
+ }
+<COPY_USER_CMAKE><<EOF>> {
+  if (bVERBOSE) printf("*** No user CMAKE were found. ***\n");
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  yypop_buffer_state();
+  BEGIN TEMPLATE_ANALYSIS;
+  bNotFinishedYet=1;
+ }
+<COPY_USER_CMAKE>. { }
+<COPY_USER_CMAKE>\n {
+  lineCounter++;
+ }
 
 <COPY_USER_FUNCTIONS>"\\User"[ \t\n]+"functions"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User functions\n\n"); 
