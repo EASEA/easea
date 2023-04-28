@@ -491,7 +491,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(std::chrono::time_point<std::ch
       printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|  DEV  |FITNESS|\n");
       printf("------------------------------------------------------------------------------------------------\n");
     }
-    printf("%7u\t%10.3f\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,elapsed_s,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+    printf("%7u\t%10.3fs\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,elapsed_s,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
   }
 
   if((this->params->plotStats && this->grapher->valid) || this->params->generatePlotScript){
