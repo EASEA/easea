@@ -7,28 +7,11 @@ __________________________________________________________*/
 
 \User declarations :
 #define SIZE 2
-#define BBOB_FUNCTION_ID 1
-#define BBOB_INSTANCE_ID 1
-#define X_MIN -5.
-#define X_MAX 5.
-#define ITER 120      
-#define Abs(x) ((x) < 0 ? -(x) : (x))
-#define MAX(x,y) ((x)>(y)?(x):(y))
-#define MIN(x,y) ((x)<(y)?(x):(y))
-#define SIGMA  1.                     /*  mutation parameter */
-#define PI 3.141592654
-
- 
+#define DIM SIZE
 float pMutPerGene=0.1;
-int DIM = SIZE;
-int trialid = BBOB_INSTANCE_ID;
-int funcId = BBOB_FUNCTION_ID; //passed by parameter
-int instanceId = BBOB_INSTANCE_ID;;
 
-double * peaks;
-double * Xopt; /*Initialized in benchmarkhelper.c*/
-double Fopt;
-unsigned int isInitDone=0;
+#include "benchmarksdeclare.h"
+ 
 \end
 
 \User functions:
@@ -140,7 +123,7 @@ GenomeClass {
        	Genome.x[i] = MIN(X_MAX,Genome.x[i]);              // pour eviter les depassements
        	Genome.x[i] = MAX(X_MIN,Genome.x[i]);
     	}
-return NbMut;
+  return NbMut;
 \end
 
 \GenomeClass::evaluator : // Returns the score
