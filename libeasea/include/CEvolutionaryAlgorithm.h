@@ -15,11 +15,6 @@
 #include "CStoppingCriterion.h"
 #include "CComUDPLayer.h"
 #include "CStats.h"
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#endif
 
 class Parameters;
 class CGrapher;
@@ -62,11 +57,8 @@ public:
   void sendIndividual();
   void refreshClient();
 
-#ifdef WIN32
-  void showPopulationStats(clock_t beginTime);
-#else
+
   void showPopulationStats(struct timeval beginTime);
-#endif
   void generatePlotScript();
   void generateRScript();
 
