@@ -16,15 +16,15 @@ using std::vector;
 
 /* Simple logger for printing different kinds of messages to console */
 
-#define LOG_MSG(type, msg, ...)  Output(type, formatString(msg, ##__VA_ARGS__), __func__, __FILE__, __LINE__);
+#define LOG_MSG(type, msg, ...)  Output(type, formatString(msg, #__VA_ARGS__), __func__, __FILE__, __LINE__);
 
 #define LOG_ERROR(code, msg, ...)                                           \
-  throw Exception(code, formatString(msg, ##__VA_ARGS__), __func__, __FILE__, __LINE__);
+  throw Exception(code, formatString(msg, #__VA_ARGS__), __func__, __FILE__, __LINE__);
 
 #define LOG_CHECK(condition, code, msg, ...)                    \
   if (!(condition)) {                                             \
     EASEA_ERROR(code, string("Failed `" #condition "`: ") + msg,  \
-               ##__VA_ARGS__);                                    \
+               #__VA_ARGS__);                                    \
   }
 
 /* Type of message */
