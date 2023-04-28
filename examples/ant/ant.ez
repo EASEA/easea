@@ -13,7 +13,7 @@
   int profondeurMax1 = 9; //La profondeur max d'un arbre au cours de l'évolution
   
   int taille = 32; //taille de la grille
-  int SIZE=0;//taille d'un individu 
+  int SZ=0;//taille d'un individu 
   int carte[32][32]; //la grille
   inline void swap(int& a,int& b) {int c=a; a=b; b=c;}
   \end
@@ -104,7 +104,7 @@
   */
   Element *copierSousArbreRec(Element* ssArbreSource, int profondeur, int pMax){
     Element *elt = new Element;
-    elt->numero = SIZE++;
+    elt->numero = SZ++;
     elt->profondeur = profondeur;
     if(ssArbreSource==NULL)
       return NULL;
@@ -139,7 +139,7 @@
   */
   Element *genererNoeud(int profondeur, int profondeurMaxAutorisee){
     Element *elt = new Element;
-    elt->numero = SIZE++;
+    elt->numero = SZ++;
     elt->profondeur = profondeur;
     //Cas d'un symbole terminal (feuille)
     if(profondeur == profondeurMaxAutorisee ){
@@ -249,7 +249,7 @@
   Renumerote les noeuds de l'arbre et regenere sa taille
   */
   void regenSizeRec(Element *racine, int p){
-    racine->numero=SIZE++;
+    racine->numero=SZ++;
     racine->profondeur=p;
     if(racine->filsG!=NULL)
       regenSizeRec(racine->filsG, p+1);
@@ -260,7 +260,7 @@
   }
   
   void regenSize(Element *racine){
-    SIZE=0;
+    SZ=0;
     regenSizeRec(racine, 0);
   }
   
@@ -455,7 +455,7 @@
   \end
   
   \Before everything else function:
-  if ((argc>1)&&(!std::strcmp(argv[1],"size"))) SIZE=atoi(argv[2]);
+  if ((argc>1)&&(!std::strcmp(argv[1],"size"))) SZ=atoi(argv[2]);
   \end
   
   \User classes:
@@ -506,12 +506,12 @@
   \end
   
   \GenomeClass::initialiser:
-  SIZE = 0;
+  SZ = 0;
   //Creation de l'arbre.
   Element *pElt = genererNoeud(0,profondeurMax);
   Genome.arbre= pElt;
-  Genome.Size=SIZE;
-  SIZE=0;
+  Genome.Size=SZ;
+  SZ=0;
   \end
   
   
@@ -527,7 +527,7 @@
   
   remplace(child.arbre,elt11,locusC);
   regenSize(child.arbre);
-  child.Size=SIZE;
+  child.Size=SZ;
   
   \end
   
@@ -599,7 +599,7 @@
 	}
       }
 	regenSize(racine);
-	Genome.Size = SIZE;
+	Genome.Size = SZ;
 	nbMut++;
       }
     } 
