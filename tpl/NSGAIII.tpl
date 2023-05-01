@@ -346,10 +346,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	std::string* ipFilename=new std::string();
-	*ipFilename=setVariable("ipFile","\IP_FILE");
-
-	this->ipFile =(char*)ipFilename->c_str();
+	this->ipFile = setVariable("ipFile","\IP_FILE");
 	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
     this->serverPort = setVariable("serverPort",\SERVER_PORT);
 }
