@@ -70,7 +70,7 @@ extern bool bPRINT_STATS, bPLOT_STATS, bGENERATE_CSV_FILE, bGENERATE_GNUPLOT_SCR
 extern bool bSAVE_POPULATION, bSTART_FROM_FILE;
 extern bool bREMOTE_ISLAND_MODEL;
 extern bool bLINE_NUM_EZ_FILE;
-extern char* nGENOME_NAME;
+extern const char* nGENOME_NAME;
 extern int nPOP_SIZE, nNB_GEN, nARCH_SIZE, nNB_OPT_IT, nOFF_SIZE, nPROBLEM_DIM, nTIME_LIMIT;
 extern int nSERVER_PORT;
 extern int nWARNINGS, nERRORS;

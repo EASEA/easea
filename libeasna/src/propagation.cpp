@@ -93,6 +93,7 @@ void freeNetwork(network & neuronalNetwork) {
 		}
 		free(neuronalNetwork.weights[i]);
 		free(neuronalNetwork.weightsPreviousChange[i]);
+		(void)(numberOfNeuronsInPreviousLayer);
 	}
 	free(neuronalNetwork.weights);
 	free(neuronalNetwork.weightsPreviousChange); 

@@ -9,8 +9,6 @@
 
 #include <iostream>
 
-using namespace std;
-
 #define MAX_ARITY 2          // maximum arrity for GP node
 
 /**
@@ -85,7 +83,7 @@ class GPNode {
     bool operator!=(GPNode &EASEA_Var) const {return !(*this==EASEA_Var);} // operator!=
 
 
-    friend ostream& operator<< (ostream& os, const GPNode& EASEA_Var) { // Output stream insertion operator
+    friend std::ostream& operator<< (std::ostream& os, const GPNode& EASEA_Var) { // Output stream insertion operator
       os <<  "var_id:" << EASEA_Var.var_id << "\n";
       os <<  "erc_value:" << EASEA_Var.erc_value << "\n";
       //os <<  "arity:" << EASEA_Var.arity << "\n";

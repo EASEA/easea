@@ -8,7 +8,7 @@ __________________________________________________________*/
 \User declarations :
 #define SIZE 2
 #define DIM SIZE
-static constexpr float pMutPerGene=0.1;
+float pMutPerGene=0.1;
 
 #include "benchmarksdeclare.h"
  
@@ -123,6 +123,7 @@ GenomeClass {
        	Genome.x[i] = MIN(X_MAX,Genome.x[i]);              // pour eviter les depassements
        	Genome.x[i] = MAX(X_MIN,Genome.x[i]);
     	}
+  return NbMut;
 \end
 
 \GenomeClass::evaluator : // Returns the score

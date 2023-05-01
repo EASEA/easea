@@ -20,29 +20,28 @@
 #include "CLogger.h"
 #include "CMeta.h"
 
-using namespace std;
 
 class CQMetricsFunctions{
 public:
     /* Read Pareto front from file */
-	vector< vector<double> > readFrontFromFile(string const& path){
+	std::vector< std::vector<double> > readFrontFromFile(std::string const& path){
 
-        vector< vector <double> > front;
+        std::vector< std::vector <double> > front;
 
         std::ifstream in(path.c_str());
         if( !in )
            LOG_ERROR(errorCode::io, "impossible to read file");
 
-        string line;
+        std::string line;
 
-        while( getline(in, line ) ) {
+        while( std::getline(in, line ) ) {
 
-            vector<double> list;
+            std::vector<double> list;
 
-            istringstream iss(line);
+            std::stringstream iss(line);
 
             while (iss) {
-                string token;
+                std::string token;
                 iss >> token;
                 if (token.compare("")!=0)
                     list.push_back(atof(token.c_str()));
@@ -55,9 +54,9 @@ public:
         return front;
     };
 
-    vector<double> getMaxValues(vector< vector<double> > const& front, int nbObj) {
+    std::vector<double> getMaxValues(std::vector< std::vector<double> > const& front, int nbObj) {
 
-        vector<double> maxValues;
+        std::vector<double> maxValues;
 	maxValues.reserve(nbObj);
 
 	    for (auto i = 0; i < nbObj; i++)
@@ -74,9 +73,9 @@ public:
 	    return maxValues;
     };
 
-    vector<double> getMinValues(vector< vector<double> > const& front, int nbObj) {
+    std::vector<double> getMinValues(std::vector< std::vector<double> > const& front, int nbObj) {
 
-        vector<double> minValues;
+        std::vector<double> minValues;
 	minValues.reserve(nbObj);
 
        for (auto i = 0; i < nbObj; i++)
@@ -91,7 +90,7 @@ public:
         return minValues;
     };
 
-	double distance(vector<double> const& a, vector<double> const& b){
+	double distance(std::vector<double> const& a, std::vector<double> const& b){
 
         double distance = 0.0;
 
@@ -102,7 +101,7 @@ public:
         return sqrt(distance);
     };
 
-    double distanceToClosedPoint(vector<double> const& point, vector< vector<double> > const& front){
+    double distanceToClosedPoint(std::vector<double> const& point, std::vector< std::vector<double> > const& front){
 
         double minDistance = distance(point,front[0]);
 
@@ -115,12 +114,12 @@ public:
         return minDistance;
     };
 
-    vector< vector<double> > getNormalizedFront(vector< vector<double> > const& front, vector<double> const& maxValue, vector<double> const& minValue) {
+    std::vector< std::vector<double> > getNormalizedFront(std::vector< std::vector<double> > const& front, std::vector<double> const& maxValue, std::vector<double> const& minValue) {
 
-        vector< vector<double> > normalizedFront;
+        std::vector< std::vector<double> > normalizedFront;
 
         for (const auto& row : front){
-            vector<double> list;
+            std::vector<double> list;
             for (size_t j = 0; j < row.size(); j++)
                 list.push_back((row[j] - minValue[j]) / (maxValue[j] - minValue[j]));
 
@@ -129,12 +128,12 @@ public:
         return normalizedFront;
     };
 
-	vector< vector<double> > getInvertedFront(vector< vector<double> > const& front) {
+	std::vector< std::vector<double> > getInvertedFront(std::vector< std::vector<double> > const& front) {
 
-	vector< vector<double> > invertedFront;
+	std::vector< std::vector<double> > invertedFront;
 
         for (const auto& row : front){
-            vector<double> list;
+            std::vector<double> list;
             for( const auto& item : row){
                 if (item <= 1.0 && item >= 0.0)
 			list.push_back(1.0 - item);

@@ -64,94 +64,6 @@ int main(int argc, char** argv){
 	return 0;
 }
 
-\START_CUDA_GENOME_H_TPL
-
-#ifndef PROBLEM_DEP_H
-#define PROBLEM_DEP_H
-
-//#include "CRandomGenerator.h"
-#include <stdlib.h>
-#include <iostream>
-#include <CIndividual.h>
-#include <Parameters.h>
-#include <cstring>
-#include <sstream>
-
-using namespace std;
-
-class CRandomGenerator;
-class CSelectionOperator;
-class CGenerationalCriterion;
-class CEvolutionaryAlgorithm;
-class CPopulation;
-class Parameters;
-
-extern int EZ_POP_SIZE;
-extern int OFFSPRING_SIZE;
-
-/*\INSERT_USER_DECLARATIONS*/
-\ANALYSE_USER_CLASSES
-
-\INSERT_USER_CLASSES
-
-class IndividualImpl : public CIndividual {
-
-public: // in EASEA the genome is public (for user functions,...)
-	// Class members
-  	\INSERT_GENOME
-
-public:
-	IndividualImpl();
-	IndividualImpl(const IndividualImpl& indiv);
-	virtual ~IndividualImpl();
-	float evaluate();
-	static unsigned getCrossoverArrity(){ return 2; }
-	float getFitness(){ return this->fitness; }
-	CIndividual* crossover(CIndividual** p2);
-	void printOn(std::ostream& O) const;
-	CIndividual* clone();
-
-	void mutate(float pMutationPerGene);
-
-	void boundChecking();      
-
-	string serialize();
-	void deserialize(string AESAE_Line);
-
-	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
-	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
-
-};
-
-
-class ParametersImpl : public Parameters {
-public:
-	void setDefaultParameters(int argc, char** argv);
-	CEvolutionaryAlgorithm* newEvolutionaryAlgorithm();
-};
-
-/**
- * @TODO ces functions devraient s'appeler weierstrassInit, weierstrassFinal etc... (en gros EASEAFinal dans le tpl).
- *
- */
-
-void EASEAInit(int argc, char** argv);
-void EASEAFinal(CPopulation* pop);
-void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
-void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
-void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
-
-
-class EvolutionaryAlgorithmImpl: public CEvolutionaryAlgorithm {
-public:
-	EvolutionaryAlgorithmImpl(Parameters* params);
-	virtual ~EvolutionaryAlgorithmImpl();
-	void initializeParentPopulation();
-};
-
-#endif /* PROBLEM_DEP_H */
-
-
 \START_CUDA_GENOME_CU_TPL
 
 #include <fstream>
@@ -181,7 +93,9 @@ CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 
 #define STD_TPL
+
 \INSERT_USER_DECLARATIONS
+\ANALYSE_USER_CLASSES
 
 \INSERT_USER_FUNCTIONS
 
@@ -315,13 +229,15 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-void IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 
   // ********************
   // Problem specific part
   \INSERT_MUTATOR
+
+  return 0;
 }
 
 void ParametersImpl::setDefaultParameters(int argc, char** argv){
@@ -332,7 +248,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->isLogg = setVariable("isLogg", 1);
 	this->reevaluateImmigrants = setVariable("reevaluateImmigrants", 0);
 
+	#ifdef USE_OPENMP
 	omp_set_num_threads(this->nbCPUThreads);
+	#endif
 	seed = setVariable("seed",(int)time(0));
 	globalRandomGenerator = new CRandomGenerator(seed);
 	this->randomGenerator = globalRandomGenerator;
@@ -410,10 +328,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	std::string* ipFilename=new std::string();
-	*ipFilename=setVariable("ipFile","\IP_FILE");
-
-	this->ipFile =(char*)ipFilename->c_str();
+	this->ipFile = setVariable("ipFile","\IP_FILE");
 	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
     this->serverPort = setVariable("serverPort",\SERVER_PORT);
 }
@@ -466,6 +381,91 @@ EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvol
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 
 }
+
+\START_CUDA_GENOME_H_TPL
+
+#ifndef PROBLEM_DEP_H
+#define PROBLEM_DEP_H
+
+//#include "CRandomGenerator.h"
+#include <stdlib.h>
+#include <iostream>
+#include <CIndividual.h>
+#include <Parameters.h>
+#include <cstring>
+#include <sstream>
+
+using namespace std;
+
+class CRandomGenerator;
+class CSelectionOperator;
+class CGenerationalCriterion;
+class CEvolutionaryAlgorithm;
+class CPopulation;
+class Parameters;
+
+extern int EZ_POP_SIZE;
+extern int OFFSPRING_SIZE;
+
+\INSERT_USER_CLASSES
+
+class IndividualImpl : public CIndividual {
+
+public: // in EASEA the genome is public (for user functions,...)
+	// Class members
+  	\INSERT_GENOME
+
+public:
+	IndividualImpl();
+	IndividualImpl(const IndividualImpl& indiv);
+	virtual ~IndividualImpl();
+	float evaluate();
+	static unsigned getCrossoverArrity(){ return 2; }
+	float getFitness(){ return this->fitness; }
+	CIndividual* crossover(CIndividual** p2);
+	void printOn(std::ostream& O) const;
+	CIndividual* clone();
+
+	unsigned mutate(float pMutationPerGene);
+
+	void boundChecking();      
+
+	string serialize();
+	void deserialize(string AESAE_Line);
+
+	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
+	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
+
+};
+
+
+class ParametersImpl : public Parameters {
+public:
+	void setDefaultParameters(int argc, char** argv);
+	CEvolutionaryAlgorithm* newEvolutionaryAlgorithm();
+};
+
+/**
+ * @TODO ces functions devraient s'appeler weierstrassInit, weierstrassFinal etc... (en gros EASEAFinal dans le tpl).
+ *
+ */
+
+void EASEAInit(int argc, char** argv);
+void EASEAFinal(CPopulation* pop);
+void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
+void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
+void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
+
+
+class EvolutionaryAlgorithmImpl: public CEvolutionaryAlgorithm {
+public:
+	EvolutionaryAlgorithmImpl(Parameters* params);
+	virtual ~EvolutionaryAlgorithmImpl();
+	void initializeParentPopulation();
+};
+
+#endif /* PROBLEM_DEP_H */
+
 \START_CUDA_MAKEFILE_TPL
 
 UNAME := $(shell uname)
@@ -551,11 +551,13 @@ find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
 	PATH_SUFFIXES include easena libeasea)
-find_package(Boost)
+find_package(Boost REQUIRED)
 find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
-target_link_libraries(EASEA PUBLIC ${libeasea_LIB} OpenMP::OpenMP_CXX $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+
+\INSERT_USER_CMAKE
 
 \START_EO_PARAM_TPL#****************************************
 #                                         

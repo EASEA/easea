@@ -1,6 +1,3 @@
-//#ifdef OS_WINDOWS
-//#pragma comment(lib, "WinMM.lib")
-//#endif
 /*
  * CEvolutionaryAlgorithm.cpp
  *
@@ -13,16 +10,6 @@
 
 #include "include/CEvolutionaryAlgorithm.h"
 #include "config.h"
-#ifndef OS_WINDOWS
-#include <sys/time.h>
-#include <sys/wait.h>
-#endif
-#ifdef OS_WINDOWS
-#define OS_WINDOWS_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <mmsystem.h>
-#endif
 
 #include <stdio.h>
 #include <time.h>
@@ -108,32 +95,6 @@ easena::log_stream logg;
 /*****
  * REAL CONSTRUCTOR
  */
-sig_atomic_t volatile done = 1;
-#ifndef OS_WINDOWS
-void childHandler(int signum)
-{
-	(void)(signum);
-        int status;
-	ostringstream ss;
-
-        while(waitpid(-1, &status, WNOHANG)>0)
-        {
-            if(WIFEXITED(status)){
-                ss << "Display process stopped normally" << std::endl;
-		LOG_MSG(msgType::WARNING, ss.str());
-		done = 0;
-            } else if (WIFSIGNALED(status)){
-                ss << "Display process stopped by a signal" << std::endl;
-		LOG_MSG(msgType::WARNING, ss.str());
-                done = 0;
-            } else if (WIFSTOPPED(status)){
-                 ss << "Display process stopped by a signal" << std::endl;
-		 LOG_MSG(msgType::WARNING, ss.str());
-                 done = 0;
-        }
-}//!WIFEXITED(status) && !WIFSIGNALED(status));
-}
-#endif
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 	
@@ -143,9 +104,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
 
 	this->params = params;
 	this->cstats = new CStats();
-#ifndef OS_WINDOWS
-	signal(SIGCHLD, childHandler);
-#endif
+
 	CPopulation::initPopulation(params->selectionOperator,params->replacementOperator,params->parentReductionOperator,params->offspringReductionOperator,
         params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
@@ -176,7 +135,6 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     fichier.append(".r");
     remove(fichier.c_str());
   }
-  //#ifndef OS_WINDOWS 
   if(params->plotStats){
         string str = "Plotting of the evolution of ";;
         string str2 = this->params->outputFilename;
@@ -184,7 +142,6 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     //this->grapher = new CGrapher((this->params->offspringPopulationSize*this->params->nbGen)+this->params->parentPopulationSize, (char*)str.c_str());
     this->grapher = new CGrapher(this->params, (char*)str.c_str());
   }
-  //#endif
 
 
   // INITIALIZE SERVER OBJECT ISLAND MODEL
@@ -213,15 +170,6 @@ void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
 void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   CIndividual** elitistPopulation = NULL;
     
-#ifdef OS_WINDOWS
-
-   clock_t begin(clock());
-#else
-
-  struct timeval begin;
-  gettimeofday(&begin,0);
-#endif
-
 #ifdef INSTRUMENTED
   const char* timing_file_name = "timing.csv";
   FILE* timing_file = NULL;
@@ -276,7 +224,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     std::cout << *population << std::endl;
   }
 
-  showPopulationStats(begin);
+  showPopulationStats(start);
   bBest = population->Best;
   currentGeneration += 1;
 
@@ -303,11 +251,6 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
     }
 
     EASEABeginningGenerationFunction(this);
-    if (done == 0){
-        delete this->grapher;
-	this->params->plotStats = 0;
-	done = 1;
-    }
 auto tmpElitSize =  params->elitSize;
 auto tmpPrntReduceSize =  this->params->parentReductionSize;
 auto tmpPrntReduct = params->parentReduction; 
@@ -372,7 +315,7 @@ params->parentReduction = 1;
 
     population->sortParentPopulation();
     //if( this->params->printStats  || this->params->generateCSVFile )
-    showPopulationStats(begin); // (always calculate stats)
+    showPopulationStats(start); // (always calculate stats)
     bBest = population->Best;
     EASEAEndGenerationFunction(this);
 
@@ -386,12 +329,7 @@ params->parentReduction = 1;
   this->params->parentReductionSize = tmpPrntReduceSize;
  params->parentReduction = tmpPrntReduct ;
   }
-//#ifdef OS_UNIX
-  //if(this->params->plotStats && this->grapher->valid){
-    //outputGraph();
-    //delete this->grapher;
-  //}
-//#endif
+
     auto end = std::chrono::system_clock::now();
  
     std::chrono::duration<double> elapsed_seconds = end-start;
@@ -406,15 +344,9 @@ params->parentReduction = 1;
     else{
 	
 	/* Logging out the results */
-	std::stringstream stream;
-	stream << "Seed: " << params->seed; 
-	LOG_MSG(msgType::INFO, stream.str());
-	stream.str("");
-	stream << "Best fitness: " << population->Best->getFitness();
-	LOG_MSG(msgType::INFO, stream.str());
-	stream.str("");
-	stream << "Elapsed time: " << elapsed_seconds.count();
-	LOG_MSG(msgType::INFO, stream.str());
+	LOG_MSG(msgType::INFO, "Seed: %d", params->seed);
+	LOG_MSG(msgType::INFO, "Best fitness: %ld", static_cast<long>(population->Best->getFitness()));
+	LOG_MSG(msgType::INFO, "Elapsed time: %f", elapsed_seconds.count());
     }
 
 if (params->isLogg == 1){
@@ -506,12 +438,7 @@ if (params->isLogg == 1){
 #endif
 }
 
-
-#ifdef OS_WINDOWS
-void CEvolutionaryAlgorithm::showPopulationStats(clock_t beginTime){
-#else
-void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
-#endif
+void CEvolutionaryAlgorithm::showPopulationStats(std::chrono::time_point<std::chrono::system_clock> const& beginTime){
 
   //Calcul de la moyenne et de l'ecart type
   population->Best = population->Worst = population->parents[0];
@@ -543,15 +470,9 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   this->cstats->currentStdDev/=population->parentPopulationSize;
   this->cstats->currentStdDev=sqrt(this->cstats->currentStdDev);
 
-#ifdef OS_WINDOWS
-  clock_t end(clock());
-  double duration;
-  duration = (double)(end-beginTime)/CLOCKS_PER_SEC;
-#else
-  struct timeval end, res;
-  gettimeofday(&end,0);
-  timersub(&end,&beginTime,&res);
-#endif
+  auto elapsed = std::chrono::system_clock::now() - beginTime;
+  auto elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+  auto elapsed_s = static_cast<float>(elapsed_us) / 1e6f;
 
   //Affichage
   
@@ -564,11 +485,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
       printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|  DEV  |FITNESS|\n");
       printf("------------------------------------------------------------------------------------------------\n");
     }
-#ifdef OS_WINDOWS
-    printf("%7u\t%10.3f\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,duration,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
-#else
-      printf("%7u\t%10ld.%03ds\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/1000,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
-#endif
+    printf("%7u\t%10.3fs\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,elapsed_s,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
   }
 
   if((this->params->plotStats && this->grapher->valid) || this->params->generatePlotScript){
@@ -579,12 +496,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
   if(f!=NULL){
     if(currentGeneration==0)
       fprintf(f,"#GEN\tTIME\t\tEVAL\tBEST\t\tAVG\t\tSTDDEV\t\tWORST\n\n");
-#ifdef OS_WINDOWS
-    fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,population->Worst->getFitness(),this->cstats->currentStdDev);
-#else
-      //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
-      fprintf(f,"%u\t%ld.%d\t\t%u\t\t%.2e  %.2e  %.2e  %.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
-#endif
+    fprintf(f,"%u\t%2.6f\t%u\t%.2e\t%.2e\t%.2e\t%.2e\n",currentGeneration,elapsed_s,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,population->Worst->getFitness(),this->cstats->currentStdDev);
     fclose(f);
         }
   }
@@ -599,17 +511,11 @@ void CEvolutionaryAlgorithm::showPopulationStats(struct timeval beginTime){
     fprintf(f, "Run configuration:\nNB_GEN = %i POP_SIZE = %i OFFSPRING_SIZE = %i MUT_PROB = %f  XOVER_PROB = %f \n\n", (*EZ_NB_GEN), EZ_POP_SIZE, OFFSPRING_SIZE, (*pEZ_MUT_PROB), (*pEZ_XOVER_PROB));
 
     fprintf(f,"GEN,TIME,EVAL,BEST,AVG,STDDEV,WORST\n");
-#ifdef OS_WINDOWS
-    fprintf(f,"%u,%2.6f,%u,%.2e,%.2e,%.2e,%.2e\n",currentGeneration,duration,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
-#else
-      //printf("%d\t%ld.%01ld\t%d\t%.2e\t%.2e\t%.2e\t%.2e\n",(int)currentGeneration,res.tv_sec,res.tv_usec,(int)population->currentEvaluationNb,population->Best->getFitness(),currentAverageFitness,currentSTDEV, population->Worst->getFitness());
-      fprintf(f,"%u,%ld.%d,%u,%.2e,%.2e,%.2e,%.2e\n",(int)currentGeneration,res.tv_sec,(int)res.tv_usec/10000,(int)population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
-#endif
+    fprintf(f,"%u,%2.6f,%u,%.2e,%.2e,%.2e,%.2e\n",currentGeneration,elapsed_s,population->currentEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
     fclose(f);
         }
   }
   //print grapher
-  #ifndef OS_WINDOWS
   if(this->params->plotStats && this->grapher->valid){
   //if(currentGeneration==0)
   //  fprintf(this->grapher->fWrit,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines ls 1, \'%s.dat\' using 3:5 t  \'Average\' w lines ls 4, \'%s.dat\' using 3:6 t \'StdDev\' w lines ls 3\n", params->outputFilename,params->outputFilename,params->outputFilename);
@@ -632,21 +538,8 @@ currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitn
     }
   fflush(this->grapher->fWrit);
  }
-#endif
- 
-#ifdef OS_UNIX
-  double elapsedTime = static_cast<double>(res.tv_sec) + 0.0;
-  double micSec = static_cast<double>(res.tv_usec) + 0.0;
 
-  while(micSec>1){
-  micSec /= 10.;
-  }
-  elapsedTime += micSec + 0.0;
-
-
-  params->timeCriterion->setElapsedTime(elapsedTime);
-
-#endif
+  params->timeCriterion->setElapsedTime(elapsed_s);
 
   //Reset Current Gen Stats
   this->cstats->resetCurrentStats();
@@ -813,26 +706,3 @@ bool CEvolutionaryAlgorithm::allCriteria(){
   }
   return false;
 }
-
-#ifdef OS_WINDOWS
-int gettimeofday
-(struct timeval* tp, void* tzp) {
-  DWORD t;
-  t = timeGetTime();
-  tp->tv_sec = t / 1000;
-  tp->tv_usec = t % 1000;
-  return 0;
-}
-
-void timersub( const timeval * tvp, const timeval * uvp, timeval* vvp )
-{
-  vvp->tv_sec = tvp->tv_sec - uvp->tv_sec;
-  vvp->tv_usec = tvp->tv_usec - uvp->tv_usec;
-  if( vvp->tv_usec < 0 )
-  {
-    --vvp->tv_sec;
-    vvp->tv_usec += 1000000;
-  }
-} 
-#endif
-

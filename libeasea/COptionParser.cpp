@@ -6,6 +6,9 @@
  *  Changed 25.08.2018 by Anna Ouskova Leonteva
  */
 
+#include <vector>
+#include <string>
+#include <fstream>
 #include <iostream>
 #include <stdio.h>
 #include <memory>
@@ -49,12 +52,28 @@ TypeVariable setVariable(const std::string& argumentName, TypeVariable defaultVa
     }
 }
 
-int loadParametersFile(const string& filename, char*** outputContainer){
+std::vector<std::string> loadParametersFile(const string& filename)
+{
+	std::ifstream paramFile{filename, std::ios_base::in};
+	std::vector<std::string> ret;
+	ret.emplace_back("");
+	std::string buffer;
 
-    FILE* paramFile = fopen(filename.c_str(),"r");
+	while (std::getline(paramFile, buffer)) {
+		if ((buffer.find('#') == std::string::npos) && buffer.size() > 0) {
+			auto space = buffer.find_first_of(" \t");
+			if (space != std::string::npos)
+				buffer.resize(space);
+			ret.push_back(std::move(buffer));
+		}
+	}
+
+	return ret;
+
+    /*FILE* paramFile = fopen(filename.c_str(),"r");
     char buffer[512];
     vector<char*> tmpContainer;
-    char* padding = (char*)malloc(sizeof(char));
+    char* padding = new char;//(char*)malloc(sizeof(char));
     padding[0] = 0;
 
     tmpContainer.push_back(padding);
@@ -68,31 +87,30 @@ int loadParametersFile(const string& filename, char*** outputContainer){
 	}
 	std::size_t str_len;
         if( (str_len = strlen(buffer)) ){
-        	char* nLine = (char*)malloc(sizeof(char)*(str_len+1));
+        	char* nLine = new char[str_len + 1];//(char*)malloc(sizeof(char)*(str_len+1));
                 strcpy(nLine,buffer);
                 tmpContainer.push_back(nLine);
         }
         }
 
-        (*outputContainer) = (char**)malloc(sizeof(char*)*tmpContainer.size());
+        (*outputContainer) = new char*[tmpContainer.size()];//(char**)malloc(sizeof(char*)*tmpContainer.size());
 
         for ( size_t i=0 ; i<tmpContainer.size(); i++)
             (*outputContainer)[i] = tmpContainer.at(i);
 
         fclose(paramFile);
-        return static_cast<int>(tmpContainer.size());
+        return static_cast<int>(tmpContainer.size());*/
 }
 
 void parseArguments(const char* parametersFileName, int ac, char** av, std::unique_ptr<cxxopts::ParseResult> &vm, std::unique_ptr<cxxopts::ParseResult>& vm_file){
 
-    char** argv;
-    int argc;
-    if( parametersFileName )
-        argc = loadParametersFile(parametersFileName,&argv);
-    else{
-        argc = 0;
-        argv = nullptr;
+    std::vector<std::string> argv;
+    int argc = 0;
+    if( parametersFileName ) {
+	argv = loadParametersFile(parametersFileName);
+        argc = argv.size();
     }
+
 
     options
         .add_options()
@@ -145,26 +163,24 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         ("u5","User defined parameter 5",cxxopts::value<int>());
     try{
         auto vm_value = options.parse(ac,av);
-        vm = std::make_unique<cxxopts::ParseResult>(move(vm_value));
+        vm = std::make_unique<cxxopts::ParseResult>(std::move(vm_value));
         if (vm->count("help")) {
             ostringstream msg;
             LOG_MSG(msgType::INFO,options.help({""}));
 	    exit(1);
         }
         if(parametersFileName){
-            auto vm_file_value = options.parse(argc, argv);
-            vm_file = std::make_unique<cxxopts::ParseResult>(move(vm_file_value));
+	    std::vector<const char*> cstr;
+	    std::transform(argv.cbegin(), argv.cend(), std::back_inserter(cstr), [](auto const& s) {return s.c_str();});
+	    auto carr = cstr.data();
+            auto vm_file_value = options.parse(argc, carr);
+            vm_file = std::make_unique<cxxopts::ParseResult>(std::move(vm_file_value));
         }
     }
-    catch(const cxxopts::OptionException& e){
+    catch(const std::exception& e){
         ostringstream msg;
         LOG_ERROR(errorCode::value, msg.str());
   }
-
-    for(auto i = 0 ; i<argc ; i++)
-        free(argv[i]);
-    if( argv )
-        free(argv);
 }
 
 void parseArguments(const char* parametersFileName, int ac, char** av){

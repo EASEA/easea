@@ -200,6 +200,7 @@ CIndividual** CPopulation::reduceParentPopulation(unsigned obSize){
   this->actualParentPopulationSize = obSize;
 
   parents = nextGeneration;
+  pPopulation = parents;
 
   return nextGeneration;
 }
@@ -320,6 +321,7 @@ void CPopulation::reduceTotalPopulation(CIndividual** elitPop){
   actualParentPopulationSize = parentPopulationSize;
   actualOffspringPopulationSize = 0;
   parents = nextGeneration;
+  pPopulation = parents;
 
 }
 
@@ -331,14 +333,16 @@ void CPopulation::produceOffspringPopulation(){
 	int sum = 0;
 #ifdef USE_OPENMP
 #pragma omp parallel
+#endif
 	{
 		CIndividual** ps = new CIndividual*[crossoverArrity]();
 		CIndividual* p1;
 		CIndividual* child;
 
+#ifdef USE_OPENMP
 #pragma omp for private(p1) private(child) reduction(+:sum)
 #endif
-		for( int i=0 ; i<offspringPopulationSize ; i++ ){
+		for( int i=0 ; i<static_cast<int>(offspringPopulationSize) ; i++ ){
 			unsigned index = selectionOperator->selectNext(parentPopulationSize);
 			p1 = parents[index];
 

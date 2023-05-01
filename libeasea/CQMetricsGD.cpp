@@ -13,15 +13,15 @@
 
     CQMetricsGD::~CQMetricsGD() {}
 
-    double CQMetricsGD::get(vector< vector<double> > const& takenFront, vector< vector<double> > const& realFront, int nbObj) {
+    double CQMetricsGD::get(std::vector< std::vector<double> > const& takenFront, std::vector< std::vector<double> > const& realFront, int nbObj) {
 
-        vector<double> maxValues = getFunctions()->getMaxValues(realFront, nbObj);
-        vector<double> minValues = getFunctions()->getMinValues(realFront, nbObj);
+        std::vector<double> maxValues = getFunctions()->getMaxValues(realFront, nbObj);
+        std::vector<double> minValues = getFunctions()->getMinValues(realFront, nbObj);
 
-        vector< vector<double> > normalizedTakenFront = getFunctions()->getNormalizedFront(takenFront,
+        std::vector< std::vector<double> > normalizedTakenFront = getFunctions()->getNormalizedFront(takenFront,
                                                 maxValues,
                                                 minValues);
-        vector< vector<double> >  normalizedRealFront = getFunctions()->getNormalizedFront(realFront,
+        std::vector< std::vector<double> >  normalizedRealFront = getFunctions()->getNormalizedFront(realFront,
                                                 maxValues,
                                                 minValues);
 

@@ -240,7 +240,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 	int nbCPUThreads = setVariable("nbCPUThreads", 1);
 	this->isLogg = setVariable("isLogg", 1);
+	#ifdef USE_OPENMP
 	omp_set_num_threads(nbCPUThreads);
+	#endif
 
         parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
         offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
@@ -304,10 +306,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	}
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	std::string* ipFilename=new std::string();
-	*ipFilename=setVariable("ipFile","\IP_FILE");
-
-	this->ipFile =(char*)ipFilename->c_str();
+	this->ipFile = setVariable("ipFile","\IP_FILE");
 	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
     this->serverPort = setVariable("serverPort",\SERVER_PORT);
 }
@@ -594,7 +593,9 @@ find_package(Boost)
 find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
-target_link_libraries(EASEA PUBLIC ${libeasea_LIB} OpenMP::OpenMP_CXX $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+
+\INSERT_USER_CMAKE
 
 \START_EO_PARAM_TPL#****************************************
 #                                         

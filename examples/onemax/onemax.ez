@@ -4,10 +4,9 @@ onemax.ez // Evolve individuals containing 111111111111111111...
 __________________________________________________________*/
 
 \User declarations :
-
 #define SIZE 1000
  
-static constexpr float pMutPerGene=0.1;
+float pMutPerGene=0.1;
 \end
 
 \User functions:
@@ -55,7 +54,7 @@ GenomeClass {
 \GenomeClass::mutator : // Must return a value (for historical reasons)
   for (int i=0;i<SIZE;i++)
     if (tossCoin(pMutPerGene)) Genome.x[i]=(Genome.x[i]+1)%2;
- 
+  return 3;
 \end
 
 \GenomeClass::evaluator : // Returns the score

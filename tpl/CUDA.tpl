@@ -519,13 +519,15 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-void IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 
   // ********************
   // Problem specific part
   \INSERT_MUTATOR
+
+  return 0;
 }
 
 
@@ -588,7 +590,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->nbCPUThreads = setVariable("nbCPUThreads", 1);
         this->isLogg = setVariable("isLogg", 1);
 
+	#ifdef USE_OPENMP
 	omp_set_num_threads(this->nbCPUThreads);
+	#endif
 	this->reevaluateImmigrants = setVariable("reevaluateImmigrants", 0);
         seed = setVariable("seed",(int)time(0));
         globalRandomGenerator = new CRandomGenerator(seed);
@@ -660,10 +664,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	std::string* ipFilename=new std::string();
-	*ipFilename=setVariable("ipFile","\IP_FILE");
-	
-	this->ipFile =(char*)ipFilename->c_str();
+	this->ipFile = setVariable("ipFile","\IP_FILE");
     this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
     this->serverPort = setVariable("serverPort",\SERVER_PORT);
 
@@ -796,7 +797,7 @@ public:
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	void mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene);
 
 	void boundChecking();
 
@@ -1076,7 +1077,9 @@ find_package(CUDAToolkit REQUIRED)
 message(STATUS ${libeasea_INCLUDE} ${CLOGGER} ${CUDAToolkit_INCLUDE_DIRS})
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE} ${CUDAToolkit_INCLUDE_DIRS})
-target_link_libraries(EASEA PUBLIC ${libeasea_LIB} OpenMP::OpenMP_CXX $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+
+\INSERT_USER_CMAKE
 \START_EO_PARAM_TPL#****************************************
 #
 #  EASEA.prm

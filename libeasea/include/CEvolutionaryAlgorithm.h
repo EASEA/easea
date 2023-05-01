@@ -7,19 +7,14 @@
 
 #ifndef CEVOLUTIONARYALGORITHM_H_
 #define CEVOLUTIONARYALGORITHM_H_
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
-#include <time.h>
+#include <chrono>
 #include "CSelectionOperator.h"
 #include "CPopulation.h"
 #include "CStoppingCriterion.h"
 #include "CComUDPLayer.h"
 #include "CStats.h"
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#endif
 
 class Parameters;
 class CGrapher;
@@ -62,11 +57,8 @@ public:
   void sendIndividual();
   void refreshClient();
 
-#ifdef WIN32
-  void showPopulationStats(clock_t beginTime);
-#else
-  void showPopulationStats(struct timeval beginTime);
-#endif
+
+  void showPopulationStats(std::chrono::time_point<std::chrono::system_clock> const& beginTime);
   void generatePlotScript();
   void generateRScript();
 

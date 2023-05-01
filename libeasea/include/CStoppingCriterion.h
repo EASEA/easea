@@ -10,14 +10,6 @@
 
 #include <stdlib.h>
 #include <signal.h>
-#ifndef WIN32
-#include <sys/time.h>
-#endif
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#endif
 #include <time.h>
 
 class CEvolutionaryAlgorithm;

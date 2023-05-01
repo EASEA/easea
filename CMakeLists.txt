@@ -5,7 +5,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.9) # 3.9: OpenMP improved support
 # Debug ONLY
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
-PROJECT(EASENA VERSION 3.2.2)
+PROJECT(EASENA VERSION 3.2.0)
 #set(PROJECT_NAME "EASENA")
 
 message("-- PROJECT NAME: ${PROJECT_NAME}")
@@ -112,7 +112,7 @@ if (OpenMP_CXX_FOUND)
 	target_link_libraries(libeasna PUBLIC OpenMP::OpenMP_CXX)
 else ()
   	# Disable warnings for all the unknown OpenMP pragmas.
-  	target_compile_options(libeasna $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-unknown-pragmas>)
+	target_compile_options(libeasna PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-unknown-pragmas>)
 endif ()
 
 ## Boost (asio)

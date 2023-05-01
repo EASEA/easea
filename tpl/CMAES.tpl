@@ -252,7 +252,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-void IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate( float pMutationPerGene ){
   this->valid=false;
 
 
@@ -265,6 +265,8 @@ void IndividualImpl::mutate( float pMutationPerGene ){
 		sum += cma->B[i][j] * cma->rgdTmp[j];
 	this->\GENOME_NAME[i] = cma->rgxmean[i] + cma->sigma * sum;
   }
+
+  return 0;
 }
 
 
@@ -275,7 +277,9 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         this->minimizing =1;
         this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 	int nbCPUThreads = setVariable("nbCPUThreads", 1);
+	#ifdef USE_OPENMP
 	omp_set_num_threads(nbCPUThreads);
+	#endif
 
         seed = setVariable("seed",(int)time(0));
         globalRandomGenerator = new CRandomGenerator(seed);
@@ -418,7 +422,7 @@ public:
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	void mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene);
 
 	void boundChecking();
 
@@ -547,7 +551,9 @@ find_package(Boost)
 find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
-target_link_libraries(EASEA PUBLIC ${libeasea_LIB} OpenMP::OpenMP_CXX $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+
+\INSERT_USER_CMAKE
 
 \START_EO_PARAM_TPL#****************************************
 #

@@ -35,7 +35,7 @@ public:
     ~CQMetricsHV();
 
     double calculate(double** front, int nbPoints, int nbObj);
-    double get(vector< vector<double> > const& takenFront, vector< vector<double> > const& realFront, int nbObj);
+    double get(std::vector< std::vector<double> > const& takenFront, std::vector< std::vector<double> > const& realFront, int nbObj);
 
 };
 

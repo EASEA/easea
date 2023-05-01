@@ -75,7 +75,7 @@ choco install boost-msvc-14.3 --version 1.79.0
 3. Configure the build by typing the following command into your shell:
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DUSE_OPENMP=ON
 ```
 
 4. Compile EASENA by typing:
@@ -89,6 +89,10 @@ cmake --build build --config Release
 ```bash
 cmake --install build
 ```
+
+#### OpenMP and default MacOS compiler
+
+Apple decided to remove OpenMP from the default C/C++ compiler. You can either choose to disable OpenMP by using `-DUSE_OPENMP=OFF` at step 3. Otherwise, you can either install a real compiler (see accepted answer of [Stack Overflow: "fatal error: 'omp.h' file not found" using clang on Apple M1](https://stackoverflow.com/questions/66663120/fatal-error-omp-h-file-not-found-using-clang-on-apple-m1)). Another solution is to install OpenMP using brew and either add directories to default paths or provide them to CMake as proposed in [a github issue](https://github.com/actions/runner-images/issues/5555#issuecomment-1133906879).
 
 ## How to use
 

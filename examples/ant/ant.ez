@@ -2,19 +2,19 @@
  
   \User declarations:
   #include <cstring>
-  static int nbEvalTotal = 0; //Le nombre d'evaluations
-  static constexpr short nbPasMax = 600; //Le nombre max de mouvements autorises
-  static constexpr double pMutPerGene=0.05; // La probabilité de muter un gene
+  int nbEvalTotal = 0; //Le nombre d'evaluations
+  short nbPasMax = 600; //Le nombre max de mouvements autorises
+  double pMutPerGene=0.05; // La probabilité de muter un gene
   
   enum symboles {food_ahead, progn2, progn3, LEFT, RIGHT, MOVE}; //L'ensemble des valeurs que peut prendre un noeud de l'arbre
   enum orientations {nord, est, sud, ouest}; //Les 4 orientations possibles
   
-  static constexpr int profondeurMax = 2; //La profondeur max d'un arbre a sa cration (racine = 0)
-  static constexpr int profondeurMax1 = 9; //La profondeur max d'un arbre au cours de l'évolution
+  int profondeurMax = 2; //La profondeur max d'un arbre a sa cration (racine = 0)
+  int profondeurMax1 = 9; //La profondeur max d'un arbre au cours de l'évolution
   
-  static constexpr int taille = 32; //taille de la grille
-  static int EZ_SIZE=0;//taille d'un individu 
-  static int carte[32][32]; //la grille
+  int taille = 32; //taille de la grille
+  int SZ=0;//taille d'un individu 
+  int carte[32][32]; //la grille
   inline void swap(int& a,int& b) {int c=a; a=b; b=c;}
   \end
   
@@ -104,7 +104,7 @@
   */
   Element *copierSousArbreRec(Element* ssArbreSource, int profondeur, int pMax){
     Element *elt = new Element;
-    elt->numero = EZ_SIZE++;
+    elt->numero = SZ++;
     elt->profondeur = profondeur;
     if(ssArbreSource==NULL)
       return NULL;
@@ -139,7 +139,7 @@
   */
   Element *genererNoeud(int profondeur, int profondeurMaxAutorisee){
     Element *elt = new Element;
-    elt->numero = EZ_SIZE++;
+    elt->numero = SZ++;
     elt->profondeur = profondeur;
     //Cas d'un symbole terminal (feuille)
     if(profondeur == profondeurMaxAutorisee ){
@@ -249,7 +249,7 @@
   Renumerote les noeuds de l'arbre et regenere sa taille
   */
   void regenSizeRec(Element *racine, int p){
-    racine->numero=EZ_SIZE++;
+    racine->numero=SZ++;
     racine->profondeur=p;
     if(racine->filsG!=NULL)
       regenSizeRec(racine->filsG, p+1);
@@ -260,7 +260,7 @@
   }
   
   void regenSize(Element *racine){
-    EZ_SIZE=0;
+    SZ=0;
     regenSizeRec(racine, 0);
   }
   
@@ -455,7 +455,7 @@
   \end
   
   \Before everything else function:
-  if ((argc>1)&&(!std::strcmp(argv[1],"size"))) EZ_SIZE=atoi(argv[2]);
+  if ((argc>1)&&(!std::strcmp(argv[1],"size"))) SZ=atoi(argv[2]);
   \end
   
   \User classes:
@@ -497,21 +497,21 @@
   * Attention : penser à commenter dans la fonction evaluerMove
    */
   imprimerArbre(bBest->arbre);
-  printf("\nfitness = %f\n",bBest->getFitness());
+  printf("\nfitness = %f\n",pPopulation[0]->getFitness());
   FILE *fichier;
   fichier = fopen("sortieEasea.txt","w");
-  imprimerArbreDansFichier(bBest->arbre, fichier);
+  imprimerArbreDansFichier(pPopulation[0]->arbre, fichier);
   fclose(fichier);
  
   \end
   
   \GenomeClass::initialiser:
-  EZ_SIZE = 0;
+  SZ = 0;
   //Creation de l'arbre.
   Element *pElt = genererNoeud(0,profondeurMax);
   Genome.arbre= pElt;
-  Genome.Size=EZ_SIZE;
-  EZ_SIZE=0;
+  Genome.Size=SZ;
+  SZ=0;
   \end
   
   
@@ -523,14 +523,12 @@
   Element * elt1=chercheNoeud(child.arbre,locusC);
   Element * eltParent2=chercheNoeud(parent2.arbre,locusP2);
   
-  if (elt1 && eltParent2) {
   Element *elt11 = copierSousArbreRec(eltParent2, elt1->profondeur,profondeurMax1);
   
   remplace(child.arbre,elt11,locusC);
-  }
   regenSize(child.arbre);
-  child.Size=EZ_SIZE;
-
+  child.Size=SZ;
+  
   \end
   
   \GenomeClass::mutator:
@@ -544,7 +542,7 @@
     if(d<pMutPerGene){
      Element *elt=chercheNoeud(racine,i);
       if(elt==NULL){
-	continue;
+	return 0;
       }
       double rnd = random(0.0,1.0);
       switch(elt->Value){
@@ -601,12 +599,12 @@
 	}
       }
 	regenSize(racine);
-	Genome.Size = EZ_SIZE;
+	Genome.Size = SZ;
 	nbMut++;
       }
     } 
    
-  
+  return nbMut;
   \end
     
     \GenomeClass::evaluator:

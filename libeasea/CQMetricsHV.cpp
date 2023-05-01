@@ -8,6 +8,8 @@
 
 #include <CQMetricsHV.h>
 
+using namespace std;
+
     CQMetricsHV::CQMetricsHV():CQMetricsAbs() {}
 
     CQMetricsHV::~CQMetricsHV() {}

@@ -6,7 +6,6 @@ Selection operator: Tournament
 __________________________________________________________*/
 
 \User declarations :
-#include "CPrintTable.h"
 #define SIZE 100
 #define X_MIN -1.
 #define X_MAX 1.
@@ -18,7 +17,7 @@ __________________________________________________________*/
 #define PI 3.141592654
 
  
-static constexpr float pMutPerGene=0.1;
+float pMutPerGene=0.1;
 
 \end
 
@@ -119,8 +118,10 @@ GenomeClass {
 \end
 
 \GenomeClass::display:
-    easena::CPrintTable pt(SIZE, &x[0]);
-    pt.display();
+/* 	 for( size_t i=0 ; i<SIZE ; i++){ */
+/* 	      //     cout << Genome.x[i] << ":" << Genome.sigma[i] << "|"; */
+/* 	      printf("%.02f:%.02f|",Genome.x[i],Genome.sigma[i]); */
+/* 	 }	       */
 \end
 
 \GenomeClass::initialiser : // "initializer" is also accepted
@@ -152,7 +153,7 @@ GenomeClass {
        	Genome.x[i] = MIN(X_MAX,Genome.x[i]);              // pour eviter les depassements
        	Genome.x[i] = MAX(X_MIN,Genome.x[i]);
     	}
-
+return NbMut;
 \end
 
 \GenomeClass::evaluator : // Returns the score

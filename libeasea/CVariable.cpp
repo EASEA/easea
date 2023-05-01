@@ -14,6 +14,6 @@ CVariable::~CVariable() {  }
 
 
 // Gets the type of the variable
-string CVariable::getVariableType() {
+std::string CVariable::getVariableType() {
   return typeid(this).name() ;
 }

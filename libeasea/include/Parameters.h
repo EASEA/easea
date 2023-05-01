@@ -8,6 +8,8 @@
 #ifndef PARAMETERS_H_
 #define PARAMETERS_H_
 
+#include <string>
+
 #include "CEvolutionaryAlgorithm.h"
 class CGenerationalCriterion;
 class CControlCStopingCriterion;
@@ -75,7 +77,7 @@ class Parameters {
 
     //Parameters for the Island Model
     bool remoteIslandModel;
-    char* ipFile;
+    std::string ipFile;
     float migrationProbability;
     int serverPort;
 

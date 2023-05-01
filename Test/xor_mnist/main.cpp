@@ -245,6 +245,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < numberOfEpochs; i++) {
        if (almostEqual(expectedMnistResults[i],mnistResults[i])) mnistTestScore++;
     }
+    (void)(mnistTestScore);
     // For personal debug, do not use it
     // std::cout<< std::endl << "Mnist regression test score is " << std::to_string(mnistTestScore) << " / " << std::to_string(numberOfEpochs) << std::endl;
 

@@ -137,8 +137,11 @@ void Casrea<TIndividual, TRandom>::makeOneGeneration(void)
     
 	for (size_t i = 0; i < offspring.size(); ++i)
 		easea::shared::CArchive<TIndividual>::updateArchive(offspring[i]);
-	size_t szPopDiv2 = (offspring.size() - TBaseArchive::m_archive.size()) / 2;
-	size_t icounter = TBaseArchive::m_archive.size();
+	size_t szPopDiv2 = offspring.size() / 2;//(offspring.size() - TBaseArchive::m_archive.size()) / 2;
+	size_t icounter = 0;//TBaseArchive::m_archive.size();
+
+	// IMPORTANT: we have a problem if the archive size is greater than population size. This implies that the Pareto Front contains more individuals than the population.
+	// 	      For now the archive continues to grow but half the next generation is randomly obtained from it and the second half is selected from the population.
 
 	//IMPORTANT: there is a problem below, I tried to fix it using the commented code, I reverted to the old version to bring back the old message. You may want to uncomment
 	//std::copy(TBaseArchive::m_archive.begin() /*+ std::max(0, static_cast<int>(TBaseArchive::m_archive.size()) - static_cast<int>(TBase::m_population.size()))*/, TBaseArchive::m_archive.begin() + std::min(TBaseArchive::m_archive.size(), TBase::m_population.size()), TBase::m_population.begin());
@@ -148,10 +151,10 @@ void Casrea<TIndividual, TRandom>::makeOneGeneration(void)
 	//LOG_MSG(msgType::DEBUG, "pop size: %d\narchive size: %d\n", TBase::m_population.size(), TBaseArchive::m_archive.size());
 
 	// IMPORTANT: old version below used totalSelection and was responsible for alignment errors and segfault, or just stop the program from working after N generations.
-	std::vector<TPtr> archPop;
-	for (size_t i = 0; i < TBaseArchive::m_archive.size(); ++i)
-    		archPop.push_back(&TBaseArchive::m_archive[i]);
-	easea::operators::selection::totalSelection(archPop, TBase::m_population.begin(), TBase::m_population.end());
+	//std::vector<TPtr> archPop;
+	//for (size_t i = 0; i < TBaseArchive::m_archive.size(); ++i)
+    	//	archPop.push_back(&TBaseArchive::m_archive[i]);
+	//easea::operators::selection::totalSelection(archPop, TBase::m_population.begin(), TBase::m_population.end());
 
 	for( size_t i = icounter; i < szPopDiv2; ++i)
 	{
