@@ -12,17 +12,16 @@
 #include <CQMetricsAbs.h>
 #include <memory>
 
-using namespace std;
 
 class CQMetrics : public CQMetricsAbs {
 
 private:
 	int nbObj;
-	vector<vector<double>> paretoTakenFront;
-	vector<vector<double>> paretoRealFront;
+	std::vector<std::vector<double>> paretoTakenFront;
+	std::vector<std::vector<double>> paretoRealFront;
 
 public:
-	CQMetrics(string const& paretoTakenFrontFile, string const& paretoRealFrontFile, int nbObj) : CQMetricsAbs() {
+	CQMetrics(std::string const& paretoTakenFrontFile, std::string const& paretoRealFrontFile, int nbObj) : CQMetricsAbs() {
 		this->nbObj = nbObj;
 		paretoTakenFront = getFunctions()->readFrontFromFile(paretoTakenFrontFile);
 		paretoRealFront = getFunctions()->readFrontFromFile(paretoRealFrontFile);
@@ -32,7 +31,7 @@ public:
 	~CQMetrics(){};
 	template <class Tclass>
 	double getMetric(){
-		auto metric = make_unique<Tclass>();
+		auto metric = std::make_unique<Tclass>();
 		return metric->get(paretoTakenFront, paretoRealFront, nbObj);
 	};
 

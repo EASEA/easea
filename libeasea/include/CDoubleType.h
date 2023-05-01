@@ -39,10 +39,10 @@ public:
   	double getUpperBound()  { return upperBound_; };
   	void setLowerBound(const double &bound) { lowerBound_ = bound; };
   	void setUpperBound(const double &bound) { upperBound_ = bound; };
-  	string toString(){  
+	std::string toString(){  
 		std::ostringstream stringStream;
   		stringStream << value_ ;
-  		string aux = stringStream.str() + " ";
+		std::string aux = stringStream.str() + " ";
 
   		return aux ;
 	} ;

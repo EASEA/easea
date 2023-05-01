@@ -12,7 +12,6 @@
 #include <string>
 
 /* This is abstract class for defining variables */
-using namespace std;
 
 class CVariable {
 
@@ -26,7 +25,7 @@ public:
   virtual double getUpperBound() = 0;
   void setLowerBound(double bound);
   void setUpperBound(double bound);
-  virtual string getVariableType();
+  virtual std::string getVariableType();
 
   virtual std::string toString()=0;
 

@@ -6,6 +6,7 @@
 #include<iostream>
 #include<sstream>
 
+using namespace std;
 
 extern CRandomGenerator* globalRandomGenerator;
 extern unsigned opArity[];
