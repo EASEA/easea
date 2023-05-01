@@ -321,6 +321,7 @@ void CPopulation::reduceTotalPopulation(CIndividual** elitPop){
   actualParentPopulationSize = parentPopulationSize;
   actualOffspringPopulationSize = 0;
   parents = nextGeneration;
+  pPopulation = parents;
 
 }
 
