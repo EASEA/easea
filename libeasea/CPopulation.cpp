@@ -200,6 +200,7 @@ CIndividual** CPopulation::reduceParentPopulation(unsigned obSize){
   this->actualParentPopulationSize = obSize;
 
   parents = nextGeneration;
+  pPopulation = parents;
 
   return nextGeneration;
 }
