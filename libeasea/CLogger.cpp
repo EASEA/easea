@@ -3,6 +3,8 @@
 #include <sstream>
 #include <iostream>
 
+using std::string;
+
 /* Types of Error */
 string getErrorMsg(errorCode code) {
     switch (code) {

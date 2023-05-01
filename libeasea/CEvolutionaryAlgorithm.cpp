@@ -344,15 +344,9 @@ params->parentReduction = 1;
     else{
 	
 	/* Logging out the results */
-	std::stringstream stream;
-	stream << "Seed: " << params->seed; 
-	LOG_MSG(msgType::INFO, stream.str());
-	stream.str("");
-	stream << "Best fitness: " << population->Best->getFitness();
-	LOG_MSG(msgType::INFO, stream.str());
-	stream.str("");
-	stream << "Elapsed time: " << elapsed_seconds.count();
-	LOG_MSG(msgType::INFO, stream.str());
+	LOG_MSG(msgType::INFO, "Seed: %d", params->seed);
+	LOG_MSG(msgType::INFO, "Best fitness: %ld", static_cast<long>(population->Best->getFitness()));
+	LOG_MSG(msgType::INFO, "Elapsed time: %f", elapsed_seconds.count());
     }
 
 if (params->isLogg == 1){

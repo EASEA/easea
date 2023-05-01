@@ -341,7 +341,7 @@ void CPopulation::produceOffspringPopulation(){
 #ifdef USE_OPENMP
 #pragma omp for private(p1) private(child) reduction(+:sum)
 #endif
-		for( int i=0 ; i<offspringPopulationSize ; i++ ){
+		for( int i=0 ; i<static_cast<int>(offspringPopulationSize) ; i++ ){
 			unsigned index = selectionOperator->selectNext(parentPopulationSize);
 			p1 = parents[index];
 

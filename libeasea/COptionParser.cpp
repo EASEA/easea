@@ -145,7 +145,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         ("u5","User defined parameter 5",cxxopts::value<int>());
     try{
         auto vm_value = options.parse(ac,av);
-        vm = std::make_unique<cxxopts::ParseResult>(move(vm_value));
+        vm = std::make_unique<cxxopts::ParseResult>(std::move(vm_value));
         if (vm->count("help")) {
             ostringstream msg;
             LOG_MSG(msgType::INFO,options.help({""}));
@@ -153,7 +153,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         }
         if(parametersFileName){
             auto vm_file_value = options.parse(argc, argv);
-            vm_file = std::make_unique<cxxopts::ParseResult>(move(vm_file_value));
+            vm_file = std::make_unique<cxxopts::ParseResult>(std::move(vm_file_value));
         }
     }
     catch(const cxxopts::OptionException& e){
