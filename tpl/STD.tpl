@@ -247,6 +247,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->nbCPUThreads = setVariable("nbCPUThreads", 1);
         this->isLogg = setVariable("isLogg", 1);
 	this->reevaluateImmigrants = setVariable("reevaluateImmigrants", 0);
+	this->alwaysEvaluate = setVariable("alwaysEvaluate", false);
 
 	#ifdef USE_OPENMP
 	omp_set_num_threads(this->nbCPUThreads);
@@ -313,6 +314,8 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
 
 	this->optimise = 0;
+
+	this->alwaysEvaluate = setVariable("alwaysEvaluate", false);
 
 	this->printStats = setVariable("printStats",\PRINT_STATS);
 	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);

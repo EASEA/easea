@@ -125,6 +125,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         ("eliteType","Strong (1) or weak (0)",cxxopts::value<int>())
         ("nbCPUThreads","Set the number of threads", cxxopts::value<int>())
         ("isLogg","Set 0 if you want to swith off the logging", cxxopts::value<int>())
+	("alwaysEvaluate","Always evaluate individual, do not reuse previous fitness", cxxopts::value<bool>()->default_value("false"))
         ("reevaluateImmigrants","Set 1 if you want evaluate immigrant", cxxopts::value<int>())
         ("nbGen","Set the number of generation", cxxopts::value<int>())
         ("timeLimit","Set the timeLimit, (0) to desactivate",cxxopts::value<int>())

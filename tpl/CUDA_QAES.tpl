@@ -1049,6 +1049,8 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->optimise=0;
 
+	this->alwaysEvaluate = setVariable("alwaysEvaluate", false);
+
         this->printStats = setVariable("printStats",\PRINT_STATS);
         this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
         this->generatePlotScript = setVariable("generatePlotScript",\GENERATE_GNUPLOT_SCRIPT);

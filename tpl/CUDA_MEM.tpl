@@ -568,6 +568,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
 
 	this->optimise=1;
+	this->alwaysEvaluate = setVariable("alwaysEvaluate", false);
         this->optimiseIterations = setVariable("optimiseIterations",(int)\NB_OPT_IT);
         this->baldwinism = setVariable("baldwinism",(int)\BALDWINISM);
 

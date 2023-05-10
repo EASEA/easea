@@ -428,6 +428,8 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->optimise = 0;
 
+	this->alwaysEvaluate = setVariable("alwaysEvaluate", false);
+
         seed = setVariable("seed",(int)time(0));
         globalRandomGenerator = new CRandomGenerator(seed);
         this->randomGenerator = globalRandomGenerator;

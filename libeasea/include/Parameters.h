@@ -31,6 +31,8 @@ class Parameters {
     int isLogg;
     int reevaluateImmigrants;
 
+    bool alwaysEvaluate;
+
     float selectionPressure;
     float replacementPressure;
     float parentReductionPressure;

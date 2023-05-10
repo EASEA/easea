@@ -265,6 +265,8 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
 
 	this->optimise = 0;
+	
+	this->alwaysEvaluate = setVariable("alwaysEvaluate", false);
 
 	this->printStats = setVariable("printStats",\PRINT_STATS);
 	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);

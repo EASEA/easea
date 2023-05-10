@@ -123,10 +123,10 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
   for( int i=0 ; i < static_cast<int>(populationSize) ; i++ ){
-    if (population[i]->valid == false)
+    if (params->alwaysEvaluate || population[i]->valid == false) {
     	realEvaluationNb++;
-    
-    population[i]->evaluate();
+	population[i]->evaluate();
+    }
 }
 
 }
