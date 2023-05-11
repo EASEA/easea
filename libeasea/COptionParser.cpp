@@ -60,8 +60,11 @@ std::vector<std::string> loadParametersFile(const string& filename)
 	std::string buffer;
 
 	while (std::getline(paramFile, buffer)) {
-		if ((buffer.find('#') == std::string::npos) && buffer.size() > 0) {
+	    std::string::size_type id_find = buffer.find('#');
+	    if ((id_find > 0) && (buffer.size() > 0)) {
 			auto space = buffer.find_first_of(" \t");
+			if ((id_find != std::string::npos) && (id_find >1))
+			    buffer.erase(id_find);
 			if (space != std::string::npos)
 				buffer.resize(space);
 			ret.push_back(std::move(buffer));
