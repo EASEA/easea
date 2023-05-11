@@ -8,15 +8,44 @@
 #ifndef COPTIONPARSER_H
 #define COPTIONPARSER_H
 
-
 #include <string>
+#include <memory>
+#include <third_party/cxxopts/cxxopts.hpp>
+
+extern std::unique_ptr<cxxopts::ParseResult> vm;
+extern std::unique_ptr<cxxopts::ParseResult> vm_file;
+extern cxxopts::Options options;
 
 void parseArguments(const char* parametersFileName, int ac, char** av);
 
-int setVariable(const std::string& optionName, int defaultValue);
-float setVariable(const std::string& optionName, float defaultValue);
-std::string setVariable(const std::string& optionName, std::string const& defaultValue);
+template <typename T>
+struct is_c_str
+	: std::integral_constant<
+		  bool, (std::is_pointer<T>::value || std::is_array<T>::value ||
+			 (std::is_reference<T>::value && std::is_array<std::remove_reference_t<T>>::value)) &&
+				std::is_same<char, std::remove_all_extents_t<std::remove_const_t<std::remove_pointer_t<
+							   std::remove_const_t<std::remove_reference_t<T>>>>>>::value> {
+};
 
+template <typename TypeVariable>
+typename std::conditional_t<is_c_str<TypeVariable>::value, std::string, TypeVariable>
+setVariable(const std::string& argumentName, TypeVariable&& defaultValue, std::unique_ptr<cxxopts::ParseResult>& vm,
+	    std::unique_ptr<cxxopts::ParseResult>& vm_file)
+{
+	using ret_t = std::conditional_t<is_c_str<TypeVariable>::value, std::string, TypeVariable>;
+	if (vm->count(argumentName)) {
+		return (*vm)[argumentName].as<ret_t>();
+	} else if (vm_file->count(argumentName)) {
+		return (*vm_file)[argumentName].as<ret_t>();
+	} else {
+		return ret_t{ defaultValue };
+	}
+}
 
+template <typename TypeVariable>
+auto setVariable(const std::string& argumentName, TypeVariable&& defaultValue)
+{
+	return setVariable(argumentName, std::forward<TypeVariable>(defaultValue), vm, vm_file);
+}
 
 #endif /* COPTIONPARSER_H_ */

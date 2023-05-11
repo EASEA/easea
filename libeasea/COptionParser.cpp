@@ -13,11 +13,8 @@
 #include <stdio.h>
 #include <memory>
 #include <sstream>
-#include "include/COptionParser.h"
-#include <third_party/cxxopts/cxxopts.hpp>
+#include "COptionParser.h"
 #include <CLogger.h>
-#include "include/define.h"
-
 
 using namespace cxxopts;
 using namespace std;
@@ -29,28 +26,6 @@ using namespace std;
 std::unique_ptr<cxxopts::ParseResult> vm = nullptr;
 std::unique_ptr<cxxopts::ParseResult> vm_file = nullptr;
 cxxopts::Options options("Allowed options");
-
-
-template<typename TypeVariable>
-TypeVariable setVariable(const std::string& argumentName, TypeVariable defaultValue, std::unique_ptr<cxxopts::ParseResult> &vm,  std::unique_ptr<cxxopts::ParseResult>& vm_file){
-
-    TypeVariable ret;
-
-    if (vm->count(argumentName)){
-        auto ptr = *vm;
-        ret = ptr[argumentName].as<TypeVariable>();
-        return ret;
-    }else if( vm_file->count(argumentName) ){
-        auto ptr = *vm_file;
-        ret = ptr[argumentName].as<TypeVariable>();
-        return ret;
-     }else {
-        ret = defaultValue;
-    //    msg << argumentName <<" is not declared, default value is  " << ret;
-    //    LOG_MSG(msgType::INFO, msg.str());
-        return ret;
-    }
-}
 
 std::vector<std::string> loadParametersFile(const string& filename)
 {
@@ -188,16 +163,3 @@ void parseArguments(const char* parametersFileName, int ac, char** av){
 
     parseArguments( parametersFileName,ac,av, vm, vm_file);
 }
-
-std::string setVariable(const std::string& optionName, string const& defaultValue){
-    return setVariable(optionName, defaultValue, vm, vm_file);
-}
-
-float setVariable(const std::string& optionName, float defaultValue){
-    return setVariable( optionName, defaultValue, vm, vm_file);
-}
-
-int setVariable(const std::string& optionName, int defaultValue){
-    return setVariable(optionName, defaultValue, vm, vm_file);
-}
-
