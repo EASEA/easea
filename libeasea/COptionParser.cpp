@@ -154,8 +154,10 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         }
     }
     catch(const std::exception& e){
-        ostringstream msg;
-        LOG_ERROR(errorCode::value, msg.str());
+	std::cerr << "Bad command line argument(s): " << e.what() << "\n" <<
+		options.help({""});
+	exit(1);
+        //LOG_ERROR(errorCode::value, msg.str());
   }
 }
 
