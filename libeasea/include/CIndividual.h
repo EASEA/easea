@@ -71,9 +71,11 @@ public:
 public:
 
     CIndividual();
-    CIndividual(CIndividual *genome);
-    //CIndividual(const CIndividual& indiv);
-    virtual ~CIndividual();
+    CIndividual(CIndividual const& genome) noexcept=default;
+    CIndividual& operator=(CIndividual const& genome) noexcept =default;
+    CIndividual(CIndividual&&) noexcept =default;
+    CIndividual& operator=(CIndividual&&) noexcept =default;
+    virtual ~CIndividual() =default;
     virtual float evaluate()  =  0;
     virtual void printOn(std::ostream& O) const = 0;
     virtual unsigned mutate(float pMutationPerGene)  = 0;
