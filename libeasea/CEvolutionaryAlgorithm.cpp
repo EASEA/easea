@@ -206,19 +206,18 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
 
   TIME_ST(eval);
-  if(!INSTEAD_EVAL_STEP)
+  if(!INSTEAD_EVAL_STEP) {
     this->population->evaluateParentPopulation();
-  else
+  } else {
     evale_pop_chunk(population->parents, static_cast<int>(population->parentPopulationSize));
+    this->population->currentEvaluationNb += this->params->parentPopulationSize;
+  }
 
   if(this->params->optimise){
         population->optimiseParentPopulation();
   }
   TIME_END(eval);
   TIME_ACC(eval);
-
-  this->population->currentEvaluationNb += this->params->parentPopulationSize;
-
 
   if(this->params->printInitialPopulation){
     std::cout << *population << std::endl;
@@ -272,10 +271,10 @@ params->parentReduction = 1;
     if(!INSTEAD_EVAL_STEP){
 //      population->evaluateParentPopulation();
       population->evaluateOffspringPopulation();
-    }
-    else
+    } else {
       evale_pop_chunk(population->offsprings, static_cast<int>(population->offspringPopulationSize));
     population->currentEvaluationNb += this->params->offspringPopulationSize;
+    }
 
     if(this->params->optimise){
           population->optimiseOffspringPopulation();
