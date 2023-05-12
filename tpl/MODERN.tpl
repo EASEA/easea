@@ -1,22 +1,14 @@
 \TEMPLATE_START
-/***********************************************************************
-| GDE Multi Objective Algorithm Template                                |
-|                                                                       |
-| This file is part of Artificial Evolution plateform EASEA             |
-| (EAsy Specification of Evolutionary Algorithms)                       |
-| https://github.com/EASEA/                                             |
-|                                                                       |
-| Copyright (c)                                                         |
-| ICUBE Strasbourg                                                      |
-| Date: 2023-05                                                         |
-|                                                                       |
- ***********************************************************************/
+/**
+ This is program entry for STD template for EASEA
 
+*/
 
 \ANALYSE_PARAMETERS
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
+#include <CLogger.h>
 #include "COptionParser.h"
 #include "CRandomGenerator.h"
 #include "CEvolutionaryAlgorithm.h"
@@ -35,10 +27,20 @@ unsigned *EZ_current_generation;
 int EZ_POP_SIZE;
 int OFFSPRING_SIZE;
 
+std::vector<char *> vArgv;
+
 CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
 
+	/* Let's give an access to varible argv for users and put it to vArgv */
+	if (argc > 1){
+    	    for (int i = 1; i < argc; i++){
+        	if ((argv[i][0]=='-')&&(argv[i][1]=='-')) break;
+            	    vArgv.push_back(argv[i]);
+    	    }
+        }
+       
 
 	parseArguments("EASEA.prm",argc,argv);
 
@@ -68,26 +70,13 @@ int main(int argc, char** argv){
 #include <time.h>
 #include <cstring>
 #include <sstream>
-#include <chrono>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
 #include "CStoppingCriterion.h"
 #include "CEvolutionaryAlgorithm.h"
 #include "global.h"
-#include <CLogger.h>
-
-
-#include <CQMetrics.h>
-#include <CQMetricsHV.h>
-#include <CQMetricsGD.h>
-#include <CQMetricsIGD.h>
-#include <problems/CProblem.h>
-#include <operators/crossover/C3x1CrossoverLauncher.h>
-#include <variables/continuous/uniform.h>
-#include <algorithms/moea/Cgde.h>
-#include <operators/crossover/continuous/CdeCrossover.h>
-
+#include "CIndividual.h"
 
 #include "config.h"
 #ifdef USE_OPENMP
@@ -97,32 +86,15 @@ int main(int argc, char** argv){
 
 using namespace std;
 bool bReevaluate = false;
-
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
 CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
-#define STD_TPL
-typedef std::mt19937 TRandom;
-typedef double TT;
-typedef easea::problem::CProblem<TT> TP;
-typedef TP::TV TV;
-typedef TP::TO TO;
 
-typedef typename easea::Individual<TT, TV> TIndividual;
-typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
-typedef easea::algorithms::gde::Cgde< TIndividual, TRandom &> TAlgorithm;
-typedef easea::operators::crossover::continuous::de::CdeCrossover<TT, TRandom &> TCrossover;
-std::time_t m_seed = std::time(nullptr);
-TRandom m_generator{m_seed};
-typedef easea::algorithms::gde::Cgde< TIndividual, TRandom &> TAlgorithm;
-TAlgorithm *m_algorithm;
-size_t m_popSize = -1;
+#define STD_TPL
 
 \INSERT_USER_DECLARATIONS
-//easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
-
 \ANALYSE_USER_CLASSES
 
 
@@ -138,67 +110,14 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
-    if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population");  };
-    const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
-
-    m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover);
-
 }
 
 void EASEAFinal(CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
-/*EASEAFinalization(pop);*/
-    	string file_o = "objectives";
-        string file_s = "solutions";
-        std::ofstream out_o(file_o.c_str());
-        std::ofstream out_s(file_s.c_str());  
-        cout.setf(ios::fixed);
-	LOG_MSG(msgType::INFO, "Saving Pareto Front in file objectives");
-
-        const auto &population = m_algorithm->getPopulation();
-        for (size_t i = 0; i < population.size(); ++i)
-        {
-        	const auto &objective = population[i].m_objective;
-		const auto &solution = population[i].m_variable;
-    		for (size_t j = 0; j < objective.size(); ++j)
-        	    out_o << objective[j] << ' ';
-    		out_o << endl;
-                for(size_t j = 0; j < solution.size(); j++)
-		    out_s << solution[j] << ' ';
-		out_s << endl;
-        }
-	LOG_MSG(msgType::INFO, "Pareto Front is saved ");
-
-#ifdef QMETRICS
-        LOG_MSG(msgType::INFO, "Calculating performance metrics ");
-        LOG_MSG(msgType::INFO, "Statistic begin");
-
-	auto metrics = make_unique<CQMetrics>("objectives", PARETO_TRUE_FILE, m_problem.getNumberOfObjectives());
-	auto hv = metrics->getMetric<CQMetricsHV>();
-	auto gd = metrics->getMetric<CQMetricsGD>();
-	auto igd = metrics->getMetric<CQMetricsIGD>();
-	std::ostringstream statInfo;
-	statInfo << "Quality Metrics: " << std::endl
-	<< "HyperVolume = " << hv << std::endl
-	<< "Generational distance = " << gd << std::endl
-	<< "Inverted generational distance  = " << igd << std::endl;
-	auto statistics = (statInfo.str());
-        LOG_MSG(msgType::INFO, statistics);
-        LOG_MSG(msgType::INFO, "Statistic end");
-
-	
-#endif
-        out_o.close();
-        out_s.close();
-        delete(m_algorithm);
-	 LOG_MSG(msgType::INFO, "GDE finished");
-
 }
 
 void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
 	\INSERT_BEGIN_GENERATION_FUNCTION
-
-
 }
 
 void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
@@ -209,51 +128,175 @@ void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 	\INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT
 }
 
-template <typename TO, typename TV>
-easea::Individual<TO, TV>::Individual(void)
-{
-        m_crowdingDistance = -1;
+
+IndividualImpl::IndividualImpl() : CIndividual() {
+  \GENOME_CTOR 
+  \INSERT_EO_INITIALISER
+  valid = false;
+  isImmigrant = false;
 }
 
-template <typename TO, typename TV>
-easea::Individual<TO, TV>::~Individual(void)
-{
+CIndividual* IndividualImpl::clone(){
+	return new IndividualImpl(*this);
 }
 
-template <typename TO, typename TV>
-size_t easea::Individual<TO, TV>::evaluate()
-{
-/*    if(valid)
-        return fitness;
-    else{
-       valid = true;*/
-        \INSERT_EVALUATOR
-//    }
-
+IndividualImpl::~IndividualImpl(){
+  \GENOME_DTOR
 }
 
 
+float IndividualImpl::evaluate(){
+  if(valid)
+    return fitness;
+  else{
+    valid = true;
+    \INSERT_EVALUATOR
+  }
+}
+
+void IndividualImpl::boundChecking(){
+	\INSERT_BOUND_CHECKING
+}
+
+string IndividualImpl::serialize(){
+    ostringstream AESAE_Line(ios_base::app);
+    \GENOME_SERIAL
+    AESAE_Line  << this->fitness;
+    return AESAE_Line.str();
+}
+
+void IndividualImpl::deserialize(string Line){
+    istringstream AESAE_Line(Line);
+    string line;
+    \GENOME_DESERIAL
+    AESAE_Line >> this->fitness;
+    this->valid=true;
+    this->isImmigrant = false;
+}
+
+IndividualImpl::IndividualImpl(const IndividualImpl& genome){
+
+  // ********************
+  // Problem specific part
+  \COPY_CTOR
+
+
+  // ********************
+  // Generic part
+  this->valid = genome.valid;
+  this->fitness = genome.fitness;
+  this->isImmigrant = false;
+}
+
+
+CIndividual* IndividualImpl::crossover(CIndividual** ps){
+	// ********************
+	// Generic part
+	IndividualImpl** tmp = (IndividualImpl**)ps;
+	IndividualImpl parent1(*this);
+	IndividualImpl parent2(*tmp[0]);
+	IndividualImpl child(*this);
+
+	//DEBUG_PRT("Xover");
+	/*   cout << "p1 : " << parent1 << endl; */
+	/*   cout << "p2 : " << parent2 << endl; */
+
+	// ********************
+	// Problem specific part
+  	\INSERT_CROSSOVER
+
+
+	child.valid = false;
+	/*   cout << "child : " << child << endl; */
+	return new IndividualImpl(child);
+}
+
+
+void IndividualImpl::printOn(std::ostream& os) const{
+	\INSERT_DISPLAY
+}
+
+std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
+{
+  // ********************
+  // Problem specific part
+  O << "\nIndividualImpl : "<< std::endl;
+  O << "\t\t\t";
+  B.printOn(O);
+
+  if( B.valid ) O << "\t\t\tfitness : " << B.fitness;
+  else O << "fitness is not yet computed" << std::endl;
+  return O;
+}
+
+
+void IndividualImpl::mutate( float pMutationPerGene ){
+  this->valid=false;
+
+
+  // ********************
+  // Problem specific part
+  \INSERT_MUTATOR
+}
 
 void ParametersImpl::setDefaultParameters(int argc, char** argv){
 
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
-	int nbCPUThreads = setVariable("nbCPUThreads", 1);
-	this->isLogg = setVariable("isLogg", 1);
+	this->nbCPUThreads = setVariable("nbCPUThreads", 1);
+        this->isLogg = setVariable("isLogg", 1);
+	this->reevaluateImmigrants = setVariable("reevaluateImmigrants", 0);
+
 	#ifdef USE_OPENMP
-	omp_set_num_threads(nbCPUThreads);
+	omp_set_num_threads(this->nbCPUThreads);
 	#endif
+	seed = setVariable("seed",(int)time(0));
+	globalRandomGenerator = new CRandomGenerator(seed);
+	this->randomGenerator = globalRandomGenerator;
 
-        parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
-        offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
 
+	selectionOperator = getSelectionOperator(setVariable("selectionOperator","\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
+	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
+	parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator","\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
+	offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator","\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
+	selectionPressure = setVariable("selectionPressure",(float)\SELECT_PRM);
+	replacementPressure = setVariable("reduceFinalPressure",(float)\RED_FINAL_PRM);
+	parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
+	offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
 	pCrossover = \XOVER_PROB;
 	pMutation = \MUT_PROB;
 	pMutationPerGene = 0.05;
 
 	parentPopulationSize = setVariable("popSize",(int)\POP_SIZE);
 	offspringPopulationSize = setVariable("nbOffspring",(int)\OFF_SIZE);
-	m_popSize = parentPopulationSize;
+
+
+	parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents",(float)\SURV_PAR_SIZE));
+	offspringReductionSize = setReductionSizes(offspringPopulationSize, setVariable("survivingOffspring",(float)\SURV_OFF_SIZE));
+
+	this->elitSize = setVariable("elite",(int)\ELITE_SIZE);
+	this->strongElitism = setVariable("eliteType",(int)\ELITISM);
+
+	if((this->parentReductionSize + this->offspringReductionSize) < this->parentPopulationSize){
+		printf("*WARNING* parentReductionSize + offspringReductionSize < parentPopulationSize\n");
+		printf("*WARNING* change Sizes in .prm or .ez\n");
+		printf("EXITING\n");
+		exit(1);	
+	} 
+	if((this->parentPopulationSize-this->parentReductionSize)>this->parentPopulationSize-this->elitSize){
+		printf("*WARNING* parentPopulationSize - parentReductionSize > parentPopulationSize - elitSize\n");
+		printf("*WARNING* change Sizes in .prm or .ez\n");
+		printf("EXITING\n");
+		exit(1);	
+	} 
+	if(!this->strongElitism && ((this->offspringPopulationSize - this->offspringReductionSize)>this->offspringPopulationSize-this->elitSize)){
+		printf("*WARNING* offspringPopulationSize - offspringReductionSize > offspringPopulationSize - elitSize\n");
+		printf("*WARNING* change Sizes in .prm or .ez\n");
+		printf("EXITING\n");
+		exit(1);	
+	} 
+	
+
 	/*
 	 * The reduction is set to true if reductionSize (parent or offspring) is set to a size less than the
 	 * populationSize. The reduction size is set to populationSize by default
@@ -285,28 +328,6 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	this->outputFilename = (char*)"EASEA";
 	this->plotOutputFilename = (char*)"EASEA.png";
 
-        if (this->isLogg == 1){
-
-        auto tmStart = std::chrono::system_clock::now();
-        time_t t = std::chrono::system_clock::to_time_t(tmStart);
-        std::tm * ptm = std::localtime(&t);
-        char buf_start_time[32];
-        string log_fichier_name = this->outputFilename;
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tmStart.time_since_epoch()) % 1000;
-        if (this->isLogg == 1){
-            std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
-            easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
-            logg("DATA of TEST;", std::string(buf_start_time).c_str());
-            logg("\n__RUN SETTINGS__");
-            logg("SEED;", m_seed);
-            logg("nCURRENT_GEN;", this->nbGen);
-            logg("POP_SIZE;", this->parentPopulationSize);
-            logg("CPU_THREADS_NB;", nbCPUThreads);
-
-
-        }
-	}
-
 	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
 	this->ipFile = setVariable("ipFile","\IP_FILE");
 	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
@@ -319,8 +340,8 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	pEZ_XOVER_PROB = &pCrossover;
 	//EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
 	EZ_current_generation=0;
-        EZ_POP_SIZE = parentPopulationSize;
-        OFFSPRING_SIZE = offspringPopulationSize;
+  EZ_POP_SIZE = parentPopulationSize;
+  OFFSPRING_SIZE = offspringPopulationSize;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
@@ -333,47 +354,8 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	 return ea;
 }
-void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
-	LOG_MSG(msgType::INFO, "GDE starting....");
-
-	auto tmStart = std::chrono::system_clock::now();
-	size_t nb_obj = m_algorithm->getPopulation()[0].m_objective.size();
-
-	while( this->allCriteria() == false){
-                ostringstream ss;
-	    if ( currentGeneration % 10 == 0 ){
-                    ss << "Generation: " << currentGeneration;
-		    if ( nb_obj == 1)
-                    ss << " Best fitness = " << m_algorithm->getPopulation()[0].m_objective[0];
-                    LOG_MSG(msgType::INFO, ss.str());
-		    
-		    LOG_MSG(msgType::INFO, ss.str());
-		}
-	        m_algorithm->run();
-    		currentGeneration += 1;
-	}
-        ostringstream ss;
-        std::chrono::duration<double> tmDur = std::chrono::system_clock::now() - tmStart;
-        ss << "Total execution time (in sec.): " << tmDur.count() << std::endl;
-        LOG_MSG(msgType::INFO, ss.str());
-	if ( nb_obj == 1 )
-    	    ss << "Best fitness: " << m_algorithm->getPopulation()[0].m_objective[0] << std::endl;
-
-        if (params->isLogg == 1){
-	if ( nb_obj == 1 )
-            logg("\nBEST FITNESS;", to_string(m_algorithm->getPopulation()[0].m_objective[0]));
-        logg("\nRUNTIME;",tmDur.count());
-	}
-	LOG_MSG(msgType::INFO, ss.str());
-
-
-}
-
 
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
-/*const std::vector<TV> initial = easea::variables::continuous::uniform(generator, problem.getBoundary(), \POP_SIZE);
-algorithm  = new _TAlgorithm(generator, problem, initial, crossover, mutation);
-
 	if(this->params->startFromFile){
 	  ifstream AESAE_File("EASEA.pop");
 	  string AESAE_Line;
@@ -389,7 +371,7 @@ algorithm  = new _TAlgorithm(generator, problem, initial, crossover, mutation);
 		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
 	  }
 	}
-        this->population->actualParentPopulationSize = this->params->parentPopulationSize;*/
+        this->population->actualParentPopulationSize = this->params->parentPopulationSize;
 }
 
 
@@ -409,7 +391,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 //#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
-#include <core/CmoIndividual.h>
+#include <CIndividual.h>
 #include <Parameters.h>
 #include <cstring>
 #include <sstream>
@@ -428,9 +410,6 @@ extern int OFFSPRING_SIZE;
 
 \INSERT_USER_CLASSES
 
-namespace easea
-{
-/*
 class IndividualImpl : public CIndividual {
 
 public: // in EASEA the genome is public (for user functions,...)
@@ -448,7 +427,7 @@ public:
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	unsigned mutate(float pMutationPerGene);
+	void mutate(float pMutationPerGene);
 
 	void boundChecking();      
 
@@ -459,25 +438,7 @@ public:
 	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
 
 };
-*/
 
-template <typename TObjective, typename TVariable>
-class Individual : public easea::CmoIndividual<TObjective, TVariable>
-{
-public:
-        typedef TObjective TO;
-        typedef TVariable TV;
-        typedef CmoIndividual<TO, TV> TI;
-
-        TO m_crowdingDistance;
-	float fitness; 		// this is variable for return the value 1 from function evaluate()
-
-
-        Individual(void);
-        ~Individual(void);
-	size_t evaluate();
-};
-}
 
 class ParametersImpl : public Parameters {
 public:
@@ -502,7 +463,6 @@ public:
 	EvolutionaryAlgorithmImpl(Parameters* params);
 	virtual ~EvolutionaryAlgorithmImpl();
 	void initializeParentPopulation();
-	void runEvolutionaryLoop();
 };
 
 #endif /* PROBLEM_DEP_H */
@@ -521,7 +481,7 @@ endif
 
 EASEALIB_PATH=$(EZ_PATH)/libeasea/
 
-CXXFLAGS =  -std=c++14 -O3 -DNDEBUG -fopenmp -w -Wno-deprecated -Wno-write-strings -fmessage-length=0 -I$(EASEALIB_PATH)include
+CXXFLAGS =  -std=c++14 -fopenmp -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include
 
 OBJS = EASEA.o EASEAIndividual.o 
 
@@ -556,6 +516,7 @@ ifneq ("$(OS)","")
 else
 	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
 endif
+
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
@@ -615,11 +576,11 @@ endif()
 # --seed=0   # -S : Random number seed. It is possible to give a specific seed.
 
 ######    Evolution Engine    ######
---popSize=50 # -P : Population Size
---nbOffspring=50 # -O : Nb of offspring (percentage or absolute)
+--popSize=\POP_SIZE # -P : Population Size
+--nbOffspring=\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
 
 ######	  Stopping Criterions    #####
---nbGen=3000 #Nb of generations
+--nbGen=\NB_GEN #Nb of generations
 --timeLimit=\TIME_LIMIT # Time Limit: desactivate with (0) (in Seconds)
 
 ######    Evolution Engine / Replacement    ######

@@ -528,7 +528,10 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	if(this->params->startFromFile){
 	  ifstream AESAE_File("EASEA.pop");
 	  string AESAE_Line;
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
+	  #ifdef USE_OPENMP
+	  #pragma omp parallel for
+	  #endif
+  	  for( int i=0 ; i< this->params->parentPopulationSize ; i++){
 	  	  getline(AESAE_File, AESAE_Line);
 		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
 		  ((IndividualImpl*)this->population->parents[i])->deserialize(AESAE_Line);
@@ -728,6 +731,12 @@ find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
 target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+
+if (SANITIZE)
+        target_compile_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>
+)
+        target_link_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>)
+endif()
 
 \INSERT_USER_CMAKE
 
