@@ -17,7 +17,7 @@ RandomGenerator* globalRandomGenerator;
 int main(int argc, char** argv){
 
 
-  parseArguments("EASEA.prm",argc,argv);
+  
 
   size_t parentPopulationSize = setVariable("popSize",\POP_SIZE);
   size_t offspringPopulationSize = setVariable("nbOffspring",\OFF_SIZE);
@@ -1342,7 +1342,7 @@ int loadParametersFile(const string& filename, char*** outputContainer){
 }
 
 
-void parseArguments(const char* parametersFileName, int ac, char** av, 
+void 
 		    po::variables_map& vm, po::variables_map& vm_file){
 
   char** argv;
@@ -1392,8 +1392,8 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
  
 }
 
-void parseArguments(const char* parametersFileName, int ac, char** av){
-  parseArguments(parametersFileName,ac,av,vm,vm_file);
+void 
+  
 }
 
 
@@ -1672,7 +1672,6 @@ class Population {
 /*   } */
 /* } */
 
-void parseArguments(const char* parametersFileName, int ac, char** av);
 int setVariable(const std::string optionName, int defaultValue);
 std::string setVariable(const std::string optionName, std::string defaultValue);
 

@@ -41,10 +41,7 @@ CEvolutionaryAlgorithm* EA;
 int main(int argc, char** argv){
 
 
-	parseArguments("EASEA.prm",argc,argv);
-
-	/*easea::*/ParametersImpl p;
-	p.setDefaultParameters(argc,argv);
+	/*easea::*/ParametersImpl p("EASEA.prm", argc, argv);
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
