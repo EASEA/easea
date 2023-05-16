@@ -9,24 +9,22 @@
 #include "COptionParser.h"
 #include <stdio.h>
 
-#define SV(s, df) (setVariable(s, df, vm, vm_file))
-
 Parameters::Parameters(std::string const& filename, int argc, char* argv[]) : optimise(false), baldwinism(false) {
 	parseArguments(filename.c_str(), argc, argv, vm, vm_file);
 	
 	// set parameters that can only be defined using cmd line arguments or files
-	nbCPUThreads = SV("nbCPUThreads", 1);
-	noLogFile = SV("noLogFile", false);
-	reevaluateImmigrants = SV("reevaluateImmigrants", false);
-	alwaysEvaluate = SV("alwaysEvaluate", false);
-	seed = SV("seed", 0);
-	printInitialPopulation = SV("printInitialPopulation", false);
-	printFinalPopulation = SV("printFinalPopulation", false);
-	u1 = SV("u1", "");
-	u2 = SV("u2", "");
-	u3 = SV("u3", "");
-	u4 = SV("u4", "");
-	u5 = SV("u5", "");
+	nbCPUThreads = setVariable("nbCPUThreads", 1);
+	noLogFile = setVariable("noLogFile", false);
+	reevaluateImmigrants = setVariable("reevaluateImmigrants", false);
+	alwaysEvaluate = setVariable("alwaysEvaluate", false);
+	seed = setVariable("seed", 0);
+	printInitialPopulation = setVariable("printInitialPopulation", false);
+	printFinalPopulation = setVariable("printFinalPopulation", false);
+	u1 = setVariable("u1", "");
+	u2 = setVariable("u2", "");
+	u3 = setVariable("u3", "");
+	u4 = setVariable("u4", "");
+	u5 = setVariable("u5", "");
 }
 
 Parameters::~Parameters(){

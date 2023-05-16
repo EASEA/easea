@@ -110,6 +110,11 @@ class Parameters {
     virtual ~Parameters();
     virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;
     int setReductionSizes(int popSize, float popReducSize);
+
+    template <typename T>
+    auto setVariable(std::string const& argumentName, T&& defaultValue) {
+	    return ::setVariable(argumentName, std::forward<T>(defaultValue), vm, vm_file);
+    }
 };
 
 #endif /* PARAMETERS_H_ */
