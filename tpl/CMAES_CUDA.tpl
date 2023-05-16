@@ -135,7 +135,7 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 
 void EASEAInit(int argc, char** argv){
 	\INSERT_INIT_FCT_CALL
-	cma = new CCmaesCuda(setVariable("nbOffspring",\OFF_SIZE), setVariable("popSize",\POP_SIZE), \PROBLEM_DIM);
+	cma = new CCmaesCuda(EZ_SV("nbOffspring", \OFF_SIZE), setVariable("popSize",\POP_SIZE), \PROBLEM_DIM);
 }
 
 void EASEAFinal(CPopulation* pop){
@@ -398,39 +398,40 @@ void PopulationImpl::evaluateOffspringPopulation(){
 
 
 
+#define EZ_SV(cname, def) (setVariable(cname, def, vm, vm_file))
 
 ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
 
         this->minimizing =1;
-        this->nbGen = setVariable("nbGen",(int)\NB_GEN);
+        this->nbGen = EZ_SV("nbGen", (int)\NB_GEN);
 
-        selectionOperator = getSelectionOperator(setVariable("selectionOperator","Tournament"), this->minimizing, globalRandomGenerator);
-        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
+        selectionOperator = getSelectionOperator(EZ_SV("selectionOperator", "Tournament"), this->minimizing, globalRandomGenerator);
+        replacementOperator = getSelectionOperator(EZ_SV("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
         selectionPressure = 1;
-        replacementPressure = setVariable("reduceFinalPressure",(float)\RED_FINAL_PRM);
+        replacementPressure = EZ_SV("reduceFinalPressure", (float)\RED_FINAL_PRM);
         pCrossover = 1;
         pMutation = 1;
         pMutationPerGene = 1;
 
-        parentPopulationSize = setVariable("popSize",(int)\POP_SIZE);
-        offspringPopulationSize = setVariable("nbOffspring",(int)\OFF_SIZE);
+        parentPopulationSize = EZ_SV("popSize", (int)\POP_SIZE);
+        offspringPopulationSize = EZ_SV("nbOffspring", (int)\OFF_SIZE);
 
         this->elitSize = 0;
 
 	offspringReduction = parentReduction = false;
 
-        generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
+        generationalCriterion = new CGenerationalCriterion(EZ_SV("nbGen", (int)\NB_GEN));
         controlCStopingCriterion = new CControlCStopingCriterion();
-        timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
+        timeCriterion = new CTimeCriterion(EZ_SV("timeLimit", \TIME_LIMIT));
 
         globalRandomGenerator = new CRandomGenerator(seed);
         this->randomGenerator = globalRandomGenerator;
 
-        this->printStats = setVariable("printStats",\PRINT_STATS);
-        this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
-        this->generatePlotScript = setVariable("generatePlotScript",\GENERATE_GNUPLOT_SCRIPT);
-        this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
-        this->plotStats = setVariable("plotStats",\PLOT_STATS);
+        this->printStats = EZ_SV("printStats", \PRINT_STATS);
+        this->generateCSVFile = EZ_SV("generateCSVFile", \GENERATE_CSV_FILE);
+        this->generatePlotScript = EZ_SV("generatePlotScript", \GENERATE_GNUPLOT_SCRIPT);
+        this->generateRScript = EZ_SV("generateRScript", \GENERATE_R_SCRIPT);
+        this->plotStats = EZ_SV("plotStats", \PLOT_STATS);
 
         this->outputFilename = (char*)"EASEA";
         this->plotOutputFilename = (char*)"EASEA.png";
@@ -440,7 +441,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	EZ_NB_GEN = (size_t*)setVariable("nbGen",\NB_GEN);
+	EZ_NB_GEN = (size_t*)EZ_SV("nbGen", \NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);

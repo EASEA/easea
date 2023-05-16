@@ -183,25 +183,26 @@ size_t easea::Individual<TO, TV>::evaluate()
 }
 
 
+#define EZ_SV(cname, def) (setVariable(cname, def, vm, vm_file))
 
 ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
 
 	this->minimizing = \MINIMAXI;
-	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
+	this->nbGen = EZ_SV("nbGen", (int)\NB_GEN);
 
 	#ifdef USE_OPENMP
 	omp_set_num_threads(nbCPUThreads);
 	#endif
 
-        parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
-        offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
+        parentReductionPressure = EZ_SV("reduceParentsPressure", (float)\RED_PAR_PRM);
+        offspringReductionPressure = EZ_SV("reduceOffspringPressure", (float)\RED_OFF_PRM);
 
 	pCrossover = \XOVER_PROB;
 	pMutation = \MUT_PROB;
 	pMutationPerGene = 0.05;
 
-	parentPopulationSize = setVariable("popSize",(int)\POP_SIZE);
-	offspringPopulationSize = setVariable("nbOffspring",(int)\OFF_SIZE);
+	parentPopulationSize = EZ_SV("popSize", (int)\POP_SIZE);
+	offspringPopulationSize = EZ_SV("nbOffspring", (int)\OFF_SIZE);
 	m_popSize = parentPopulationSize;
 	/*
 	 * The reduction is set to true if reductionSize (parent or offspring) is set to a size less than the
@@ -213,18 +214,18 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	if(parentReductionSize<parentPopulationSize) parentReduction = true;
 	else parentReduction = false;
 
-	generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
+	generationalCriterion = new CGenerationalCriterion(EZ_SV("nbGen", (int)\NB_GEN));
 	controlCStopingCriterion = new CControlCStopingCriterion();
-	timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
+	timeCriterion = new CTimeCriterion(EZ_SV("timeLimit", \TIME_LIMIT));
 
 
-	this->printStats = setVariable("printStats",\PRINT_STATS);
-	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
-	this->generatePlotScript = setVariable("generatePlotScript",\GENERATE_GNUPLOT_SCRIPT);
-	this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
-	this->plotStats = setVariable("plotStats",\PLOT_STATS);
-	this->savePopulation = setVariable("savePopulation",\SAVE_POPULATION);
-	this->startFromFile = setVariable("startFromFile",\START_FROM_FILE);
+	this->printStats = EZ_SV("printStats", \PRINT_STATS);
+	this->generateCSVFile = EZ_SV("generateCSVFile", \GENERATE_CSV_FILE);
+	this->generatePlotScript = EZ_SV("generatePlotScript", \GENERATE_GNUPLOT_SCRIPT);
+	this->generateRScript = EZ_SV("generateRScript", \GENERATE_R_SCRIPT);
+	this->plotStats = EZ_SV("plotStats", \PLOT_STATS);
+	this->savePopulation = EZ_SV("savePopulation", \SAVE_POPULATION);
+	this->startFromFile = EZ_SV("startFromFile", \START_FROM_FILE);
 
 	this->outputFilename = (char*)"EASEA";
 	this->plotOutputFilename = (char*)"EASEA.png";
@@ -253,10 +254,10 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
     }
 
 
-	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	this->ipFile = setVariable("ipFile","\IP_FILE");
-	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
-        this->serverPort = setVariable("serverPort",\SERVER_PORT);
+	this->remoteIslandModel = EZ_SV("remoteIslandModel", \REMOTE_ISLAND_MODEL);
+	this->ipFile = EZ_SV("ipFile", "\IP_FILE");
+	this->migrationProbability = EZ_SV("migrationProbability", (float)\MIGRATION_PROBABILITY);
+        this->serverPort = EZ_SV("serverPort", \SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){

@@ -18,13 +18,13 @@ int main(int argc, char** argv){
 
   parseArguments("EASEA.prm",argc,argv);
 
-  size_t parentPopulationSize = setVariable("popSize",\POP_SIZE);
-  size_t offspringPopulationSize = setVariable("nbOffspring",\OFF_SIZE);
+  size_t parentPopulationSize = EZ_SV("popSize", \POP_SIZE);
+  size_t offspringPopulationSize = EZ_SV("nbOffspring", \OFF_SIZE);
   float pCrossover = \XOVER_PROB;
   float pMutation = \MUT_PROB;
   float pMutationPerGene = 0.05;
 
-  time_t seed = setVariable("seed",time(0));
+  time_t seed = EZ_SV("seed", time(0));
   globalRandomGenerator = new RandomGenerator(seed);
 
   std::cout << "Seed is : " << seed << std::endl;
@@ -33,15 +33,15 @@ int main(int argc, char** argv){
   SelectionOperator* replacementOperator = new \RED_FINAL;
   float selectionPressure = \SELECT_PRM;
   float replacementPressure = \RED_FINAL_PRM;
-  string outputfile = setVariable("outputfile","");
-  string inputfile = setVariable("inputfile","");
+  string outputfile = EZ_SV("outputfile", "");
+  string inputfile = EZ_SV("inputfile", "");
 
   EASEAInit(argc,argv);
     
   EvolutionaryAlgorithm ea(parentPopulationSize,offspringPopulationSize,selectionPressure,replacementPressure,
 			   selectionOperator,replacementOperator,pCrossover, pMutation, pMutationPerGene,outputfile,inputfile);
 
-  StoppingCriterion* sc = new GenerationalCriterion(&ea,setVariable("nbGen",\NB_GEN));
+  StoppingCriterion* sc = new GenerationalCriterion(&ea,EZ_SV("nbGen", \NB_GEN));
   ea.addStoppingCriterion(sc);
   Population* pop = ea.getPopulation();
 
@@ -1774,11 +1774,11 @@ void parseArguments(const char* parametersFileName, int ac, char** av){
 
 
 int setVariable(const string optionName, int defaultValue){
-  return setVariable(optionName,defaultValue,vm,vm_file);
+  return EZ_SV(optionName, defaultValue,vm,vm_file);
 }
 
 string setVariable(const string optionName, string defaultValue){
-  return setVariable(optionName,defaultValue,vm,vm_file);
+  return EZ_SV(optionName, defaultValue,vm,vm_file);
 }
 
 
@@ -2085,8 +2085,8 @@ class Population {
 /* } */
 
 void parseArguments(const char* parametersFileName, int ac, char** av);
-int setVariable(const std::string optionName, int defaultValue);
-std::string setVariable(const std::string optionName, std::string defaultValue);
+int EZ_SV(const std::string optionName,  int defaultValue);
+std::string EZ_SV(const std::string optionName,  std::string defaultValue);
 
 
 
