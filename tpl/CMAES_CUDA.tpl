@@ -474,7 +474,10 @@ inline void IndividualImpl::copyToCudaBuffer(void* buffer, size_t id){
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 
   //DEBUG_PRT("Creation of %lu/%lu parents (other could have been loaded from input file)",this->params->parentPopulationSize-this->params->actualParentPopulationSize,this->params->parentPopulationSize);
-  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
+#ifdef USE_OPENMP
+#pragma omp parallel for
+#endif
+for(int i=0 ; i< this->params->parentPopulationSize ; i++){
 	this->population->addIndividualParentPopulation(new IndividualImpl(),i);
   }
 
