@@ -372,38 +372,37 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
 
   return 0;
 }
-#define EZ_SV(cname, def) (setVariable(cname, def, vm, vm_file))
 
 ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
 
 	this->minimizing = \MINIMAXI;
-	this->nbGen = EZ_SV("nbGen", (int)\NB_GEN);
+	this->nbGen = setVariable("nbGen", (int)\NB_GEN);
 
 	globalRandomGenerator = new CRandomGenerator(seed);
 	this->randomGenerator = globalRandomGenerator;
 
 
-	selectionOperator = getSelectionOperator(EZ_SV("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
-	replacementOperator = getSelectionOperator(EZ_SV("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
-	parentReductionOperator = getSelectionOperator(EZ_SV("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
-	offspringReductionOperator = getSelectionOperator(EZ_SV("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
-	selectionPressure = EZ_SV("selectionPressure", (float)\SELECT_PRM);
-	replacementPressure = EZ_SV("reduceFinalPressure", (float)\RED_FINAL_PRM);
-	parentReductionPressure = EZ_SV("reduceParentsPressure", (float)\RED_PAR_PRM);
-	offspringReductionPressure = EZ_SV("reduceOffspringPressure", (float)\RED_OFF_PRM);
+	selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
+	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
+	parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
+	offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
+	selectionPressure = setVariable("selectionPressure", (float)\SELECT_PRM);
+	replacementPressure = setVariable("reduceFinalPressure", (float)\RED_FINAL_PRM);
+	parentReductionPressure = setVariable("reduceParentsPressure", (float)\RED_PAR_PRM);
+	offspringReductionPressure = setVariable("reduceOffspringPressure", (float)\RED_OFF_PRM);
 	pCrossover = \XOVER_PROB;
 	pMutation = \MUT_PROB;
 	pMutationPerGene = 0.05;
 
-	parentPopulationSize = EZ_SV("popSize", (int)\POP_SIZE);
-	offspringPopulationSize = EZ_SV("nbOffspring", (int)\OFF_SIZE);
+	parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
+	offspringPopulationSize = setVariable("nbOffspring", (int)\OFF_SIZE);
 	m_classPopSize = parentPopulationSize;
 
-	parentReductionSize = setReductionSizes(parentPopulationSize, EZ_SV("survivingParents", (float)\SURV_PAR_SIZE));
-	offspringReductionSize = setReductionSizes(offspringPopulationSize, EZ_SV("survivingOffspring", (float)\SURV_OFF_SIZE));
+	parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents", (float)\SURV_PAR_SIZE));
+	offspringReductionSize = setReductionSizes(offspringPopulationSize, setVariable("survivingOffspring", (float)\SURV_OFF_SIZE));
 
-	this->elitSize = EZ_SV("elite", (int)\ELITE_SIZE);
-	this->strongElitism = EZ_SV("eliteType", (int)\ELITISM);
+	this->elitSize = setVariable("elite", (int)\ELITE_SIZE);
+	this->strongElitism = setVariable("eliteType", (int)\ELITISM);
 
 	if((this->parentReductionSize + this->offspringReductionSize) < this->parentPopulationSize){
 		printf("*WARNING* parentReductionSize + offspringReductionSize < parentPopulationSize\n");
@@ -435,33 +434,33 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	if(parentReductionSize<parentPopulationSize) parentReduction = true;
 	else parentReduction = false;
 
-	generationalCriterion = new CGenerationalCriterion(EZ_SV("nbGen", (int)\NB_GEN));
+	generationalCriterion = new CGenerationalCriterion(setVariable("nbGen", (int)\NB_GEN));
 	controlCStopingCriterion = new CControlCStopingCriterion();
-	timeCriterion = new CTimeCriterion(EZ_SV("timeLimit", \TIME_LIMIT));
+	timeCriterion = new CTimeCriterion(setVariable("timeLimit", \TIME_LIMIT));
 
 
-	this->printStats = EZ_SV("printStats", \PRINT_STATS);
-	this->generateCSVFile = EZ_SV("generateCSVFile", \GENERATE_CSV_FILE);
-	this->generatePlotScript = EZ_SV("generatePlotScript", \GENERATE_GNUPLOT_SCRIPT);
-	this->generateRScript = EZ_SV("generateRScript", \GENERATE_R_SCRIPT);
-	this->plotStats = EZ_SV("plotStats", \PLOT_STATS);
-	this->savePopulation = EZ_SV("savePopulation", \SAVE_POPULATION);
-	this->startFromFile = EZ_SV("startFromFile", \START_FROM_FILE);
+	this->printStats = setVariable("printStats", \PRINT_STATS);
+	this->generateCSVFile = setVariable("generateCSVFile", \GENERATE_CSV_FILE);
+	this->generatePlotScript = setVariable("generatePlotScript", \GENERATE_GNUPLOT_SCRIPT);
+	this->generateRScript = setVariable("generateRScript", \GENERATE_R_SCRIPT);
+	this->plotStats = setVariable("plotStats", \PLOT_STATS);
+	this->savePopulation = setVariable("savePopulation", \SAVE_POPULATION);
+	this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
 	this->outputFilename = (char*)"EASEA";
 	this->plotOutputFilename = (char*)"EASEA.png";
 
-	this->remoteIslandModel = EZ_SV("remoteIslandModel", \REMOTE_ISLAND_MODEL);
-	this->ipFile = EZ_SV("ipFile", "\IP_FILE");
-	this->migrationProbability = EZ_SV("migrationProbability", (float)\MIGRATION_PROBABILITY);
-    this->serverPort = EZ_SV("serverPort", \SERVER_PORT);
+	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
+	this->ipFile = setVariable("ipFile", "\IP_FILE");
+	this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
+    this->serverPort = setVariable("serverPort", \SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	//EZ_NB_GEN = (unsigned*)EZ_SV("nbGen", \NB_GEN);
+	//EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
 	EZ_current_generation=0;
   EZ_POP_SIZE = parentPopulationSize;
   OFFSPRING_SIZE = offspringPopulationSize;
