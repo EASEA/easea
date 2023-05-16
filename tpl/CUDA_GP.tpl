@@ -640,9 +640,11 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 }
 
 void EASEAInit(int argc, char* argv[], ParametersImpl& p){
+	(void)argc;(void)argv;(void)p;
 	auto setVariable = [&](std::string const& arg, auto def) {
 		return p.setVariable(arg, def);
 	}; // for compatibility
+	(void)setVariable;
   fstGpu = setVariable("fstgpu", 0);
   lstGpu = setVariable("lstgpu", 0);
 

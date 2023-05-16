@@ -88,9 +88,11 @@ void EASEAFinal(Population* pop){
 }
 
 void EASEAInit(int argc, char* argv[], ParametersImpl& p){
+	(void)argc;(void)argv;(void)p;
 	auto setVariable = [&](std::string const& arg, auto def) {
 		return p.setVariable(arg, def);
 	}; // for compatibility
+	(void)setVariable;
 
   \INSERT_INIT_FCT_CALL
 }
