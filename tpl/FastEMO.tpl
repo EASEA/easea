@@ -117,7 +117,6 @@ easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossove
 
 \INSERT_USER_FUNCTIONS
 
-\INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
 typedef easea::algorithms::sigma::Csigma< TIndividual, TRandom &> TAlgorithm;
@@ -133,11 +132,11 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	(void)argc;(void)argv;(void)p;
 	auto setVariable = [&](std::string const& arg, auto def) {
-		return p.setVariable(arg, def);
+		return p.setVariable(arg, std::forward<decltype(def)>(def));
 	}; // for compatibility
 	(void)setVariable;
 
-	\INSERT_INIT_FCT_CALL
+	\INSERT_INITIALISATION_FUNCTION
     if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population");  };
     const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
 

@@ -126,7 +126,6 @@ void cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid
         std::cout << "Number of block : " << dimBlock->x << std::endl;
 }
 
-\INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
 void evale_pop_chunk(CIndividual** population, int popSize){
@@ -136,11 +135,11 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 void EASEAInit(int argc, char** argv, ParametersImpl& p){
 	(void)argc;(void)argv;(void)p;
 	auto setVariable = [&](std::string const& arg, auto def) {
-		return p.setVariable(arg, def);
+		return p.setVariable(arg, std::forward<decltype(def)>(def));
 	}; // for compatibility
 	(void)setVariable;
 
-	\INSERT_INIT_FCT_CALL
+	\INSERT_INITIALISATION_FUNCTION
   	cma = new CCmaes(p->offspringPopulationSize, p->parentPopulationSize, \PROBLEM_DIM);
 }
 

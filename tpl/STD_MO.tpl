@@ -77,7 +77,6 @@ extern RandomGenerator* globalRandomGenerator;
 
 \INSERT_USER_FUNCTIONS
 
-\INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 \INSERT_GENERATION_FUNCTION
 \INSERT_BEGIN_GENERATION_FUNCTION
@@ -90,11 +89,11 @@ void EASEAFinal(Population* pop){
 void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	(void)argc;(void)argv;(void)p;
 	auto setVariable = [&](std::string const& arg, auto def) {
-		return p.setVariable(arg, def);
+		return p.setVariable(arg, std::forward<decltype(def)>(def));
 	}; // for compatibility
 	(void)setVariable;
 
-  \INSERT_INIT_FCT_CALL
+  \INSERT_INITIALISATION_FUNCTION
 }
 
 

@@ -192,7 +192,7 @@ to refresh the window.<BR><HR> </BODY> </HTML>");
   for(i=1; i<argc; i++)
     if(strcmp(argv[i++],"seed") == 0)
       GARandomSeed((unsigned int)atoi(argv[i]));
-\INSERT_INIT_FCT_CALL
+\INSERT_INITIALISATION_FUNCTION
   GA\SELECTORSelector select;
   EASEAGenome genome;
   GA\REPLACEMENTGA ga(genome);

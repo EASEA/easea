@@ -756,7 +756,6 @@ m_problem.getBoundary()[j].first) + m_problem.getBoundary()[j].first);
 }
 
 
-\INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
 void evale_pop_chunk(CIndividual** population, int popSize){
@@ -766,7 +765,7 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	(void)argc;(void)argv;(void)p;
 	auto setVariable = [&](std::string const& arg, auto def) {
-		return p.setVariable(arg, def);
+		return p.setVariable(arg, std::forward<decltype(def)>(def));
 	}; // for compatibility
 	(void)setVariable;
 
@@ -791,7 +790,7 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 
 	//globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
 	InitialiseGPUs();
-	\INSERT_INIT_FCT_CALL
+	\INSERT_INITIALISATION_FUNCTION
 }
 
 void EASEAFinal(CPopulation* pop){

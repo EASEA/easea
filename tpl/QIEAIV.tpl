@@ -108,7 +108,6 @@ typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
 \INSERT_USER_FUNCTIONS
 
-\INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
 size_t m_quantDomain = 1;
@@ -571,11 +570,11 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	(void)argc;(void)argv;(void)p;
 	auto setVariable = [&](std::string const& arg, auto def) {
-		return p.setVariable(arg, def);
+		return p.setVariable(arg, std::forward<decltype(def)>(def));
 	}; // for compatibility
 	(void)setVariable;
 
-	\INSERT_INIT_FCT_CALL
+	\INSERT_INITIALISATION_FUNCTION
 	if (m_classPopSize <= 0) LOG_ERROR(errorCode::value, "Wrong size of parent population");
 	if ((m_quantDomain <= 0) || (m_quantDomain > m_classPopSize/2)) LOG_ERROR(errorCode::value, "Wrong size of quantum domain number");
 	//quantPop = initQuantumPopulation(m_problem.getBoundary(), m_quantDomain);
