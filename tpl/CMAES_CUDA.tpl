@@ -140,7 +140,7 @@ void EASEAInit(int argc, char** argv, ParametersImpl& p){
 	(void)setVariable;
 
 	\INSERT_INITIALISATION_FUNCTION
-  	cma = new CCmaes(p->offspringPopulationSize, p->parentPopulationSize, \PROBLEM_DIM);
+  	cma = new CCmaes(p.offspringPopulationSize, p.parentPopulationSize, \PROBLEM_DIM);
 }
 
 void EASEAFinal(CPopulation* pop){
