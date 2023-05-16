@@ -36,7 +36,7 @@ int main(int argc, char** argv){
   string outputfile = setVariable("outputfile","");
   string inputfile = setVariable("inputfile","");
 
-  EASEAInit(argc,argv);
+  EASEAInit(argc, argv, p);
     
   EvolutionaryAlgorithm ea(parentPopulationSize,offspringPopulationSize,selectionPressure,replacementPressure,
 			   selectionOperator,replacementOperator,pCrossover, pMutation, pMutationPerGene,outputfile,inputfile);
@@ -87,7 +87,7 @@ void EASEAFinal(Population* pop){
   \INSERT_FINALIZATION_FCT_CALL
 }
 
-void EASEAInit(int argc, char** argv){
+void EASEAInit(int argc, char* argv[], ParametersImpl& p){
   \INSERT_INIT_FCT_CALL
 }
 
@@ -372,7 +372,7 @@ extern int OFFSPRING_SIZE;
 
 \INSERT_USER_CLASSES_DEFINITIONS
 
-void EASEAInit(int argc, char *argv[]);
+void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(Population* population);
 void EASEAFinalization(Population* population);
 

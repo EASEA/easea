@@ -45,7 +45,7 @@ int main(int argc, char** argv){
 
 	EA = ea;
 
-	EASEAInit(argc,argv);
+	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -130,7 +130,7 @@ void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
 
-void EASEAInit(int argc, char** argv){
+void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	\INSERT_INIT_FCT_CALL
     if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
     const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
@@ -443,7 +443,7 @@ public:
  *
  */
 
-void EASEAInit(int argc, char** argv);
+void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);

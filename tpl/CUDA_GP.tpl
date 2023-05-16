@@ -48,7 +48,7 @@ int main(int argc, char** argv){
 
 	EA = ea;
 
-	EASEAInit(argc,argv);
+	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -639,7 +639,7 @@ void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
 
-void EASEAInit(int argc, char** argv){
+void EASEAInit(int argc, char* argv[], ParametersImpl& p){
   fstGpu = setVariable("fstgpu", 0);
   lstGpu = setVariable("lstgpu", 0);
 
@@ -1062,7 +1062,7 @@ public:
  *
  */
 
-void EASEAInit(int argc, char** argv);
+void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);

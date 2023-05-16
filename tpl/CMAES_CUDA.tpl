@@ -133,7 +133,7 @@ void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
 
-void EASEAInit(int argc, char** argv, ParametersImpl const& p){
+void EASEAInit(int argc, char** argv, ParametersImpl& p){
 	\INSERT_INIT_FCT_CALL
   	cma = new CCmaes(p->offspringPopulationSize, p->parentPopulationSize, \PROBLEM_DIM);
 }
@@ -565,7 +565,7 @@ public:
  *
  */
 
-void EASEAInit(int argc, char** argv);
+void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);

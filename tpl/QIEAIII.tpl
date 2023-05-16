@@ -47,7 +47,7 @@ int main(int argc, char** argv){
 
 	EA = ea;
 
-	EASEAInit(argc,argv);
+	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -315,7 +315,7 @@ void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
 
-void EASEAInit(int argc, char** argv){
+void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	\INSERT_INIT_FCT_CALL
 	if (m_classPopSize <= 0) LOG_ERROR(errorCode::value, "Wrong size of parent population");
 	if ((m_quantDomain <= 0) || (m_quantDomain > m_classPopSize/2)) LOG_ERROR(errorCode::value, "Wrong size of quantum domain number");
@@ -791,7 +791,7 @@ public:
  *
  */
 
-void EASEAInit(int argc, char** argv);
+void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
 void EASEABeginningGeneration(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGeneration(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
