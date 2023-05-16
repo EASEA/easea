@@ -269,7 +269,7 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
 
 
 
-void ParametersImpl::setDefaultParameters(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
+ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
 
         this->minimizing =1;
         this->nbGen = setVariable("nbGen",(int)\NB_GEN);

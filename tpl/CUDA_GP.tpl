@@ -838,7 +838,7 @@ void PopulationImpl::evaluateOffspringPopulation(){
 
 
 
-void ParametersImpl::setDefaultParameters(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
+ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
         this->minimizing = \MINIMAXI;
         this->nbGen = setVariable("nbGen",(int)\NB_GEN);
 	#ifdef USE_OPENMP

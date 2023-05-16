@@ -237,7 +237,7 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
   return 0;
 }
 
-void ParametersImpl::setDefaultParameters(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
+ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
 
 	this->minimizing = \MINIMAXI;
 
