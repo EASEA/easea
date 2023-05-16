@@ -12,6 +12,7 @@
 #include <memory>
 
 #include "CEvolutionaryAlgorithm.h"
+#include "COptionParser.h"
 
 class CGenerationalCriterion;
 class CControlCStopingCriterion;
