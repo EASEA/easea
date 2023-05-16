@@ -39,7 +39,7 @@ int main(int argc, char** argv){
 
 	EA = ea;
 
-	EASEAInit(argc,argv);
+	EASEAInit(argc,argv,p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -97,9 +97,9 @@ void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
 
-void EASEAInit(int argc, char** argv){
+void EASEAInit(int argc, char** argv, ParametersImpl const& p){
 	\INSERT_INIT_FCT_CALL
-  	cma = new CCmaes(EZ_SV("nbOffspring", \OFF_SIZE), setVariable("popSize",\POP_SIZE), \PROBLEM_DIM);
+  	cma = new CCmaes(p->offspringPopulationSize, p->parentPopulationSize, \PROBLEM_DIM);
 }
 
 void EASEAFinal(CPopulation* pop){
