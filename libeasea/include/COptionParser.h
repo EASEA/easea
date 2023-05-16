@@ -12,11 +12,7 @@
 #include <memory>
 #include <third_party/cxxopts/cxxopts.hpp>
 
-extern std::unique_ptr<cxxopts::ParseResult> vm;
-extern std::unique_ptr<cxxopts::ParseResult> vm_file;
-extern cxxopts::Options options;
-
-void parseArguments(const char* parametersFileName, int ac, char** av);
+void parseArguments(const char* parametersFileName, int ac, char** av, std::unique_ptr<cxxopts::ParseResult> &vm, std::unique_ptr<cxxopts::ParseResult>& vm_file);
 
 template <typename T>
 struct is_c_str
@@ -40,12 +36,6 @@ setVariable(const std::string& argumentName, TypeVariable&& defaultValue, std::u
 	} else {
 		return ret_t{ defaultValue };
 	}
-}
-
-template <typename TypeVariable>
-auto setVariable(const std::string& argumentName, TypeVariable&& defaultValue)
-{
-	return setVariable(argumentName, std::forward<TypeVariable>(defaultValue), vm, vm_file);
 }
 
 #endif /* COPTIONPARSER_H_ */

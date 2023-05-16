@@ -5,16 +5,32 @@
  *      Author: maitre
  */
 
-#include "include/Parameters.h"
+#include "Parameters.h"
+#include "COptionParser.h"
 #include <stdio.h>
 
-#ifdef WIN32
-Parameters::Parameters(){
+#define SV(s, df) (setVariable(s, df, vm, vm_file))
+
+Parameters::Parameters(std::string const& filename, int argc, char* argv[]) {
+	parseArguments(filename.c_str(), argc, argv, vm, vm_file);
+	
+	// set parameters that can only be defined using cmd line arguments or files
+	nbCPUThreads = SV("nbCPUThreads", 1);
+	noLogFile = SV("noLogFile", false);
+	reevaluateImmigrants = SV("reevaluateImmigrants", false);
+	alwaysEvaluate = SV("alwaysEvaluate", false);
+	seed = SV("seed", 0);
+	printInitialPopulation = SV("printInitialPopulation", false);
+	printFinalPopulation = SV("printFinalPopulation", false);
+	u1 = SV("u1", "");
+	u2 = SV("u2", "");
+	u3 = SV("u3", "");
+	u4 = SV("u4", "");
+	u5 = SV("u5", "");
 }
 
 Parameters::~Parameters(){
 }
-#endif
 
 int Parameters::setReductionSizes(int popSize, float popReducSize){
         if(popReducSize<1.0 && popReducSize>=0.0)

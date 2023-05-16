@@ -198,7 +198,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   time_t t = std::chrono::system_clock::to_time_t(start);
   std::tm * ptm = std::localtime(&t);
   char buf_start_time[32];
-  if (params->isLogg == 1){
+  if (!params->noLogFile){
     std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
     easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
   }
@@ -348,7 +348,7 @@ params->parentReduction = 1;
 	LOG_MSG(msgType::INFO, "Elapsed time: %f", elapsed_seconds.count());
     }
 
-if (params->isLogg == 1){
+if (!params->noLogFile){
     logg("Run configuration:");
     logg("Start time: ", std::string(buf_start_time));
     logg("Seed: ", params->seed);
