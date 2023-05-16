@@ -133,6 +133,10 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 }
 
 void EASEAInit(int argc, char* argv[], ParametersImpl& p){
+	auto setVariable = [&](std::string const& arg, auto def) {
+		return p.setVariable(arg, def);
+	}; // for compatibility
+
 	\INSERT_INIT_FCT_CALL
     if (m_popSize <= 0){ LOG_ERROR(errorCode::value,"Wrong size of parent population"); };
     const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);

@@ -153,6 +153,10 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 }
 
 void EASEAInit(int argc, char* argv[], ParametersImpl& p){
+	auto setVariable = [&](std::string const& arg, auto def) {
+		return p.setVariable(arg, def);
+	}; // for compatibility
+
 	\INSERT_INIT_FCT_CALL
 	if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
         const size_t nbObjectives = m_problem.getNumberOfObjectives();

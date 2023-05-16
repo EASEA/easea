@@ -222,6 +222,10 @@ void evale_pop_chunk(CIndividual** population, int popSize){
 }
 
 void EASEAInit(int argc, char* argv[], ParametersImpl& p){
+	auto setVariable = [&](std::string const& arg, auto def) {
+		return p.setVariable(arg, def);
+	}; // for compatibility
+
 	\INSERT_INIT_FCT_CALL
 	if (m_classPopSize <= 0) LOG_ERROR(errorCode::value, "Wrong size of parent population");
 	if ((m_quantDomain <= 0) || (m_quantDomain > m_classPopSize/2)) LOG_ERROR(errorCode::value, "Wrong size of quantum domain number");
