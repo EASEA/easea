@@ -237,19 +237,14 @@ unsigned IndividualImpl::mutate( float pMutationPerGene ){
   return 0;
 }
 
-void ParametersImpl::setDefaultParameters(int argc, char** argv){
+void ParametersImpl::setDefaultParameters(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
 
 	this->minimizing = \MINIMAXI;
-	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
-	this->nbCPUThreads = setVariable("nbCPUThreads", 1);
-        this->isLogg = setVariable("isLogg", 1);
-	this->reevaluateImmigrants = setVariable("reevaluateImmigrants", 0);
-	this->alwaysEvaluate = setVariable("alwaysEvaluate", false);
 
 	#ifdef USE_OPENMP
 	omp_set_num_threads(this->nbCPUThreads);
 	#endif
-	seed = setVariable("seed",(int)time(0));
+
 	globalRandomGenerator = new CRandomGenerator(seed);
 	this->randomGenerator = globalRandomGenerator;
 
@@ -310,17 +305,12 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	controlCStopingCriterion = new CControlCStopingCriterion();
 	timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
 
-	this->optimise = 0;
-
-	this->alwaysEvaluate = setVariable("alwaysEvaluate", false);
 
 	this->printStats = setVariable("printStats",\PRINT_STATS);
 	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
 	this->generatePlotScript = setVariable("generatePlotScript",\GENERATE_GNUPLOT_SCRIPT);
 	this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
 	this->plotStats = setVariable("plotStats",\PLOT_STATS);
-	this->printInitialPopulation = setVariable("printInitialPopulation",0);
-	this->printFinalPopulation = setVariable("printFinalPopulation",0);
 	this->savePopulation = setVariable("savePopulation",\SAVE_POPULATION);
 	this->startFromFile = setVariable("startFromFile",\START_FROM_FILE);
 
@@ -441,7 +431,7 @@ public:
 
 class ParametersImpl : public Parameters {
 public:
-	void setDefaultParameters(int argc, char** argv);
+	ParametersImpl(std::string const& file, int argc, char* argv[]);
 	CEvolutionaryAlgorithm* newEvolutionaryAlgorithm();
 };
 

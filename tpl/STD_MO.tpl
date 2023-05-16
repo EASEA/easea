@@ -25,7 +25,6 @@ int main(int argc, char** argv){
   float pMutation = \MUT_PROB;
   float pMutationPerGene = 0.05;
 
-  time_t seed = setVariable("seed",time(0));
   globalRandomGenerator = new RandomGenerator(seed);
 
   std::cout << "Seed is : " << seed << std::endl;
