@@ -332,6 +332,7 @@ string IndividualImpl::serialize(){
 }
 
 void IndividualImpl::deserialize(string Line){
+    delete root;
     istringstream AESAE_Line(Line);
     string line;
     \GENOME_DESERIAL
@@ -521,7 +522,7 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	if(this->params->startFromFile){
 	  ifstream AESAE_File("EASEA.pop");
 	  string AESAE_Line;
-  	  for( int i=0 ; i< this->params->parentPopulationSize ; i++){
+  	  for( unsigned i=0 ; i< this->params->parentPopulationSize ; i++){
 	  	  getline(AESAE_File, AESAE_Line);
 		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
 		  ((IndividualImpl*)this->population->parents[i])->deserialize(AESAE_Line);
