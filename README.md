@@ -50,7 +50,13 @@ brew install bison flex libomp coreutils boost cmake clang
 
 Windows builds using _msvc_ are supported. The recommended way to install the required packages is to first install [chocolatey package manager](https://chocolatey.org/install).
 
-You need to install [Windows C++ compiler](https://visualstudio.microsoft.com/fr/downloads/). This can be done via _chocolatey_ with the command `choco install visualstudio2022buildtools` inside a Powershell command prompt, or via the _Visual Studio Community/Entreprise Installer_.
+You need to install [Windows C++ compiler](https://visualstudio.microsoft.com/fr/downloads/). This can be done via _chocolatey_ with using the command below inside a Powershell command prompt, or via the _Visual Studio Community/Entreprise Installer_.
+
+```bash
+choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools;includeRecommended"
+```
+
+**NOTE:** _if no version of msvc is installed by chocolatey you may need to install it manually, or using_ `choco install visualstudio2022-workload-vctools --package-parameters "--includeRecommended"`
 
 The other dependencies can be installed using chocolatey by opening a Powershell prompt and pasting the following command :
 
@@ -75,7 +81,7 @@ choco install boost-msvc-14.3 --version 1.79.0
 3. Configure the build by typing the following command into your shell:
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DUSE_OPENMP=ON
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DUSE_OPENMP=ON .
 ```
 
 4. Compile EASENA by typing:
