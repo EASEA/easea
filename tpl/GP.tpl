@@ -521,9 +521,6 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	if(this->params->startFromFile){
 	  ifstream AESAE_File("EASEA.pop");
 	  string AESAE_Line;
-	  #ifdef USE_OPENMP
-	  #pragma omp parallel for
-	  #endif
   	  for( int i=0 ; i< this->params->parentPopulationSize ; i++){
 	  	  getline(AESAE_File, AESAE_Line);
 		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
@@ -532,8 +529,11 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	  
 	}
 	else{
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
+  	  #ifdef USE_OPENMP
+  	  #pragma omp parallel for
+  	  #endif
+  	  for(int i = 0; i < static_cast<int>(populationSize); ++i) {
+  	    	  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
 	  }
 	}
         this->population->actualParentPopulationSize = this->params->parentPopulationSize;

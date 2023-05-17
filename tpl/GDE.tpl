@@ -381,8 +381,11 @@ algorithm  = new _TAlgorithm(generator, problem, initial, crossover, mutation);
 	  
 	}
 	else{
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
+  	  #ifdef USE_OPENMP
+  	  #pragma omp parallel for
+  	  #endif
+  	  for(int i = 0; i < static_cast<int>(populationSize); ++i) {
+  	    	  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
 	  }
 	}
         this->population->actualParentPopulationSize = this->params->parentPopulationSize;*/

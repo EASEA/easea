@@ -361,7 +361,10 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	  
 	}
 	else{
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
+  	  #ifdef USE_OPENMP
+          #pragma omp parallel for
+          #endif
+	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
 		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
 	  }
 	}
