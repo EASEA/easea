@@ -345,7 +345,7 @@ algorithm  = new _TAlgorithm(generator, problem, initial, crossover, mutation);
   	  #ifdef USE_OPENMP
   	  #pragma omp parallel for
   	  #endif
-  	  for(int i = 0; i < static_cast<int>(populationSize); ++i) {
+  	  for(int i = 0; i < static_cast<int>(this->params->parentPopulationSize); ++i) {
   	    	  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
 	  }
 	}
