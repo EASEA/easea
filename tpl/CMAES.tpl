@@ -322,7 +322,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
         this->ipFile = (char*)setVariable("ipFile", "\IP_FILE").c_str();
         this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
-        this->serverPort - setVariable("serverPort", \SERVER_PORT);
+        this->serverPort = setVariable("serverPort", \SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
