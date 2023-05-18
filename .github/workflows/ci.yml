@@ -219,6 +219,13 @@ jobs:
           exit $result_code
         shell: bash
 
+      - name: Export examples if errors
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: examples-windows
+          path: ./examples/
+
       - name: Output examples status
         id: status
         if: ${{ always() }}
