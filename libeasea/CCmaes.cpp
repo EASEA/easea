@@ -87,7 +87,7 @@ clock_t cloc = clock();
 this->lambda = lambda;
 this->mu = mu;
 /*set weights*/
-this->weights = (double*)malloc(this->mu*sizeof(double));
+this->weights = new double[this->mu];
 for (i=0; i<this->mu; ++i) 
       this->weights[i] = log(this->mu+1.)-log(i+1.);
 /* normalize weights vector and set mueff */
@@ -490,13 +490,13 @@ CCmaes::CCmaes(int lambda, int mu, int problemdim){
   this->facupdateCmode = 1;
   this->flgIniphase = 0;
 
-  this->xstart = (double*)malloc(this->dim*sizeof(double));
+  this->xstart = new double[this->dim];
   
   this->typicalXcase = 1;
   for (i=0; i<this->dim; ++i)
     this->xstart[i] = 0.5;
 
-  this->rgInitialStds = (double*)malloc(this->dim*sizeof(double));
+  this->rgInitialStds = new double[this->dim];
   for (i=0; i<this->dim; ++i)
         this->rgInitialStds[i] = 0.3;
 
@@ -514,19 +514,19 @@ CCmaes::CCmaes(int lambda, int mu, int problemdim){
   this->flgCheckEigen = 0;
   this->genOfEigensysUpdate = 0;
 
-  this->rgpc = (double*)malloc(this->dim*sizeof(double));
-  this->rgps = (double*)malloc(this->dim*sizeof(double));
-  this->rgdTmp = (double*)malloc((this->dim+1)*sizeof(double));
-  this->rgBDz = (double*)malloc(this->dim*sizeof(double));
-  this->rgxmean = (double*)malloc(this->dim*sizeof(double));
-  this->rgxold = (double*)malloc(this->dim*sizeof(double));  
-  this->rgD = (double*)malloc(this->dim*sizeof(double));
-  this->C = (double**)malloc(this->dim*sizeof(double*));
-  this->B = (double**)malloc(this->dim*sizeof(double*));
+  this->rgpc = new double[this->dim];
+  this->rgps = new double[this->dim];
+  this->rgdTmp = new double[(this->dim+1)];
+  this->rgBDz = new double[this->dim];
+  this->rgxmean = new double[this->dim];
+  this->rgxold = new double[this->dim];  
+  this->rgD = new double[this->dim];
+  this->C = new double*[this->dim];
+  this->B = new double*[this->dim];
 
   for (i = 0; i < this->dim; ++i) {
-    this->C[i] = (double*)malloc((i+1)*sizeof(double));;
-    this->B[i] = (double*)malloc(this->dim*sizeof(double));
+    this->C[i] = new double[(i+1)];;
+    this->B[i] = new double[this->dim];
   }
   /* Initialize newed space  */
 
@@ -575,19 +575,22 @@ void CCmaes::Adapt_C2(int hsig, double **parents)
 CCmaes::~CCmaes()
 {
   int i;
-  free( this->rgpc);
-  free( this->rgps);
-  free( this->rgdTmp);
-  free( this->rgBDz);
-  free( this->rgxmean);
-  free( this->rgxold); 
-  free( this->rgD);
+  delete[](weights);
+  delete[](xstart);
+  delete[](rgInitialStds);
+  delete[]( this->rgpc);
+  delete[]( this->rgps);
+  delete[]( this->rgdTmp);
+  delete[]( this->rgBDz);
+  delete[]( this->rgxmean);
+  delete[]( this->rgxold); 
+  delete[]( this->rgD);
   for (i = 0; i < this->dim; ++i) {
-    free( this->C[i]);
-    free( this->B[i]);
+    delete[]( this->C[i]);
+    delete[]( this->B[i]);
   }
-  free( this->C);
-  free( this->B);
+  delete[]( this->C);
+  delete[]( this->B);
 } /* cmaes_exit() */
 
 void CCmaes::cmaes_update(double **popparent, double *fitpar){

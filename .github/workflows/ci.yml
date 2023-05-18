@@ -33,7 +33,7 @@ jobs:
           else
               EXPORT_VALUE="${TMP_GITHUB_REF}"
           fi
-          echo "::set-output name=branch::${EXPORT_VALUE}"
+          echo "branch=${EXPORT_VALUE}" >> $GITHUB_OUTPUT
 
   Linux:
     name: Build, install and test (Linux)
@@ -95,9 +95,9 @@ jobs:
           NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
           PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
           FAILED=$((NBE - PASSED))
-          echo "::set-output name=total::${NBE}"
-          echo "::set-output name=passed::${PASSED}"
-          echo "::set-output name=failed::${FAILED}"
+          echo "total=${NBE}" >> $GITHUB_OUTPUT
+          echo "passed=${PASSED}" >> $GITHUB_OUTPUT
+          echo "failed=${FAILED}" >> $GITHUB_OUTPUT
         shell: bash
 
   MacOS:
@@ -158,9 +158,9 @@ jobs:
           NBE=$(echo ${LINE} | gsed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
           PASSED=$(echo ${LINE} | gsed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
           FAILED=$((NBE - PASSED))
-          echo "::set-output name=total::${NBE}"
-          echo "::set-output name=passed::${PASSED}"
-          echo "::set-output name=failed::${FAILED}"
+          echo "total=${NBE}" >> $GITHUB_OUTPUT
+          echo "passed=${PASSED}" >> $GITHUB_OUTPUT
+          echo "failed=${FAILED}" >> $GITHUB_OUTPUT
         shell: bash
 
   Windows:
@@ -182,8 +182,8 @@ jobs:
         run: choco install winflexbison3 sed
         shell: bash
 
-      - name: Installing Boost 1.79
-        run: choco install boost-msvc-14.3 --version 1.79.0
+      - name: Installing Boost
+        run: choco install boost-msvc-14.3
 
           #- name: Installing CUDA
           #  uses: Jimver/cuda-toolkit@v0.2.10
@@ -227,9 +227,9 @@ jobs:
           NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
           PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
           FAILED=$((NBE - PASSED))
-          echo "::set-output name=total::${NBE}"
-          echo "::set-output name=passed::${PASSED}"
-          echo "::set-output name=failed::${FAILED}"
+          echo "total=${NBE}" >> $GITHUB_OUTPUT
+          echo "passed=${PASSED}" >> $GITHUB_OUTPUT
+          echo "failed=${FAILED}" >> $GITHUB_OUTPUT
         shell: bash
 
   Badges:

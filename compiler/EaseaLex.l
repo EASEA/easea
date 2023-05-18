@@ -284,6 +284,7 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting initialisation function.\n");
+  rewind(fpGenomeFile);
   yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
   yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   lineCounter = 1;
@@ -1184,10 +1185,6 @@ exponent  ([Ee][+-]?[0-9]+)
   fprintf(fpOutputFile,"%d",bIsOffspringReduce);
  }
 
-<TEMPLATE_ANALYSIS>"\\INSERT_INIT_FCT_CALL"  {
-  if (bInitFunction) fprintf(fpOutputFile,"\n  EASEAInitFunction(argc, argv);\n");
- }
-
 <TEMPLATE_ANALYSIS>"\\INSERT_FINALIZATION_FCT_CALL"  {
   if (bFinalizationFunction) fprintf(fpOutputFile,"\n  EASEAFinalization(pop);\n");
  }        
@@ -1519,8 +1516,8 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 
 <COPY_INITIALISATION_FUNCTION>"\\Before"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
-    fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){\n");
-  bFunction=1; bInitFunction=1;
+    //fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){\n");
+  //bFunction=1; bInitFunction=1;
   if( bLINE_NUM_EZ_FILE )
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
       

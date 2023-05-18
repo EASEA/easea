@@ -9,13 +9,23 @@
 #define PARAMETERS_H_
 
 #include <string>
+#include <memory>
 
 #include "CEvolutionaryAlgorithm.h"
+#include "COptionParser.h"
+
 class CGenerationalCriterion;
 class CControlCStopingCriterion;
 class CSelectionOperator;
+namespace cxxopts {
+  class ParseResult;
+}
 
 class Parameters {
+  protected:
+    std::unique_ptr<cxxopts::ParseResult> vm;
+    std::unique_ptr<cxxopts::ParseResult> vm_file;
+
   public:
     CSelectionOperator* selectionOperator;
     CSelectionOperator* replacementOperator;
@@ -28,8 +38,10 @@ class Parameters {
 
     int nbGen;
     int nbCPUThreads;
-    int isLogg;
+    int noLogFile;
     int reevaluateImmigrants;
+
+    bool alwaysEvaluate;
 
     float selectionPressure;
     float replacementPressure;
@@ -87,16 +99,22 @@ class Parameters {
     int fstGpu;
     int lstGpu;
 
+    std::string u1;
+    std::string u2;
+    std::string u3;
+    std::string u4;
+    std::string u5;
+
   public:
-#ifdef WIN32
-    Parameters();
-    ~Parameters();
-#else
-    virtual ~Parameters(){;}
-#endif
-    virtual void setDefaultParameters(int argc, char** argv) = 0;
+    Parameters(std::string const& filename, int argc, char* argv[]);
+    virtual ~Parameters();
     virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;
     int setReductionSizes(int popSize, float popReducSize);
+
+    template <typename T>
+    auto setVariable(std::string const& argumentName, T&& defaultValue) {
+	    return ::setVariable(argumentName, std::forward<T>(defaultValue), vm, vm_file);
+    }
 };
 
 #endif /* PARAMETERS_H_ */

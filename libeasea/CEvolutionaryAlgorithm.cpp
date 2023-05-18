@@ -198,7 +198,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   time_t t = std::chrono::system_clock::to_time_t(start);
   std::tm * ptm = std::localtime(&t);
   char buf_start_time[32];
-  if (params->isLogg == 1){
+  if (!params->noLogFile){
     std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
     easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
   }
@@ -206,19 +206,18 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
 
   TIME_ST(eval);
-  if(!INSTEAD_EVAL_STEP)
+  if(!INSTEAD_EVAL_STEP) {
     this->population->evaluateParentPopulation();
-  else
+  } else {
     evale_pop_chunk(population->parents, static_cast<int>(population->parentPopulationSize));
+    this->population->currentEvaluationNb += this->params->parentPopulationSize;
+  }
 
   if(this->params->optimise){
         population->optimiseParentPopulation();
   }
   TIME_END(eval);
   TIME_ACC(eval);
-
-  this->population->currentEvaluationNb += this->params->parentPopulationSize;
-
 
   if(this->params->printInitialPopulation){
     std::cout << *population << std::endl;
@@ -272,10 +271,10 @@ params->parentReduction = 1;
     if(!INSTEAD_EVAL_STEP){
 //      population->evaluateParentPopulation();
       population->evaluateOffspringPopulation();
-    }
-    else
+    } else {
       evale_pop_chunk(population->offsprings, static_cast<int>(population->offspringPopulationSize));
     population->currentEvaluationNb += this->params->offspringPopulationSize;
+    }
 
     if(this->params->optimise){
           population->optimiseOffspringPopulation();
@@ -349,7 +348,7 @@ params->parentReduction = 1;
 	LOG_MSG(msgType::INFO, "Elapsed time: %f", elapsed_seconds.count());
     }
 
-if (params->isLogg == 1){
+if (!params->noLogFile){
     logg("Run configuration:");
     logg("Start time: ", std::string(buf_start_time));
     logg("Seed: ", params->seed);
@@ -362,15 +361,15 @@ if (params->isLogg == 1){
     logg("Offspring population size: ",  params->offspringPopulationSize);
     logg("Mutation probability: ", params->pMutation);
     logg("Crossover probability: ", params->pCrossover);
-    logg("Selection operator: ", params->selectionOperator->getSelectorName());
+    logg("Selection operator: ", (params->selectionOperator) ? params->selectionOperator->getSelectorName() : "None");
     logg("Selection pressure: ", params->selectionPressure);
     logg("Reduce parent pressure: ", params->parentReductionPressure);
     logg("Reduce offspring pressure: ", params->offspringReductionPressure);
-    logg("Reduce parents operator: ", params->parentReductionOperator->getSelectorName());
-    logg("Reduce offspring operator: ", params->offspringReductionOperator->getSelectorName());
+    logg("Reduce parents operator: ", (params->parentReductionOperator) ? params->parentReductionOperator->getSelectorName() : "None");
+    logg("Reduce offspring operator: ", (params->offspringReductionOperator) ? params->offspringReductionOperator->getSelectorName() : "None");
     logg("Surviving parents: ", params->parentReductionSize);
     logg("Surviving offspring: ", params->offspringReductionSize);
-    logg("Replacement operator: ", params->replacementOperator->getSelectorName());
+    logg("Replacement operator: ", (params->replacementOperator) ? params->replacementOperator->getSelectorName() : "None");
     logg("Replacement pressure: ", params->replacementPressure);
     logg("Elitism: ", params->strongElitism);
     logg("Elite size: ",params->elitSize);

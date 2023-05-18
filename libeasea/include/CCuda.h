@@ -22,7 +22,7 @@
     err = f;						\
     if( err != cudaSuccess ){				\
       printf("Cuda Execution Error : %s at line : %s:%d\n",cudaGetErrorString(err),__FILE__,__LINE__); \
-      exit(-1);						\
+      exit(1);						\
     }							\
   }
    

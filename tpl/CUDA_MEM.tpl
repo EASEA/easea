@@ -32,15 +32,12 @@ unsigned *EZ_current_generation;
 int main(int argc, char** argv){
 
 
-	parseArguments("EASEA.prm",argc,argv);
-
-	ParametersImpl p;
-	p.setDefaultParameters(argc,argv);
+	ParametersImpl p("EASEA.prm", argc, argv);
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
 
-	EASEAInit(argc,argv);
+	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -141,15 +138,20 @@ void cudaPreliminaryProcess(unsigned populationSize, dim3* dimBlock, dim3* dimGr
         //std::cout << "Number of block : " << dimBlock->x << std::endl;
 }
 
-\INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
 void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
 
-void EASEAInit(int argc, char** argv){
-	\INSERT_INIT_FCT_CALL
+void EASEAInit(int argc, char* argv[], ParametersImpl& p){
+	(void)argc;(void)argv;(void)p;
+	auto setVariable = [&](std::string const& arg, auto def) {
+		return p.setVariable(arg, std::forward<decltype(def)>(def));
+	}; // for compatibility
+	(void)setVariable;
+
+	\INSERT_INITIALISATION_FUNCTION
 }
 
 void EASEAFinal(CPopulation* pop){
@@ -505,39 +507,37 @@ void PopulationImpl::optimiseOffspringPopulation(){
   }
 }
 
-void ParametersImpl::setDefaultParameters(int argc, char** argv){
+ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
         this->minimizing = \MINIMAXI;
-        this->nbGen = setVariable("nbGen",(int)\NB_GEN);
-	int nbCPUThreads = setVariable("nbCPUThreads", 1);
+        this->nbGen = setVariable("nbGen", (int)\NB_GEN);
 	#ifdef USE_OPENMP
 	omp_set_num_threads(nbCPUThreads);
 	#endif
 
-        seed = setVariable("seed",(int)time(0));
         globalRandomGenerator = new CRandomGenerator(seed);
         this->randomGenerator = globalRandomGenerator;
 
-        selectionOperator = getSelectionOperator(setVariable("selectionOperator","\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
-        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator","\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
-        parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator","\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
-        offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator","\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
-        selectionPressure = setVariable("selectionPressure",(float)\SELECT_PRM);
-        replacementPressure = setVariable("reduceFinalPressure",(float)\RED_FINAL_PRM);
-        parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
-        offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
+        selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
+        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
+        parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
+        offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
+        selectionPressure = setVariable("selectionPressure", (float)\SELECT_PRM);
+        replacementPressure = setVariable("reduceFinalPressure", (float)\RED_FINAL_PRM);
+        parentReductionPressure = setVariable("reduceParentsPressure", (float)\RED_PAR_PRM);
+        offspringReductionPressure = setVariable("reduceOffspringPressure", (float)\RED_OFF_PRM);
         pCrossover = \XOVER_PROB;
         pMutation = \MUT_PROB;
         pMutationPerGene = 0.05;
 
-        parentPopulationSize = setVariable("popSize",(int)\POP_SIZE);
-        offspringPopulationSize = setVariable("nbOffspring",(int)\OFF_SIZE);
+        parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
+        offspringPopulationSize = setVariable("nbOffspring", (int)\OFF_SIZE);
 
 
-        parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents",(float)\SURV_PAR_SIZE));
-        offspringReductionSize = setReductionSizes(offspringPopulationSize, setVariable("survivingOffspring",(float)\SURV_OFF_SIZE));
+        parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents", (float)\SURV_PAR_SIZE));
+        offspringReductionSize = setReductionSizes(offspringPopulationSize, setVariable("survivingOffspring", (float)\SURV_OFF_SIZE));
 
-        this->elitSize = setVariable("elite",(int)\ELITE_SIZE);
-        this->strongElitism = setVariable("eliteType",(int)\ELITISM);
+        this->elitSize = setVariable("elite", (int)\ELITE_SIZE);
+        this->strongElitism = setVariable("eliteType", (int)\ELITISM);
 
         if((this->parentReductionSize + this->offspringReductionSize) < this->parentPopulationSize){
                 printf("*WARNING* parentReductionSize + offspringReductionSize < parentPopulationSize\n");
@@ -563,38 +563,34 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         if(parentReductionSize<parentPopulationSize) parentReduction = true;
         else parentReduction = false;
 
-        generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
+        generationalCriterion = new CGenerationalCriterion(setVariable("nbGen", (int)\NB_GEN));
         controlCStopingCriterion = new CControlCStopingCriterion();
-        timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
+        timeCriterion = new CTimeCriterion(setVariable("timeLimit", \TIME_LIMIT));
+        this->optimiseIterations = setVariable("optimiseIterations", (int)\NB_OPT_IT);
+        this->baldwinism = setVariable("baldwinism", (int)\BALDWINISM);
 
-	this->optimise=1;
-        this->optimiseIterations = setVariable("optimiseIterations",(int)\NB_OPT_IT);
-        this->baldwinism = setVariable("baldwinism",(int)\BALDWINISM);
-
-        this->printStats = setVariable("printStats",\PRINT_STATS);
-        this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
-        this->generatePlotScript = setVariable("generatePlotScript",\GENERATE_GNUPLOT_SCRIPT);
-        this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
-        this->plotStats = setVariable("plotStats",\PLOT_STATS);
-        this->printInitialPopulation = setVariable("printInitialPopulation",0);
-        this->printFinalPopulation = setVariable("printFinalPopulation",0);
-        this->savePopulation = setVariable("savePopulation",\SAVE_POPULATION);
-        this->startFromFile = setVariable("startFromFile",\START_FROM_FILE);
+        this->printStats = setVariable("printStats", \PRINT_STATS);
+        this->generateCSVFile = setVariable("generateCSVFile", \GENERATE_CSV_FILE);
+        this->generatePlotScript = setVariable("generatePlotScript", \GENERATE_GNUPLOT_SCRIPT);
+        this->generateRScript = setVariable("generateRScript", \GENERATE_R_SCRIPT);
+        this->plotStats = setVariable("plotStats", \PLOT_STATS);
+        this->savePopulation = setVariable("savePopulation", \SAVE_POPULATION);
+        this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
         this->outputFilename = (char*)"EASEA";
         this->plotOutputFilename = (char*)"EASEA.png";
 
-        this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	    this->ipFile = (char*)setVariable("ipFile","\IP_FILE").c_str();
-        this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
-        this->serverPort = setVariable("serverPort",\SERVER_PORT);
+        this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
+	    this->ipFile = (char*)setVariable("ipFile", "\IP_FILE").c_str();
+        this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
+        this->serverPort = setVariable("serverPort", \SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	EZ_NB_GEN = (unsigned*)setVariable("nbGen",\NB_GEN);
+	EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
@@ -731,7 +727,7 @@ public:
 
 class ParametersImpl : public Parameters {
 public:
-	void setDefaultParameters(int argc, char** argv);
+	ParametersImpl(std::string const& file, int argc, char* argv[]);
 	CEvolutionaryAlgorithm* newEvolutionaryAlgorithm();
 };
 
@@ -740,7 +736,7 @@ public:
  *
  */
 
-void EASEAInit(int argc, char** argv);
+void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);

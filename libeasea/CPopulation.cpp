@@ -119,16 +119,18 @@ void CPopulation::initPopulation(CSelectionOperator* selectionOperator,
 
 
 void CPopulation::evaluatePopulation(CIndividual** population, unsigned populationSize){
+	unsigned real_evals = 0;
 #ifdef USE_OPENMP
-    EASEA_PRAGMA_OMP_PARALLEL
+#pragma omp parallel for reduction(+:real_evals)
 #endif
   for( int i=0 ; i < static_cast<int>(populationSize) ; i++ ){
-    if (population[i]->valid == false)
-    	realEvaluationNb++;
-    
-    population[i]->evaluate();
-}
-
+    if (params->alwaysEvaluate || !population[i]->valid) {
+	++real_evals;
+	population[i]->evaluate();
+    }
+  }
+  realEvaluationNb += real_evals;
+  currentEvaluationNb += populationSize;
 }
 void CPopulation::optimisePopulation(CIndividual**, unsigned){
 }

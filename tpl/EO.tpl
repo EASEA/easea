@@ -147,7 +147,7 @@ void make_help(eoParser & _parser);
 int main(int argc, char* argv[]){
 
 try  {
-\INSERT_INIT_FCT_CALL
+\INSERT_INITIALISATION_FUNCTION
 
   eoParser parser(argc, argv);  // for user-parameter reading
 

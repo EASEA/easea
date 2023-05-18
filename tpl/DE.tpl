@@ -41,15 +41,12 @@ CEvolutionaryAlgorithm* EA;
 int main(int argc, char** argv){
 
 
-	parseArguments("EASEA.prm",argc,argv);
-
-	/*easea::*/ParametersImpl p;
-	p.setDefaultParameters(argc,argv);
+	/*easea::*/ParametersImpl p("EASEA.prm", argc, argv);
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
 
-	EASEAInit(argc,argv);
+	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -128,7 +125,6 @@ TRandom m_generator{m_seed};
 
 \INSERT_USER_FUNCTIONS
 
-\INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 
 
@@ -137,9 +133,15 @@ void evale_pop_chunk(CIndividual** population, int popSize){
   \INSTEAD_EVAL_FUNCTION
 }
 
-void EASEAInit(int argc, char** argv){
+void EASEAInit(int argc, char* argv[], ParametersImpl& p){
+	(void)argc;(void)argv;(void)p;
+	auto setVariable = [&](std::string const& arg, auto def) {
+		return p.setVariable(arg, std::forward<decltype(def)>(def));
+	}; // for compatibility
+	(void)setVariable;
 
-	\INSERT_INIT_FCT_CALL
+
+	\INSERT_INITIALISATION_FUNCTION
     if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population");  };
     const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
     m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover);
@@ -187,27 +189,24 @@ size_t easea::Individual<TO, TV>::evaluate()
 
 
 
-void ParametersImpl::setDefaultParameters(int argc, char** argv){
+ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
 
 	this->minimizing = \MINIMAXI;
-	this->nbGen = setVariable("nbGen",(int)\NB_GEN);
-	this->isLogg = setVariable("isLogg", 1);
+	this->nbGen = setVariable("nbGen", (int)\NB_GEN);
 
-
-	int nbCPUThreads = setVariable("nbCPUThreads", 1);
 	#ifdef USE_OPENMP
 	omp_set_num_threads(nbCPUThreads);
 	#endif
 
-        parentReductionPressure = setVariable("reduceParentsPressure",(float)\RED_PAR_PRM);
-        offspringReductionPressure = setVariable("reduceOffspringPressure",(float)\RED_OFF_PRM);
+        parentReductionPressure = setVariable("reduceParentsPressure", (float)\RED_PAR_PRM);
+        offspringReductionPressure = setVariable("reduceOffspringPressure", (float)\RED_OFF_PRM);
 
 	pCrossover = \XOVER_PROB;
 	pMutation = \MUT_PROB;
 	pMutationPerGene = 0.05;
 
-	parentPopulationSize = setVariable("popSize",(int)\POP_SIZE);
-	offspringPopulationSize = setVariable("nbOffspring",(int)\OFF_SIZE);
+	parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
+	offspringPopulationSize = setVariable("nbOffspring", (int)\OFF_SIZE);
 	m_popSize = parentPopulationSize;
 	/*
 	 * The reduction is set to true if reductionSize (parent or offspring) is set to a size less than the
@@ -219,26 +218,23 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
 	if(parentReductionSize<parentPopulationSize) parentReduction = true;
 	else parentReduction = false;
 
-	generationalCriterion = new CGenerationalCriterion(setVariable("nbGen",(int)\NB_GEN));
+	generationalCriterion = new CGenerationalCriterion(setVariable("nbGen", (int)\NB_GEN));
 	controlCStopingCriterion = new CControlCStopingCriterion();
-	timeCriterion = new CTimeCriterion(setVariable("timeLimit",\TIME_LIMIT));
+	timeCriterion = new CTimeCriterion(setVariable("timeLimit", \TIME_LIMIT));
 
-	this->optimise = 0;
 
-	this->printStats = setVariable("printStats",\PRINT_STATS);
-	this->generateCSVFile = setVariable("generateCSVFile",\GENERATE_CSV_FILE);
-	this->generatePlotScript = setVariable("generatePlotScript",\GENERATE_GNUPLOT_SCRIPT);
-	this->generateRScript = setVariable("generateRScript",\GENERATE_R_SCRIPT);
-	this->plotStats = setVariable("plotStats",\PLOT_STATS);
-	this->printInitialPopulation = setVariable("printInitialPopulation",0);
-	this->printFinalPopulation = setVariable("printFinalPopulation",0);
-	this->savePopulation = setVariable("savePopulation",\SAVE_POPULATION);
-	this->startFromFile = setVariable("startFromFile",\START_FROM_FILE);
+	this->printStats = setVariable("printStats", \PRINT_STATS);
+	this->generateCSVFile = setVariable("generateCSVFile", \GENERATE_CSV_FILE);
+	this->generatePlotScript = setVariable("generatePlotScript", \GENERATE_GNUPLOT_SCRIPT);
+	this->generateRScript = setVariable("generateRScript", \GENERATE_R_SCRIPT);
+	this->plotStats = setVariable("plotStats", \PLOT_STATS);
+	this->savePopulation = setVariable("savePopulation", \SAVE_POPULATION);
+	this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
 	this->outputFilename = (char*)"EASEA";
 	this->plotOutputFilename = (char*)"EASEA.png";
 
-        if (this->isLogg == 1){
+        if (!this->noLogFile) {
 
         auto tmStart = std::chrono::system_clock::now();
         time_t t = std::chrono::system_clock::to_time_t(tmStart);
@@ -246,7 +242,7 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
         char buf_start_time[32];
         string log_fichier_name = this->outputFilename;
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tmStart.time_since_epoch()) % 1000;
-        if (this->isLogg == 1){
+	if (!this->noLogFile) {
 	    std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
 	    easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
 	    logg("DATA of TEST;", std::string(buf_start_time).c_str());
@@ -262,10 +258,10 @@ void ParametersImpl::setDefaultParameters(int argc, char** argv){
     }
 
 
-	this->remoteIslandModel = setVariable("remoteIslandModel",\REMOTE_ISLAND_MODEL);
-	this->ipFile = setVariable("ipFile","\IP_FILE");
-	this->migrationProbability = setVariable("migrationProbability",(float)\MIGRATION_PROBABILITY);
-        this->serverPort = setVariable("serverPort",\SERVER_PORT);
+	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
+	this->ipFile = setVariable("ipFile", "\IP_FILE");
+	this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
+        this->serverPort = setVariable("serverPort", \SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -333,7 +329,10 @@ algorithm  = new _TAlgorithm(generator, problem, initial, crossover, mutation);
 	  
 	}
 	else{
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
+	#ifdef USE_OPENMP
+        #pragma omp parallel for
+        #endif
+  	  for( int i=0 ; i< this->params->parentPopulationSize ; i++){
 		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
 	  }
 	}
@@ -399,7 +398,7 @@ public:
 
 class ParametersImpl : public Parameters {
 public:
-	void setDefaultParameters(int argc, char** argv);
+	ParametersImpl(std::string const& file, int argc, char* argv[]);
 	CEvolutionaryAlgorithm* newEvolutionaryAlgorithm();
 };
 class EvolutionaryAlgorithmImpl: public CEvolutionaryAlgorithm {
@@ -416,7 +415,7 @@ public:
  *
  */
 
-void EASEAInit(int argc, char** argv);
+void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
@@ -522,6 +521,12 @@ find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
 target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+
+if (SANITIZE)
+        target_compile_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>
+)
+        target_link_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>)
+endif()
 
 \INSERT_USER_CMAKE
 

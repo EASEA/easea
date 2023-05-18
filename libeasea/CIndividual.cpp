@@ -17,13 +17,13 @@ CIndividual::CIndividual() : upperBound_(nullptr),
   // TODO Auto-generated constructor stub
 
 }
-CIndividual::CIndividual(CIndividual *) {
+/*CIndividual::CIndividual(CIndividual *) {
 
-}
+}*/
 
-CIndividual::~CIndividual() {
+/*CIndividual::~CIndividual() {
   // TODO Auto-generated destructor stub
-}
+}*/
 
 void CIndividual::setObjective(int index, double val) {
     if (index < 0 || index >= nbObj_)

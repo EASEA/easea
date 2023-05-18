@@ -17,7 +17,7 @@ RandomGenerator* globalRandomGenerator;
 int main(int argc, char** argv){
 
 
-  parseArguments("EASEA.prm",argc,argv);
+  
 
   size_t parentPopulationSize = setVariable("popSize",\POP_SIZE);
   size_t offspringPopulationSize = setVariable("nbOffspring",\OFF_SIZE);
@@ -25,7 +25,6 @@ int main(int argc, char** argv){
   float pMutation = \MUT_PROB;
   float pMutationPerGene = 0.05;
 
-  time_t seed = setVariable("seed",time(0));
   globalRandomGenerator = new RandomGenerator(seed);
 
   std::cout << "Seed is : " << seed << std::endl;
@@ -37,7 +36,7 @@ int main(int argc, char** argv){
   string outputfile = setVariable("outputfile","");
   string inputfile = setVariable("inputfile","");
 
-  EASEAInit(argc,argv);
+  EASEAInit(argc, argv, p);
     
   EvolutionaryAlgorithm ea(parentPopulationSize,offspringPopulationSize,selectionPressure,replacementPressure,
 			   selectionOperator,replacementOperator,pCrossover, pMutation, pMutationPerGene,outputfile,inputfile);
@@ -78,7 +77,6 @@ extern RandomGenerator* globalRandomGenerator;
 
 \INSERT_USER_FUNCTIONS
 
-\INSERT_INITIALISATION_FUNCTION
 \INSERT_FINALIZATION_FUNCTION
 \INSERT_GENERATION_FUNCTION
 \INSERT_BEGIN_GENERATION_FUNCTION
@@ -88,8 +86,14 @@ void EASEAFinal(Population* pop){
   \INSERT_FINALIZATION_FCT_CALL
 }
 
-void EASEAInit(int argc, char** argv){
-  \INSERT_INIT_FCT_CALL
+void EASEAInit(int argc, char* argv[], ParametersImpl& p){
+	(void)argc;(void)argv;(void)p;
+	auto setVariable = [&](std::string const& arg, auto def) {
+		return p.setVariable(arg, std::forward<decltype(def)>(def));
+	}; // for compatibility
+	(void)setVariable;
+
+  \INSERT_INITIALISATION_FUNCTION
 }
 
 
@@ -373,7 +377,7 @@ extern int OFFSPRING_SIZE;
 
 \INSERT_USER_CLASSES_DEFINITIONS
 
-void EASEAInit(int argc, char *argv[]);
+void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(Population* population);
 void EASEAFinalization(Population* population);
 
@@ -1342,7 +1346,7 @@ int loadParametersFile(const string& filename, char*** outputContainer){
 }
 
 
-void parseArguments(const char* parametersFileName, int ac, char** av, 
+void 
 		    po::variables_map& vm, po::variables_map& vm_file){
 
   char** argv;
@@ -1392,8 +1396,8 @@ void parseArguments(const char* parametersFileName, int ac, char** av,
  
 }
 
-void parseArguments(const char* parametersFileName, int ac, char** av){
-  parseArguments(parametersFileName,ac,av,vm,vm_file);
+void 
+  
 }
 
 
@@ -1672,7 +1676,6 @@ class Population {
 /*   } */
 /* } */
 
-void parseArguments(const char* parametersFileName, int ac, char** av);
 int setVariable(const std::string optionName, int defaultValue);
 std::string setVariable(const std::string optionName, std::string defaultValue);
 
