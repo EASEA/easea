@@ -285,7 +285,7 @@ void toDotFile(GPNode* root, const char* baseFileName, int treeId, const unsigne
   if( !outputFile ){
     perror("Opening file for outputing dot representation ");
     printf("%s\n",oss.str().c_str());
-    exit(-1);
+    exit(1);
   }
 
   fprintf(outputFile,"digraph trees {\n");

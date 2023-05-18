@@ -66,7 +66,7 @@ using namespace std;
 
         if (nbPoints < 1) {
             cout << "run-time error" << endl;
-            exit(-1);
+            exit(1);
     }
 
         double minValue = front[0][objective];
@@ -106,7 +106,7 @@ using namespace std;
             if (nbObj < 3) {
                 if (nbNondominatedPoints < 1) {
                     cout << "run-time error" << endl;
-                    exit(-1);
+                    exit(1);
                 }
                 tmpVolume = front[0][0];
             } else
