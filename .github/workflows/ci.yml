@@ -182,7 +182,7 @@ jobs:
         run: choco install winflexbison3 sed
         shell: bash
 
-      - name: Installing Boost 1.79
+      - name: Installing Boost
         run: choco install boost-msvc-14.3
 
           #- name: Installing CUDA
