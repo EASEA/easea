@@ -289,6 +289,10 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
         selectionPressure = 1;
         replacementPressure = setVariable("reduceFinalPressure", (float)\RED_FINAL_PRM);
+	parentReductionOperator = NULL;
+	offspringReductionOperator = NULL;
+	offspringReductionPressure = 1.;
+	parentReductionPressure = 1.;
         pCrossover = 1;
         pMutation = 1;
         pMutationPerGene = 1;
