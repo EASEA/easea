@@ -36,13 +36,12 @@ public:
         typedef std::vector<TRange> TBoundary;
 
         CBoundary(const TBoundary &boundary);
-        ~CBoundary(void);
         const TBoundary &getBoundary(void) const;
         bool isInside(const std::vector<TType> &point) const;
         static bool validate(const TBoundary &boundary);
 
 private:
-        const TBoundary m_boundary;
+        TBoundary m_boundary;
 };
 
 template <typename TType>
@@ -51,11 +50,6 @@ CBoundary<TType>::CBoundary(const TBoundary &boundary)
 {
         if (!validate(boundary)) LOG_ERROR(errorCode::value, "Value of boundary is not valid");
  
-}
-
-template <typename TType>
-CBoundary<TType>::~CBoundary(void)
-{
 }
 
 template <typename TType>
