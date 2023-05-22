@@ -1479,7 +1479,8 @@ if(OPERATING_SYSTEM=WINDOWS)
  }                
 
 <COPY_USER_CMAKE>"\\User"[ \t\n]+[Cc][Mm][Aa][Kk][Ee][^ \t\n]*[ \t\n]*":" {
-  fprintf (fpOutputFile,"# User CMAKE\n"); 
+  fprintf (fpOutputFile,"# User CMAKE\n");
+  bFunction = 0;
   BEGIN COPY;
  }
 <COPY_USER_CMAKE><<EOF>> {
