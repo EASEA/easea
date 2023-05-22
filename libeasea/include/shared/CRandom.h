@@ -13,6 +13,9 @@
 
 #pragma once
 
+#include <type_traits>
+#include <functional>
+
 namespace easea
 {
 namespace shared
@@ -21,18 +24,18 @@ template <typename TRandom>
 class CRandom
 {
 public:
-        typedef TRandom TR;
+        using TR = typename std::remove_reference<typename std::remove_cv<TRandom>::type>::type;
 
-        CRandom(TR random);
+        CRandom(TR& random);
         ~CRandom(void);
-        TR getRandom(void);
+        TR& getRandom(void);
 
 private:
-        TR m_random;
+	std::reference_wrapper<TR> m_random;
 };
 
 template <typename TRandom>
-CRandom<TRandom>::CRandom(TRandom random) : m_random(random)
+CRandom<TRandom>::CRandom(CRandom<TRandom>::TR& random) : m_random(random)
 {
 }
 
@@ -42,7 +45,7 @@ CRandom<TRandom>::~CRandom(void)
 }
 
 template <typename TRandom>
-TRandom CRandom<TRandom>::getRandom(void)
+typename CRandom<TRandom>::TR& CRandom<TRandom>::getRandom(void)
 {
         return m_random;
 }
