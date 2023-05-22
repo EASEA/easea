@@ -12,6 +12,8 @@
  ***********************************************************************/
 #pragma once
 
+#include <functional>
+
 #include <operators/crossover/base/C2x2Crossover.h>
 
 namespace easea
@@ -33,7 +35,7 @@ public:
         TC &getCrossover(void) const;
 
 private:
-        TC &m_crossover;
+	std::reference_wrapper<TC> m_crossover;
 };
 
 
