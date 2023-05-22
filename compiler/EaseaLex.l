@@ -2686,7 +2686,8 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
     fprintf(stderr,"\n*** Project names starting with non-letters are invalid.\n*** Please choose another name.\n"); return 0;}
                                                                            
   if (!(fpGenomeFile = fopen(sEZ_FILE_NAME, "r"))){
-    fprintf(stderr,"\n*** Could not open %s\n",sEZ_FILE_NAME); return 0;}
+    fprintf(stderr,"\n*** Could not open %s\n",sEZ_FILE_NAME);
+    exit(1);}
  
   return 1;
 }
