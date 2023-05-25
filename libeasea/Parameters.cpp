@@ -8,6 +8,7 @@
 #include "Parameters.h"
 #include "COptionParser.h"
 #include <stdio.h>
+#include <cmath>
 
 Parameters::Parameters(std::string const& filename, int argc, char* argv[]) : optimise(false), baldwinism(false) {
 	parseArguments(filename.c_str(), argc, argv, vm, vm_file);
@@ -44,5 +45,15 @@ int Parameters::setReductionSizes(int popSize, float popReducSize){
         }
         else
                 return static_cast<int>(popReducSize);
+}
+
+int Parameters::getOffspringSize(int defaut_value, int parent_size) const {
+	float cur = setVariable("nbOffspring", static_cast<float>(defaut_value));
+	if (cur <= 1.0) { // relative
+		auto parentSize = setVariable("popSize", parent_size);
+		return static_cast<int>(cur * static_cast<float>(parentSize));
+	} else {
+		return static_cast<int>(std::round(cur));
+	}
 }
 

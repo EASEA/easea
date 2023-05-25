@@ -8,11 +8,12 @@
 #ifndef COPTIONPARSER_H
 #define COPTIONPARSER_H
 
+#include <type_traits>
 #include <string>
 #include <memory>
 #include <third_party/cxxopts/cxxopts.hpp>
 
-void parseArguments(const char* parametersFileName, int ac, char** av, std::unique_ptr<cxxopts::ParseResult> &vm, std::unique_ptr<cxxopts::ParseResult>& vm_file);
+void parseArguments(const char* parametersFileName, int ac, char** av, std::unique_ptr<cxxopts::ParseResult>&vm, std::unique_ptr<cxxopts::ParseResult>& vm_file);
 
 template <typename T>
 struct is_c_str
@@ -24,11 +25,11 @@ struct is_c_str
 };
 
 template <typename TypeVariable>
-typename std::conditional_t<is_c_str<TypeVariable>::value, std::string, TypeVariable>
-setVariable(const std::string& argumentName, TypeVariable&& defaultValue, std::unique_ptr<cxxopts::ParseResult>& vm,
-	    std::unique_ptr<cxxopts::ParseResult>& vm_file)
+typename std::conditional_t<is_c_str<TypeVariable>::value, std::string, std::remove_cv_t<std::remove_reference_t<TypeVariable>>>
+setVariable(const std::string& argumentName, TypeVariable&& defaultValue, std::unique_ptr<cxxopts::ParseResult> const& vm,
+	    std::unique_ptr<cxxopts::ParseResult> const& vm_file)
 {
-	using ret_t = std::conditional_t<is_c_str<TypeVariable>::value, std::string, TypeVariable>;
+	using ret_t = std::conditional_t<is_c_str<TypeVariable>::value, std::string, std::remove_cv_t<std::remove_reference_t<TypeVariable>>>;
 	if (vm->count(argumentName)) {
 		return (*vm)[argumentName].as<ret_t>();
 	} else if (vm_file->count(argumentName)) {

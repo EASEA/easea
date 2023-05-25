@@ -113,6 +113,10 @@ typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 \INSERT_USER_DECLARATIONS
 easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
 
+typedef easea::algorithms::asrea::Casrea< TIndividual, TRandom &> TAlgorithm;
+TAlgorithm *m_algorithm;
+size_t m_popSize = -1;
+
 \ANALYSE_USER_CLASSES
 
 
@@ -120,10 +124,6 @@ easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossove
 \INSERT_USER_FUNCTIONS
 
 \INSERT_FINALIZATION_FUNCTION
-
-typedef easea::algorithms::asrea::Casrea< TIndividual, TRandom &> TAlgorithm;
-TAlgorithm *m_algorithm;
-size_t m_popSize = -1;
 
 
 
@@ -248,7 +248,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	pMutationPerGene = 0.05;
 
 	parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
-	offspringPopulationSize = setVariable("nbOffspring", (int)\OFF_SIZE);
+	offspringPopulationSize = getOffspringSize((int)\OFF_SIZE, \POP_SIZE);
 	m_popSize = parentPopulationSize;
 	/*
 	 * The reduction is set to true if reductionSize (parent or offspring) is set to a size less than the

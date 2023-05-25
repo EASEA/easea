@@ -115,6 +115,10 @@ TCrossover m_crossover = crossover;
 //easea::operators::crossover::CWrap2x2Crossover<TT, TV>(crossover);
 //easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
 
+typedef easea::algorithms::moead::Cmoead< TIndividual, TRandom &> TAlgorithm;
+TAlgorithm *m_algorithm;
+size_t m_popSize = -1;
+
 \ANALYSE_USER_CLASSES
 
 
@@ -144,10 +148,6 @@ size_t setNumberOfReferencePointDiv( const int nbObjectives)
 }
 
 \INSERT_FINALIZATION_FUNCTION
-
-typedef easea::algorithms::moead::Cmoead< TIndividual, TRandom &> TAlgorithm;
-TAlgorithm *m_algorithm;
-size_t m_popSize = -1;
 
 
 
@@ -308,7 +308,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	pMutationPerGene = 0.05;
 
 	parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
-	offspringPopulationSize = setVariable("nbOffspring", (int)\OFF_SIZE);
+	offspringPopulationSize = getOffspringSize((int)\OFF_SIZE, \POP_SIZE);
 	m_popSize = parentPopulationSize;
 
 	/*parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents", (float)\SURV_PAR_SIZE));

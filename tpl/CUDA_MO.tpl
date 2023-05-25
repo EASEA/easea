@@ -19,7 +19,7 @@ int main(int argc, char** argv){
   parseArguments("EASEA.prm",argc,argv);
 
   size_t parentPopulationSize = setVariable("popSize", \POP_SIZE);
-  size_t offspringPopulationSize = setVariable("nbOffspring", \OFF_SIZE);
+  size_t offspringPopulationSize = getOffspringSize(\OFF_SIZE, \POP_SIZE);
   float pCrossover = \XOVER_PROB;
   float pMutation = \MUT_PROB;
   float pMutationPerGene = 0.05;

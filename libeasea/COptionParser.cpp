@@ -61,7 +61,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         ("h,help", "produce help message")
         ("s,seed", "set the global seed of the pseudo random generator", cxxopts::value<int>())
         ("p,popSize","set the population size",cxxopts::value<int>())
-        ("nbOffspring","set the offspring population size", cxxopts::value<int>())
+        ("nbOffspring","set the offspring population size", cxxopts::value<float>())
         ("survivingParents","set the reduction size for parent population", cxxopts::value<float>())
         ("survivingOffspring","set the reduction size for offspring population",cxxopts::value<float>())
         ("elite","Elite size",cxxopts::value<int>())

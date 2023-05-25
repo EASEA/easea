@@ -748,7 +748,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	pMutationPerGene = 0.05;
 
 	parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
-	offspringPopulationSize = setVariable("nbOffspring", (int)\OFF_SIZE);
+	offspringPopulationSize = getOffspringSize((int)\OFF_SIZE, \POP_SIZE);
 	m_classPopSize = parentPopulationSize;
 
 	parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents", (float)\SURV_PAR_SIZE));
