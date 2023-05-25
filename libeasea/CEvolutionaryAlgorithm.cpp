@@ -412,7 +412,7 @@ if (!params->noLogFile){
     population->serializePopulation();
   }
 
-  if(this->params->generatePlotScript || !this->params->plotStats)
+  if(this->params->generatePlotScript /*|| !this->params->plotStats*/)
   generatePlotScript();
 
   if(this->params->generateRScript)
