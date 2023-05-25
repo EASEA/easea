@@ -112,6 +112,7 @@ template <typename TObjective, typename TVariable>
 void CAlgorithm<TObjective, TVariable>::run()
 {
         makeOneGeneration();
+	m_iGen++;
 }
 }
 }

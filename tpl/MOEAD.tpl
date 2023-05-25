@@ -388,26 +388,24 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	return ea;
 }
+
 void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
-	LOG_MSG(msgType::INFO, "MOEAD starting....");
+	const auto max_gen = *this->params->generationalCriterion->getGenerationalLimit();
+	const auto max_time_s = this->params->timeCriterion->getLimit();
+	m_algorithm->print_header(std::cout, max_gen, max_time_s);
+
 	auto tmStart = std::chrono::system_clock::now();
-	size_t limitGen = EZ_NB_GEN[0];
-	m_algorithm->setLimitGeneration(limitGen);
 
 	while( this->allCriteria() == false){
-            ostringstream ss;
-            ss << "Generation: " << currentGeneration << std::endl;
-            LOG_MSG(msgType::INFO, ss.str());
-    	    m_algorithm->run();
-    	    currentGeneration += 1;
+	        m_algorithm->run();
+		m_algorithm->print_population_stats(std::cout);
+    		currentGeneration += 1;
 	}
         ostringstream ss;
         std::chrono::duration<double> tmDur = std::chrono::system_clock::now() - tmStart;
         ss << "Total execution time (in sec.): " << tmDur.count() << std::endl;
         LOG_MSG(msgType::INFO, ss.str());
-
 }
-
 
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 /*const std::vector<TV> initial = easea::variables::continuous::uniform(generator, problem.getBoundary(), \POP_SIZE);
