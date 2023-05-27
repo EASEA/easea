@@ -65,11 +65,14 @@ class CStatsPrinter
 		std::vector<obj_t> min_objs(nb_objs, std::numeric_limits<obj_t>::max());
 		std::vector<obj_t> max_objs(nb_objs, std::numeric_limits<obj_t>::min());
 
-		var_t* pmv = mean_vars.data();
-		obj_t* pmo = mean_objs.data();
-		obj_t* pmio = min_objs.data();
-		obj_t* pmao = max_objs.data();
+		var_t* const pmv = mean_vars.data();
+		obj_t* const pmo = mean_objs.data();
+		obj_t* const pmio = min_objs.data();
+		obj_t* const pmao = max_objs.data();
+		// NOTE: not supported on MSVC
+#if defined(_OPENMP) && (_OPENMP >= 201511)
 		#pragma omp parallel for reduction(+:pmv[:nb_vars]) reduction(+:pmo[:nb_objs]) reduction(min:pmio[:nb_objs]) reduction(max:pmao[:nb_objs])
+#endif
 		for (int i = 0; i < nb_individuals; ++i) {
 			auto const& ind = population[i];
 			for (std::size_t i = 0; i < nb_vars; ++i)
@@ -93,9 +96,11 @@ class CStatsPrinter
 		std::vector<var_t> var_vars(nb_vars, 0.f);
 		std::vector<obj_t> var_objs(nb_objs, 0.f);
 
-		var_t* pvv = var_vars.data();
-		obj_t* pvo = var_objs.data();
+		var_t* const pvv = var_vars.data();
+		obj_t* const pvo = var_objs.data();
+#if defined(_OPENMP) && (_OPENMP >= 201511)
 		#pragma omp parallel for reduction(+:pvv[:nb_vars]) reduction(+:pvo[:nb_objs])
+#endif
 		for (auto const& ind : population) {
 			for (std::size_t i = 0; i < nb_vars; ++i)
 				pvv[i] += (ind.m_variable[i] - mean_vars[i]) * (ind.m_variable[i] - mean_vars[i]);
