@@ -37,7 +37,7 @@ public:
 	TV m_mutStep;
 
         CmoIndividual(void);
-        ~CmoIndividual(void);
+        virtual ~CmoIndividual(void);
         virtual std::size_t evaluate() = 0;
         bool operator ==(const CmoIndividual<TO, TV> &individual) const;
 
