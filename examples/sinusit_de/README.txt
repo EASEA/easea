@@ -1,5 +1,5 @@
 To Compile this example:
-  $ easea -de cigtab.ez
+  $ easea -de sinus_it.ez
   $ cmake . && cmake --build . --config Release
 
 To test it:
