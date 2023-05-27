@@ -3,12 +3,25 @@
 # Léo Chéneau - 2022
 # $1 = easea binary to call
 # $2 = --no-cuda
+# $3 = --verbose
 path_to_script=$(realpath $BASH_SOURCE)
 examples_dir=$(dirname $path_to_script)
 EZ_BINARY="$(realpath "$1")"
+VERBOSE=false
+CUDA=true
+
+if [[ "$3" == "--verbose" ]] || [[ "$2" == "--verbose" ]]; then
+	VERBOSE=true
+fi
+if [[ "$3" == "--no-cuda" ]] || [[ "$2" == "--no-cuda" ]]; then
+	CUDA=false
+fi
+
 Color_Off='\033[0m'
 Red='\033[0;31m'
 Green='\033[0;32m'
+
+
 
 SED=sed
 # Use GNU version of sed
@@ -60,7 +73,7 @@ for edir in $all_examples; do
 	printf "$Green ok!$Color_Off\n"
 
 	# Convert args if CUDA not available
-	if [[ "$2" == "--no-cuda" ]]; then
+	if ! $CUDA; then
 		EASEA_ARGS=$(echo $EASEA_ARGS | $SED 's/\(cuda_\|_cuda\)//')
 		EASEA_ARGS=$(echo $EASEA_ARGS | $SED 's/\(-cuda\)//')
 	fi
@@ -76,6 +89,9 @@ for edir in $all_examples; do
 		continue
 	fi
 	printf "$Green ok!$Color_Off\n"
+	if $VERBOSE; then
+		printf "Output:\n===\n%s\n===\n" "$OUT"
+	fi
 
 	# compile
 	printf -- "\t$EASEA_BUILD..."
@@ -89,6 +105,9 @@ for edir in $all_examples; do
 		continue
 	fi
 	printf "$Green ok!$Color_Off\n"
+	if $VERBOSE; then
+		printf "Output:\n===\n%s\n===\n" "$OUT"
+	fi
 
 	# Match output file
 	CURATED_BIN=$(echo $EASEA_OUT | $SED -n 's/\.\///p')
@@ -112,10 +131,13 @@ for edir in $all_examples; do
 		failed=$((failed + 1))
 		failed_list+=($(basename $edir))
 	fi
+	if $VERBOSE; then
+		printf "Output:\n===\n%s\n===\n" "$OUT"
+	fi
 
 	# clean
 	make clean easeaclean >/dev/null 2>/dev/null
-	rm -rf *.log *.prm CMakeLists.txt CMakeFiles CMakeCache 
+	rm -rf *.log *.prm CMakeLists.txt CMakeFiles CMakeCache *.pop *.plot *.prm
 done
 
 # Stats
