@@ -50,7 +50,7 @@ public:
         
         typedef std::vector<TI> TPopulation;
         typedef CmoeaAlgorithm<TPopulation, TRandom> TBase;
-;
+
         typedef typename TBase::TP TP;
         typedef typename easea::operators::crossover::CWrap2x2Crossover<TO, TV>::TC TC;
         typedef typename easea::operators::mutation::CWrapMutation<TO, TV>::TM TM;
