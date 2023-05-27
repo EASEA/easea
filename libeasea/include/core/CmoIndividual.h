@@ -14,6 +14,7 @@
  
 #include <vector>
 #include <core/CConstraint.h>
+#include <shared/CSerializable.h>
 
 namespace easea
 {
@@ -23,7 +24,7 @@ namespace easea
  * \param[in] - TVariable : Type of the decision, can be any data structure
  */
 template <typename TObjective, typename TVariable>
-class CmoIndividual : public CConstraint<TObjective>
+class CmoIndividual : public CConstraint<TObjective>, public CSerializable<CmoIndividual<TObjective, TVariable>>
 {
 public:
 

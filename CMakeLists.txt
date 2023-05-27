@@ -116,8 +116,9 @@ else ()
 endif ()
 
 ## Boost (asio)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS iostreams serialization)
 target_include_directories(libeasea PUBLIC ${Boost_INCLUDE_DIRS})
+target_link_libraries(libeasea PUBLIC ${Boost_LIBRARIES})
 
 ## Bison & Flex: FLEX and BISON management to create the easea language and soon the easna/neural language
 

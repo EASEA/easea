@@ -24,7 +24,7 @@ namespace easea
 namespace algorithms
 {
 template <typename TPopulation, typename TRandom>
-class CmoeaAlgorithm : public CAlgorithm<typename TPopulation::value_type::TO, typename TPopulation::value_type::TV>,  public easea::shared::CRandom<TRandom>, public CStatsPrinter<CmoeaAlgorithm<TPopulation, TRandom>>
+class CmoeaAlgorithm : public CAlgorithm<typename TPopulation::value_type::TO, typename TPopulation::value_type::TV>,  public easea::shared::CRandom<TRandom>, public CStatsPrinter<CmoeaAlgorithm<TPopulation, TRandom>>, public CSerializable<CmoeaAlgorithm<TPopulation, TRandom>>
 {
 public:
         typedef TPopulation TPop;
