@@ -116,7 +116,7 @@ typedef easea::operators::crossover::continuous::de::CdeCrossover<TT, TRandom &>
 TAlgorithm *m_algorithm;
 size_t m_popSize = -1;
 std::time_t m_seed = std::time(nullptr);
-TRandom m_generator{static_cast<unsigned long>(m_seed)};
+TRandom m_generator{static_cast<unsigned int>(m_seed)};
 
 \INSERT_USER_DECLARATIONS
 
