@@ -363,7 +363,7 @@ void InitialiseGPUs(){
 
 \INSERT_FINALIZATION_FUNCTION
 
-void evale_pop_chunk(CIndividual** population, int popSize){
+void evale_pop_chunk([[maybe_unused]] CIndividual** population, [[maybe_unused]] int popSize) {
   \INSTEAD_EVAL_FUNCTION
 }
 

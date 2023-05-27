@@ -125,7 +125,7 @@ size_t m_popSize = -1;
 
 
 
-void evale_pop_chunk(CIndividual** population, int popSize){
+void evale_pop_chunk([[maybe_unused]] CIndividual** population, [[maybe_unused]] int popSize) {
   \INSTEAD_EVAL_FUNCTION
 }
 

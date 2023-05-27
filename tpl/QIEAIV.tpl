@@ -563,7 +563,7 @@ void output_psi(double *psi, int N, double size, FILE *fp, std::vector<double>f)
 
 */
 
-void evale_pop_chunk(CIndividual** population, int popSize){
+void evale_pop_chunk([[maybe_unused]] CIndividual** population, [[maybe_unused]] int popSize) {
   \INSTEAD_EVAL_FUNCTION
 }
 

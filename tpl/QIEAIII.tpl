@@ -310,7 +310,7 @@ int qhoa(double sigma, const size_t nbVar, const size_t szPop, std::vector<std::
 
 
 
-void evale_pop_chunk(CIndividual** population, int popSize){
+void evale_pop_chunk([[maybe_unused]] CIndividual** population, [[maybe_unused]] int popSize) {
   \INSTEAD_EVAL_FUNCTION
 }
 
