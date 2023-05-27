@@ -552,7 +552,15 @@ find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
 	PATH_SUFFIXES include easena libeasea)
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
+	add_definitions(-DBOOST_ALL_NO_LIB)
+	set(Boost_USE_STATIC_LIBS ON)
+	set(Boost_USE_MULTITHREADED ON)
+	set(Boost_USE_STATIC_RUNTIME OFF)
+endif()
 find_package(Boost REQUIRED COMPONENTS iostreams serialization)
+
 find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
