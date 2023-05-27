@@ -111,7 +111,7 @@ void Ccde<TIndividual, TRandom>::makeOneGeneration(void)
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-	for (size_t i = 0; i < parent.size(); ++i)
+	for (int i = 0; i < static_cast<int>(parent.size()); ++i)
 	{
 	    TIndividual child = runBreeding(parent, i);
 	    if (child.m_objective[0] < parent[i].m_objective[0])
