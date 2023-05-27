@@ -13,6 +13,7 @@ class CSerializable
 	template <typename Archive, typename B = Base>
 	auto serialize_impl(Archive& ar, const unsigned version) -> decltype(&B::getPopulation, void())
 	{
+		(void)version;
 		auto* pop_owner = static_cast<Base*>(this);
 		auto const& population = pop_owner->getPopulation();
 		ar & population;
@@ -21,6 +22,7 @@ class CSerializable
 	template <typename Archive, typename  B = Base>
 	auto serialize_impl(Archive& ar, const unsigned version) -> decltype(std::declval<B>().m_variable, void())
 	{
+		(void)version;
 		auto* pop_owner = static_cast<Base*>(this);
 		auto const& vars = pop_owner->m_variable;
 		auto const& objs = pop_owner->m_objective;
