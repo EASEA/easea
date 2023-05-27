@@ -410,11 +410,11 @@ void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* e
 	\INSERT_BEGIN_GENERATION_FUNCTION
 }
 
-void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEEndGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_END_GENERATION_FUNCTION
 }
 
-void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEGenerationFunctionBeforeReplacement([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
         \INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT
 }
 
@@ -503,7 +503,7 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 }
 
 
-void IndividualImpl::printOn(std::ostream& os) const{
+void IndividualImpl::printOn([[maybe_unused]] std::ostream& os) const {
 	\INSERT_DISPLAY
 }
 
@@ -521,7 +521,7 @@ std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
 }
 
 
-unsigned IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate([[maybe_unused]] float pMutationPerGene ) {
   this->valid=false;
 
 

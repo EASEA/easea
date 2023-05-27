@@ -200,7 +200,7 @@ void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* e
 
 }
 
-void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEEndGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_END_GENERATION_FUNCTION
 }
 
