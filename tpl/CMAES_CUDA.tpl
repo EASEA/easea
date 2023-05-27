@@ -784,8 +784,6 @@ clean:
 </VisualStudioProject>
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(EZ_ROOT $ENV{EZ_PATH})
 
 project(EASEA LANGUAGES CUDA CXX C)
@@ -809,7 +807,7 @@ target_compile_options(EASEA PRIVATE
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /W3>
 	$<$<AND:$<NOT:$<COMPILE_LANGUAGE:CUDA>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -march=native -mtune=native -Wall -Wextra>
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/O1 /W4 /DEBUG:FULL>
-	$<$<AND:$<NOT:$<COMPILE_LANGUAGE:CUDA>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O2 -g -Wall -Wextra>
+	$<$<AND:$<NOT:$<COMPILE_LANGUAGE:CUDA>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O0 -g -Wall -Wextra>
 	)
 
 find_library(libeasea_LIB

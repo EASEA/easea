@@ -541,7 +541,6 @@ endif
 
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(EZ_ROOT $ENV{EZ_PATH})
 
 project(EASEA)
@@ -563,7 +562,7 @@ target_compile_options(EASEA PUBLIC
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /W3>
 	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -march=native -mtune=native -Wall -Wextra -pedantic>
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/W4 /DEBUG:FULL>
-	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O2 -g -Wall -Wextra -pedantic>
+	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O0 -g -Wall -Wextra -pedantic>
 	)
 
 find_library(libeasea_LIB
