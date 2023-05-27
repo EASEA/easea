@@ -9,7 +9,7 @@ __________________________________________________________*/
 #include "bradint.h"
 #include "very_uniform.h"
 #include "quicksort.h"
-#include <sys/time.h>
+#include <chrono>
 #include <fstream>
 
 #include <stdio.h>
@@ -55,8 +55,8 @@ for(size_t i = 0; i < nb_sin; ++i){
 };return innerBoundary;}()};
 
 TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(B));
-constexpr double cr = 0.5;
-constexpr double sf = 0.5;
+constexpr double cr = 0.5; // controlled using --u1
+constexpr double sf = 0.5; // controlled using --u2
 TCrossover m_crossover(m_generator, cr, m_problem.getBoundary(), sf);
 
 
@@ -73,8 +73,8 @@ TCrossover m_crossover(m_generator, cr, m_problem.getBoundary(), sf);
 
 
 //Time at the beginning and the end of the GRS step
-struct timeval tv_time_start;
-struct timeval tv_time_stop;
+std::chrono::system_clock::time_point time_start;
+std::chrono::system_clock::time_point time_end;
 
 
 //Display value of the best individual every nDISPLAY_EVERY generations
@@ -679,10 +679,13 @@ if(bNUS_FILE && bSAMP_GRS_extension){
 
 
 
+// Added to adjust crossover rate and scaling factor at runtime
+// crossover rate controlled using --u1, scaling factor controlled using --u2
+auto dyncr = std::stof(setVariable("u1", "0.5"));
+auto dynsf = std::stof(setVariable("u2", "0.5"));
+m_crossover = TCrossover(m_generator, cr, m_problem.getBoundary(), sf);
 
-
-
-gettimeofday(&tv_time_start, NULL);
+time_start = std::chrono::system_clock::now();
 
 \end
 \After everything else function:
@@ -796,7 +799,7 @@ int index = rand()%((int)nMISSING_GRS_FULL_POINTS.size()+1);
         }
     }
 
-    gettimeofday(&tv_time_stop, NULL);
+    time_end = std::chrono::system_clock::now();
 
     //Decrement counter to enumerate GRS steps number
     nGRS_STEPS_LEFT--;
@@ -824,7 +827,7 @@ int index = rand()%((int)nMISSING_GRS_FULL_POINTS.size()+1);
     nGENS_BEFORE_GRS_CHANGE=nNB_GRS_GENS;
 
     //Put stop timeval into start timeval
-    tv_time_start = tv_time_stop;
+    time_start = time_end;
 
     //Current GRS step
     nSTEP++;
@@ -854,7 +857,8 @@ int index = rand()%((int)nMISSING_GRS_FULL_POINTS.size()+1);
           }
       }
 
-      gettimeofday(&tv_time_stop, NULL);
+
+      time_end = std::chrono::system_clock::now();
 
       //Decrement counter to enumerate GRS steps number
       nGRS_STEPS_LEFT--;
@@ -884,7 +888,7 @@ int index = rand()%((int)nMISSING_GRS_FULL_POINTS.size()+1);
       strcat(cGRS_STEPS, cCHAR_CONTAINER);
 */
       //Copy stop timeval to start timeval
-      tv_time_start = tv_time_stop;
+      time_start = time_end;
 
       //Current GRS step
       nSTEP++;
