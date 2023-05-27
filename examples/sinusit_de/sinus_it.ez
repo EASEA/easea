@@ -1,0 +1,1235 @@
+/*_________________________________________________________
+Derived from the code of Marc HAEGELIN 15/01/2020
+Note that EASEA filenames cannot contain dashes "-" but they
+can contain underscores "_" as is the case with sinus_it.ez
+__________________________________________________________*/
+
+\User declarations :
+
+#include "bradint.h"
+#include "very_uniform.h"
+#include "quicksort.h"
+#include <sys/time.h>
+#include <fstream>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#define nb_sin 5
+#define MAX_SIN 5
+#define NB_VARIABLES nb_sin*4
+
+
+
+constexpr double CI = 1;
+//Number of sines to search for in the signal (up to MAX_SIN)
+int nNB_SIN=nb_sin;
+//Compute with brad_int function
+bool bBRAD_INT=0;
+//Flag to indicate if we search for fine isotopic distribution
+bool bFINE_ISOTOPIC=0;
+//Boolean flag to indicate if there is a decay or not
+bool bNO_DECAY=0;
+
+//Boundaries for amplitude, frequency, phase and exponential decay
+#define fMIN_AMP  0.0
+#define fMAX_AMP  1000.0
+#define fMIN_FREQ 0.23975//0.230;//0.2315; // 0.05335;
+#define fMAX_FREQ  0.26024//0.1995;//0.235;//0.2345; // 0.0536;
+#define fMIN_PH  -PI //0.0;
+#define fMAX_PH  PI //6.283185308;
+#define fMIN_EXP  0.1 //0.0001;
+#define fMAX_EXP  99.9 //5.0;
+
+
+static std::vector<std::pair<TT, TT>> innerBoundary;
+std::vector<std::pair<TT, TT>> B{[]()->
+std::vector<std::pair<TT,TT>>{
+for(size_t i = 0; i < nb_sin; ++i){
+    innerBoundary.push_back(std::make_pair< TT,TT>(fMIN_AMP,fMAX_AMP));
+    innerBoundary.push_back(std::make_pair< TT,TT>(fMIN_FREQ,fMAX_FREQ));
+    innerBoundary.push_back(std::make_pair< TT,TT>(fMIN_PH,fMAX_PH));
+    innerBoundary.push_back(std::make_pair< TT,TT>(fMIN_EXP,fMAX_EXP));
+};return innerBoundary;}()};
+
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(B));
+constexpr double cr = 0.5;
+constexpr double sf = 0.5;
+TCrossover m_crossover(m_generator, cr, m_problem.getBoundary(), sf);
+
+
+
+//These defines are mandatory (can't be variables) because used in easena cuda device code
+//PI and 2*PI with accuracy
+#define PI  3.141592653589793238462643383279502884197169399375105820974944592307816406286209
+#define PI2 6.283185307179586476925286766559005768394338798750211641949889184615632812572418
+//Conversion from brad to rad and vice versa
+#define RAD2BRADMULT 40.743665431525205956834243423363676680821669309556850879402840079077580194361993
+#define BRAD2RADMULT 0.024543692606170259675489401431871116282790385932618014226366754627404815674111008
+//Define maximal number of sines
+
+
+
+//Time at the beginning and the end of the GRS step
+struct timeval tv_time_start;
+struct timeval tv_time_stop;
+
+
+//Display value of the best individual every nDISPLAY_EVERY generations
+int nDISPLAY_EVERY = 10;
+//Size of the whole transient
+int nTRANSIENT_SIZE = 4096;//2048;///1024;//4096;//16777216;
+int DELTA= 1024;
+//NUS multiplier (if NUS acquisition : power of 2)
+int nNUS_ACQ=1;
+
+//Sampling mode (FULL, NUS, GRS, NUS FILE)
+bool bSAMP_FULL = 0;
+bool bSAMP_NUS = 0;
+bool bSAMP_GRS_extension = 0;
+bool bSAMP_GRS_replacement = 1;
+bool bNUS_FILE = 0;
+
+//GRS Settings
+// e.g. with nNUS_GRS_SAMP==16 we pick up 128 points out of 2048(==128*16) sampling points from 32768(==2048*16) full transient with nNUS_GRS==16
+//Number of generations elapsed before expanding the GRS points
+int nNB_GRS_GENS= 0;//128;//3;
+//Ratio of acquired transient over sampled transient (power of 2)
+int nNUS_GRS=4;//8;//4;//8;////32;;//32*32;//last - 32;//8;//1;
+//Defines the number of points to introduce in GRS every nNB_GRS_GENS generations (power of 2)
+//e.g. with nNUS_GRS_SAMP==1 we introduce nNB_SAMPLES new points at every GRS step
+//e.g. with nNUS_GRS_SAMP==2 we introduce nNB_SAMPLES / 2 new points at every GRS step
+//e.g. with nNUS_GRS_SAMP==4 we introduce nNB_SAMPLES / 4 new points at every GRS step
+int nNUS_GRS_SAMP=1; //!!2; //last- 1//!!!!8;//8;//4;
+//Number of current generations to pass before changing the GRS points (counter initialization)
+int nGENS_BEFORE_GRS_CHANGE=nNB_GRS_GENS;
+
+//Window within we want to sample
+//Start point of the window
+int nX_MIN=0;//0;
+//Size of the sampling window (power of 2)
+int nWIN_SIZE=1024;//65536;//2048;//32768/2;; //1048576/4;///4;//last - 32768*2;//65536;//131072;
+//End point of the window
+int nX_MAX=nX_MIN+nWIN_SIZE-1;
+
+//Input transient file name
+char cinput_signal_file[150]="glutathione_down_1024_ZoomFFT_05_to_25_k.bin";//"first-zoom2.bin";//"glutathione_full_zoom_64.bin"; //"glutathione_first_isotope_band_filtered_0_narrowed_freq_0.1985839296875_down_2048_filtered.bin";//"glutathione_full_band_filtered_0.19725_0.1995.bin";//"25062021-Glutathione-cal-300scan-isol_000002.bin";//"output_signal_Fri_Jun_18_15-20-02_2021_16M_allsines_noise10000.bin";//"011219-subP-16M-72-100sc-iso_000003_filtered_fine.bin";//"011219-subP-16M-72-100sc-iso_000003_filtered_coarse.bin"; //"output_signal_Thu_Apr_22_11-17-52_2021_6sines_16M.bin";//"output_signal_Fri_Apr_23_10-26-06_2021_6sines_shifted32k.bin"; //"output_signal_Thu_Apr_22_11-17-52_2021_6sines_16M.bin";//"output_signal_Tue_Apr_20_16-02-02_2021_6sines_realisticphase.bin";
+char cinput_ranks_file[150]="ranks_Mon_Feb_22_15-10-06_2021.bin";
+
+char csinusit_version[512]="sinus_it v12b";
+char ccomment[512]="This is a comment to put in the log file.";
+
+//Counter initialization for display
+int nUSERDISPLAY_COUNTER=nDISPLAY_EVERY;
+
+//Computed settings
+int nTRANSIENT_ACQUIRED=nTRANSIENT_SIZE/nNUS_ACQ;
+int nNB_SAMPLES = /*512;*/nTRANSIENT_ACQUIRED/nNUS_GRS;
+
+//Backup for the initial number of points
+int nINITIAL_nNB_SAMPLES = nNB_SAMPLES;
+
+//New points to introduce for each GRS step
+int nNEW_POINTS_PER_GRS_STEP = nNB_SAMPLES / nNUS_GRS_SAMP;
+
+//Step number in GRS
+int nSTEP=1;
+
+//Steps left in GRS
+int nGRS_STEPS_LEFT;
+
+double fintensity_delta_amp;
+double fintensity_delta_freq;
+double fintensity_delta_phase;
+double fintensity_delta_decay;
+
+double fmutator_amp_rate;
+double fmutator_freq_rate;
+double fmutator_ph_rate;
+double fmutator_dec_rate;
+
+//Maximum similarity between freq. of the sines before merging
+double fepsilon_freq; //0.00000015;
+
+//Backup for initial best fitness
+double fbestinitialfitness;
+
+//Current generation counter
+int nCURRENT_GEN=1;
+
+//Whole transient values
+double* fTRANSIENT = (double*) malloc(nTRANSIENT_SIZE*sizeof(double));
+//Acquired transient in Bruker format (int32 values)
+int* nTRANSIENT;
+//Coordinates of acquired points
+int* nCOORDS_ACQUIRED = (int*) malloc(nTRANSIENT_ACQUIRED*sizeof(int));
+//Consecutive X coordinates in sampled transient points
+int *nCOORDS_ACQUIRED_NUS_GRS;
+
+//Missing points in full transient coordinates (GRS sampling with FULL file)
+vector<int> nMISSING_GRS_FULL_POINTS;
+//Missing points in acquired transient coordinates (GRS sampling with NUS file)
+vector<int> nMISSING_GRS_ACQUIRED_POINTS;
+
+//Sampled points
+double* fSAMPLE = (double*) malloc(sizeof(double) * 2 * nNB_SAMPLES);
+
+//String to store useful informmations added at each GRS step (for final log file)
+char* cGRS_STEPS = NULL;
+
+//Random coordinates in GRS acquired transient for bNUS_FILE when subsampling
+int* nRAND_GRS_COORDINATES;
+\end
+
+\User functions:
+
+
+//Conversion function from rad to brad
+/*__device__ __host__*/ inline double rad2brad(double fRad){
+  return fRad*RAD2BRADMULT;
+}
+
+//Conversion function from brad to rad
+/*__device__ __host__*/ inline double brad2rad(double fBrad){
+  return fBrad*BRAD2RADMULT;
+}
+
+//Evaluation function
+
+
+//Evaluation function
+/*__device__ __host__*/ inline double fScoreOnGPU_L2(const double genome[4*MAX_SIN]){
+
+double y,fScore=0.0;
+
+
+for (int i=0;i<nNB_SAMPLES;i++){
+  y=0; // writing the intialization of y here for clarity
+  for(int j=0;j<nNB_SIN;j++){
+double x = (log(genome[4*j+3]/100.0)/nWIN_SIZE)*(fSAMPLE[2*i]);
+if (i==0){ 
+y+=genome[4*j+0]*sin(2*PI*genome[4*j+1]*(fSAMPLE[2*i])+ genome[4*j+2]);}
+else
+           y+=/*(1+x+x*x/2.0+x*x*x/6.0+x*x*x*x/24.0+x*x*x*x*x/120.0)*/exp((x))*
+     genome[4*j+0]*sin(2*PI*genome[4*j+1]*(fSAMPLE[2*i])+genome[4*j+2]);
+/*    y+=exp((log(genome[4*j+3]/100.0)/nWIN_SIZE)*fSAMPLE[2*i])*genome[4*j+0]*sin(2*PI*genome[4*j+1]*fSAMPLE[2*i]+genome[4*j+2]);*/
+}
+
+//     fScore+=fabs(y-fSAMPLE[2*i+1]);
+     
+
+fScore+=powf(fSAMPLE[2*i+1]-y,2);//powf(fSAMPLE[2*i+1]-((double)y),2); // square of the difference to focus on the large values
+}
+
+fScore/=(double)nNB_SAMPLES;
+
+
+fScore=powf(fScore, .5);
+
+return fScore;
+}
+
+
+
+
+//Evaluation function with brad int
+/*__device__ __host__*/ inline double fScoreOnGPUbradint(const double genome[4*MAX_SIN]){
+
+double y,fScore=0.0;
+
+
+for(int i=0;i<nNB_SAMPLES;i++){
+  y=0.0; // writing the intialization of y here for clarity
+  for(int j=0;j<nNB_SIN;j++){
+    y+=exp((log(genome[4*j+3]/100.0)/nWIN_SIZE)*fSAMPLE[2*i])*genome[4*j+0]*sin(brad2rad(hbrad_modlli64d(2*PI*rad2brad(genome[4*j+1]),(unsigned long long int)fSAMPLE[2*i],rad2brad(genome[4*j+2]))));
+  }
+  fScore+=pow(fSAMPLE[2*i+1]-y,2); // square of the difference to focus on the large values
+}
+
+fScore/=(double)nNB_SAMPLES;
+
+
+fScore=pow(fScore, .5);
+return fScore;
+
+}
+\end
+
+//void beforeEverything(){
+\Before everything else function:
+
+    logg("DE_TYPE;", "Classical DE");
+    logg("\n___TRANSIENT SETTINGS___");
+    logg(cinput_signal_file);
+    logg("nTRANSIENT_SIZE;", nTRANSIENT_SIZE);
+    logg("\n__PART OF TRANSIENT USED__");
+    logg("nX_MIN;", nX_MIN);
+    logg("nWIN_SIZE;", nWIN_SIZE);
+    logg("\n__TREATMENT SETTINGS__");
+    logg("bNO_DECAY;0");
+    logg("\n__SINE SETTINGS__");
+    logg("nNB_SIN;", nb_sin);
+    logg("fMIN_AMP;", fMIN_AMP);
+    logg("fMAX_AMP;", fMAX_AMP);
+    logg("fMIN_FREQ;", fMIN_FREQ);
+    logg("fMAX_FREQ;", fMAX_FREQ);
+    logg("fMIN_PH;", fMIN_PH);
+    logg("fMAX_PH;", fMAX_PH);
+    logg("fMIN_EXP;", fMIN_EXP);
+    logg("fMAX_EXP;", fMAX_EXP);
+
+
+if(!bNUS_FILE){
+  //Update number of samples
+  nNB_SAMPLES =  nWIN_SIZE / nNUS_GRS;
+
+  //Backup for the initial number of points
+  nINITIAL_nNB_SAMPLES = nNB_SAMPLES;
+
+  //New points to introduce for each GRS step
+  nNEW_POINTS_PER_GRS_STEP = nNB_SAMPLES / nNUS_GRS_SAMP;
+
+  free(fSAMPLE);
+
+  fSAMPLE = (double*) malloc(sizeof(double)*2*nNB_SAMPLES);
+}
+
+printf("nX_MIN=%d\n", nX_MIN);
+printf("nX_MAX=%d\n", nX_MAX);
+printf("nNB_SAMPLES=%d\n", nNB_SAMPLES);
+printf("nTRANSIENT_ACQUIRED=%d\n", nTRANSIENT_ACQUIRED);
+
+if(nNB_SIN>MAX_SIN){
+  printf("Error : Trying to search for nNB_SIN>%d sines (max. limit)\n", MAX_SIN);
+  exit(1);
+}
+
+if(bSAMP_FULL==0 && bSAMP_NUS==0 && bSAMP_GRS_extension==0 && bSAMP_GRS_replacement==0){
+    printf("Error : At least one of the four (bSAMP_FULL, bSAMP_NUS, bSAMP_GRS_extension, bSAMP_GRS_replacement) must be non-zero\n");
+    exit(1);
+}
+
+if((bSAMP_FULL&&bSAMP_NUS) || (bSAMP_FULL&&bSAMP_GRS_extension) || (bSAMP_NUS&&bSAMP_GRS_extension)
+    || (bSAMP_FULL&&bSAMP_GRS_replacement) || (bSAMP_NUS&&bSAMP_GRS_replacement)){
+    printf("Error : Only one of the four (bSAMP_FULL, bSAMP_NUS, bSAMP_GRS_extension, bSAMP_GRS_replacement) must be non-zero\n");
+    exit(1);
+}
+
+//Make sure that nNB_SAMPLES<nTRANSIENT_ACQUIRED
+if(nNB_SAMPLES>nTRANSIENT_ACQUIRED){
+    printf("Error : trying to subsample too many points\n");
+    printf("Please make sure that nNB_SAMPLES<=nTRANSIENT_ACQUIRED\n");
+    exit(1);
+}
+
+//Make sure there are enough points within [nX_MIN, nX_MAX]
+if(nNB_SAMPLES>(nX_MAX-nX_MIN+1)){
+    printf("Error : The [nX_MIN, nX_MAX] interval has not enough points for sampling\n");
+    printf("Please make sure that nNB_SAMPLES<=(nX_MAX-nX_MIN)\n");
+    exit(1);
+}
+
+//Make sure that nX_MIN and nX_MAX are in [0, nTRANSIENT_ACQUIRED]
+if(nX_MAX>nTRANSIENT_SIZE || nX_MIN>nTRANSIENT_SIZE || nX_MAX<0 || nX_MIN<0){
+    printf("Error : trying to window outside of the acquired transient\n");
+    printf("Please make sure that nX_MIN and nX_MAX are in [0, nTRANSIENT_ACQUIRED]");
+    exit(1);
+}
+
+//Make sure that nX_MAX > nX_MIN
+if(nX_MAX<=nX_MIN){
+    printf("Error : nX_MAX <= nX_MIN\n");
+    printf("Please make sure to window in a correct manner\n");
+    exit(1);
+}
+
+if(log2((double)(nX_MAX-nX_MIN+1))!=(int)log2((double)(nX_MAX-nX_MIN+1))){
+    printf("Error : The number of points to be considered in the signal is not a power of 2\n");
+    exit(1);
+}
+
+if(log2((double)nNB_SAMPLES)!=(int)log2((double)nNB_SAMPLES)){
+    printf("Error : The number of points to sample from the signal is not a power of 2\n");
+    exit(1);
+}
+
+if(log2((double)nNUS_GRS_SAMP)!=(int)log2((double)nNUS_GRS_SAMP)){
+    printf("Error : nNUS_GRS_SAMP is not a power of 2\n");
+    exit(1);
+}
+
+if(nNUS_GRS_SAMP>nNB_SAMPLES){
+    printf("Error : nNUS_GRS_SAMP must be lower than nNB_SAMPLES (too big)\n");
+    exit(1);
+}
+
+if(log2((double)nTRANSIENT_ACQUIRED)!=(int)log2((double)nTRANSIENT_ACQUIRED)){
+    printf("Error : nTRANSIENT_ACQUIRED is not a power of 2\n");
+    exit(1);
+}
+
+if(log2((double)nWIN_SIZE)!=(int)log2((double)nWIN_SIZE)){
+    printf("Error : nWIN_SIZE is not a power of 2\n");
+    exit(1);
+}
+
+if(bFINE_ISOTOPIC){
+
+  fintensity_delta_amp = (fMAX_AMP-fMIN_AMP)/(2.0*128);
+  fintensity_delta_freq = (fMAX_FREQ-fMIN_FREQ)/(2.0*16);
+  fintensity_delta_phase = (fMAX_PH-fMIN_PH)/(2.0*8);
+  fintensity_delta_decay = (fMAX_EXP-fMIN_EXP)/(2.0*16);
+
+  fmutator_amp_rate = 0.8;
+  fmutator_freq_rate = 0.6;
+  fmutator_ph_rate = 0.4;
+  fmutator_dec_rate = 0.233;
+
+  //Maximum similarity between freq. of the sines before merging
+  fepsilon_freq = 0.00000004; //0.00000015
+
+
+}else{
+
+  fintensity_delta_amp = (fMAX_AMP-fMIN_AMP)/(2.0*128);
+  fintensity_delta_freq = (fMAX_FREQ-fMIN_FREQ)/(2.0*4);
+  fintensity_delta_phase = (fMAX_PH-fMIN_PH)/(2.0*8);
+  fintensity_delta_decay = (fMAX_EXP-fMIN_EXP)/(2.0*16);
+
+  fmutator_amp_rate = 1.0;
+  fmutator_freq_rate = 1.0;
+  fmutator_ph_rate = 0.5;
+  fmutator_dec_rate = 0.233;
+
+  //Maximum similarity between freq. and phase of the sines before merging
+  fepsilon_freq = 0.00002;//0.00015; //0.00002;
+
+}
+
+
+FILE* file = fopen(cinput_signal_file, "r");
+
+if(file==NULL){
+  printf("Error : Could not read signal data file\n");
+  exit(1);
+}
+
+
+if(bNUS_FILE && bSAMP_GRS_extension){
+
+    //Count the number of times left we can extend the points number in GRS Sampling (initialization)
+    nGRS_STEPS_LEFT=(nNUS_GRS-1)*nNUS_GRS_SAMP;
+    //Consecutive X coordinates in nGRS_STEPS_LEFT(=(nNUS_GRS-1)*nNUS_GRS_SAMP) GRS draws
+    nCOORDS_ACQUIRED_NUS_GRS = (int*) malloc(nNB_SAMPLES*sizeof(double));
+
+    //Malloc array to store the input Bruker (int32) signal
+    nTRANSIENT = (int*) malloc(nTRANSIENT_ACQUIRED*sizeof(int));
+    //Read transient from file un Bruker format (int32)
+    fread(nTRANSIENT,sizeof(int),nTRANSIENT_ACQUIRED,file);
+
+    FILE* rank_file = fopen(cinput_ranks_file, "r");
+
+    if(rank_file!=NULL){
+        // Now, read the coordinates from rank file in NUS acquisition
+        fread(nCOORDS_ACQUIRED, sizeof(int), nTRANSIENT_ACQUIRED, rank_file);
+    }else{
+        printf("Error : NUS input file selected and ranks.bin was not found\n");
+        exit(1);
+    }
+
+    //Choose random points from acquired transient
+    nRAND_GRS_COORDINATES = (int*) malloc(nNB_SAMPLES*sizeof(int));
+    very_uniform_grs(nNB_SAMPLES, nNUS_GRS, nRAND_GRS_COORDINATES);
+
+    for(int i=0; i<nNB_SAMPLES; i++){
+        nCOORDS_ACQUIRED_NUS_GRS[i]=nCOORDS_ACQUIRED[nRAND_GRS_COORDINATES[i]-1]-1;
+    }
+
+    //Enumerate and store points coordinates that are missing from previous draw in acquired transient
+    int k=0; // initialize counter
+
+    for(int i=0; i<nNB_SAMPLES; i++){ // For each existing point in acquired transient
+      if(nRAND_GRS_COORDINATES[k]-1!=i){ // If i-th acquired point is not a point selected in the current sorted GRS coordinates
+        nMISSING_GRS_ACQUIRED_POINTS.push_back(i); // Add i-th acquired point to the missing coordinates
+      }else{ // else if i-th is already in the GRS acquired points coordinates
+        k++; // increment counter
+      }
+    }
+
+    for(int i=0; i<nNB_SAMPLES; i++){
+      fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED_NUS_GRS[i];
+      fSAMPLE[2*i+1]=nTRANSIENT[nRAND_GRS_COORDINATES[i]-1];
+    }
+
+}else if(bNUS_FILE && bSAMP_GRS_replacement){
+
+    //Count the number of distinct draws we still can use in GRS sampling (initialization)
+    nGRS_STEPS_LEFT=nNUS_GRS*nNUS_GRS;
+    //Consecutive draws of X coordinates in nGRS_STEPS_LEFT(=nNUS_GRS*nNUS) + 1_GRS draws
+    nCOORDS_ACQUIRED_NUS_GRS = (int*) malloc((nGRS_STEPS_LEFT+1)*nNB_SAMPLES*sizeof(double));
+
+    //Malloc array to store the input Bruker (int32) signal
+    nTRANSIENT = (int*) malloc(nTRANSIENT_ACQUIRED*sizeof(int));
+    //Read transient from file un Bruker format (int32)
+    fread(nTRANSIENT,sizeof(int),nTRANSIENT_ACQUIRED,file);
+
+    FILE* rank_file = fopen(cinput_ranks_file, "r");
+
+    if(rank_file!=NULL){
+        // Now, read the coordinates from rank file in NUS acquisition
+        fread(nCOORDS_ACQUIRED, sizeof(int), nTRANSIENT_ACQUIRED, rank_file);
+    }else{
+        printf("Error : NUS input file selected and ranks.bin was not found\n");
+        exit(1);
+    }
+
+    //Choose random points from acquired transient
+    nRAND_GRS_COORDINATES = (int*) malloc(nNB_SAMPLES*sizeof(int));
+    very_uniform_grs(nNB_SAMPLES, nNUS_GRS, nRAND_GRS_COORDINATES);
+
+    for(int i=0; i<nNB_SAMPLES; i++){
+        nCOORDS_ACQUIRED_NUS_GRS[i]=nCOORDS_ACQUIRED[nRAND_GRS_COORDINATES[i]-1]-1;
+    }
+
+    for(int i=0; i<nNB_SAMPLES; i++){
+      fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED_NUS_GRS[i];
+      fSAMPLE[2*i+1]=nTRANSIENT[nRAND_GRS_COORDINATES[i]-1];
+    }
+
+}else if(bNUS_FILE && bSAMP_FULL){
+
+    if(nTRANSIENT_ACQUIRED!=nNB_SAMPLES){
+      printf("Error : Make sure that nNB_SAMPLES==nTRANSIENT_ACQUIRED in bNUS_FILE && bSAMP_FULL mode\n");
+      exit(1);
+    }
+
+    nTRANSIENT = (int*) malloc(nTRANSIENT_ACQUIRED*sizeof(int));
+    fread(nTRANSIENT,sizeof(int),nTRANSIENT_ACQUIRED,file);
+
+    FILE* rank_file = fopen(cinput_ranks_file, "r");
+
+    if(rank_file!=NULL){
+        // Now, we create nTRANSIENT_ACQUIRED points within [X_MIN, X_MAX] in NUS acquisition
+        fread(nCOORDS_ACQUIRED, sizeof(int), nTRANSIENT_ACQUIRED, rank_file);
+    }else{
+        printf("Error : NUS sampling selected and ranks.bin was not found\n");
+        exit(1);
+    }
+
+    for(int i=0; i<nNB_SAMPLES; i++){
+        fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED[i]-1;
+        fSAMPLE[2*i+1]=nTRANSIENT[i];
+    }
+
+}else if(bNUS_FILE && bSAMP_NUS){
+
+    nRAND_GRS_COORDINATES = (int*) malloc(nNB_SAMPLES*sizeof(double));
+
+    nTRANSIENT = (int*) malloc(nTRANSIENT_ACQUIRED*sizeof(int));
+    fread(nTRANSIENT,sizeof(int),nTRANSIENT_ACQUIRED,file);
+
+    FILE* rank_file = fopen(cinput_ranks_file, "r");
+
+    if(rank_file!=NULL){
+        // Now, we create nTRANSIENT_ACQUIRED points within [X_MIN, X_MAX] in NUS acquisition
+        fread(nCOORDS_ACQUIRED, sizeof(int), nTRANSIENT_ACQUIRED, rank_file);
+    }else{
+        printf("Error : NUS sampling selected and ranks.bin was not found\n");
+        exit(1);
+    }
+
+    //Pick up randomly the NUS coordinate points
+    very_uniform_nus(nNB_SAMPLES, nNUS_GRS, nRAND_GRS_COORDINATES);
+
+    for(int i=0; i<nNB_SAMPLES; i++){
+        fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED[nRAND_GRS_COORDINATES[i]-1]-1;
+        fSAMPLE[2*i+1]=nTRANSIENT[nRAND_GRS_COORDINATES[i]-1];
+    }
+
+}else if(!bNUS_FILE && bSAMP_NUS){ // FULL file and NUS sampling mode
+
+    //Malloc array to store the input bruker signal
+    nTRANSIENT = (int*) malloc(nTRANSIENT_SIZE*sizeof(int));
+    //Read transient from file un Bruker format (int32)
+    fread(nTRANSIENT,sizeof(int),nTRANSIENT_SIZE,file);
+
+    //Pick up randomly the NUS coordinate points
+    very_uniform_nus(nNB_SAMPLES, nNUS_GRS, nCOORDS_ACQUIRED);
+
+    for(int i=0; i<nNB_SAMPLES; i++){
+        nCOORDS_ACQUIRED[i]+=(nX_MIN-1); // shift from nX_MIN to be within [nX_MIN,nX_MAX]
+    }
+
+    //Initialize fSAMPLE coordinates and points
+    for(int i=0; i<nNB_SAMPLES; i++){
+        fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED[i];
+        fSAMPLE[2*i+1]=nTRANSIENT[nCOORDS_ACQUIRED[i]];
+    }
+
+}else if(!bNUS_FILE && bSAMP_GRS_extension){
+
+    //Count the number of times left we can extend the points number in GRS Sampling (initialization)
+    nGRS_STEPS_LEFT=(nNUS_GRS-1)*nNUS_GRS_SAMP;
+    //Consecutive X coordinates in nGRS_STEPS_LEFT(=(nNUS_GRS-1)*nNUS_GRS_SAMP) GRS draws
+    nCOORDS_ACQUIRED_NUS_GRS = (int*) malloc(nNB_SAMPLES*sizeof(double));
+
+    //Malloc array to store the input bruker signal
+    nTRANSIENT = (int*) malloc(nTRANSIENT_SIZE*sizeof(int));
+    //Read transient from file un Bruker format (int32)
+    fread(nTRANSIENT,sizeof(int),nTRANSIENT_SIZE,file);
+
+    //Pick up randomly the GRS coordinate points
+    very_uniform_grs(nNB_SAMPLES, nNUS_GRS, nCOORDS_ACQUIRED_NUS_GRS);
+
+    //Enumerate and store points coordinates that are missing from previous draw
+    int k=0; // initialize counter
+
+    for(int i=0; i<nTRANSIENT_ACQUIRED; i++){ // For each existing point in acquired transient
+      if(nCOORDS_ACQUIRED_NUS_GRS[k]!=i){ // If i is not a point selected in the current sorted GRS coordinates
+        nMISSING_GRS_FULL_POINTS.push_back(i); // Add i to the missing coordinates
+      }else{ // else if i is already in the GRS coordinates
+        k++; // increment counter
+      }
+    }
+
+    for(int i=0; i<nNB_SAMPLES; i++){
+        nCOORDS_ACQUIRED_NUS_GRS[i]+=(nX_MIN-1); // shift from nX_MIN to be within [nX_MIN,nX_MAX]
+    }
+
+    //Initialize fSAMPLE coordinates and points
+    for(int i=0; i<nNB_SAMPLES; i++){
+        fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED_NUS_GRS[i];
+        fSAMPLE[2*i+1]=nTRANSIENT[nCOORDS_ACQUIRED_NUS_GRS[i]];
+    }
+
+}else if(!bNUS_FILE && bSAMP_GRS_replacement){
+
+    //Count the number of distinct draws we still can use in GRS sampling (initialization)
+    nGRS_STEPS_LEFT=nNUS_GRS*nNUS_GRS;
+    //Consecutive draws of X coordinates in nGRS_STEPS_LEFT(=nNUS_GRS*nNUS) + 1_GRS draws
+    nCOORDS_ACQUIRED_NUS_GRS = (int*) malloc((nGRS_STEPS_LEFT+1)*nNB_SAMPLES*sizeof(double));
+
+    nTRANSIENT = (int*) malloc(nTRANSIENT_SIZE*sizeof(int));
+    fread(nTRANSIENT,sizeof(int),nTRANSIENT_SIZE,file);
+
+    for(int i=0; i<=nGRS_STEPS_LEFT; i++){
+        very_uniform_grs(nNB_SAMPLES, nNUS_GRS, nCOORDS_ACQUIRED_NUS_GRS+i*nNB_SAMPLES);
+    }
+
+    for(int i=0; i<nNB_SAMPLES*nGRS_STEPS_LEFT; i++){
+        nCOORDS_ACQUIRED_NUS_GRS[i]+=(nX_MIN-1); // shift from nX_MIN to be within [nX_MIN,nX_MAX]
+    }
+
+    for(int i=0; i<nNB_SAMPLES; i++){
+        fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED_NUS_GRS[i];
+        fSAMPLE[2*i+1]=nTRANSIENT[nCOORDS_ACQUIRED_NUS_GRS[i]];
+    }
+
+}else if(!bNUS_FILE && bSAMP_FULL){ // FULL file and FULL sampling mode
+/*
+    if(nNB_SAMPLES!=(nX_MAX-nX_MIN+1)){
+      printf("Error : Window size must equal the number of sampling points\n");
+      exit(1);
+    }
+*/
+    //Malloc array to store the input bruker signal
+    nTRANSIENT = (int*) malloc(nTRANSIENT_SIZE*sizeof(int));
+    //Read transient from file un Bruker format (int32)
+    fread(nTRANSIENT,sizeof(int),nTRANSIENT_SIZE,file);
+
+    if(nX_MIN+nNB_SAMPLES>nTRANSIENT_ACQUIRED){
+        printf("Error : nX_MIN+nNB_SAMPLES>nTRANSIENT_ACQUIRED\n");
+        exit(1);
+    }
+  /* for(int i=0; i<nTRANSIENT_ACQUIRED; i++){
+        nCOORDS_ACQUIRED[i]=i; // points are consecutive
+    }
+    
+    //Initialize fSAMPLE coordinates and points
+    for(int i=0; i<nNB_SAMPLES; i++){
+        fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED[i];
+        fSAMPLE[2*i+1]=nTRANSIENT[nX_MIN+nCOORDS_ACQUIRED[i]];
+    }*/
+    for(int i=0; i<nTRANSIENT_ACQUIRED; i++){
+        nCOORDS_ACQUIRED[i]=nX_MIN+i; // points are consecutive
+    }
+
+    //Initialize fSAMPLE coordinates and points
+    for(int i=0; i<nNB_SAMPLES; i++){
+        fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED[i]+DELTA;
+        fSAMPLE[2*i+1]=nTRANSIENT[nCOORDS_ACQUIRED[i]]*CI;
+    }
+    std::ofstream source;
+    source.open("source.txt");
+    for (int i=/*1024*/2048; i</*nTRANSIENT_SIZE/4*/ /*65535*/2048+1024; i++){
+     source <<  i-2048/*-1024*/ << "; ";
+     source << nTRANSIENT[i]   << "\n";      
+    }
+    source.close();
+
+
+
+}else{ // Flags are not correctly set
+    printf("Error : Incorrect sampling flags settings\n");
+    printf("Exiting\n");
+    exit(1);
+}
+
+
+
+
+
+
+gettimeofday(&tv_time_start, NULL);
+
+\end
+\After everything else function:
+ auto pop = m_algorithm->getPopulation();
+quicksort_freq(&(pop[0].m_variable)[0], 0, nb_sin-1);
+const std::string column_set = "Sine number;Amplitudes;Frequencies;Phases;Decay";
+logg(column_set);
+
+    std::string string_set;
+    for ( int i = 0; i < nb_sin; ++i ){
+        std::stringstream str_amp, str_freq, str_ph, str_damp;
+        str_amp << std::fixed << std::setprecision(15) << pop[0].m_variable[i*4];
+        str_freq << std::fixed << std::setprecision(15) << pop[0].m_variable[i*4+1];
+        str_ph << std::fixed << std::setprecision(15) << pop[0].m_variable[i*4+2];
+        str_damp << std::fixed << std::setprecision(15) << log(pop[0].m_variable[i*4+3]/100.)/(double)nWIN_SIZE;
+
+        string_set = "Sine " + to_string(i+1) + ";" + str_amp.str() + ";"+
+        str_freq.str() + ";"+ str_ph.str() + ";" + str_damp.str();
+        logg(string_set);
+    }
+
+
+     //Experiment informations
+     printf("--------------------------------------------------------\n");
+     printf("nNB_SAMPLES:%d,nX_MIN:%d,nX_MAX:%d\n",
+     nNB_SAMPLES,nX_MIN,nX_MAX);
+     
+     //Sort the values by frequency
+//     quicksort_freq(Sin, 0, nNB_SIN-1);
+ 
+     //Display the result to inform the user
+/*     printf("\n--------------------------------------------------------\n");
+     printf("Obtained function sorted by frequency: \n y=exp(-%.15f*x)*%.15f*sin(%.15f*x+%.15f)",
+     -log(Sin[3]/100.0)/nTRANSIENT_SIZE,Sin[0],Sin[1],Sin[2]);
+     for (int i=1;i<nNB_SIN;i++)
+       printf("+exp(-%.15f*x)*%.15f*sin(%.15f*x+%.15f)",
+     -log(Sin[i*4+3]/100.0)/nTRANSIENT_SIZE,Sin[i*4+0],
+     Sin[i*4+1],Sin[i*4+2]);
+     printf("\n--------------------------------------------------------\n");
+*/
+//}
+\end
+//void beginGen(){
+\At the beginning of each generation function:
+
+// Global Random Sampling (GRS) section
+// if GRS, if we have elapsed all generations before change, if we still have points to add
+if(bSAMP_GRS_extension && !nGENS_BEFORE_GRS_CHANGE && nGRS_STEPS_LEFT){
+
+    if(bNUS_FILE){
+
+        //Backup for the number of sampling points
+        int nOld_NB_SAMPLES=nNB_SAMPLES;
+
+        //Update the number of sampling points by nNEW_POINTS_PER_GRS_STEP
+        if(nNB_SAMPLES<nTRANSIENT_ACQUIRED){
+          nNB_SAMPLES+=nNEW_POINTS_PER_GRS_STEP;
+        }
+
+        //Extend the coordinates and fSAMPLE by nNEW_POINTS_PER_GRS_STEP
+        nCOORDS_ACQUIRED_NUS_GRS = (int*) realloc(nCOORDS_ACQUIRED_NUS_GRS, nNB_SAMPLES*sizeof(int));
+        nRAND_GRS_COORDINATES = (int*) realloc(nRAND_GRS_COORDINATES, nNB_SAMPLES*sizeof(int));
+        fSAMPLE = (double*) realloc(fSAMPLE, 2*nNB_SAMPLES*sizeof(double));
+
+        //Initialize the new points coordinates picked up from missing points
+        for(int i=0; i<nNEW_POINTS_PER_GRS_STEP; i++){
+         // int index = random((int)0, (int)nMISSING_GRS_ACQUIRED_POINTS.size());
+int index = rand()%((int)nMISSING_GRS_ACQUIRED_POINTS.size()+1);
+          nCOORDS_ACQUIRED_NUS_GRS[i+nOld_NB_SAMPLES]=nCOORDS_ACQUIRED[nMISSING_GRS_ACQUIRED_POINTS.at(index)]-1;
+          nRAND_GRS_COORDINATES[i+nOld_NB_SAMPLES]=nMISSING_GRS_ACQUIRED_POINTS.at(index);
+          nMISSING_GRS_ACQUIRED_POINTS.erase(nMISSING_GRS_ACQUIRED_POINTS.begin()+index);
+        }
+
+        //Initialize new range points
+        for(int i=0; i<nNEW_POINTS_PER_GRS_STEP; i++){
+            fSAMPLE[2*(i+nOld_NB_SAMPLES)]=(double)nCOORDS_ACQUIRED_NUS_GRS[i+nOld_NB_SAMPLES];
+            fSAMPLE[2*(i+nOld_NB_SAMPLES)+1]=nTRANSIENT[nRAND_GRS_COORDINATES[i+nOld_NB_SAMPLES]]; /// Use coordinates in acquired transient not in full transient
+        }
+
+    }else{
+
+        //Backup for the number of sampling points
+        int nOld_NB_SAMPLES=nNB_SAMPLES;
+printf("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT\n");
+        //Update the number of sampling points by nNEW_POINTS_PER_GRS_STEP
+        if(nNB_SAMPLES<nTRANSIENT_ACQUIRED){
+          nNB_SAMPLES+=nNEW_POINTS_PER_GRS_STEP;
+        }
+
+        //Extend the coordinates and fSAMPLE by nNEW_POINTS_PER_GRS_STEP
+        nCOORDS_ACQUIRED_NUS_GRS = (int*) realloc(nCOORDS_ACQUIRED_NUS_GRS, nNB_SAMPLES*sizeof(int));
+        fSAMPLE = (double*) realloc(fSAMPLE, 2*nNB_SAMPLES*sizeof(double));
+
+        //Initialize the new points coordinates picked up from missing points
+        for(int i=0; i<nNEW_POINTS_PER_GRS_STEP; i++){
+    //      int index = random((int)0, (int)nMISSING_GRS_FULL_POINTS.size());
+int index = rand()%((int)nMISSING_GRS_FULL_POINTS.size()+1);
+          nCOORDS_ACQUIRED_NUS_GRS[i+nOld_NB_SAMPLES]=nMISSING_GRS_FULL_POINTS.at(index);
+          nMISSING_GRS_FULL_POINTS.erase(nMISSING_GRS_FULL_POINTS.begin()+index);
+        }
+
+        //Shift from nX_MIN to be within [nX_MIN,nX_MAX]
+        for(int i=0; i<nNEW_POINTS_PER_GRS_STEP; i++){
+          nCOORDS_ACQUIRED_NUS_GRS[i+nOld_NB_SAMPLES]+=nX_MIN;
+        }
+
+        //Initialize fSAMPLE new points
+        for(int i=0; i<nNEW_POINTS_PER_GRS_STEP; i++){
+            fSAMPLE[2*(i+nOld_NB_SAMPLES)]=(double)nCOORDS_ACQUIRED_NUS_GRS[i+nOld_NB_SAMPLES];
+            fSAMPLE[2*(i+nOld_NB_SAMPLES)+1]=nTRANSIENT[nCOORDS_ACQUIRED_NUS_GRS[i+nOld_NB_SAMPLES]];
+        }
+    }
+
+    gettimeofday(&tv_time_stop, NULL);
+
+    //Decrement counter to enumerate GRS steps number
+    nGRS_STEPS_LEFT--;
+
+    //Building an information string for the output log
+    char cCHAR_CONTAINER[625]="";
+    char cCHAR_CONTAINER_STEP[125]="";
+
+    cGRS_STEPS = (char*) realloc(cGRS_STEPS, sizeof(char)*nCURRENT_GEN*625);
+/*
+    snprintf(cCHAR_CONTAINER_STEP, 125, "GRS STEP / TOTAL STEPS = %d / %d\n", nSTEP, (nNUS_GRS-1)*nNUS_GRS_SAMP);
+    strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+    snprintf(cCHAR_CONTAINER_STEP, 125, "STEP DURATION = %.2f sec.\n", (tv_time_stop.tv_sec - tv_time_start.tv_sec) + 1e-6*(tv_time_stop.tv_usec - tv_time_start.tv_usec));
+    strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+    snprintf(cCHAR_CONTAINER_STEP, 125, "GENERATION NUMBER = %d\n", nCURRENT_GEN);
+    strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+    snprintf(cCHAR_CONTAINER_STEP, 125, "CURRENT FITNESS = %f\n", bBest->fitness);
+    strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+    snprintf(cCHAR_CONTAINER_STEP, 125, "NUMBER OF POINTS = %d\n\n", nNB_SAMPLES);
+    strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+
+    strcat(cGRS_STEPS, cCHAR_CONTAINER);
+*/
+    //Initialize again the counter to the number of generations before GRS
+    nGENS_BEFORE_GRS_CHANGE=nNB_GRS_GENS;
+
+    //Put stop timeval into start timeval
+    tv_time_start = tv_time_stop;
+
+    //Current GRS step
+    nSTEP++;
+
+}else if(bSAMP_GRS_replacement && !nGENS_BEFORE_GRS_CHANGE){
+
+      if(bNUS_FILE){
+          for(int i=0; i<nNEW_POINTS_PER_GRS_STEP; i++){
+              int randval = rand()%((int)nTRANSIENT_ACQUIRED+1);
+//random((int)0, (int)nTRANSIENT_ACQUIRED);
+              int xcoord =  rand()%((int)nNB_SAMPLES+1);
+//random((int)0, (int)nNB_SAMPLES);
+              fSAMPLE[2*xcoord]=(double)nCOORDS_ACQUIRED[randval]-1;
+              fSAMPLE[2*xcoord+1]=nTRANSIENT[randval];
+          }
+      }else{
+
+          for(int i=0; i<nNEW_POINTS_PER_GRS_STEP; i++){
+             int randval = rand()%((int)nNB_SAMPLES+1);
+//random((int)0, (int)nNB_SAMPLES);
+             nCOORDS_ACQUIRED_NUS_GRS[randval]=nCOORDS_ACQUIRED_NUS_GRS[randval+nSTEP*nNB_SAMPLES];
+          }
+
+          for(int i=0; i<nNB_SAMPLES; i++){
+              fSAMPLE[2*i]=(double)nCOORDS_ACQUIRED_NUS_GRS[i];
+              fSAMPLE[2*i+1]=nTRANSIENT[nCOORDS_ACQUIRED_NUS_GRS[i]];
+          }
+      }
+
+      gettimeofday(&tv_time_stop, NULL);
+
+      //Decrement counter to enumerate GRS steps number
+      nGRS_STEPS_LEFT--;
+      //Skip first draw and make a modulo to round-robin
+      nGRS_STEPS_LEFT = (nGRS_STEPS_LEFT==0 ? (nNUS_GRS*nNUS_GRS) : nGRS_STEPS_LEFT);
+
+      //Initialize again the counter to the number of generations before GRS
+      nGENS_BEFORE_GRS_CHANGE=nNB_GRS_GENS;
+
+      //Building an information string for the output log
+      char cCHAR_CONTAINER[625]="";
+      char cCHAR_CONTAINER_STEP[125]="";
+/*
+      cGRS_STEPS = (char*) realloc(cGRS_STEPS, sizeof(char)*nCURRENT_GEN*625);
+
+      snprintf(cCHAR_CONTAINER_STEP, 125, "GRS STEP / GRS DRAWS = %d / %d\n", nSTEP, nNUS_GRS*nNUS_GRS);
+      strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+      snprintf(cCHAR_CONTAINER_STEP, 125, "STEP DURATION = %.2f sec.\n", (tv_time_stop.tv_sec - tv_time_start.tv_sec) + 1e-6*(tv_time_stop.tv_usec - tv_time_start.tv_usec));
+      strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+      snprintf(cCHAR_CONTAINER_STEP, 125, "GENERATION NUMBER = %d\n", nCURRENT_GEN);
+      strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+      snprintf(cCHAR_CONTAINER_STEP, 125, "CURRENT FITNESS = %f\n", bBest->fitness);
+      strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+      snprintf(cCHAR_CONTAINER_STEP, 125, "TOTAL NUMBER OF POINTS CHANGED = %d\n\n", nSTEP * nNEW_POINTS_PER_GRS_STEP);
+      strcat(cCHAR_CONTAINER, cCHAR_CONTAINER_STEP);
+
+      strcat(cGRS_STEPS, cCHAR_CONTAINER);
+*/
+      //Copy stop timeval to start timeval
+      tv_time_start = tv_time_stop;
+
+      //Current GRS step
+      nSTEP++;
+
+      nSTEP = (nSTEP==(nNUS_GRS*nNUS_GRS+1) ? 1 : nSTEP);
+
+}
+
+//Count down the number of generations left before next GRS step
+nGENS_BEFORE_GRS_CHANGE--;
+
+
+\end
+
+\At the end of each generation function:
+
+//Counter for the number of elapsed generations
+nCURRENT_GEN++;
+//Adjust ranges to mutate the parameters
+
+// if(nCURRENT_GEN==1){
+//   fbestinitialfitness=bBest->fitness;
+// }else{
+//   fintensity_delta_amp*=bBest->fitness/(100.0*fbestinitialfitness);
+//   fintensity_delta_freq*=bBest->fitness/(100.0*fbestinitialfitness);
+//   fintensity_delta_phase*=bBest->fitness/(100.0*fbestinitialfitness);
+//   fintensity_delta_decay*=bBest->fitness/(100.0*fbestinitialfitness);
+// }
+
+//Decrement counter for user regular display
+/*nUSERDISPLAY_COUNTER--;
+if(nUSERDISPLAY_COUNTER==0){ // When the counter reaches zero
+  //Sort the values of the best individual by frequency
+  quicksort_freq(bBest->Sin, 0, nNB_SIN-1);
+  //Display the best individual
+  printf("\n--------------------------------------------------------\n");
+  printf("Obtained function sorted by frequency: \ny=exp(-%.15f*x)*%.15f*sin(%.15f*x+%.15f)",-log(bBest->Sin[3]/100.0)/nTRANSIENT_SIZE,bBest->Sin[0],bBest->Sin[1],bBest->Sin[2]);
+  for (int i=1;i<nNB_SIN;i++)
+      printf("+exp(-%.15f*x)*%.15f*sin(%.15f*x+%.15f)",-log(bBest->Sin[i*4+3]/100.0)/nTRANSIENT_SIZE,bBest->Sin[i*4+0],bBest->Sin[i*4+1],bBest->Sin[i*4+2]);
+  printf("\n--------------------------------------------------------\n");
+
+  nUSERDISPLAY_COUNTER=nDISPLAY_EVERY; // Initialize counter back to nDISPLAY_EVERY again
+}*/
+
+\end
+
+\At each generation before reduce function:
+  //cout << "At each generation before replacement function called" << endl;
+\end
+
+\User classes :
+GenomeClass {           // EASEA only implements single dimension arrays, so
+  double Sin[4*MAX_SIN];// sin[i*4+0] = amplitude of sine i
+                        // sin[i*4+1] = frequency of sine i
+                        // sin[i*4+2] = phase of sine i
+                        // sin[i*4+3] = decay of sine i
+}
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser : // "initializer" is also accepted
+/*
+if(bFINE_ISOTOPIC){
+
+  for(int i=0; i<nNB_SIN; i++){
+    Genome.Sin[i*4+0]=random((double)fMIN_AMP, (double)fMAX_AMP);
+    Genome.Sin[i*4+1]=random((double)fMIN_FREQ, (double)fMAX_FREQ);
+    Genome.Sin[i*4+2]=fintercept+fslope*Genome.Sin[i*4+1]; //random((double)fMIN_PH, (double)fMAX_PH);
+    if(bNO_DECAY==1){
+      Genome.Sin[i*4+3]=100.0;
+    }else{
+      Genome.Sin[i*4+3]=random((double)fMIN_EXP,(double)fMAX_EXP);
+    }
+  }
+
+}else{
+
+  for(int i=0; i<nNB_SIN; i++){
+    Genome.Sin[i*4+0]=random((double)fMIN_AMP, (double)fMAX_AMP);
+    Genome.Sin[i*4+1]=random((double)fMIN_FREQ, (double)fMAX_FREQ);
+    Genome.Sin[i*4+2]=random((double)fMIN_PH, (double)fMAX_PH);
+    if(bNO_DECAY==1){
+      Genome.Sin[i*4+3]=100.0;
+    }else{
+      Genome.Sin[i*4+3]=random((double)fMIN_EXP,(double)fMAX_EXP);
+    }
+  }
+*/
+}
+
+\end
+
+\GenomeClass::crossover : // create child (initialized to parent1) out of parent1 and parent2
+/*int nLocus=random(0,nNB_SIN);
+for(int i=0; i<nLocus; i++){
+  child.Sin[i*4+0]=parent2.Sin[i*4+0];
+  child.Sin[i*4+1]=parent2.Sin[i*4+1];
+  child.Sin[i*4+2]=parent2.Sin[i*4+2];
+  child.Sin[i*4+3]=parent2.Sin[i*4+3];
+}*/
+\end
+
+\GenomeClass::mutator:
+/*
+if(bFINE_ISOTOPIC){
+
+  float fpMut=3/((float)nNB_SIN);  // Probability of mutating a sine
+
+  for (int i=0;i<nNB_SIN;i++){
+    if (tossCoin(fpMut)){
+          if (tossCoin(fmutator_amp_rate)){ // Mutate amplitude within [fMIN_AMP,fMAX_AMP]
+             double delta_amp = fintensity_delta_amp-random(0.0, 2*fintensity_delta_amp);
+             if(Genome.Sin[i*4+0]+delta_amp<fMIN_AMP || Genome.Sin[i*4+0]+delta_amp>fMAX_AMP){
+               delta_amp*=-1;
+             }
+             Genome.Sin[i*4+0]+=delta_amp;
+          }
+
+          if (tossCoin(fmutator_freq_rate)){ // Mutate frequency within [fMIN_FREQ, fMAX_FREQ]
+             double delta_freq = fintensity_delta_freq-random(0.0, 2*fintensity_delta_freq);
+             if(Genome.Sin[i*4+1]+delta_freq<fMIN_FREQ || Genome.Sin[i*4+1]+delta_freq>fMAX_FREQ){
+               delta_freq*=-1;
+             }
+             Genome.Sin[i*4+1]+=delta_freq;
+
+             Genome.Sin[i*4+2]=fintercept+fslope*Genome.Sin[i*4+1];
+          }
+
+          if(bNO_DECAY==0 && tossCoin(fmutator_dec_rate)){ // Mutate decay within [fMIN_EXP, fMAX_EXP]
+             double delta_exp = fintensity_delta_decay-random(0.0, 2*fintensity_delta_decay);
+             if(Genome.Sin[i*4+3]+delta_exp<fMIN_EXP || Genome.Sin[i*4+3]+delta_exp>fMAX_EXP){
+               delta_exp*=-1;
+             }
+             Genome.Sin[i*4+3]+=delta_exp;
+          }
+      }
+  }
+
+  //Sort the values by frequency
+  quicksort_freq(Genome.Sin, 0, nNB_SIN-1);
+
+  for (int i=0;i<nNB_SIN-1;i++){
+    if (Genome.Sin[i*4+0])
+      if (fabs(Genome.Sin[i*4+1]-Genome.Sin[(i+1)*4+1])<fepsilon_freq){ // Then, we merge the sines and we "remove" the first one
+        double a0, a1, a2, f, p0, p1, p2, e0, e1, e2;  // we will create a2, e2 and p2 out of a0, a1, f, p0, p1
+        // We take for a common frequency the weighted mean of the frequency of the two sines
+        f=Genome.Sin[(i+1)*4+1]=(Genome.Sin[(i)*4+1]*Genome.Sin[(i)*4+0]+Genome.Sin[(i+1)*4+1]*Genome.Sin[(i+1)*4+0])/(Genome.Sin[(i+0)*4+0]+Genome.Sin[(i+1)*4+0]);
+        a0=Genome.Sin[(i+0)*4+0]; a1=Genome.Sin[(i+1)*4+0]; p0=Genome.Sin[(i+0)*4+2]; p1=Genome.Sin[(i+1)*4+2];
+        e0=Genome.Sin[(i+0)*4+3]; e1=Genome.Sin[(i+1)*4+3];
+        a2=sqrt(powf(a0*cos(p0)+a1*cos(p1),2)+powf(a0*sin(p0)+a1*sin(p1),2));
+        //p2=atan((a0*sin(p0)+a1*sin(p1))/(a0*cos(p0)+a1*cos(p1)));
+        p2=fintercept+fslope*f;
+        e2=(e0*a0+e1*a1)/(a0+a1);
+        //If the new amplitude, phase and decay are in the boundaries
+        if(a2<fMAX_AMP && a2>fMIN_AMP && p2<fMAX_PH && p2>fMIN_PH && e2<fMAX_EXP && e2>fMIN_EXP){
+            Genome.Sin[(i+1)*4+0]=a2;
+            Genome.Sin[(i+1)*4+1]=f;
+            Genome.Sin[(i+1)*4+2]=p2;
+            Genome.Sin[(i+1)*4+3]=e2;
+        }else{
+          //Create a new random sine instead of merging
+          Genome.Sin[(i+1)*4+0]=random((double)fMIN_AMP, (double)fMAX_AMP);
+          Genome.Sin[(i+1)*4+1]=random((double)fMIN_FREQ, (double)fMAX_FREQ);
+          Genome.Sin[(i+1)*4+2]=fintercept + fslope*Genome.Sin[(i+1)*4+1]; //random((double)fMIN_PH, (double)fMAX_PH);
+          if(bNO_DECAY==1){
+            Genome.Sin[(i+1)*4+3]=100.0;
+          }else{
+            Genome.Sin[(i+1)*4+3]=random((double)fMIN_EXP,(double)fMAX_EXP);
+          }
+        }
+        //Create a new random sine
+        Genome.Sin[i*4+0]=random((double)fMIN_AMP, (double)fMAX_AMP);
+        Genome.Sin[i*4+1]=random((double)fMIN_FREQ, (double)fMAX_FREQ);
+        Genome.Sin[i*4+2]=fintercept+fslope*Genome.Sin[i*4+1]; //random((double)fMIN_PH, (double)fMAX_PH);
+        if(bNO_DECAY==1){
+          Genome.Sin[i*4+3]=100.0;
+        }else{
+          Genome.Sin[i*4+3]=random((double)fMIN_EXP,(double)fMAX_EXP);
+        }
+     }
+  }
+
+}else{
+
+  float fpMut=3/((float)nNB_SIN);  // Probability of mutating a sine
+  for (int i=0;i<nNB_SIN;i++){
+    if (tossCoin(fpMut)){
+          if (tossCoin(fmutator_amp_rate)){ // Mutate amplitude within [fMIN_AMP,fMAX_AMP]
+             double delta_amp = fintensity_delta_amp-random(0.0, 2*fintensity_delta_amp);
+             if(Genome.Sin[i*4+0]+delta_amp<fMIN_AMP || Genome.Sin[i*4+0]+delta_amp>fMAX_AMP){
+               delta_amp*=-1;
+             }
+             Genome.Sin[i*4+0]+=delta_amp;
+          }
+
+          if (tossCoin(fmutator_freq_rate)){ // Mutate frequency within [fMIN_FREQ, fMAX_FREQ]
+             double delta_freq = fintensity_delta_freq-random(0.0, 2*fintensity_delta_freq);
+             if(Genome.Sin[i*4+1]+delta_freq<fMIN_FREQ || Genome.Sin[i*4+1]+delta_freq>fMAX_FREQ){
+               delta_freq*=-1;
+             }
+             Genome.Sin[i*4+1]+=delta_freq;
+          }
+
+          if (tossCoin(fmutator_ph_rate)){ // Mutate phase within [fMIN_PH, fMAX_PH]
+            double delta_phase = fintensity_delta_phase-random(0.0, 2*fintensity_delta_phase);
+            double new_phase = Genome.Sin[i*4+2]+delta_phase;
+            if(new_phase<0){
+              new_phase+=PI2;
+            }else{
+              new_phase=fmod(Genome.Sin[i*4+2]+delta_phase, PI2);
+            }
+            Genome.Sin[i*4+2]=new_phase;
+          }
+
+          if(bNO_DECAY==0 && tossCoin(fmutator_dec_rate)){ // Mutate decay within [fMIN_EXP, fMAX_EXP]
+             double delta_exp = fintensity_delta_decay-random(0.0, 2*fintensity_delta_decay);
+             if(Genome.Sin[i*4+3]+delta_exp<fMIN_EXP || Genome.Sin[i*4+3]+delta_exp>fMAX_EXP){
+               delta_exp*=-1;
+             }
+             Genome.Sin[i*4+3]+=delta_exp;
+          }
+      }
+  }
+
+  // This is a subtlety to improve the efficiency of the crossover
+  // for (int i=0;i<nNB_SIN-1;i++){  // an evo-bub sort on the frequency :-)
+  //
+  // if (Genome.Sin[i*4+1]>Genome.Sin[(i+1)*4+1]){ // only one bubble goes up
+  //     double ampTemp, freqTemp, phaseTemp, decTemp; // the generations do the global sorting
+  //     ampTemp=Genome.Sin[i*4+0];
+  //     freqTemp=Genome.Sin[i*4+1];
+  //     phaseTemp=Genome.Sin[i*4+2];
+  //     decTemp=Genome.Sin[i*4+3];
+  //     Genome.Sin[i*4+0]=Genome.Sin[(i+1)*4+0];
+  //     Genome.Sin[i*4+1]=Genome.Sin[(i+1)*4+1];
+  //     Genome.Sin[i*4+2]=Genome.Sin[(i+1)*4+2];
+  //     Genome.Sin[i*4+3]=Genome.Sin[(i+1)*4+3];
+  //     Genome.Sin[(i+1)*4+0]=ampTemp;
+  //     Genome.Sin[(i+1)*4+1]=freqTemp;
+  //     Genome.Sin[(i+1)*4+2]=phaseTemp;
+  //     Genome.Sin[(i+1)*4+3]=decTemp;
+  //
+  // } }
+
+  //Sort the values by frequency
+  quicksort_freq(Genome.Sin, 0, nNB_SIN-1);
+
+
+  for (int i=0;i<nNB_SIN-1;i++){
+    if (Genome.Sin[i*4+0])
+      if (fabs(Genome.Sin[i*4+1]-Genome.Sin[(i+1)*4+1])<fepsilon_freq){ // Then, we merge the sines and we "remove" the first one
+        double a0, a1, a2, f, p0, p1, p2, e0, e1, e2;  // we will create a2, e2 and p2 out of a0, a1, f, p0, p1
+        // We take for a common frequency the weighted mean of the frequency of the two sines
+        f=Genome.Sin[(i+1)*4+1]=(Genome.Sin[(i)*4+1]*Genome.Sin[(i)*4+0]+Genome.Sin[(i+1)*4+1]*Genome.Sin[(i+1)*4+0])/(Genome.Sin[(i+0)*4+0]+Genome.Sin[(i+1)*4+0]);
+        a0=Genome.Sin[(i+0)*4+0]; a1=Genome.Sin[(i+1)*4+0]; p0=Genome.Sin[(i+0)*4+2]; p1=Genome.Sin[(i+1)*4+2];
+        e0=Genome.Sin[(i+0)*4+3]; e1=Genome.Sin[(i+1)*4+3];
+        a2=sqrt(powf(a0*cos(p0)+a1*cos(p1),2)+powf(a0*sin(p0)+a1*sin(p1),2));
+        p2=atan((a0*sin(p0)+a1*sin(p1))/(a0*cos(p0)+a1*cos(p1)));
+        e2=(e0*a0+e1*a1)/(a0+a1);
+        //If the new amplitude, phase and decay are in the boundaries
+        if(a2<fMAX_AMP && a2>fMIN_AMP && p2<fMAX_PH && p2>fMIN_PH && e2<fMAX_EXP && e2>fMIN_EXP){
+            Genome.Sin[(i+1)*4+0]=a2; Genome.Sin[(i+1)*4+1]=f; Genome.Sin[(i+1)*4+2]=p2; Genome.Sin[(i+1)*4+3]=e2;
+        }else{
+          //Create a new random sine instead of merging
+          Genome.Sin[(i+1)*4+0]=random((double)fMIN_AMP, (double)fMAX_AMP);
+          Genome.Sin[(i+1)*4+1]=random((double)fMIN_FREQ, (double)fMAX_FREQ);
+          Genome.Sin[(i+1)*4+2]=random((double)fMIN_PH, (double)fMAX_PH);
+          if(bNO_DECAY==1){
+            Genome.Sin[(i+1)*4+3]=100.0;
+          }else{
+            Genome.Sin[(i+1)*4+3]=random((double)fMIN_EXP,(double)fMAX_EXP);
+          }
+        }
+        //Create a new random sine
+        Genome.Sin[i*4+0]=random((double)fMIN_AMP, (double)fMAX_AMP);
+        Genome.Sin[i*4+1]=random((double)fMIN_FREQ, (double)fMAX_FREQ);
+        Genome.Sin[i*4+2]=random((double)fMIN_PH, (double)fMAX_PH);
+        if(bNO_DECAY==1){
+          Genome.Sin[i*4+3]=100.0;
+        }else{
+          Genome.Sin[i*4+3]=random((double)fMIN_EXP,(double)fMAX_EXP);
+        }
+     }
+  }*/
+}
+\end
+
+\GenomeClass::evaluator: // Returns the score
+    TI::m_objective.resize(NB_OBJECTIVES);
+
+
+    size_t dim = NB_VARIABLES; //getNumberofVariables();
+    TT sin[NB_VARIABLES];
+    for (size_t i = 0; i < dim; ++i)
+        sin[i] = TI::m_variable[i];
+    TI::m_objective[0] = fScoreOnGPU_L2(sin/*, NB_VARIABLES*/);
+
+    return 1;
+
+//    return (double)fScoreOnGPU_L2(Genome.Sin);
+
+\end
+
+/*
+double EVAL( const double *Sin){
+    if(bBRAD_INT){
+        return (double)fScoreOnGPUbradint(Sin);
+    }else{
+        return (double)fScoreOnGPU_L2(Sin);
+    }
+    }
+*/
+\User Makefile options:
+\end
+  
+\Default run parameters :         // Please let the parameters appear in this or
+  Number of generations : 2048   // NB_GEN
+  Time limit: 0                   // In seconds, 0 to deactivate
+  Population size : 134912 // 16384 // 32768 // 4096
+  Offspring size : 100%
+  Mutation probability : 1        // MUT_PROB
+  Crossover probability : 1       // XOVER_PROB
+  Evaluator goal : minimise       // Maximise
+  Selection operator: Tournament 25
+  Surviving parents: 100%         // percentage or absolute
+  Surviving offspring: 100%
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+  Final reduce operator: Tournament 25  // 12
+  
+  Elitism: weak                    // Weak (best of parents+offspring) or Strong
+  Elite: 1
+  Print stats: true
+  Generate csv stats file:false
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats:false
+
+  Remote island model: false
+  IP file: ip.txt                  // File containing all the remote island's IP
+  Server port : 2929
+  Migration probability: 0.333
+
+  Save population: false
+  Start from file:false
+\end
