@@ -590,7 +590,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
+	//EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
