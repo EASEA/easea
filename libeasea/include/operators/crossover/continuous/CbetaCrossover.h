@@ -110,7 +110,7 @@ static std::uniform_real_distribution<TT> dist(0, 1);
 	if (k < 1) k = 1;
 double p1 = parent1;
 double p2 = parent2;
-bool t =false;
+[[maybe_unused]] bool t =false;
 /*if (fabs(parent1-parent2)<0.001){
     p1 = p1 + 0.00001*(dist(random));
     p2 = p2 + 0.00001*dist(random);
@@ -139,8 +139,8 @@ bool t =false;
 
 	offspring1 = (min01 + ((dist(random)) * (max01 - min01)));
 	offspring2 = (min01 + ((dist(random)) * (max01 - min01)));
-	double o1 = offspring1;
-	double o2 = offspring2;
+	[[maybe_unused]] double o1 = offspring1;
+	[[maybe_unused]] double o2 = offspring2;
 	offspring1 = (  1-m_adapt) * offspring1 + ( m_adapt) * parent1;
 	offspring2 = (  1-m_adapt) * offspring2 + ( m_adapt)* parent2;
 /*
@@ -213,7 +213,7 @@ sigma = sigma*2;*/
 
         
 template <typename TType, typename TRandom>
-void CbetaCrossover<TType, TRandom>::launch(const TVariable &parent1, const TVariable &parent2, const TVariable step1, const TVariable step2, TVariable &offspring1, TVariable &offspring2)
+void CbetaCrossover<TType, TRandom>::launch(const TVariable &parent1, const TVariable &parent2, [[maybe_unused]] const TVariable step1, [[maybe_unused]] const TVariable step2, TVariable &offspring1, TVariable &offspring2)
 {
         assert(!this->getBoundary().empty());
         assert(parent1.size() == this->getBoundary().size());
