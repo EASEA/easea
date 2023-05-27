@@ -406,7 +406,7 @@ void EASEAFinal(CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
 }
 
-void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_BEGIN_GENERATION_FUNCTION
 }
 

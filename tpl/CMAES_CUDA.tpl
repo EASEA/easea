@@ -148,7 +148,7 @@ void EASEAFinal(CPopulation* pop){
 	delete(cma);
 }
 
-void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	if(*EZ_current_generation==1){
 		cudaPreliminaryProcess(((PopulationImpl*)evolutionaryAlgorithm->population)->offspringPopulationSize,&dimBlockcuda, &dimGridcuda, &d_offspringPopulationcuda,&d_fitnessescuda);
 	}

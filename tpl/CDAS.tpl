@@ -195,7 +195,7 @@ void EASEAFinal(CPopulation* pop){
 	LOG_MSG(msgType::INFO, "CDAS finished");
 }
 
-void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_BEGIN_GENERATION_FUNCTION
 
 

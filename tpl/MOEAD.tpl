@@ -244,7 +244,7 @@ void EASEAFinal(CPopulation* pop){
 
 }
 
-void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_BEGIN_GENERATION_FUNCTION
 
 

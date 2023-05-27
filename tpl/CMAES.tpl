@@ -112,7 +112,7 @@ void EASEAFinal(CPopulation* pop){
 	delete(cma);
 }
 
-void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
     cma->cmaes_UpdateEigensystem(0);
     cma->TestMinStdDevs();
     \INSERT_BEGIN_GENERATION_FUNCTION
