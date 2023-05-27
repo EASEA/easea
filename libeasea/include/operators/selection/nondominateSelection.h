@@ -34,7 +34,7 @@ namespace selection
 template <typename TI, typename TIter, typename TDom, typename TNonCritic, typename TCritic>
 TIter nondominateSelection(std::list<TI> &donorPop, TIter recipPopBegin, TIter recipPopEnd, TDom dominate, TNonCritic noncritical, TCritic critical)
 {
-        if (donorPop.size() < std::distance(recipPopBegin, recipPopEnd)) 	LOG_ERROR(errorCode::value, "Wrong popultion size");
+        if (static_cast<long int>(donorPop.size()) < std::distance(recipPopBegin, recipPopEnd)) 	LOG_ERROR(errorCode::value, "Wrong popultion size");
 
         TIter selected = recipPopBegin;
         while (!donorPop.empty())
@@ -43,7 +43,7 @@ TIter nondominateSelection(std::list<TI> &donorPop, TIter recipPopBegin, TIter r
                 
 		if(nondominate.empty()) 	LOG_ERROR(errorCode::value, "No nontominated solutions");
 
-		if (std::distance(selected, recipPopEnd) > nondominate.size())
+		if (std::distance(selected, recipPopEnd) > static_cast<long int>(nondominate.size()))
                         selected = noncritical(nondominate, selected, recipPopEnd);	/* Selecting nondominated solutions by crowding distance */
                 else
                 {
