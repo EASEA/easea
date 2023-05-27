@@ -1542,7 +1542,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  *****************************************/
 
 <COPY_FINALIZATION_FUNCTION>"\\After"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
-  fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n");
+  fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n(void)population; // avoid warning\n");
   if( bLINE_NUM_EZ_FILE )
     fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
 
