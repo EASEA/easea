@@ -33,7 +33,7 @@ public:
 	double getMetric(){
 		auto metric = std::make_unique<Tclass>();
 		return metric->get(paretoTakenFront, paretoRealFront, nbObj);
-	};
+	}
 
 };
 
