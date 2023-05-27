@@ -97,7 +97,7 @@ typename Cnsga_ii<TIndividual, TRandom>::TPopulation Cnsga_ii<TIndividual, TRand
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-        for (int i = 0; i < offspring.size(); ++i)
+        for (int i = 0; i < static_cast<int>(offspring.size()); ++i)
         {
                 TI &child = offspring[i];
                 this->getMutation()(child);

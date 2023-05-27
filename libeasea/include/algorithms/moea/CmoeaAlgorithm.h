@@ -54,7 +54,7 @@ CmoeaAlgorithm<TPopulation, TRandom>::CmoeaAlgorithm(TR random, TP &problem, con
 #ifdef USE_OPENMP
 EASEA_PRAGMA_OMP_PARALLEL
 #endif
-	for (int i = 0; i < initial.size(); ++i)
+	for (int i = 0; i < static_cast<int>(initial.size()); ++i)
         {
                 TI &individual = m_population[i];
                 individual.m_variable = initial[i];
