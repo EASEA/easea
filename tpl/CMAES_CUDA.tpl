@@ -804,7 +804,7 @@ list(FILTER EASEA_src EXCLUDE REGEX .*EASEAIndividual.cpp)
 add_executable(EASEA ${EASEA_src})
 set_target_properties(EASEA PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-target_compile_features(EASEA PUBLIC cxx_std_14)
+target_compile_features(EASEA PUBLIC cxx_std_17)
 target_compile_options(EASEA PRIVATE
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /W3>
 	$<$<AND:$<NOT:$<COMPILE_LANGUAGE:CUDA>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -march=native -mtune=native -Wall -Wextra>

@@ -532,7 +532,7 @@ endif()
 file(GLOB EASEA_src ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.c)
 add_executable(EASEA ${EASEA_src})
 
-target_compile_features(EASEA PUBLIC cxx_std_14)
+target_compile_features(EASEA PUBLIC cxx_std_17)
 target_compile_options(EASEA PUBLIC
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /W3>
 	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -march=native -mtune=native -Wall -Wextra -pedantic>

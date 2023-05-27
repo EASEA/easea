@@ -50,8 +50,8 @@ SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "")
 
 ### Base flags
 SET(CMAKE_STATIC_LIBRARY_PREFIX="")
-target_compile_features(libeasea PUBLIC cxx_std_14)
-target_compile_features(libeasna PUBLIC cxx_std_14)
+target_compile_features(libeasea PUBLIC cxx_std_17)
+target_compile_features(libeasna PUBLIC cxx_std_17)
 target_compile_options(libeasea PUBLIC
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -g>
 	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -march=native -mtune=native>
