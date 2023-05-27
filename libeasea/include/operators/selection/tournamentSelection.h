@@ -46,7 +46,7 @@ TptrOffspring tournamentSelection(TRandom &random, TptrParent pBegin, TptrParent
                 {
                         if (src == pEnd)
                         {
-                                std::random_shuffle(pBegin, pEnd, [&random](const size_t n)-> size_t{return std::uniform_int_distribution<size_t> (0, n - 1)(random);});
+                                std::shuffle(pBegin, pEnd, random);
                                 src = pBegin;
                         }
                         tournament[i] = *src;
