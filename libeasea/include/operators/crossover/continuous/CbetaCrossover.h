@@ -74,7 +74,7 @@ private:
 
 
 template <typename TType, typename TRandom>
-CbetaCrossover<TType, TRandom>::CbetaCrossover(TRandom random, const TT probability, const TBoundary &boundary, const TT distributionIndex, const TT componentProbability)
+CbetaCrossover<TType, TRandom>::CbetaCrossover(TRandom random, const TT probability, const TBoundary &boundary, [[maybe_unused]] const TT distributionIndex, const TT componentProbability)
         : easea::shared::CRandom<TRandom>(random), easea::shared::CProbability<TT>(probability), easea::shared::CBoundary<TT>(boundary)
         , m_distribution(0, 1) /*, m_distributionributionIndex(distributionIndex)*/, m_probability(componentProbability)
 {

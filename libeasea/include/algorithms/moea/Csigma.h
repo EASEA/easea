@@ -189,7 +189,7 @@ void Csigma<TIndividual, TRandom>::makeOneGeneration()
 
         TPopulation offspring = runBreeding(parent);
         typedef typename TPopulation::pointer TPtr;
-	typedef typename TPopulation::iterator TIter;
+	//typedef typename TPopulation::iterator TIter; // unused
 	bool epsilon = false;
 	
 	if (TBase::checkIsLast() == true){
