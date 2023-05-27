@@ -147,7 +147,7 @@ void Cmoead<TIndividual, TRandom>::makeOneGeneration(void)
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-    for (int i = 0; i < TBase::m_population.size(); ++i)
+    for (int i = 0; i < static_cast<int>(TBase::m_population.size()); ++i)
     {
 	const std::vector<size_t> &neighbors = m_neighbors[i];
 	if (neighbors.size() <= 0) LOG_ERROR(errorCode::value, "Wrong neighbors  size");
