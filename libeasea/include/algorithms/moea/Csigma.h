@@ -206,7 +206,7 @@ void Csigma<TIndividual, TRandom>::makeOneGeneration()
 		easea::shared::CArchive<TIndividual>::updateArchiveEpsilon(offspring[i], epsilon);
 		//if (TBaseArchive::m_same == true) cc++;
 	}
-	size_t szPopDiv2 = (offspring.size() - TBaseArchive::m_archive.size()) / 2;
+	[[maybe_unused]] size_t szPopDiv2 = (offspring.size() - TBaseArchive::m_archive.size()) / 2;
 	size_t icounter = TBaseArchive::m_archive.size();
 	TBase::m_population.resize(icounter);
 
