@@ -73,7 +73,7 @@ class CStatsPrinter
 #if defined(_OPENMP) && (_OPENMP >= 201511)
 		#pragma omp parallel for reduction(+:pmv[:nb_vars]) reduction(+:pmo[:nb_objs]) reduction(min:pmio[:nb_objs]) reduction(max:pmao[:nb_objs])
 #endif
-		for (int i = 0; i < nb_individuals; ++i) {
+		for (int i = 0; i < static_cast<int>(nb_individuals); ++i) {
 			auto const& ind = population[i];
 			for (std::size_t i = 0; i < nb_vars; ++i)
 				pmv[i] += ind.m_variable[i];
@@ -101,7 +101,7 @@ class CStatsPrinter
 #if defined(_OPENMP) && (_OPENMP >= 201511)
 		#pragma omp parallel for reduction(+:pvv[:nb_vars]) reduction(+:pvo[:nb_objs])
 #endif
-		for (int i = 0; i < nb_individuals; ++i) {
+		for (int i = 0; i < static_cast<int>(nb_individuals); ++i) {
 			auto const& ind = population[i];
 			for (std::size_t i = 0; i < nb_vars; ++i)
 				pvv[i] += (ind.m_variable[i] - mean_vars[i]) * (ind.m_variable[i] - mean_vars[i]);
