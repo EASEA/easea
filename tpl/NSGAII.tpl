@@ -309,12 +309,14 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
 	const auto max_gen = *this->params->generationalCriterion->getGenerationalLimit();
 	const auto max_time_s = this->params->timeCriterion->getLimit();
 	m_algorithm->print_header(std::cout, max_gen, max_time_s);
+	m_algorithm->print_population_stats(std::cout);
 
 	auto tmStart = std::chrono::system_clock::now();
 
 	while( this->allCriteria() == false){ 
 	        m_algorithm->run();
 		m_algorithm->print_population_stats(std::cout);
+		AESAEEndGenerationFunction(this);
     		currentGeneration += 1;
 	}
         ostringstream ss;
@@ -447,9 +449,9 @@ public:
 
 void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
-void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
-void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
-void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
+void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
+void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
+void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 
 
 class EvolutionaryAlgorithmImpl: public CEvolutionaryAlgorithm {
@@ -546,11 +548,11 @@ find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
 	PATH_SUFFIXES include easena libeasea)
-find_package(Boost)
+find_package(Boost REQUIRED COMPONENTS iostreams serialization)
 find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
-target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm> ${Boost_LIBRARIES})
 
 if (SANITIZE)
         target_compile_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>

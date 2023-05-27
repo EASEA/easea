@@ -289,7 +289,8 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         char buf_start_time[32];
         string log_fichier_name = this->outputFilename;
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tmStart.time_since_epoch()) % 1000;
-	if (this->isLogg == 1){
+
+	if (!params->noLogFile){
             std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
             easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
             logg("DATA of TEST;", std::string(buf_start_time).c_str());
@@ -590,11 +591,11 @@ find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
 	PATH_SUFFIXES include easena libeasea)
-find_package(Boost)
+find_package(Boost REQUIRED COMPONENTS iostreams serialization)
 find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
-target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm> ${Boost_LIBRARIES})
 
 if (SANITIZE)
         target_compile_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>

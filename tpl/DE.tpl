@@ -116,7 +116,7 @@ typedef easea::operators::crossover::continuous::de::CdeCrossover<TT, TRandom &>
 TAlgorithm *m_algorithm;
 size_t m_popSize = -1;
 std::time_t m_seed = std::time(nullptr);
-TRandom m_generator{m_seed};
+TRandom m_generator{static_cast<unsigned long>(m_seed)};
 
 \INSERT_USER_DECLARATIONS
 
@@ -306,7 +306,7 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
         ss << "Best fitness: " << population[0].m_objective[0] << std::endl;
         
         LOG_MSG(msgType::INFO, ss.str());
-	if (params->isLogg == 1){
+	if (!params->noLogFile){
 	logg("\nBEST FITNESS;", to_string(population[0].m_objective[0]));
         logg("\nRUNTIME;",tmDur.count());
     }
@@ -516,11 +516,11 @@ find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
 	PATH_SUFFIXES include easena libeasea)
-find_package(Boost)
+find_package(Boost REQUIRED COMPONENTS iostreams serialization)
 find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
-target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm> ${Boost_LIBRARIES})
 
 if (SANITIZE)
         target_compile_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>
