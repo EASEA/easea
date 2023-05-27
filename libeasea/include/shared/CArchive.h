@@ -87,6 +87,7 @@ void CArchive<TIndividual>::setMaxSize(size_t maxSize)
 template <typename TIndividual>
 bool CArchive<TIndividual>::Dominate(const TI &individual1, const TI &individual2, bool is_convert)
 {
+	(void) is_convert; //unused
 	return easea::shared::functions::isDominated(individual1.m_objective, individual2.m_objective);
 
 }
