@@ -162,7 +162,7 @@ typename TIndividual::TO Csigma<TIndividual, TRandom>::calcIndicator(const TIndi
         return runCalcIndicator(individual1, individual2);
 }
 template <typename TIndividual, typename TRandom>
-template <typename TIter, typename TF> void Csigma<TIndividual, TRandom>::setFitness(TIter begin, TIter end, TF f)
+template <typename TIter, typename TF> void Csigma<TIndividual, TRandom>::setFitness(TIter begin, TIter end, [[maybe_unused]] TF f)
 {
         for (TIter individual = begin; individual != end; ++individual)
         {
