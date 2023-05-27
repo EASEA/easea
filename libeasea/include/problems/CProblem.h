@@ -65,7 +65,7 @@ private:
 template <typename TType>
 CProblem<TType>::CProblem(const size_t nObjectives, const size_t nVariables, const TBoundary &boundary) : easea::shared::CBoundary<TO>(boundary)
 {
-        if (nObjectives < 0)
+        if (nObjectives <= 0)
 		LOG_ERROR(errorCode::value, "Wrong number of objectives");
 
 	
