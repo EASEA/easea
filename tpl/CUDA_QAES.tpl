@@ -460,7 +460,7 @@ void EASEAEndGeneration(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
 }
     \INSERT_END_GENERATION_FUNCTION
 }
-void EASEAGenerationFunctionBeforeReplace(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void EASEAGenerationFunctionBeforeReplace([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm){
     \INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT
 }
 

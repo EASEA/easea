@@ -204,7 +204,7 @@ void AESAEEndGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evoluti
 	\INSERT_END_GENERATION_FUNCTION
 }
 
-void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEGenerationFunctionBeforeReplacement([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT
 }
 
