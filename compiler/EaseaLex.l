@@ -11,6 +11,7 @@ Centre de Math�matiques Appliqu�es
 Updated on june 2022 by Léo Chéneau to improve windows portability
   ****************************************************************************/
 #include "config.h"
+#include "version.h"
 #ifdef OS_WINDOWS
 #define _CRT_SECURE_NO_WARNINGS
 #define YY_NO_UNISTD_H
@@ -39,8 +40,6 @@ using ssize_t = signed long long;
 #include <memory>
 #include <vector>
 #include <algorithm>
-//#include <iostream>
-//#include <sstream>
 
 #if defined(__APPLE__) || defined(OS_WINDOWS)
  /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
@@ -2538,7 +2537,7 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
 
   if (bVERBOSE) {
 	printf("\n                                                                   ");
-  	printf("\n                                   E A S E A                   (v1.0.3)");
+  	printf("\n                                   E A S E A                   (v%s)", easea::version::full);
   	printf("\n                              ___________________     ");
  	printf("\n                                                                    ");
 	printf("\n		Stochastic Optimisation and Nature Inspired Computing");
