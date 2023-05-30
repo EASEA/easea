@@ -441,7 +441,8 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         this->generateRScript = setVariable("generateRScript", \GENERATE_R_SCRIPT);
         this->plotStats = setVariable("plotStats", \PLOT_STATS);
 
-        this->outputFilename = (char*)"EASEA";
+        this->outputFilename = setVariable("outputFile", "EASEA");
+        this->intputFilename = setVariable("inputFile", "EASEA.pop");
         this->plotOutputFilename = (char*)"EASEA.png";
 }
 

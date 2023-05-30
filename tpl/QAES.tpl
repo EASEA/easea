@@ -378,7 +378,8 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->savePopulation = setVariable("savePopulation", \SAVE_POPULATION);
 	this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
-	this->outputFilename = (char*)"EASEA";
+	this->outputFilename = setVariable("outputFile", "EASEA");
+	this->intputFilename = setVariable("inputFile", "EASEA.pop");
 	this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);

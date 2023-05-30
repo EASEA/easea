@@ -405,11 +405,9 @@ if (!params->noLogFile){
 
   //IF SAVING THE POPULATION, ERASE THE OLD FILE
   if(params->savePopulation){
-  
   string fichier = params->outputFilename;
   fichier.append(".pop");
-  remove(fichier.c_str());
-    population->serializePopulation();
+    population->serializePopulation(fichier);
   }
 
   if(this->params->generatePlotScript /*|| !this->params->plotStats*/)
@@ -673,7 +671,7 @@ void CEvolutionaryAlgorithm::generatePlotScript(){
   fprintf(f,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
   fprintf(f,"set xlabel \"Number of Evaluations\"\n");
         fprintf(f,"set ylabel \"Fitness\"\n");
-  fprintf(f,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines, \'%s.dat\' using 3:5 t  \'Average\' w lines, \'%s.dat\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename,params->outputFilename,params->outputFilename);
+  fprintf(f,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines, \'%s.dat\' using 3:5 t  \'Average\' w lines, \'%s.dat\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename.c_str(),params->outputFilename.c_str(),params->outputFilename.c_str());
   fclose(f);  
 }
 
@@ -684,7 +682,7 @@ void CEvolutionaryAlgorithm::generateRScript(){
   f=fopen(fichier.c_str(),"a");
   fprintf(f,"#Plotting for R\n"),
   fprintf(f,"png(\"%s\")\n",params->plotOutputFilename);
-  fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename);
+  fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename.c_str());
   fprintf(f,"plot(0, type = \"n\", main = \"Plot Title\", xlab = \"Number of Evaluations\", ylab = \"Fitness\", xlim = c(0,%d) )\n",(int)population->currentEvaluationNb);
   fprintf(f,"grid() # add grid\n");
   fprintf(f,"lines(data[,3], data[,4], lty = 1) #draw first dataset\n");

@@ -257,16 +257,11 @@ void CPopulation::sortRPopulation(CIndividual** population, unsigned populationS
 }
 
 /* Fonction qui va serializer la population */
-void CPopulation::serializePopulation(){
-  ofstream EASEA_File;
-  std::string fichier = params->outputFilename;
-  fichier.append(".pop");
-  EASEA_File.open(fichier.c_str(), ios::app);
-  for(int i=0; (unsigned)i<parentPopulationSize; i++){
-  EASEA_File << parents[i]->serialize() << endl;
-
+void CPopulation::serializePopulation(std::string const& file){
+  ofstream EASEA_File { file, ios::trunc };
+  for(unsigned i=0; (unsigned)i<parentPopulationSize; i++){
+  	EASEA_File << parents[i]->serialize() << endl;
   }
-  EASEA_File.close();
 }
 
 int CPopulation::getWorstIndividualIndex(CIndividual** population){

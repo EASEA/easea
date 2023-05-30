@@ -113,7 +113,7 @@ public:
 
     static void sortRPopulation(CIndividual** population, unsigned populationSize);
 
-    void serializePopulation();
+    void serializePopulation(std::string const& file);
     int getWorstIndividualIndex(CIndividual** population);
 
     void sortParentPopulation(){ CPopulation::sortPopulation(parents,actualParentPopulationSize);}

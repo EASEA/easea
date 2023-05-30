@@ -86,6 +86,8 @@ class Parameters {
 
     bool savePopulation;
     bool startFromFile;
+    std::string outputFilename;
+    std::string inputFilename;
 
     //Parameters for the Island Model
     bool remoteIslandModel;
@@ -93,7 +95,6 @@ class Parameters {
     float migrationProbability;
     int serverPort;
 
-    char* outputFilename;
     char* plotOutputFilename;
 
     int fstGpu;

@@ -910,7 +910,8 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->savePopulation = setVariable("savePopulation", \SAVE_POPULATION);
 	this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
-        this->outputFilename = (char*)"EASEA";
+        this->outputFilename = setVariable("outputFile", "EASEA");
+        this->intputFilename = setVariable("inputFile", "EASEA.pop");
         this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
@@ -950,7 +951,7 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
     int index,Size = this->params->parentPopulationSize;
     
     if(this->params->startFromFile){
-          ifstream AESAE_File("EASEA.pop");
+          ifstream AESAE_File(this->params->inputFilename);
           string AESAE_Line;
           for( index=(Size-1); index>=0; index--) {
              getline(AESAE_File, AESAE_Line);
