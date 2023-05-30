@@ -19,6 +19,7 @@
 #include <queue>
 #include <memory>
 #include <thread>
+#include <sstream>
 
 /**
  * @brief Global common io_context
@@ -71,13 +72,31 @@ class CComUDPServer
 	 * @return true if new data can be consumed, false otherwise
 	 */
 	bool has_data() const;
+
 	/**
 	 * @brief Consume available data
-	 * @waring Check if there's data first...
+	 * @warning Check if there's data first...
 	 *
 	 * @return A buffer with the data
 	 */
 	std::vector<char> consume();
+
+	/*
+	 * @brief Consume and convert available data to Serializable type
+	 * @warning Check if there's data first...
+	 *
+	 * @return An individual
+	 */
+	template <typename Serializable>
+	Serializable consume() {
+		auto raw = consume();
+		std::string str{raw.cbegin(), raw.cend()};
+		std::istringstream sbuf{std::move(str)};
+		
+		Serializable ret;
+		sbuf >> ret;
+		return ret;
+	}
 
     private:
 	boost::asio::ip::udp::socket socket; ///< Socket used by the server
@@ -129,6 +148,19 @@ class CComUDPClient
 	 * @param individual Individual to send to destination
 	 */
 	void send(std::string const& individual);
+
+	/**
+	 * @brief send a Serializable object
+	 *
+	 * @param Serializable to send to destination
+	 */
+	template<typename Serializable>
+	void send(Serializable const& ind) {
+		std::ostringstream os;
+		os << ind;
+		send(os.str());
+	}
+
 	/**
 	 * @brief Get IP related to this client
 	 *
