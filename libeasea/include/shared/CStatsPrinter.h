@@ -48,6 +48,15 @@ class CStatsPrinter
 		return os;
 	}
 
+	std::ostream& print_footer(std::ostream& os)
+	{
+		auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+					  std::chrono::system_clock::now() - started_at)
+					  .count();
+
+		os << "Elapsed time: " << std::setprecision(3) << elapsed_ms / 1e3f << "s\n";
+	}
+
 	std::ostream& print_population_stats(std::ostream& os)
 	{
 		auto const& population = static_cast<PopulationOwner*>(this)->getPopulation();
@@ -71,7 +80,7 @@ class CStatsPrinter
 		obj_t* const pmao = max_objs.data();
 		// NOTE: not supported on MSVC
 #if defined(_OPENMP) && (_OPENMP >= 201511)
-		#pragma omp parallel for reduction(+:pmv[:nb_vars]) reduction(+:pmo[:nb_objs]) reduction(min:pmio[:nb_objs]) reduction(max:pmao[:nb_objs])
+#pragma omp parallel for reduction(+:pmv[:nb_vars]) reduction(+:pmo[:nb_objs]) reduction(min:pmio[:nb_objs]) reduction(max:pmao[:nb_objs])
 #endif
 		for (int i = 0; i < static_cast<int>(nb_individuals); ++i) {
 			auto const& ind = population[i];
@@ -99,15 +108,14 @@ class CStatsPrinter
 		var_t* const pvv = var_vars.data();
 		obj_t* const pvo = var_objs.data();
 #if defined(_OPENMP) && (_OPENMP >= 201511)
-		#pragma omp parallel for reduction(+:pvv[:nb_vars]) reduction(+:pvo[:nb_objs])
+#pragma omp parallel for reduction(+ : pvv[:nb_vars]) reduction(+ : pvo[:nb_objs])
 #endif
 		for (int i = 0; i < static_cast<int>(nb_individuals); ++i) {
 			auto const& ind = population[i];
 			for (std::size_t i = 0; i < nb_vars; ++i)
 				pvv[i] += (ind.m_variable[i] - mean_vars[i]) * (ind.m_variable[i] - mean_vars[i]);
 			for (std::size_t i = 0; i < nb_objs; ++i)
-				pvo[i] +=
-					(ind.m_objective[i] - mean_objs[i]) * (ind.m_objective[i] - mean_objs[i]);
+				pvo[i] += (ind.m_objective[i] - mean_objs[i]) * (ind.m_objective[i] - mean_objs[i]);
 		}
 
 		for (auto& v : var_vars)
