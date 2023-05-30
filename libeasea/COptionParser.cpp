@@ -109,8 +109,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         auto vm_value = options.parse(ac,av);
         vm = std::make_unique<cxxopts::ParseResult>(std::move(vm_value));
         if (vm->count("help")) {
-            ostringstream msg;
-            LOG_MSG(msgType::INFO,options.help({""}));
+	    std::cout << options.help({""});
 	    exit(1);
         }
         if(parametersFileName){
