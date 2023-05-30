@@ -11,11 +11,11 @@ class CSerializable
 	friend class boost::serialization::access;
 
 	template <typename Archive, typename B = Base>
-	auto serialize_impl(Archive& ar, const unsigned version) -> decltype(&B::getPopulation, void())
+	auto serialize_impl(Archive& ar, const unsigned version) -> decltype(std::declval<B>().getPopulation(), void())
 	{
 		(void)version;
-		auto* pop_owner = static_cast<Base*>(this);
-		auto const& population = pop_owner->getPopulation();
+		decltype(auto) pop_owner = static_cast<Base*>(this);
+		decltype(auto) population = pop_owner->getPopulation();
 		ar & population;
 	}
 
@@ -24,8 +24,8 @@ class CSerializable
 	{
 		(void)version;
 		auto* pop_owner = static_cast<Base*>(this);
-		auto const& vars = pop_owner->m_variable;
-		auto const& objs = pop_owner->m_objective;
+		auto& vars = pop_owner->m_variable;
+		auto& objs = pop_owner->m_objective;
 		ar & vars;
 		ar & objs;
 	}
@@ -43,7 +43,7 @@ class CSerializable
 		return os;
 	}
 
-	friend std::istream& operator>>(std::istream& is, CSerializable const& serializable) {
+	friend std::istream& operator>>(std::istream& is, CSerializable& serializable) {
 		boost::archive::text_iarchive ia{is};
 		ia >> serializable;
 		return is;

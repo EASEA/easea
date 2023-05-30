@@ -88,12 +88,12 @@ class CComUDPServer
 	 * @return An individual
 	 */
 	template <typename Serializable>
-	Serializable consume() {
+	auto consume() {
 		auto raw = consume();
 		std::string str{raw.cbegin(), raw.cend()};
 		std::istringstream sbuf{std::move(str)};
-		
-		Serializable ret;
+	
+		Serializable ret{};
 		sbuf >> ret;
 		return ret;
 	}

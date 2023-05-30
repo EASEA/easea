@@ -37,9 +37,9 @@ int main(int argc, char** argv){
 
 
 	ParametersImpl p("EASEA.prm", argc, argv);
-	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
-
 	EASEAInit(argc,argv,p);
+
+	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -442,7 +442,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         this->plotStats = setVariable("plotStats", \PLOT_STATS);
 
         this->outputFilename = setVariable("outputFile", "EASEA");
-        this->intputFilename = setVariable("inputFile", "EASEA.pop");
+        this->inputFilename = setVariable("inputFile", "EASEA.pop");
         this->plotOutputFilename = (char*)"EASEA.png";
 }
 

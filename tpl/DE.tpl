@@ -39,14 +39,12 @@ int OFFSPRING_SIZE;
 CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
-
-
 	/*easea::*/ParametersImpl p("EASEA.prm", argc, argv);
+	EASEAInit(argc, argv, p);
+
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
-
-	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -55,7 +53,6 @@ int main(int argc, char** argv){
 	EASEAFinal(pop);
 
 	delete pop;
-
 
 	return 0;
 }
@@ -77,10 +74,12 @@ int main(int argc, char** argv){
 
 
 #include <problems/CProblem.h>
+#include <algorithms/CAlgorithmWrapper.h>
 #include <operators/crossover/C3x1CrossoverLauncher.h>
 #include <variables/continuous/uniform.h>
 #include <algorithms/soea/Ccde.h>
 #include <problems/CProblem.h>
+#include <algorithms/CAlgorithmWrapper.h>
 #include <operators/crossover/continuous/CdeCrossover.h>
 
 #define NB_OBJECTIVES 1
@@ -232,7 +231,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
 	this->outputFilename = setVariable("outputFile", "EASEA");
-	this->intputFilename = setVariable("inputFile", "EASEA.pop");
+	this->inputFilename = setVariable("inputFile", "EASEA.pop");
 	this->plotOutputFilename = (char*)"EASEA.png";
 
         if (!this->noLogFile) {

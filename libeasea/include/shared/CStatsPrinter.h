@@ -54,10 +54,11 @@ class CStatsPrinter
 					  std::chrono::system_clock::now() - started_at)
 					  .count();
 
-		os << "Elapsed time: " << std::setprecision(3) << elapsed_ms / 1e3f << "s\n";
+		os << "Total execution time (in sec.): " << std::setprecision(3) << elapsed_ms / 1e3f << "s\n";
+		return os;
 	}
 
-	std::ostream& print_population_stats(std::ostream& os)
+	std::ostream& print_stats(std::ostream& os)
 	{
 		auto const& population = static_cast<PopulationOwner*>(this)->getPopulation();
 		auto const& cur_generation = static_cast<PopulationOwner*>(this)->getCurrentGeneration();

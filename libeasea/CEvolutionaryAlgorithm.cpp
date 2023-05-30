@@ -151,16 +151,13 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     this->myClientNumber=0; 
     this->initializeClients();
     //if(params->remoteIslandModel)
-    server = new CComUDPServer(params->serverPort); //1 if debug
+    server = std::make_unique<CComUDPServer>(params->serverPort); //1 if debug
   }
 }
 
 /* DESTRUCTOR */
 CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
   delete population;
-        if(this->params->remoteIslandModel){
-                delete this->server;
-        }
 }
 void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
   this->stoppingCriteria.push_back(sc);

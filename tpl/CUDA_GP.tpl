@@ -44,11 +44,11 @@ int main(int argc, char** argv){
 
 
 	ParametersImpl p("EASEA.prm", argc, argv);
+	EASEAInit(argc, argv, p);
+
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
-
-	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -911,7 +911,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
         this->outputFilename = setVariable("outputFile", "EASEA");
-        this->intputFilename = setVariable("inputFile", "EASEA.pop");
+        this->inputFilename = setVariable("inputFile", "EASEA.pop");
         this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);

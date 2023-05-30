@@ -50,7 +50,7 @@ public:
   unsigned treatedIndividuals;
   unsigned numberOfClients;
   unsigned myClientNumber;
-  CComUDPServer *server;
+  std::unique_ptr<CComUDPServer> server;
   std::vector<std::unique_ptr<CComUDPClient>> Clients;
   void initializeClients();
   void receiveIndividuals();
@@ -72,9 +72,6 @@ public:
   virtual ~CEvolutionaryAlgorithm();
 
   std::vector<CStoppingCriterion*> stoppingCriteria;
-
-  std::string* outputfile;
-  std::string* inputfile;
 };
 
 #endif /* CEVOLUTIONARYALGORITHM_H_ */

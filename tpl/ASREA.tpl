@@ -38,14 +38,12 @@ int OFFSPRING_SIZE;
 CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
-
-
 	ParametersImpl p("EASEA.prm", argc, argv);
+	EASEAInit(argc, argv, p);
+
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
-
-	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -54,7 +52,6 @@ int main(int argc, char** argv){
 	EASEAFinal(pop);
 
 	delete pop;
-
 
 	return 0;
 }
@@ -81,6 +78,7 @@ int main(int argc, char** argv){
 #include <CQMetricsIGD.h>
 
 #include <problems/CProblem.h>
+#include <algorithms/CAlgorithmWrapper.h>
 #include <operators/crossover/C2x2CrossoverLauncher.h>
 
 #include <variables/continuous/uniform.h>
@@ -273,7 +271,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
 	this->outputFilename = setVariable("outputFile", "EASEA");
-	this->intputFilename = setVariable("inputFile", "EASEA.pop");
+	this->inputFilename = setVariable("inputFile", "EASEA.pop");
 	this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
@@ -291,7 +289,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
   EZ_POP_SIZE = parentPopulationSize;
   OFFSPRING_SIZE = offspringPopulationSize;
 
-	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
+	CEvolutionaryAlgorithm* ea = new CAlgorithmWrapper(this, m_algorithm);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
 	ea->addStoppingCriterion(generationalCriterion);
 	ea->addStoppingCriterion(controlCStopingCriterion);
@@ -301,58 +299,6 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	EZ_current_generation=&(ea->currentGeneration);
 
 	 return ea;
-}
-
-void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
-	const auto max_gen = *this->params->generationalCriterion->getGenerationalLimit();
-	const auto max_time_s = this->params->timeCriterion->getLimit();
-	m_algorithm->print_header(std::cout, max_gen, max_time_s);
-
-	auto tmStart = std::chrono::system_clock::now();
-
-	while( this->allCriteria() == false){
-	        m_algorithm->run();
-		m_algorithm->print_population_stats(std::cout);
-    		currentGeneration += 1;
-	}
-        ostringstream ss;
-        std::chrono::duration<double> tmDur = std::chrono::system_clock::now() - tmStart;
-        ss << "Total execution time (in sec.): " << tmDur.count() << std::endl;
-        LOG_MSG(msgType::INFO, ss.str());
-}
-
-void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
-/*const std::vector<TV> initial = easea::variables::continuous::uniform(generator, problem.getBoundary(), \POP_SIZE);
-algorithm  = new _TAlgorithm(generator, problem, initial, crossover, mutation);
-
-	if(this->params->startFromFile){
-	  ifstream AESAE_File(this->params->inputFilename);
-	  string AESAE_Line;
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-	  	  getline(AESAE_File, AESAE_Line);
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-		  ((IndividualImpl*)this->population->parents[i])->deserialize(AESAE_Line);
-	  }
-	  
-	}
-	else {
-	#ifdef USE_OPENMP
-	#pragma omp parallel for
-	#endif
-	for(int i=0 ; i< static_cast<int>(this->params->parentPopulationSize) ; i++){
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-	  }
-	}
-        this->population->actualParentPopulationSize = this->params->parentPopulationSize;*/
-}
-
-
-EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
-	;
-}
-
-EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
-
 }
 
 \START_CUDA_GENOME_H_TPL
@@ -384,36 +330,6 @@ extern int OFFSPRING_SIZE;
 
 namespace easea
 {
-/*
-class IndividualImpl : public CIndividual {
-
-public: // in EASEA the genome is public (for user functions,...)
-	// Class members
-  	\INSERT_GENOME
-
-public:
-	IndividualImpl();
-	IndividualImpl(const IndividualImpl& indiv);
-	virtual ~IndividualImpl();
-	float evaluate();
-	static unsigned getCrossoverArrity(){ return 2; }
-	float getFitness(){ return this->fitness; }
-	CIndividual* crossover(CIndividual** p2);
-	void printOn(std::ostream& O) const;
-	CIndividual* clone();
-
-	unsigned mutate(float pMutationPerGene);
-
-	void boundChecking();      
-
-	string serialize();
-	void deserialize(string AESAE_Line);
-
-	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
-	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
-
-};
-*/
 
 template <typename TObjective, typename TVariable>
 class Individual : public easea::CmoIndividual<TObjective, TVariable>
@@ -449,15 +365,6 @@ void EASEAFinal(CPopulation* pop);
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
-
-
-class EvolutionaryAlgorithmImpl: public CEvolutionaryAlgorithm {
-public:
-	EvolutionaryAlgorithmImpl(Parameters* params);
-	virtual ~EvolutionaryAlgorithmImpl();
-	void initializeParentPopulation();
-	void runEvolutionaryLoop();
-};
 
 #endif /* PROBLEM_DEP_H */
 
