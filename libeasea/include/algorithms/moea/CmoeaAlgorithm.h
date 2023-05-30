@@ -39,6 +39,7 @@ public:
         CmoeaAlgorithm(TR random, TP &problem, const std::vector<TV> &initial);
         virtual ~CmoeaAlgorithm(void);
         const TPop &getPopulation(void) const;
+	TPop& getPopulation();
 
 protected:
         TPop m_population;
@@ -78,5 +79,12 @@ const TPopulation &CmoeaAlgorithm<TPopulation, TRandom>::getPopulation(void) con
 {
         return m_population;
 }
+
+template <typename TPopulation, typename TRandom>
+TPopulation &CmoeaAlgorithm<TPopulation, TRandom>::getPopulation()
+{
+        return m_population;
+}
+
 }
 }
