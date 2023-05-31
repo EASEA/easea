@@ -56,7 +56,8 @@ public:
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+  	void initialize() override;
         template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
         static const TIndividual *comparer(const std::vector<const TIndividual *> &comparator);
@@ -70,7 +71,13 @@ Ccdas<TIndividual, TRandom>::Ccdas(TRandom random, TP &problem, const std::vecto
         : TBase(random, problem, initPop), easea::operators::crossover::CWrapCrossover<TO, TV>(crossover)
         , easea::operators::mutation::CWrapMutation<TO, TV>(mutation), m_angle(angle)
 {
-        for (size_t i = 0; i < initPop.size(); ++i)
+}
+
+template <typename TIndividual, typename TRandom>
+void Ccdas<TIndividual, TRandom>::initialize()
+{
+	TBase::initialize();
+	for (size_t i = 0; i < TBase::m_population.size(); ++i)
         {
                 TIndividual &individual = TBase::m_population[i];
 
@@ -88,6 +95,7 @@ Ccdas<TIndividual, TRandom>::Ccdas(TRandom random, TP &problem, const std::vecto
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
         }
 }
+
 template <typename TIndividual, typename TRandom>
 Ccdas<TIndividual, TRandom>::~Ccdas(void)
 {

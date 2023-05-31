@@ -74,7 +74,8 @@ protected:
   std::list<TI *> m_noncritical;
   
   static bool Dominate(const TI *individual1, const TI *individual2);
-  void makeOneGeneration(void);
+  void makeOneGeneration(void) override;
+  void initialize() override;
   template <typename TPtr, typename TIter> TIter selectNoncrit(std::list<TPtr> &front, TIter begin, TIter end);
   template <typename TPtr, typename TIter> TIter selectCrit(std::list<TPtr> &front, TIter begin, TIter end);
   size_t nnReferencePoint(TIndividual &individual) const;
@@ -94,6 +95,12 @@ Cnsga_iii<TIndividual, TRandom>::Cnsga_iii(TRandom random, TP &problem, const st
   , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover)
   , easea::operators::mutation::CWrapMutation<TO, TV>(mutation), m_referenceSet(referenceSet), m_epsilon(epsilon)
   {
+  }
+
+template <typename TIndividual, typename TRandom>
+void Cnsga_iii<TIndividual, TRandom>::initialize() {
+	TBase::initialize();
+	//NOTE: this was commented when initialize() and deferred evaluation were introduced
 /*    TBase::m_population.resize(initial.size());
     for (size_t i = 0; i < initial.size(); ++i)
     {
@@ -105,7 +112,7 @@ Cnsga_iii<TIndividual, TRandom>::Cnsga_iii(TRandom random, TP &problem, const st
 
       TBase::getProblem()(individual);
     }*/
-  }
+}
 
 template <typename TIndividual, typename TRandom>
 Cnsga_iii<TIndividual, TRandom>::~Cnsga_iii(void)

@@ -61,7 +61,8 @@ public:
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+  	void initialize() override;
         template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
         static const TI *comparer(const std::vector<const TI *> &comparator);
@@ -75,6 +76,12 @@ Casrea<TIndividual, TRandom>::Casrea(TRandom random, TP &problem, const std::vec
         , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover), easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
 	, m_distribution(0,1)	
 {
+}
+
+template <typename TIndividual, typename TRandom>
+void Casrea<TIndividual, TRandom>::initialize()
+{
+	TBase::initialize();
         typedef typename TPopulation::pointer TPtr;
         std::list<TPtr> population;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)

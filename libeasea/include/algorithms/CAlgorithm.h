@@ -44,7 +44,7 @@ public:
 
 protected:
         virtual void makeOneGeneration(void) = 0;
-	virtual void evaluate_all() = 0;
+	virtual void initialize() = 0;
 
 private:
         TP &m_problem;
@@ -113,7 +113,7 @@ template <typename TObjective, typename TVariable>
 void CAlgorithm<TObjective, TVariable>::run()
 {
 	if (m_iGen == 0) {
-		evaluate_all();
+		initialize();
 	} else {
         	makeOneGeneration();
 	}

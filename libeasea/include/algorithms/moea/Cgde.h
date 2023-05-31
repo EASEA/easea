@@ -55,7 +55,8 @@ public:
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+  	void initialize() override;
         template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
 private:
@@ -69,7 +70,13 @@ Cgde<TIndividual, TRandom>::Cgde(TRandom random, TP &problem, const std::vector<
         , easea::operators::crossover::CWrap3x1Crossover<TO, TV>(crossover)
 	, m_distribution(0, initial.size()-1)
 {
-        typedef typename TPopulation::pointer TPtr;
+}
+
+template <typename TIndividual, typename TRandom>
+void Cgde<TIndividual, TRandom>::initialize()
+{
+	TBase::initialize();
+ 	typedef typename TPopulation::pointer TPtr;
         std::list<TPtr> population;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
 	        population.push_back(&TBase::m_population[i]);

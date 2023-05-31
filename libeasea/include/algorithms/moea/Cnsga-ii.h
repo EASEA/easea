@@ -57,7 +57,8 @@ public:
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+	void initialize() override;
         template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
         static const TI *comparer(const std::vector<const TI *> &comparator);
@@ -68,11 +69,16 @@ Cnsga_ii<TIndividual, TRandom>::Cnsga_ii(TRandom random, TP &problem, const std:
         : TBase(random, problem, initial)
         , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover), easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
 {
-        typedef typename TPopulation::pointer TPtr;
-        std::list<TPtr> population;
+}
+
+template <typename TIndividual, typename TRandom>
+void Cnsga_ii<TIndividual, TRandom>::initialize() {
+	TBase::initialize();
+  	typedef typename TPopulation::pointer TPtr;
+  std::list<TPtr> population;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
 	        population.push_back(&TBase::m_population[i]);
-	
+
         while (!population.empty())
         {
                 std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);

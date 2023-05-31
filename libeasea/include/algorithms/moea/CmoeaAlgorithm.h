@@ -37,7 +37,7 @@ public:
 
 
         CmoeaAlgorithm(TR random, TP &problem, const std::vector<TV> &initial);
-	void evaluate_all() override;
+	void initialize() override;
         virtual ~CmoeaAlgorithm(void);
         const TPop &getPopulation(void) const;
 	TPop& getPopulation();
@@ -69,7 +69,7 @@ EASEA_PRAGMA_OMP_PARALLEL
 }
 
 template <typename TPopulation, typename TRandom>
-void CmoeaAlgorithm<TPopulation, TRandom>::evaluate_all() {
+void CmoeaAlgorithm<TPopulation, TRandom>::initialize() {
 	#pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(m_population.size()); ++i)
         {

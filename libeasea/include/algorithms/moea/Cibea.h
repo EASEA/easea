@@ -63,7 +63,8 @@ public:
         static bool isDominated(const TI &individual1, const TI &individual2);
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+  	void initialize() override;
 
 	static const TIndividual *comparer(const std::vector<const TIndividual *> &comparator);
         TO runCalcIndicator(const TIndividual &individual1, const TIndividual &individual2);
@@ -73,7 +74,6 @@ protected:
 
 private:
         TO m_scale;
-
 };
 
 template <typename TIndividual, typename TRandom>
@@ -84,6 +84,12 @@ Cibea<TIndividual, TRandom>::Cibea(TRandom random, TP &problem, const std::vecto
         , easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
         , m_scale(scale)
 {
+}
+
+template <typename TIndividual, typename TRandom>
+void Cibea<TIndividual, TRandom>::initialize()
+{
+	TBase::initialize();
 	setFitness(TBase::m_population.begin(), TBase::m_population.end(), [](TIndividual &individual)->TIndividual &{return individual;});
 }
 

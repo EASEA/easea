@@ -64,7 +64,8 @@ public:
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration();
+        void makeOneGeneration() override;
+	void initialize() override;
         static const TI *comparer(const std::vector<const TI *> &comparator);
 
 	TO runCalcIndicator(const TIndividual &individual1, const TIndividual &individual2);
@@ -82,7 +83,12 @@ Csigma<TIndividual, TRandom>::Csigma(TRandom random, TP &problem, const std::vec
         , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover), easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
 	, m_distribution(0,1)	
 {
-        typedef typename TPopulation::pointer TPtr;
+}
+
+template <typename TIndividual, typename TRandom>
+void Csigma<TIndividual, TRandom>::initialize() {
+	TBase::initialize();
+	typedef typename TPopulation::pointer TPtr;
         std::list<TPtr> population;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
                 population.push_back(&TBase::m_population[i]);
