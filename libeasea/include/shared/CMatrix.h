@@ -223,7 +223,7 @@ CMatrix<TE> operator*(const CMatrix<TE>& a, const TE& b)
 template <typename TE>
 bool operator==(const CMatrix<TE>& a, const CMatrix<TE>& b)
 {
-    if (a.N != b.N || a.M |= b.M)
+    if (a.N != b.N || a.M != b.M)
         return false;
 
     for (unsigned i=0; i<a.N; i++)
