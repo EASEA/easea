@@ -67,6 +67,7 @@ class CStatsPrinter
 		auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 					  std::chrono::system_clock::now() - started_at)
 					  .count();
+		nb_individuals = population.size(); // can change
 
 		using var_t = std::remove_cv_t<std::remove_reference_t<decltype(population[0].m_variable[0])>>;
 		using obj_t = std::remove_cv_t<std::remove_reference_t<decltype(population[0].m_objective[0])>>;
@@ -87,15 +88,15 @@ class CStatsPrinter
 #endif
 		for (int i = 0; i < static_cast<int>(nb_individuals); ++i) {
 			auto const& ind = population[i];
-			for (std::size_t i = 0; i < nb_vars; ++i)
-				pmv[i] += ind.m_variable[i];
-			for (std::size_t i = 0; i < nb_objs; ++i) {
-				const auto oi = ind.m_objective[i];
-				pmo[i] += oi;
-				if (oi < min_objs[i])
-					pmio[i] = oi;
-				if (oi > max_objs[i])
-					pmao[i] = oi;
+			for (std::size_t j = 0; j < nb_vars; ++j)
+				pmv[j] += ind.m_variable[j];
+			for (std::size_t j = 0; j < nb_objs; ++j) {
+				const auto oi = ind.m_objective[j];
+				pmo[j] += oi;
+				if (oi < min_objs[j])
+					pmio[j] = oi;
+				if (oi > max_objs[j])
+					pmao[j] = oi;
 			}
 		}
 
@@ -115,10 +116,10 @@ class CStatsPrinter
 #endif
 		for (int i = 0; i < static_cast<int>(nb_individuals); ++i) {
 			auto const& ind = population[i];
-			for (std::size_t i = 0; i < nb_vars; ++i)
-				pvv[i] += (ind.m_variable[i] - mean_vars[i]) * (ind.m_variable[i] - mean_vars[i]);
-			for (std::size_t i = 0; i < nb_objs; ++i)
-				pvo[i] += (ind.m_objective[i] - mean_objs[i]) * (ind.m_objective[i] - mean_objs[i]);
+			for (std::size_t j = 0; j < nb_vars; ++j)
+				pvv[j] += (ind.m_variable[j] - mean_vars[j]) * (ind.m_variable[j] - mean_vars[j]);
+			for (std::size_t j = 0; j < nb_objs; ++j)
+				pvo[j] += (ind.m_objective[j] - mean_objs[j]) * (ind.m_objective[j] - mean_objs[j]);
 		}
 
 		for (auto& v : var_vars)
