@@ -172,11 +172,6 @@ easea::Individual<TO, TV>::Individual(void)
 }
 
 template <typename TO, typename TV>
-easea::Individual<TO, TV>::~Individual(void)
-{
-}
-
-template <typename TO, typename TV>
 size_t easea::Individual<TO, TV>::evaluate()
 {
         \INSERT_EVALUATOR
@@ -387,7 +382,7 @@ public:
 
 
         Individual(void);
-        ~Individual(void);
+        ~Individual() = default;
 	size_t evaluate();
 };
 }
