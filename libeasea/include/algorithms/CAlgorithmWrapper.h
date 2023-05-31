@@ -127,7 +127,6 @@ class CAlgorithmWrapper : public CEvolutionaryAlgorithm
 		const auto max_time_s = this->params->timeCriterion->getLimit();
 		if (params->printStats) {
 			m_algorithm->print_header(std::cout, max_gen, max_time_s);
-			m_algorithm->print_stats(std::cout);
 		}
 
 		// TODO: --printInitialPopulation --printFinalPopulation --alwaysEvaluate --optimise --elitism --elite
@@ -135,7 +134,9 @@ class CAlgorithmWrapper : public CEvolutionaryAlgorithm
 			EASEABeginningGenerationFunction(this);
 
 			m_algorithm->run();
-			m_algorithm->print_stats(std::cout);
+
+			if (params->printStats)
+				m_algorithm->print_stats(std::cout);
 
 			network_tasks();
 

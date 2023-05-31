@@ -25,12 +25,13 @@ class CStatsPrinter
 	std::ostream& print_header(std::ostream& os, size_t max_generation, size_t max_seconds)
 	{
 		using namespace impl;
-		auto const& population = static_cast<PopulationOwner*>(this)->getPopulation();
+		PopulationOwner* derived = static_cast<PopulationOwner*>(this);
+		auto const& population = derived->getPopulation();
 		//auto const& max_generation = static_cast<PopulationOwner*>(this)->getLimitGeneration(); // not set
 		assert(population.size() > 0);
 		nb_individuals = population.size();
-		nb_vars = population[0].m_variable.size();
-		nb_objs = population[0].m_objective.size();
+		nb_vars = derived->getProblem().getNumberOfVariables();
+		nb_objs = derived->getProblem().getNumberOfObjectives();
 		max_gen_width = min_digits(5, max_generation);
 		max_time_width = min_digits(3, max_seconds) + 4;
 		max_evaluation_width = min_digits(5, max_generation * nb_individuals);
@@ -60,8 +61,9 @@ class CStatsPrinter
 
 	std::ostream& print_stats(std::ostream& os)
 	{
-		auto const& population = static_cast<PopulationOwner*>(this)->getPopulation();
-		auto const& cur_generation = static_cast<PopulationOwner*>(this)->getCurrentGeneration();
+		PopulationOwner* derived = static_cast<PopulationOwner*>(this);
+		auto const& population = derived->getPopulation();
+		auto const& cur_generation = derived->getCurrentGeneration();
 		auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 					  std::chrono::system_clock::now() - started_at)
 					  .count();
