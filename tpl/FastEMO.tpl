@@ -217,13 +217,7 @@ easea::Individual<TO, TV>::~Individual(void)
 template <typename TO, typename TV>
 size_t easea::Individual<TO, TV>::evaluate()
 {
-/*    if(valid)
-        return fitness;
-    else{
-       valid = true;*/
-        \INSERT_EVALUATOR
-//    }
-
+	\INSERT_EVALUATOR
 }
 
 

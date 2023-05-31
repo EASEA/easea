@@ -204,12 +204,7 @@ IndividualImpl::~IndividualImpl(){
 
 
 float IndividualImpl::evaluate(){
- /* if(valid)
-    return fitness;
-  else{
-    valid = true;*/
-    \INSERT_EVALUATOR
-  //}
+	\INSERT_EVALUATOR
 }
 
 void IndividualImpl::boundChecking(){
