@@ -39,24 +39,22 @@ int OFFSPRING_SIZE;
 CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
-
-
 	ParametersImpl p("EASEA.prm", argc, argv);
-	EASEAInit(argc, argv, p);
 
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 	pPopulation = ea->population->parents;
 
 	EA = ea;
 
+	EASEAInit(argc, argv, p);
+
 	CPopulation* pop = ea->getPopulation();
 
 	ea->runEvolutionaryLoop();
-	
+
 	EASEAFinal(pop);
 
 	delete pop;
-
 
 	return 0;
 }

@@ -36,14 +36,14 @@ int main(int argc, char** argv){
             	    vArgv.push_back(argv[i]);
     	    }
     	}
-       
 
 	ParametersImpl p("EASEA.prm", argc, argv);
-	EASEAInit(argc, argv, p);
 
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
+
+	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -52,7 +52,6 @@ int main(int argc, char** argv){
 	EASEAFinal(pop);
 
 	delete pop;
-
 
 	return 0;
 }

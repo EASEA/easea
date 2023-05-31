@@ -30,14 +30,13 @@ unsigned *EZ_NB_GEN;
 unsigned *EZ_current_generation;
 
 int main(int argc, char** argv){
-
-
 	ParametersImpl p("EASEA.prm", argc, argv);
-	EASEAInit(argc, argv, p);
 
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
+
+	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -47,9 +46,6 @@ int main(int argc, char** argv){
 
 	delete pop;
 
-#ifdef WIN32
-	system("pause");
-#endif
 	return 0;
 }
 

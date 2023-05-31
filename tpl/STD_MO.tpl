@@ -15,10 +15,6 @@ RandomGenerator* globalRandomGenerator;
 
 
 int main(int argc, char** argv){
-
-
-  
-
   size_t parentPopulationSize = setVariable("popSize",\POP_SIZE);
   size_t offspringPopulationSize = getOffspringSize(\OFF_SIZE, \POP_SIZE);
   float pCrossover = \XOVER_PROB;
@@ -55,7 +51,6 @@ int main(int argc, char** argv){
   delete selectionOperator;
   delete replacementOperator;
   delete globalRandomGenerator;
-
 
   return 0;
 }

@@ -14,8 +14,6 @@ RandomGenerator* globalRandomGenerator;
 
 
 int main(int argc, char** argv){
-
-
   parseArguments("EASEA.prm",argc,argv);
 
   size_t parentPopulationSize = setVariable("popSize", \POP_SIZE);

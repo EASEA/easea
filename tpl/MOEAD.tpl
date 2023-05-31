@@ -39,11 +39,12 @@ CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
 	ParametersImpl p("EASEA.prm", argc, argv);
-	EASEAInit(argc, argv, p);
 
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
+
+	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -161,32 +162,6 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	(void)setVariable;
 
 	\INSERT_INITIALISATION_FUNCTION
-/*	if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
-        const size_t nbObjectives = m_problem.getNumberOfObjectives();
-	size_t division = setNumberOfReferencePointDiv(nbObjectives);
-	std::list<std::vector<TO>> points = easea::shared::function::runNbi<TO>(nbObjectives, division);
-	std::vector<std::vector<TO>> m_reference(points.begin(), points.end());
-	const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
-
-	m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, m_reference);
-*/
-        if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
-        const size_t nbObjectives = m_problem.getNumberOfObjectives();
-
-        size_t division = setNumberOfReferencePointDiv(nbObjectives);
-
-//
-        auto weight = easea::shared::function::runNbi<TO>(nbObjectives, 43/*division*/);
-//	std::vector<TV> weight =  easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(),  m_popSize);
-
-        std::vector<std::vector<TO>> tmp_weight(weight.begin(), weight.end());
-        for (size_t i = 0; i < tmp_weight.size(); ++i){
-                easea::shared::function::adjustWeight(tmp_weight[i], 0.00001);
-printf("WEIGHT: %i\n",tmp_weight.size());}
-        const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), tmp_weight.size()/* m_popSize*/);
-
-        m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, tmp_weight, initPop.size() / 10);
-
 }
 
 void EASEAFinal(CPopulation* pop){
@@ -281,7 +256,6 @@ size_t easea::Individual<TO, TV>::evaluate()
 
 
 ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
-
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen", (int)\NB_GEN);
 
@@ -363,23 +337,34 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
 	this->ipFile = setVariable("ipFile", "\IP_FILE");
 	this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
-    this->serverPort = setVariable("serverPort", \SERVER_PORT);
+    	this->serverPort = setVariable("serverPort", \SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
-
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	//EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
 	EZ_current_generation=0;
-  EZ_POP_SIZE = parentPopulationSize;
-  OFFSPRING_SIZE = offspringPopulationSize;
+        EZ_POP_SIZE = parentPopulationSize;
+        OFFSPRING_SIZE = offspringPopulationSize;
+
+        if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
+        const size_t nbObjectives = m_problem.getNumberOfObjectives();
+
+        size_t division = setNumberOfReferencePointDiv(nbObjectives);
+        auto weight = easea::shared::function::runNbi<TO>(nbObjectives, 43/*division*/);
+        std::vector<std::vector<TO>> tmp_weight(weight.begin(), weight.end());
+        for (size_t i = 0; i < tmp_weight.size(); ++i){
+                easea::shared::function::adjustWeight(tmp_weight[i], 0.00001);
+		printf("WEIGHT: %i\n",tmp_weight.size());}
+        const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), tmp_weight.size()/* m_popSize*/);
+
+        m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, tmp_weight, initPop.size() / 10);
 
 	CEvolutionaryAlgorithm* ea = new CAlgorithmWrapper(this, m_algorithm);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
 	ea->addStoppingCriterion(generationalCriterion);
 	ea->addStoppingCriterion(controlCStopingCriterion);
-	ea->addStoppingCriterion(timeCriterion);	
+	ea->addStoppingCriterion(timeCriterion);
 
 	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
 	EZ_current_generation=&(ea->currentGeneration);

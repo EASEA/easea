@@ -39,11 +39,12 @@ CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
 	ParametersImpl p("EASEA.prm", argc, argv);
-	EASEAInit(argc, argv, p);
 
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
+
+	EASEAInit(argc, argv, p);
 
 	CPopulation* pop = ea->getPopulation();
 
@@ -135,11 +136,6 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	(void)setVariable;
 
 	\INSERT_INITIALISATION_FUNCTION
-    if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population");  };
-    const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
-
-    m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation);
-
 }
 
 void EASEAFinal(CPopulation* pop){
@@ -231,7 +227,6 @@ size_t easea::Individual<TO, TV>::evaluate()
 
 
 ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
-
 	this->minimizing = \MINIMAXI;
 	this->nbGen = setVariable("nbGen", (int)\NB_GEN);
 
@@ -283,24 +278,27 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
-
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	//EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
 	EZ_current_generation=0;
-  EZ_POP_SIZE = parentPopulationSize;
-  OFFSPRING_SIZE = offspringPopulationSize;
+        EZ_POP_SIZE = parentPopulationSize;
+        OFFSPRING_SIZE = offspringPopulationSize;
+
+	if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population");  };
+	const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
+
+	m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation);
 
 	CEvolutionaryAlgorithm* ea = new CAlgorithmWrapper(this, m_algorithm);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
 	ea->addStoppingCriterion(generationalCriterion);
 	ea->addStoppingCriterion(controlCStopingCriterion);
-	ea->addStoppingCriterion(timeCriterion);	
+	ea->addStoppingCriterion(timeCriterion);
 
 	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
 	EZ_current_generation=&(ea->currentGeneration);
 
-	 return ea;
+	return ea;
 }
 
 \START_CUDA_GENOME_H_TPL
