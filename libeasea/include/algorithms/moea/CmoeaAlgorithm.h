@@ -37,6 +37,7 @@ public:
 
 
         CmoeaAlgorithm(TR random, TP &problem, const std::vector<TV> &initial);
+	void evaluate_all() override;
         virtual ~CmoeaAlgorithm(void);
         const TPop &getPopulation(void) const;
 	TPop& getPopulation();
@@ -51,6 +52,7 @@ CmoeaAlgorithm<TPopulation, TRandom>::CmoeaAlgorithm(TR random, TP &problem, con
 {
         m_population.resize(initial.size());
         static std::uniform_real_distribution<TO> dist(0, 0.99);
+	const size_t nb_objs = this->getProblem().getNumberOfObjectives();
 
 #ifdef USE_OPENMP
 EASEA_PRAGMA_OMP_PARALLEL
@@ -60,13 +62,19 @@ EASEA_PRAGMA_OMP_PARALLEL
                 TI &individual = m_population[i];
                 individual.m_variable = initial[i];
                 individual.m_mutStep.resize(individual.m_variable.size());
+		individual.m_objective.resize(nb_objs);
                 for(size_t j = 0; j < individual.m_variable.size(); j++)
                         individual.m_mutStep[j] = dist(random);
-
-                TA::getProblem()(individual);
         }
-        
+}
 
+template <typename TPopulation, typename TRandom>
+void CmoeaAlgorithm<TPopulation, TRandom>::evaluate_all() {
+	#pragma omp parallel for
+	for (int i = 0; i < static_cast<int>(m_population.size()); ++i)
+        {
+                TA::getProblem()(m_population[i]);
+        }
 }
 
 template <typename TPopulation, typename TRandom>
