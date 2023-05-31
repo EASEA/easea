@@ -270,9 +270,6 @@ unsigned IndividualImpl::mutate([[maybe_unused]] float pMutationPerGene ) {
   return 0;
 }
 
-
-
-
 ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
 
         this->minimizing =1;
@@ -370,7 +367,7 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 
 
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
-	;
+
 }
 
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
@@ -460,56 +457,6 @@ public:
 
 #endif /* PROBLEM_DEP_H */
 
-\START_CUDA_MAKEFILE_TPL
-
-UNAME := $(shell uname)
-
-ifeq ($(shell uname -o 2>/dev/null),Msys)
-	OS := MINGW
-endif
-
-ifneq ("$(OS)","")
-	EZ_PATH=../../
-endif
-
-EASEALIB_PATH=$(EZ_PATH)libeasea/
-
-CXXFLAGS =  -std=c++14 -fopenmp -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include 
-
-OBJS = EASEA.o EASEAIndividual.o 
-
-LIBS = -lpthread -fopenmp
-ifneq ("$(OS)","")
-	LIBS += -lws2_32 -lwinmm -L"C:\MinGW\lib"
-endif
-
-\INSERT_MAKEFILE_OPTION
-
-#USER MAKEFILE OPTIONS :
-\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
-
-TARGET =	EASEA
-
-$(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) -g $(EASEALIB_PATH)libeasea.a $(LIBS)
-
-	
-#%.o:%.cpp
-#	$(CXX) -c $(CXXFLAGS) $^
-
-all:	$(TARGET)
-clean:
-ifneq ("$(OS)","")
-	-del $(OBJS) $(TARGET).exe
-else
-	rm -f $(OBJS) $(TARGET)
-endif
-easeaclean:
-ifneq ("$(OS)","")
-	rm -f $(TARGET).exe *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.r EASEA.plot EASEA.csv EASEA.plo EASEA.pop
-else
-	-del $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.r EASEA.plot EASEA.csv EASEA.plo EASEA.pop
-endif
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
 set(EZ_ROOT $ENV{EZ_PATH})

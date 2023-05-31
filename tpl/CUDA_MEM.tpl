@@ -646,7 +646,6 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
 	this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params);
 	((PopulationImpl*)this->population)->cuda = new CCuda(params->parentPopulationSize, params->offspringPopulationSize, sizeof(IndividualImpl));
-	;
 }
 
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
@@ -654,7 +653,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 }
 
 PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params){
-	;
+	
 }
 
 PopulationImpl::~PopulationImpl(){
@@ -756,188 +755,58 @@ public:
 
 #endif /* PROBLEM_DEP_H */
 
-\START_CUDA_MAKEFILE_TPL
-NVCC= nvcc
-CPPC= g++
-LIBAESAE=$(EZ_PATH)libeasea/
-CXXFLAGS+=-std=c++11 -g -Wall -O2 -I$(LIBAESAE)include 
-LDFLAGS= $(LIBAESAE)libeasea.a -lpthread
+\START_CMAKELISTS
+cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
+set(EZ_ROOT $ENV{EZ_PATH})
 
-#USER MAKEFILE OPTIONS :
-\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
+project(EASEA LANGUAGES CUDA CXX C)
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release")
+endif()
 
-CPPFLAGS+= -I$(LIBAESAE)include 
-NVCCFLAGS+= -std=c++11
+file(GLOB EASEA_src ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.c ${CMAKE_SOURCE_DIR}/*.cu)
+list(FILTER EASEA_src EXCLUDE REGEX .*EASEAIndividual.cpp)
+add_executable(EASEA ${EASEA_src})
+set_target_properties(EASEA PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
+target_compile_features(EASEA PUBLIC cxx_std_17)
+target_compile_options(EASEA PRIVATE
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /W3>
+	$<$<AND:$<NOT:$<COMPILE_LANGUAGE:CUDA>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -march=native -mtune=native -Wall -Wextra>
+	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/O1 /W4 /DEBUG:FULL>
+	$<$<AND:$<NOT:$<COMPILE_LANGUAGE:CUDA>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O0 -g -Wall -Wextra>
+	)
 
-EASEA_SRC= EASEAIndividual.cpp
-EASEA_MAIN_HDR= EASEA.cpp
-EASEA_UC_HDR= EASEAIndividual.hpp
+find_library(libeasea_LIB
+	NAMES libeasea easea
+	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easena ${CMAKE_INSTALL_PREFIX}/EASENA
+	PATH_SUFFIXES lib libeasea easea easena)
+find_path(libeasea_INCLUDE
+	NAMES CLogger.h
+	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
+	PATH_SUFFIXES include easena libeasea)
+find_package(Boost REQUIRED)
+find_package(OpenMP REQUIRED)
+find_package(CUDAToolkit REQUIRED)
 
-EASEA_HDR= $(EASEA_SRC:.cpp=.hpp) 
+message(STATUS ${libeasea_INCLUDE} ${CLOGGER} ${CUDAToolkit_INCLUDE_DIRS})
 
-SRC= $(EASEA_SRC) $(EASEA_MAIN_HDR)
-CUDA_SRC = EASEAIndividual.cu
-HDR= $(EASEA_HDR) $(EASEA_UC_HDR)
-OBJ= $(EASEA_SRC:.cpp=.o) $(EASEA_MAIN_HDR:.cpp=.o)
+target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE} ${CUDAToolkit_INCLUDE_DIRS})
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
 
-BIN= EASEA
-  
-all:$(BIN)
+if (SANITIZE)
+        target_compile_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>
+)
+        target_link_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>)
+endif()
 
-$(BIN):$(OBJ)
-	$(NVCC) $^ -o $@ $(LDFLAGS) -Xcompiler -fopenmp
-
-%.o:%.cu
-	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -fopenmp 
-
-easeaclean: clean
-	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj EASEA.plot EASEA.r EASEA.csv EASEA.pop
-clean:
-	rm -f $(OBJ) $(BIN) 	
-	
-\START_VISUAL_TPL<?xml version="1.0" encoding="Windows-1252"?>
-<VisualStudioProject
-	ProjectType="Visual C++"
-	Version="9,00"
-	Name="EASEA"
-	ProjectGUID="{E73D5A89-F262-4F0E-A876-3CF86175BC30}"
-	RootNamespace="EASEA"
-	Keyword="WIN32Proj"
-	TargetFrameworkVersion="196613"
-	>
-	<Platforms>
-		<Platform
-			Name="WIN32"
-		/>
-	</Platforms>
-	<ToolFiles>
-		<ToolFile
-			RelativePath="\CUDA_RULE_DIRcommon\Cuda.rules"
-		/>
-	</ToolFiles>
-	<Configurations>
-		<Configuration
-			Name="Release|WIN32"
-			OutputDirectory="$(SolutionDir)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="\EZ_PATHlibEasea"
-				Keep="false"
-				Runtime="0"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;\EZ_PATHlibEasea&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="$(CUDA_LIB_PATH)\cudart.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;\EZ_PATHlibEasea&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-	</Configurations>
-	<References>
-	</References>
-	<Files>
-		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-			>
-			<File
-				RelativePath=".\EASEA.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EASEAIndividual.cu"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath=".\EASEAIndividual.hpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
-		</Filter>
-	</Files>
-	<Globals>
-	</Globals>
-</VisualStudioProject>
+\INSERT_USER_CMAKE
 
 \START_EO_PARAM_TPL#****************************************
 #

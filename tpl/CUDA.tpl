@@ -579,9 +579,6 @@ void PopulationImpl::evaluateOffspringPopulation(){
 }
 
 
-
-
-
 ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) : Parameters(file, argc, argv) {
         this->minimizing = \MINIMAXI;
         this->nbGen = setVariable("nbGen", (int)\NB_GEN);
@@ -736,7 +733,6 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 }
 
 PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params, stats){
-	;
 }
 
 PopulationImpl::~PopulationImpl(){
@@ -836,190 +832,6 @@ public:
 
 #endif /* PROBLEM_DEP_H */
 
-\START_CUDA_MAKEFILE_TPL
-NVCC= nvcc 
-CPPC= g++ 
-LIBAESAE=$(EZ_PATH)libeasea/
-CXXFLAGS+= -std=c++11 -g -Wall -O2 -I$(LIBAESAE)include 
-LDFLAGS=$(LIBAESAE)libeasea.a -lpthread 
- 
-
-
-EASEA_SRC= EASEAIndividual.cpp
-EASEA_MAIN_HDR= EASEA.cpp
-EASEA_UC_HDR= EASEAIndividual.hpp
-
-EASEA_HDR= $(EASEA_SRC:.cpp=.hpp) 
-
-SRC= $(EASEA_SRC) $(EASEA_MAIN_HDR)
-CUDA_SRC = EASEAIndividual.cu
-HDR= $(EASEA_HDR) $(EASEA_UC_HDR)
-OBJ= $(EASEA_SRC:.cpp=.o) $(EASEA_MAIN_HDR:.cpp=.o)
-
-#USER MAKEFILE OPTIONS :
-\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
-
-CPPFLAGS+= -I$(LIBAESAE)include  -I/usr/local/cuda/include/
-NVCCFLAGS+= -std=c++11 #--ptxas-options="-v"# --gpu-architecture sm_23 --compiler-options -fpermissive 
-
-
-BIN= EASEA
-  
-all:$(BIN)
-
-$(BIN):$(OBJ)
-	$(NVCC) $^ -o $@ $(LDFLAGS) -Xcompiler -fopenmp
-
-%.o:%.cu
-	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -fopenmp 
-
-easeaclean: clean
-	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj EASEA.plot EASEA.r EASEA.csv EASEA.pop
-clean:
-	rm -f $(OBJ) $(BIN) 	
-	
-\START_VISUAL_TPL<?xml version="1.0" encoding="Windows-1252"?>
-<VisualStudioProject
-	ProjectType="Visual C++"
-	Version="9,00"
-	Name="EASEA"
-	ProjectGUID="{E73D5A89-F262-4F0E-A876-3CF86175BC30}"
-	RootNamespace="EASEA"
-	Keyword="WIN32Proj"
-	TargetFrameworkVersion="196613"
-	>
-	<Platforms>
-		<Platform
-			Name="WIN32"
-		/>
-	</Platforms>
-	<ToolFiles>
-		<ToolFile
-			RelativePath="\CUDA_RULE_DIRcommon\Cuda.rules"
-		/>
-	</ToolFiles>
-	<Configurations>
-		<Configuration
-			Name="Release|WIN32"
-			OutputDirectory="$(SolutionDir)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="\EZ_PATHlibEasea"
-				Keep="false"
-				Runtime="0"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;\EZ_PATHlibEasea&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="$(CUDA_LIB_PATH)\cudart.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;\EZ_PATHlibEasea&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-	</Configurations>
-	<References>
-	</References>
-	<Files>
-		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-			>
-			<File
-				RelativePath=".\EASEA.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EASEAIndividual.cu"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath=".\EASEAIndividual.hpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
-		</Filter>
-	</Files>
-	<Globals>
-	</Globals>
-</VisualStudioProject>
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
 set(EZ_ROOT $ENV{EZ_PATH})

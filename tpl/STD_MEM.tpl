@@ -335,17 +335,16 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->inputFilename = setVariable("inputFile", "EASEA.pop");
 	this->plotOutputFilename = (char*)"EASEA.png";
 
-    this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
-    this->ipFile = (char*)setVariable("ipFile", "\IP_FILE").c_str();
-    this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
-    this->serverPort = setVariable("serverPort", \SERVER_PORT);
+	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
+	this->ipFile = (char*)setVariable("ipFile", "\IP_FILE").c_str();
+	this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
+	this->serverPort = setVariable("serverPort", \SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	//EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
 	EZ_current_generation=0;
 	EZ_POP_SIZE = parentPopulationSize;
 	OFFSPRING_SIZE = offspringPopulationSize;
@@ -354,7 +353,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
 	ea->addStoppingCriterion(generationalCriterion);
 	ea->addStoppingCriterion(controlCStopingCriterion);
-	ea->addStoppingCriterion(timeCriterion);	
+	ea->addStoppingCriterion(timeCriterion);
 
 	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
 	EZ_current_generation=&(ea->currentGeneration);
@@ -384,7 +383,6 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
 	this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params);
-	;
 }
 
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
@@ -392,7 +390,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 }
 
 PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params){
-        ;
+
 }
 
 PopulationImpl::~PopulationImpl(){
@@ -483,55 +481,6 @@ public:
 };
 
 #endif /* PROBLEM_DEP_H */
-
-\START_CUDA_MAKEFILE_TPL
-
-UNAME := $(shell uname)
-
-ifeq($(shell uname -o 2>/dev/null),Msys)
-	OS := MINGW
-endif
-
-ifneq ("$(OS)","")
-	EZ_PATH=../../
-endif
-
-EASEALIB_PATH=$(EZ_PATH)libeasea/
-
-CXXFLAGS = -std=c++14 -fopenmp -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include 
-
-OBJS = EASEA.o EASEAIndividual.o 
-
-LIBS = -lpthread -fopenmp
-ifneq ("$(OS)","")
-	LIBS += -lw2_32 -lwinmm -L"C:\MinGW\lib"
-endif
-
-#USER MAKEFILE OPTIONS :
-\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
-
-TARGET =	EASEA
-
-$(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) -g $(EASEALIB_PATH)libeasea.a $(LIBS)
-
-	
-#%.o:%.cpp
-#	$(CXX) -c $(CXXFLAGS) $^
-
-all:	$(TARGET)
-clean:
-ifneq ("^$(OS)","")
-	-del $(OBJS) $(TARGET).exe
-else
-	rm -f $(OBJS) $(TARGET)
-endif
-easeaclean:
-ifneq ("$(OS)","")
-	-del $(TARGET).exe *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
-else	
-	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
-endif
 
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
