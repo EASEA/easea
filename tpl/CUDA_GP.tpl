@@ -1059,11 +1059,6 @@ public:
 	CEvolutionaryAlgorithm* newEvolutionaryAlgorithm();
 };
 
-/**
- * @TODO ces functions devraient s'appeler weierstrassInit, weierstrassFinal etc... (en gros EASEAFinal dans le tpl).
- *
- */
-
 void EASEAInit(int argc, char** argv, ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
