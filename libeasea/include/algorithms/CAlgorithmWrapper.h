@@ -6,6 +6,8 @@
 #include <functional>
 #include <random>
 
+#include <boost/exception/diagnostic_information.hpp>
+
 #include "CEvolutionaryAlgorithm.h"
 #include "Parameters.h"
 
@@ -41,112 +43,145 @@ template <typename MOAlgorithm>
 class CAlgorithmWrapper : public CEvolutionaryAlgorithm
 {
     public:
-	CAlgorithmWrapper(Parameters* params, MOAlgorithm& ralgo) : CEvolutionaryAlgorithm(params), m_algorithm(ralgo)
-	{
-		initializeParentPopulation();
-	}
+	CAlgorithmWrapper(Parameters* params, MOAlgorithm& ralgo);
 	virtual ~CAlgorithmWrapper() = default;
 
-	void initializeParentPopulation() override
-	{
-		if (params->startFromFile) {
-			std::ifstream ifs(params->inputFilename);
-			ifs >> *m_algorithm;
-		}
-	}
+	void initializeParentPopulation() override;
+	void savePopulation(std::string const& dst) const;
 
-	void savePopulation(std::string const& dst) const
-	{
-		std::ofstream ofs(dst);
-		ofs << *m_algorithm;
-	}
+	void network_send();
+	void network_receive();
+	void network_tasks();
 
-	void network_send()
-	{
-		if (!(params->remoteIslandModel && numberOfClients > 0))
-			return;
-
-		static std::uniform_real_distribution<float> dis(0., 1.);
-		auto p = dis(m_algorithm->getRandom());
-		if (p > params->migrationProbability)
-			return;
-
-		const auto& pop = m_algorithm->getPopulation();
-		// TODO: as CLI parameter
-		const size_t pressure = 100; // 99th percentile
-		// NOTE: tournament
-		const auto& best = *impl::dumb_tournament(pop.cbegin(), pop.cend(), pressure, m_algorithm->getRandom());
-
-		std::uniform_int_distribution<size_t> cdis(0, Clients.size());
-		auto cidx = cdis(m_algorithm->getRandom());
-		auto& cli = Clients[cidx];
-		auto now = std::chrono::system_clock::now();
-		auto in_time_t = std::chrono::system_clock::to_time_t(now);
-		if (cli->getClientName().size() > 0) {
-			std::cout << "[" << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << "]"
-				  << " Sending my best individual to " << cli->getClientName() << std::endl;
-		} else {
-			std::cout << "[" << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << "]"
-				  << " Sending my best individual to " << cli->getIP() << ":" << cli->getPort()
-				  << std::endl;
-		}
-		Clients[cidx]->send(best);
-	}
-
-	void network_receive()
-	{
-		if (!params->remoteIslandModel)
-			return;
-
-		auto& pop = m_algorithm->getPopulation();
-		using base_t = std::remove_cv_t<std::remove_reference_t<decltype(pop[0])>>;
-		while (server->has_data()) {
-			auto cmoind = server->consume<base_t>();
-
-			// anti tournament
-			// TODO: as CLI parameter
-			static constexpr size_t apressure = 10;
-			auto worst =
-				impl::dumb_tournament(pop.begin(), pop.end(), apressure, m_algorithm->getRandom(),
-						      [](auto itl, auto itr) { return impl::lhs_better(itr, itl); });
-			*worst = std::move(cmoind);
-		}
-	}
-
-	void network_tasks()
-	{
-		network_send();
-		network_receive();
-	}
-
-	void runEvolutionaryLoop() override
-	{
-		initializeParentPopulation();
-
-		const auto max_gen = *params->generationalCriterion->getGenerationalLimit();
-		const auto max_time_s = this->params->timeCriterion->getLimit();
-		if (params->printStats) {
-			m_algorithm->print_header(std::cout, max_gen, max_time_s);
-		}
-
-		// TODO: --printInitialPopulation --printFinalPopulation --alwaysEvaluate --optimise --elitism --elite
-		while (!this->allCriteria()) {
-			EASEABeginningGenerationFunction(this);
-
-			m_algorithm->run();
-
-			if (params->printStats)
-				m_algorithm->print_stats(std::cout);
-
-			network_tasks();
-
-			EASEAGenerationFunctionBeforeReplacement(this);
-			EASEAEndGenerationFunction(this);
-			currentGeneration++;
-		}
-		m_algorithm->print_footer(std::cout);
-	}
+	void runEvolutionaryLoop() override;
 
     private:
 	MOAlgorithm m_algorithm;
 };
+
+template <typename MOAlgorithm>
+CAlgorithmWrapper<MOAlgorithm>::CAlgorithmWrapper(Parameters* params, MOAlgorithm& ralgo)
+	: CEvolutionaryAlgorithm(params), m_algorithm(ralgo)
+{
+	initializeParentPopulation();
+}
+
+template <typename MOAlgorithm>
+void CAlgorithmWrapper<MOAlgorithm>::initializeParentPopulation()
+{
+	if (params->startFromFile) {
+		std::ifstream ifs(params->inputFilename);
+		if (!ifs) {
+			std::cerr << "Warning: Could not load population file " << params->inputFilename
+				  << "\nYou may provide another one using --inputFile" << std::endl;
+			return;
+		}
+		try {
+			ifs >> *m_algorithm;
+		} catch (std::exception const& e) {
+			std::cerr << "Error: An error occured while loading population from file "
+				  << params->inputFilename << " : " << e.what() << std::endl;
+		} catch (boost::exception const& e) {
+			std::cerr << "Error: An error occured while loading population from file "
+				  << params->inputFilename << " : " << boost::diagnostic_information(e) << std::endl;
+		}
+	}
+}
+
+template <typename MOAlgorithm>
+void CAlgorithmWrapper<MOAlgorithm>::savePopulation(std::string const& dst) const
+{
+	try {
+		std::ofstream ofs(dst);
+		ofs << *m_algorithm;
+	} catch (std::exception const& e) {
+		std::cerr << "Error: An error occured while saving population to file " << dst << " : " << e.what()
+			  << std::endl;
+	} catch (boost::exception const& e) {
+		std::cerr << "Error: An error occured while saving population to file " << params->inputFilename
+			  << " : " << boost::diagnostic_information(e) << std::endl;
+	}
+}
+
+template <typename MOAlgorithm>
+void CAlgorithmWrapper<MOAlgorithm>::network_send()
+{
+	if (!(params->remoteIslandModel && numberOfClients > 0))
+		return;
+
+	static std::uniform_real_distribution<float> dis(0., 1.);
+	auto p = dis(m_algorithm->getRandom());
+	if (p > params->migrationProbability)
+		return;
+
+	const auto& pop = m_algorithm->getPopulation();
+	// TODO: as CLI parameter
+	const size_t pressure = 100; // 99th percentile
+	// NOTE: tournament
+	const auto& best = *impl::dumb_tournament(pop.cbegin(), pop.cend(), pressure, m_algorithm->getRandom());
+
+	std::uniform_int_distribution<size_t> cdis(0, Clients.size() - 1);
+	auto cidx = cdis(m_algorithm->getRandom());
+	Clients[cidx]->send(best);
+}
+
+template <typename MOAlgorithm>
+void CAlgorithmWrapper<MOAlgorithm>::network_receive()
+{
+	if (!params->remoteIslandModel)
+		return;
+
+	auto& pop = m_algorithm->getPopulation();
+	using base_t = std::remove_cv_t<std::remove_reference_t<decltype(pop[0])>>;
+	while (server->has_data()) {
+		auto cmoind = server->consume<base_t>();
+
+		// anti tournament
+		// TODO: as CLI parameter
+		static constexpr size_t apressure = 10;
+		auto worst = impl::dumb_tournament(pop.begin(), pop.end(), apressure, m_algorithm->getRandom(),
+						   [](auto itl, auto itr) { return impl::lhs_better(itr, itl); });
+		*worst = std::move(cmoind);
+	}
+}
+
+template <typename MOAlgorithm>
+void CAlgorithmWrapper<MOAlgorithm>::network_tasks()
+{
+	network_send();
+	network_receive();
+}
+
+template <typename MOAlgorithm>
+void CAlgorithmWrapper<MOAlgorithm>::runEvolutionaryLoop()
+{
+	initializeParentPopulation();
+
+	const auto max_gen = *params->generationalCriterion->getGenerationalLimit();
+	const auto max_time_s = this->params->timeCriterion->getLimit();
+	if (params->printStats) {
+		m_algorithm->print_header(std::cout, max_gen, max_time_s);
+	}
+
+	// TODO: --printInitialPopulation --printFinalPopulation --alwaysEvaluate --optimise --elitism --elite
+	while (!this->allCriteria()) {
+		EASEABeginningGenerationFunction(this);
+
+		m_algorithm->run();
+
+		if (params->printStats)
+			m_algorithm->print_stats(std::cout);
+
+		network_tasks();
+
+		EASEAGenerationFunctionBeforeReplacement(this);
+		EASEAEndGenerationFunction(this);
+		currentGeneration++;
+	}
+	m_algorithm->print_footer(std::cout);
+
+	if (params->savePopulation) {
+		std::cout << "Saving population to " << params->outputFilename << ".pop\n";
+		savePopulation(params->outputFilename + ".pop");
+	}
+}
