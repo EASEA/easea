@@ -207,7 +207,7 @@ for er in "${failed_list[@]}"; do
 	if $IGNORE; then
 		warnings+=($er)
 		failed=$((failed - 1))
-		passed=$((passed + 1))
+		#passed=$((passed + 1))
 		nb_warning=$((nb_warning + 1))
 	else
 		true_errors+=($er)
@@ -224,7 +224,7 @@ fi
 
 
 EXIT_CODE=0
-if [[ "$((nb_examples-passed))" != "0" ]]; then # at least one fail
+if [[ "$failed" != "0" ]]; then # at least one fail
 	printf "failed:$Red %d$Color_Off/%d\n" "$failed" "$nb_examples"
 	printf "test failed:$Red"
 	for te in "${true_errors[@]}"; do
