@@ -83,6 +83,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
         ("optimiseIterations","Set the number of optimisation iterations (default : 100)",cxxopts::value<int>())
         ("baldwinism","Only keep fitness",cxxopts::value<bool>()->default_value("false"))
         ("remoteIslandModel","Boolean to activate the individual exchange with remote islands (default : 0)",cxxopts::value<int>())
+	("silentNetwork", "Do not log informations about sent and received individuals", cxxopts::value<bool>()->default_value("false"))
         ("ipFile","File containing all the IPs of the remote islands)",cxxopts::value<string>())
         ("migrationProbability","Probability to send an individual each generation", cxxopts::value<float>())
         ("serverPort","Port of the Server", cxxopts::value<int>())

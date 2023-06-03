@@ -52,8 +52,9 @@ class CComUDPServer
 	* @brief Construct local UDP server
 	*
 	* @param port Port to listen on
+	* @param verbose Should server print informations ?
 	*/
-	CComUDPServer(unsigned short port);
+	CComUDPServer(unsigned short port, bool verbose = true);
 
 	CComUDPServer(CComUDPServer const&) = delete;
 	CComUDPServer(CComUDPServer&&) = delete;
@@ -103,6 +104,7 @@ class CComUDPServer
 	std::queue<std::vector<char>> recv_queue; ///< Queue used to store data received until consumption
 	buffer_t recv_buffer; ///< Buffer used to receive
 	boost::asio::ip::udp::endpoint last_endpoint; /// Last endpoint who sent data
+	bool verbose; /// Should server print informations ?
 
 	/**
 	 * @brief Receive asynchronously
@@ -133,8 +135,9 @@ class CComUDPClient
 	* @param port Port the destination is listening on
 	* @param destination Resolvable adress of destination
 	* @param client_name Human-readable name of client
+	* @param verbose Should client print informations ?
 	*/
-	CComUDPClient(std::string const& destination, unsigned short port, std::string client_name = "");
+	CComUDPClient(std::string const& destination, unsigned short port, std::string client_name = "", bool verbose = true);
 
 	CComUDPClient(CComUDPClient const&) = delete;
 	CComUDPClient(CComUDPClient&&) = delete;
@@ -184,6 +187,7 @@ class CComUDPClient
 	std::string client_name; ///< Human-readble name
 	boost::asio::ip::udp::endpoint dest; ///< Destination endpoint
 	boost::asio::ip::udp::socket socket; ///< Socket used to communicate with destination
+	bool verbose; ///< Should client print informations ?
 };
 
 /**
@@ -209,9 +213,10 @@ bool checkValidLine(std::string const& line);
  *
  * @param file_name Path to config file
  * @param thisPort port used by this instance
+ * @param verbose_clients create verbose clients
  *
  * @return A list of client generated from the config
  */
-std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name, int thisPort);
+std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name, int thisPort, bool verbose_clients = true);
 
 #endif /* CCOMUDPLAYER_H_ */

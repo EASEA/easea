@@ -14,14 +14,17 @@
 using namespace boost::asio;
 using namespace boost::asio::ip;
 
-CComSharedContext::CComSharedContext() : ctx(1), thread([this]() {
-		auto work = make_work_guard(ctx.get_executor());
-		ctx.run();
-		/*std::cerr << "io_service ended.\n";*/})
+CComSharedContext::CComSharedContext()
+	: ctx(1), thread([this]() {
+		  auto work = make_work_guard(ctx.get_executor());
+		  ctx.run();
+		  /*std::cerr << "io_service ended.\n";*/
+	  })
 {
 }
 
-CComUDPServer::CComUDPServer(unsigned short port) : socket(CComSharedContext::get(), udp::endpoint(udp::v4(), port))
+CComUDPServer::CComUDPServer(unsigned short port, bool verbose_)
+	: socket(CComSharedContext::get(), udp::endpoint(udp::v4(), port)), verbose(verbose_)
 {
 	//std::cerr << "Server started on port: " << port << "\n";
 	start_receive();
@@ -51,17 +54,16 @@ void CComUDPServer::start_receive()
 
 void CComUDPServer::handle_receive(const boost::system::error_code& error, std::size_t bytes_transfered)
 {
-	//std::cerr << "Received message of size: " << bytes_transfered << "\n";
 	if (error) {
 		std::cerr << "UDP error: " << error.message() << "\n";
 	} else if (bytes_transfered != 0) {
-		//std::cerr << "Appending message to buffer" << std::endl;
 		std::vector<char> tmp(recv_buffer.begin(), recv_buffer.begin() + bytes_transfered);
-		print_stats(tmp);
+		if (verbose)
+			print_stats(tmp);
+
 		recv_queue.push(std::move(tmp));
 	}
 	start_receive();
-	//std::cout << "DBG: data was appended! -- Queue size=" << recv_queue.size() << "\n";
 }
 
 void CComUDPServer::print_stats(std::vector<char> const& received) const
@@ -74,16 +76,14 @@ void CComUDPServer::print_stats(std::vector<char> const& received) const
 
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
-	auto fmt = std::put_time(std::localtime(&in_time_t), "%H:%M:%S");
 
-	std::stringstream ss;
-	std::cout << "[" << fmt << "]"
+	std::cout << "[" << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << "]"
 		  << " Received individual (fitness = " << last << ") from " << last_endpoint.address().to_string()
 		  << ":" << last_endpoint.port() << "\n";
 }
 
-CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::string client_name_)
-	: client_name(std::move(client_name_)), socket(CComSharedContext::get())
+CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::string client_name_, bool verbose_)
+	: client_name(std::move(client_name_)), socket(CComSharedContext::get()), verbose(verbose_)
 {
 	udp::resolver resolver(CComSharedContext::get());
 	dest = *resolver.resolve(udp::v4(), ip, client_name).begin(); // throw if error (safe)
@@ -98,6 +98,17 @@ std::string const& CComUDPClient::getClientName() const
 
 void CComUDPClient::send(std::string const& individual)
 {
+	if (verbose) {
+		auto now = std::chrono::system_clock::now();
+		auto in_time_t = std::chrono::system_clock::to_time_t(now);
+		std::cout << "[" << std::put_time(std::localtime(&in_time_t), "%H:%M:%S")
+			  << "] Sending my best individual to ";
+		if (getClientName().size() > 0) {
+			std::cout << getClientName() << "\n";
+		} else {
+			std::cout << getIP() << ":" << getPort() << " \n";
+		}
+	}
 	socket.send_to(boost::asio::buffer(individual), dest);
 }
 
@@ -143,7 +154,7 @@ bool checkValidLine(std::string const& line)
 	return true;
 }
 
-std::unique_ptr<CComUDPClient> parse_line(std::string const& line)
+std::unique_ptr<CComUDPClient> parse_line(std::string const& line, bool verbose_clients)
 {
 	auto sep = std::find(std::begin(line), std::end(line), ':');
 	if (sep == std::end(line))
@@ -152,10 +163,10 @@ std::unique_ptr<CComUDPClient> parse_line(std::string const& line)
 	auto port = std::string(sep + 1, std::end(line));
 	auto p = std::stoi(port);
 
-	return std::make_unique<CComUDPClient>(ip, p, "");
+	return std::make_unique<CComUDPClient>(ip, p, "", verbose_clients);
 }
 
-std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name, int thisPort)
+std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name, int thisPort, bool verbose_clients)
 {
 	std::ifstream ip_file(file_name);
 	std::vector<std::unique_ptr<CComUDPClient>> ret;
@@ -164,8 +175,7 @@ std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_n
 	int idx = 1;
 	while (std::getline(ip_file, tmp)) {
 		try {
-			auto ptr = parse_line(tmp);
-			//std::cout << "DBG: srv on port " << thisPort << " -- client " << idx << " IP=" << ptr->getIP() << " on port " << ptr->getPort() << ", is local ? " << isLocalMachine(ptr->getIP()) << "\n";
+			auto ptr = parse_line(tmp, verbose_clients);
 			if (!(ptr->getPort() == thisPort && isLocalMachine(ptr->getIP())))
 				ret.push_back(std::move(ptr));
 		} catch (std::exception const& e) {

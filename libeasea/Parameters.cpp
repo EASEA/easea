@@ -17,6 +17,7 @@ Parameters::Parameters(std::string const& filename, int argc, char* argv[]) : op
 	nbCPUThreads = setVariable("nbCPUThreads", 1);
 	noLogFile = setVariable("noLogFile", false);
 	reevaluateImmigrants = setVariable("reevaluateImmigrants", false);
+	silentNetwork = setVariable("silentNetwork", false);
 	alwaysEvaluate = setVariable("alwaysEvaluate", false);
 	seed = setVariable("seed", 0);
 	printInitialPopulation = setVariable("printInitialPopulation", false);

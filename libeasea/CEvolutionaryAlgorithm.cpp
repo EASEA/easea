@@ -55,53 +55,11 @@ extern bool bReevaluate;
 std::ofstream easena::log_file; 
 easena::log_stream logg;
 
-/**
- * @DEPRECATED the next contructor has to be used instead of this one.
- */
-/*CEvolutionaryAlgorithm::CEvolutionaryAlgorithm( unsigned parentPopulationSize,
-                unsigned offspringPopulationSize,
-                float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
-                CSelectionOperator* selectionOperator, CSelectionOperator* replacementOperator,
-                CSelectionOperator* parentReductionOperator, CSelectionOperator* offspringReductionOperator,
-                float pCrossover, float pMutation,
-                float pMutationPerGene){
-
-  CRandomGenerator* rg = globalRandomGenerator;
-
-  CSelectionOperator* so = selectionOperator;
-  CSelectionOperator* ro = replacementOperator;
-
-  //CIndividual::initRandomGenerator(rg);
-  CPopulation::initPopulation(so,ro,parentReductionOperator,offspringReductionOperator,selectionPressure,replacementPressure,parentReductionPressure,offspringReductionPressure);
-
-  this->population = new CPopulation(parentPopulationSize,offspringPopulationSize,
-            pCrossover,pMutation,pMutationPerGene,rg,NULL);
-
-  this->currentGeneration = 0;
-
-  this->reduceParents = 0;
-  this->reduceOffsprings = 0;
-  
-  // INITIALIZE SERVER OBJECT ISLAND MODEL
-  if(params->remoteIslandModel){
-    this->server = new CComUDPServer(2909,0);
-  this->treatedIndividuals = 0;
-  this->numberOfClients = 0;
-
-  this->initializeClients();
-  }
-}*/
-
 /*****
  * REAL CONSTRUCTOR
  */
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
-	
-	//ostringstream ss;
-	//ss << "EASEA Starting...."<< std::endl;
-	//LOG_MSG(msgType::WARNING, ss.str());
-
 	this->params = params;
 	this->cstats = new CStats();
 
@@ -150,8 +108,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     this->numberOfClients = 0;
     this->myClientNumber=0; 
     this->initializeClients();
-    //if(params->remoteIslandModel)
-    server = std::make_unique<CComUDPServer>(params->serverPort); //1 if debug
+    server = std::make_unique<CComUDPServer>(params->serverPort, !params->silentNetwork);
   }
 }
 
@@ -542,40 +499,15 @@ currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitn
   
 //REMOTE ISLAND MODEL FUNCTIONS
 void CEvolutionaryAlgorithm::initializeClients(){
-  /*int clientNumber=0;
-  char (*clients)[16] = (char(*)[16])calloc(1,sizeof(char)*16);
-  
-  cout << "Reading IP address file: " << this->params->ipFile << endl;
-  ifstream IP_File(this->params->ipFile);
-  string line;
-  while(getline(IP_File, line)){
-    if(!isLocalMachine(line.c_str())){
-      memmove(clients[this->numberOfClients],line.c_str(),sizeof(char)*16);
-      this->numberOfClients++;
-      clients = (char(*)[16])realloc(clients,sizeof(char)*16*(this->numberOfClients*16));
-      clientNumber++;
-    }
-    else{
-      this->myClientNumber = clientNumber;  
-    }
-  }*/
     this->refreshClient();
 
-  /*if(this->numberOfClients>0){
-    this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
-    for(int i=0; i<(signed)this->numberOfClients; i++){
-      this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);
-    }
-  }
-  else{*/
     if(this->numberOfClients<=0){
     cout << "***WARNING***\nNo islands to communicate with." << endl;
-  //  params->remoteIslandModel=0;
   }
 }
 
 void CEvolutionaryAlgorithm::refreshClient(){
-    this->Clients = parse_file(this->params->ipFile, this->params->serverPort);
+    this->Clients = parse_file(this->params->ipFile, this->params->serverPort, !params->silentNetwork);
     this->numberOfClients = Clients.size();
 
     cout << "ip file : " << this->params->ipFile << " contains " << numberOfClients << " client ip(s)" << endl;
@@ -585,25 +517,12 @@ void CEvolutionaryAlgorithm::sendIndividual(){
   //Sending an individual every n generations 
   if(globalRandomGenerator->random(0.0,1.0)<=params->migrationProbability){
   //if((this->currentGeneration+this->myClientNumber)%3==0 && this->currentGeneration!=0){
-    //cout << "I'm going to send an Individual now" << endl;
     this->population->selectionOperator->initialize(this->population->parents, params->selectionPressure, this->population->actualParentPopulationSize);
     //unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
   
     //selecting a client randomly
     int client = globalRandomGenerator->getRandomIntMax(static_cast<int>(this->numberOfClients));
-    //for(int client=0; client<this->numberOfClients; client++){
-    //cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to "
-    auto now = std::chrono::system_clock::now();
-    auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
-    std::stringstream ss;
-    ss <<std::put_time(std::localtime(&in_time_t),  "%H:%M:%S");
-    if (Clients[client]->getClientName() != ""s)
-	cout << "[" << ss.str()<<"]"<<  " Sending my best individual to " << this->Clients[client]->getClientName() <<  endl;
-    else
-	cout << "[" << ss.str()<<"]" << " Sending my best individual to " << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() << endl;
-    //cout << "Sending individual " << index << " to client " << client << " now" << endl;
-    //cout << this->population->parents[index]->serialize() << endl;
     this->Clients[client]->send(bBest->serialize());
   }
 }
@@ -612,8 +531,6 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 
   //Checking every generation for received individuals
   if(server->has_data()){
-    //cout << "number of received individuals :" << this->server->nb_data << endl;
-    //cout << "number of treated individuals :" << this->treatedIndividuals << endl;
     CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);   
 
 
@@ -624,10 +541,6 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
       
       //We're selecting the worst element to replace
-      //size_t index = this->population->getWorstIndividualIndex(this->population->parents);
-
-      //cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
-      //cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
       auto data = server->consume();
       string line = std::string{std::begin(data), std::end(data)};
       this->population->parents[index]->deserialize(line);
@@ -642,8 +555,6 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       params->reevaluateImmigrants = reeval;
       //TAG THE INDIVIDUAL AS IMMIGRANT
       this->population->parents[index]->isImmigrant = true;
-
-      //cout << "DBG: new Individual with fitness=" << this->population->parents[index]->getFitness() << " :" << this->population->parents[index]->serialize() << endl;
     }
   }
 }

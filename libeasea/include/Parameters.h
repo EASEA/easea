@@ -94,6 +94,7 @@ class Parameters {
     std::string ipFile;
     float migrationProbability;
     int serverPort;
+    bool silentNetwork;
 
     char* plotOutputFilename;
 

@@ -55,6 +55,7 @@ class CStatsPrinter
 					  std::chrono::system_clock::now() - started_at)
 					  .count();
 
+		os << "\n";
 		os << "Total execution time (in sec.): " << std::setprecision(3) << elapsed_ms / 1e3f << "s\n";
 		return os;
 	}
