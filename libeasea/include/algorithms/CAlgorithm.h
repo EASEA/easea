@@ -34,7 +34,6 @@ public:
         TP &getProblem() const;
         void run();
 	bool checkIsLast();
-	void trueIsLast();
 	void setLimitGeneration(size_t nbGen);
 	void setCurrentGeneration(size_t iGen);
 	size_t getLimitGeneration();
@@ -48,17 +47,13 @@ protected:
 
 private:
         TP &m_problem;
-	bool m_isLast;
 	size_t m_nbGen;
 	size_t m_iGen;
 };
 
 template <typename TObjective, typename TVariable>
-CAlgorithm<TObjective, TVariable>::CAlgorithm(TP &problem) : m_problem(problem)
+CAlgorithm<TObjective, TVariable>::CAlgorithm(TP &problem) : m_problem(problem), m_nbGen(0), m_iGen(0)
 {
-	m_isLast = false;
-	m_nbGen = 0;
-	m_iGen = 0;
 }
 
 template <typename TObjective, typename TVariable>
@@ -75,13 +70,7 @@ typename CAlgorithm<TObjective, TVariable>::TP &CAlgorithm<TObjective, TVariable
 template <typename TObjective, typename TVariable>
 bool CAlgorithm<TObjective, TVariable>::checkIsLast()
 {
-	return m_isLast;
-}
-
-template <typename TObjective, typename TVariable>
-void CAlgorithm<TObjective, TVariable>::trueIsLast()
-{
-	m_isLast = true;    
+	return m_iGen + 1 >= m_nbGen;
 }
 
 template <typename TObjective, typename TVariable>
@@ -112,12 +101,10 @@ size_t CAlgorithm<TObjective, TVariable>::getCurrentGeneration()
 template <typename TObjective, typename TVariable>
 void CAlgorithm<TObjective, TVariable>::run()
 {
-	if (m_iGen == 0) {
+	if (m_iGen == 0)
 		initialize();
-	} else {
-        	makeOneGeneration();
-	}
-	
+        	
+	makeOneGeneration();
 	m_iGen++;
 }
 }
