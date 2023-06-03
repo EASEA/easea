@@ -11,20 +11,23 @@ VERBOSE=false
 CUDA=true
 EZARGS=""
 CMARGS=""
+IGNORE_ERRORS=""
 
 ### CLI args
 function help {
-	printf -- "usage: [ -v | --verbose ] [ -e | --ez-args <ARGS> ] [ -c | --cmake-args <ARGS> ] [ --no-cuda ] <COMPILER>\n"
+	printf -- "usage: [ -v | --verbose ] [ -e | --ez-args <ARGS> ] [ -c | --cmake-args <ARGS> ] [ --ignore-errors <NAME>] [ --no-cuda ] <COMPILER>\n"
 	printf -- "<COMPILER> : path to the EASEA compiler.\n"
 	printf -- "--verbose or -v : (optional) print more informations, such as all ouputs of commands.\n"
 	printf -- "--ez-args <ARGS> or -e <ARGS> : (optional) arguments to pass to the final EASEA program.\n"
 	printf -- "--cmake-args <ARGS> or -c <ARGS> : (optional) arguments to pass to the first CMake command.\n"
+	printf -- "--ignore-errors <NAME> : (optional) ignore example <NAME>. DO NOT USE ON ERRORS YOU CAN FIX!\n"
 	printf -- "--no-cuda : (optional) replace CUDA templates with non-CUDA ones.\n"
 	printf -- "--help : print this help message.\n"
 }
 
 NEXT_EZARGS=false
 NEXT_CMARGS=false
+NEXT_IGNORE=false
 for var in "$@"; do
 	if $NEXT_EZARGS; then
 		EZARGS="$var"
@@ -32,6 +35,9 @@ for var in "$@"; do
 	elif $NEXT_CMARGS; then
 		CMARGS="$var"
 		NEXT_CMARGS=false
+	elif $NEXT_IGNORE; then
+		IGNORE_ERRORS="$var $IGNORE_ERRORS"
+		NEXT_IGNORE=false
 	else
 		if [[ "$var" == "--verbose" ]] || [[ "$var" == "-v" ]]; then
 			VERBOSE=true
@@ -44,6 +50,8 @@ for var in "$@"; do
 			NEXT_EZARGS=true
 		elif [[ "$var" == "--cmake-args" ]] || [[ "$var" == "-c" ]]; then
 			NEXT_CMARGS=true
+		elif [[ "$var" == "--ignore-errors" ]]; then
+			NEXT_IGNORE=true
 		else
 			if [[ "$EZ_BINARY" == "" ]]; then
 				EZ_BINARY="$(realpath "$var")"
@@ -59,7 +67,12 @@ done
 Color_Off='\033[0m'
 Red='\033[0;31m'
 Green='\033[0;32m'
+Yellow='\033[0;33m'
 
+if [[ $IGNORE_ERRORS != "" ]]; then
+	printf "$Yellow"
+	printf "Warning: Please DO NOT use '--ignore-errors' for errors you introduced!\n$Color_Off"
+fi
 
 SED=sed
 # Use GNU version of sed
@@ -175,24 +188,67 @@ for edir in $all_examples; do
 	fi
 
 	# clean
-	#make clean easeaclean >/dev/null 2>/dev/null
-	#rm -rf *.log *.prm CMakeLists.txt CMakeFiles CMakeCache *.pop *.plot *.prm
+	make clean easeaclean >/dev/null 2>/dev/null
+	rm -rf *.log *.prm CMakeLists.txt CMakeFiles CMakeCache *.plot
+done
+
+# Compute ignored tests
+warnings=()
+true_errors=()
+nb_warning=0
+for er in "${failed_list[@]}"; do
+	IGNORE=false
+	for si in $IGNORE_ERRORS; do
+		if [[ "$si" == "$er" ]]; then
+			IGNORE=true
+			break
+		fi
+	done
+	if $IGNORE; then
+		warnings+=($er)
+		failed=$((failed - 1))
+		passed=$((passed + 1))
+		nb_warning=$((nb_warning + 1))
+	else
+		true_errors+=($er)
+	fi
 done
 
 # Stats
 printf "\n### Results ###\n"
 printf "passed: $Green%d$Color_Off/%d\n" "$passed" "$nb_examples"
 
+if [[ "$warnings" != "0" ]]; then
+	printf "ignored:$Yellow %d$Color_Off/%d\n" "$warning" "$nb_examples"
+fi
+
+
+EXIT_CODE=0
 if [[ "$((nb_examples-passed))" != "0" ]]; then # at least one fail
 	printf "failed:$Red %d$Color_Off/%d\n" "$failed" "$nb_examples"
 	printf "test failed:$Red"
-	for te in "${failed_list[@]}"; do
+	for te in "${true_errors[@]}"; do
 		printf " %s" "$te"
 	done
 	printf "$Red\nFAILED$Color_Off\n"
-	exit 1
+	EXIT_CODE=1
 else
 	printf "$Green"
 	printf "PASSED$Color_Off\n"
-	exit 0
+	EXIT_CODE=0
 fi
+
+if [[ "$warnings" != "0" ]]; then
+	printf "\n$Yellow"
+	if [[ "$warnings" == "1" ]]; then
+		printf "Warning:$Color_Off %d test failed but was ignored:$Yellow\n" "$nb_warning"
+	else
+		printf "Warning:$Color_Off %d tests failed but were ignored:$Yellow" "$nb_warning"
+	fi
+	for te in "${warnings[@]}"; do
+		printf " %s" "$te"
+	done
+	printf "$Color_Off\n"
+fi
+
+exit $EXIT_CODE
