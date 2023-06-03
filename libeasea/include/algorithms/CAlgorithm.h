@@ -101,10 +101,11 @@ size_t CAlgorithm<TObjective, TVariable>::getCurrentGeneration()
 template <typename TObjective, typename TVariable>
 void CAlgorithm<TObjective, TVariable>::run()
 {
-	if (m_iGen == 0)
+	if (m_iGen == 0) {
 		initialize();
-        	
-	makeOneGeneration();
+        } else {
+		makeOneGeneration();
+	}
 	m_iGen++;
 }
 }
