@@ -69,6 +69,7 @@ class CStatsPrinter
 					  std::chrono::system_clock::now() - started_at)
 					  .count();
 		nb_individuals = population.size(); // can change
+		auto nb_evaluations = derived->getProblem().getNumberOfEvaluations();
 
 		using var_t = std::remove_cv_t<std::remove_reference_t<decltype(population[0].m_variable[0])>>;
 		using obj_t = std::remove_cv_t<std::remove_reference_t<decltype(population[0].m_objective[0])>>;
@@ -130,7 +131,7 @@ class CStatsPrinter
 
 		os << std::left << std::setw(max_gen_width) << cur_generation << " " << std::right << std::setw(9)
 		   << std::setprecision(4) << std::fixed << static_cast<float>(elapsed_ms) / 1e3f << "s"
-		   << " " << std::left << std::setw(max_evaluation_width) << nb_individuals * cur_generation << " ";
+		   << " " << std::left << std::setw(max_evaluation_width) << nb_evaluations << " ";
 		for (std::size_t i = 0; i < nb_objs; ++i)
 			os << std::right << std::setw(11) << std::scientific << mean_objs[i] << " " << std::setw(11)
 			   << std::scientific << var_objs[i] << " ";
