@@ -163,6 +163,8 @@ void CAlgorithmWrapper<MOAlgorithm>::runEvolutionaryLoop()
 		m_algorithm->print_header(std::cout, max_gen, max_time_s);
 	}
 
+	m_algorithm->setLimitGeneration(max_gen);
+
 	// TODO: --printInitialPopulation --printFinalPopulation --alwaysEvaluate --optimise --elitism --elite
 	while (!this->allCriteria()) {
 		EASEABeginningGenerationFunction(this);
