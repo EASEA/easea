@@ -344,7 +344,8 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
         std::vector<std::vector<TO>> tmp_weight(weight.begin(), weight.end());
         for (size_t i = 0; i < tmp_weight.size(); ++i){
                 easea::shared::function::adjustWeight(tmp_weight[i], 0.00001);
-		//printf("WEIGHT: %i\n",tmp_weight.size());}
+		//printf("WEIGHT: %i\n",tmp_weight.size());
+	}
         const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), tmp_weight.size()/* m_popSize*/);
 
         m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, tmp_weight, initPop.size() / 10);
