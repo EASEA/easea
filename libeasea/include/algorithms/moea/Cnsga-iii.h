@@ -142,7 +142,7 @@ typename Cnsga_iii<TIndividual, TRandom>::TPopulation Cnsga_iii<TIndividual, TRa
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-    for (int i = 0; i < offspring.size(); ++i)
+    for (int i = 0; i < static_cast<int>(offspring.size()); ++i)
     {
 	TIndividual &child = offspring[i];
 	this->getMutation()(child);
@@ -185,8 +185,9 @@ void Cnsga_iii<TIndividual, TRandom>::makeOneGeneration(void)
 template <typename TIndividual, typename TRandom>
 template <typename TPtr, typename TIter> TIter Cnsga_iii<TIndividual, TRandom>::selectNoncrit(std::list<TPtr> &front, TIter begin, TIter end)
 {
+  /* Note: end was unused before, this could create an overflow */
   TIter dest = begin;
-  for (auto i = front.begin(); i != front.end(); ++i, ++dest)
+  for (auto i = front.begin(); i != front.end() && dest != end; ++i, ++dest) // NOTE: && dest != end added to prevent OOB
     *dest = **i;
   m_noncritical.splice(m_noncritical.end(), front, front.begin(), front.end());
   return dest;
@@ -195,8 +196,8 @@ template <typename TPtr, typename TIter> TIter Cnsga_iii<TIndividual, TRandom>::
 template <typename TIndividual, typename TRandom>
 template <typename TPtr, typename TIter> TIter Cnsga_iii<TIndividual, TRandom>::selectCrit(std::list<TPtr> &front, TIter begin, TIter end)
 {
-  assert(front.size() >= std::distance(begin, end));
-  if (front.size() == std::distance(begin, end))
+  assert(static_cast<long>(front.size()) >= std::distance(begin, end));
+  if (static_cast<long>(front.size()) == std::distance(begin, end))
     return selectNoncrit(front, begin, end);
   {
       std::list<TPtr> population(m_noncritical.begin(), m_noncritical.end());
@@ -404,8 +405,11 @@ std::vector<typename TIndividual::TO> Cnsga_iii<TIndividual, TRandom>::getInterc
     CMatrix<typename TIndividual::TO> temp1(inverse.Rows(),1, 1.);
     CMatrix<typename TIndividual::TO> temp = inverse*temp1;
     std::vector<typename TIndividual::TO> intercepts(temp.Rows());
-    for (size_t i = 0; i < intercepts.size(); ++i)
-      intercepts[i] = 1 / temp[i][1];
+    for (size_t i = 0; i < intercepts.size(); ++i) {
+      /* Old line below was OOB because M = 1 and indices start at 0, not 1. */
+      // intercepts[i] = 1 / temp[i][1];
+      intercepts[i] = 1. / temp[i][0];
+    }
     return intercepts;
   }
   catch (...)

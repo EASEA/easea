@@ -102,8 +102,8 @@ public:
     CMatrix<T> inverse1();
 
     CMatrix<T>& operator=(const std::vector<std::vector<T>> &m);
-    std::vector<T>& operator[](unsigned i) { return mat[i]; }
-    std::vector<T> operator[](unsigned i) const { return mat[i]; }
+    std::vector<T>& operator[](unsigned i) { assert(i < mat.size()); return mat[i]; }
+    std::vector<T> operator[](unsigned i) const { assert(i < mat.size()); return mat[i]; }
     CMatrix<T>& operator+=(const CMatrix<T> &m);
     CMatrix<T>& operator-=(const CMatrix<T> &m);
     CMatrix<T>& operator*=(const CMatrix<T> &m);
