@@ -218,8 +218,8 @@ done
 printf "\n### Results ###\n"
 printf "passed: $Green%d$Color_Off/%d\n" "$passed" "$nb_examples"
 
-if [[ "$warnings" != "0" ]]; then
-	printf "ignored:$Yellow %d$Color_Off/%d\n" "$warning" "$nb_examples"
+if [[ "$nb_warning" != "0" ]]; then
+	printf "ignored:$Yellow %d$Color_Off/%d\n" "$nb_warning" "$nb_examples"
 fi
 
 
@@ -238,10 +238,10 @@ else
 	EXIT_CODE=0
 fi
 
-if [[ "$warnings" != "0" ]]; then
+if [[ "$nb_warning" != "0" ]]; then
 	printf "\n$Yellow"
-	if [[ "$warnings" == "1" ]]; then
-		printf "Warning:$Color_Off %d test failed but was ignored:$Yellow\n" "$nb_warning"
+	if [[ "$nb_warning" == "1" ]]; then
+		printf "Warning:$Color_Off %d test failed but was ignored:$Yellow" "$nb_warning"
 	else
 		printf "Warning:$Color_Off %d tests failed but were ignored:$Yellow" "$nb_warning"
 	fi
