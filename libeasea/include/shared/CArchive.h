@@ -111,7 +111,7 @@ bool CArchive<TIndividual>::isEqual(const TI *individual1, const TI *individual2
 template <typename TIndividual>
 void CArchive<TIndividual>::updateArchive(const TI candidate) 
 { 
-	if (m_archive.size() <= 0) LOG_ERROR(errorCode::value, "Size of archive <= 0!");
+	//if (m_archive.size() <= 0) LOG_ERROR(errorCode::value, "Size of archive <= 0!"); // makes no sense, we should be able to add individuals
 
 	// NOTE: this is tested and works as intended
 	for (auto it = m_archive.begin(); it != m_archive.end();)
