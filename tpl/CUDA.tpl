@@ -340,7 +340,7 @@ void wake_up_gpu_thread(){
 void InitialiseGPUs(){
 	//MultiGPU part on one CPU
 	globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
-	pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
+	pthread_t* globalThreads = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
 	int gpuId = fstGpu;
 	//here we want to create on thread per GPU
 	for( int i=0 ; i<num_gpus ; i++ ){
@@ -353,8 +353,9 @@ void InitialiseGPUs(){
 	  	globalGpuData[i].threadId = i;
 	  	sem_init(&globalGpuData[i].sem_in,0,0);
 	  	sem_init(&globalGpuData[i].sem_out,0,0);
-	  	if( pthread_create(t+i,NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
+	  	if( pthread_create(&globalThreads[i],NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
 	}
+	free(globalThreads);
 }
 
 \INSERT_FINALIZATION_FUNCTION
@@ -398,7 +399,7 @@ void EASEAFinal(CPopulation* pop){
 	freeGPU=true;
 	wake_up_gpu_thread();
         free(globalGpuData);
-	
+
 	\INSERT_FINALIZATION_FCT_CALL;
 }
 
@@ -716,6 +717,7 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
 
   // warning cstats parameter is null
+  delete(this->population); // avoid leak
   this->population = (CPopulation*)new
   PopulationImpl( this->params->parentPopulationSize,this->params->offspringPopulationSize,
                   this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,
@@ -729,13 +731,13 @@ EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvol
 }
 
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
-
 }
 
 PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params, stats){
 }
 
 PopulationImpl::~PopulationImpl(){
+	free(cudaBuffer);
 }
 
 
