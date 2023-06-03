@@ -551,7 +551,8 @@ void PopulationImpl::evaluateParentPopulation(){
 	}  
 
         delete[](fitnessTemp);
-
+	realEvaluationNb += actualPopulationSize;
+  	currentEvaluationNb += actualPopulationSize;
 }
 
 void PopulationImpl::evaluateOffspringPopulation(){
@@ -577,6 +578,9 @@ void PopulationImpl::evaluateOffspringPopulation(){
  
         first_generation = false;
         delete[](fitnessTemp);
+
+	realEvaluationNb += actualPopulationSize;
+  	currentEvaluationNb += actualPopulationSize;
 }
 
 
