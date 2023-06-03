@@ -22,6 +22,8 @@
 using std::cout;
 using std::endl;
 
+extern int yylineno;
+
 void debug(char* s)
 {
 #ifdef _DEBUG
@@ -859,7 +861,9 @@ void CSymbol::printAllSymbols(FILE* fp, char* sCompleteName, EObjectType FatherT
 
 CSymbol* CSymbolTable::insert(std::unique_ptr<CSymbol>&& symbol)
 {
-	assert(hashmap.find(symbol->sName) == hashmap.end());
+	if (hashmap.find(symbol->sName) != hashmap.end()) {
+		std::cerr << "\n" << sEZ_FILE_NAME << " - Warning line " << yylineno << ": Multiple definitions of symbol '" << symbol->sName << "', this may lead to compile errors!\n";
+	}
 	auto h = symbol->sName;
 	hashmap.emplace(h, std::move(symbol));
 	return hashmap.at(h).get();
