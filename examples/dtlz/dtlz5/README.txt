@@ -1,5 +1,5 @@
 To Compile this example:
-  $ easena -moead  dtlz5.ez
+  $ easena -nsgaii  dtlz5.ez
   $ cmake . && cmake --build . --config Release
 
 To test it:

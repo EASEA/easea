@@ -1,5 +1,5 @@
 To Compile this example:
-  $ easena -fastemo dtlz1.ez
+  $ easena -nsgaii dtlz1.ez
   $ cmake . && cmake --build . --config Release
 
 To test it:

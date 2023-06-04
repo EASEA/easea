@@ -272,7 +272,6 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         char buf_start_time[32];
         string log_fichier_name = this->outputFilename;
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tmStart.time_since_epoch()) % 1000;
-
 	if (!params->noLogFile){
             std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
             easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
@@ -284,7 +283,6 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
             logg("CPU_THREADS_NB;", nbCPUThreads);
 
 
-        }
 	}
 
 	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
@@ -342,7 +340,7 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
 	if ( nb_obj == 1 )
     	    ss << "Best fitness: " << m_algorithm->getPopulation()[0].m_objective[0] << std::endl;
 	
-	if (!this->noLogFile) {
+	if (!params->noLogFile) {
 	if ( nb_obj == 1 )
             logg("\nBEST FITNESS;", to_string(m_algorithm->getPopulation()[0].m_objective[0]));
         logg("\nRUNTIME;",tmDur.count());
