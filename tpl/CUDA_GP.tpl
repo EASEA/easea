@@ -127,6 +127,7 @@ int lstGpu = 0;
 
 
 struct gpuEvaluationData<TO>* globalGpuData;
+pthread_t* globalThreads;
 float* fitnessTemp;  
 bool freeGPU = false;
 bool first_generation = true;
@@ -167,7 +168,7 @@ void dispatchPopulation(int populationSize){
     cudaError_t lastError = cudaGetDeviceProperties(&deviceProp, index+fstGpu);
     if( lastError!=cudaSuccess ){
       std::cerr << "Cannot get device information for device no : " << index+fstGpu << std::endl;
-      exit(-1);
+      exit(1);
     }
 
     globalGpuData[index].num_MP =  deviceProp.multiProcessorCount; 
@@ -240,7 +241,7 @@ float recEval(GPNode* root, float* input) {
 \INSERT_GP_CPU_SWITCH
   default:
     fprintf(stderr,"error unknown terminal opcode %d\n",root->opCode);
-    exit(-1);
+    exit(1);
   }
   return RESULT;
 }
@@ -357,7 +358,7 @@ int flatteningSubPopulation( struct gpuEvaluationData<TO>* localGpuData, Individ
     localGpuData->progs[index++] = OP_RETURN;
     if( index > MAX_PROGS_SIZE ){
       std::cerr << "Error, impossible to flatten the population. Consider to increase the MAX_PROGS_SIZE. " << std::endl;
-      exit(-1);
+      exit(1);
     }
   }
   return index;
@@ -396,7 +397,7 @@ void* gpuThreadMain(void* arg){
     sem_wait(&localGpuData->sem_in);
     
     if( freeGPU ) {
-      // do we need to free gpu memory ?
+      // do we need to free gpu memory ? WTF yes
       cudaFree(localGpuData->d_fitness);
       //cudaFree(localGpuData->d_population);
 
@@ -404,7 +405,9 @@ void* gpuThreadMain(void* arg){
       cudaFree(localGpuData->d_progs);
 
       delete[] localGpuData->progs;
-      delete[] localGpuData->indexes;	break;
+      delete[] localGpuData->indexes;
+      delete[] localGpuData->fitness;
+      break;
     }
 
     if(nbr_cudaPreliminaryProcess > 0) {
@@ -412,7 +415,8 @@ void* gpuThreadMain(void* arg){
       if( nbr_cudaPreliminaryProcess==2 ) 
 	cudaPreliminaryProcessGP(localGpuData);
       else {
-	cudaPreliminaryProcessGP(localGpuData);
+        // not needed
+	//cudaPreliminaryProcessGP(localGpuData);
       }
       nbr_cudaPreliminaryProcess--;
 	
@@ -484,7 +488,7 @@ void InitialiseGPUs(){
 
   //MultiGPU part on one CPU
   globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
-  pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
+  globalThreads = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
   int gpuId = fstGpu;
   //here we want to create on thread per GPU
   for( int i=0 ; i<num_gpus ; i++ ){
@@ -497,12 +501,11 @@ void InitialiseGPUs(){
     globalGpuData[i].threadId = i;
     sem_init(&globalGpuData[i].sem_in,0,0);
     sem_init(&globalGpuData[i].sem_out,0,0);
-    if( pthread_create(t+i,NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
+    if( pthread_create(globalThreads+i,NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
 
     globalGpuData[i].flatInputs = flatInputs;
   }
   gflatInputs = flatInputs; // avoid leaks
-  free(t);
 }
 
 GPNode* pickNthNode(GPNode* root, int N, int* childId){
@@ -645,14 +648,22 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 
 	if( lstGpu==fstGpu && fstGpu==0 ){
 	  // use all gpus available
-	  cudaGetDeviceCount(&num_gpus);
+	  auto code = cudaGetDeviceCount(&num_gpus);
+          if (code != cudaSuccess) {
+	    std::cerr << "Error: could not retrieve CUDA device(s): " << cudaGetErrorString(code) << std::endl;
+	    exit(1);
+	  }
 	}
 	else{
 	  int queryGpuNum;
-	  cudaGetDeviceCount(&queryGpuNum);
+	  auto code = cudaGetDeviceCount(&queryGpuNum);
+          if (code != cudaSuccess) {
+            std::cerr << "Error: could not retrieve CUDA device(s): " << cudaGetErrorString(code) << std::endl;
+	    exit(1);
+	  }
 	  if( (lstGpu - fstGpu)>queryGpuNum || fstGpu<0 || lstGpu>queryGpuNum){
 	    std::cerr << "Error, not enough devices found on the system ("<< queryGpuNum <<") to satisfy user configuration ["<<fstGpu<<","<<lstGpu<<"["<<std::endl;
-	    exit(-1);
+	    exit(1);
 	  }
 	  else{
 	    num_gpus = lstGpu-fstGpu;
@@ -670,6 +681,7 @@ void EASEAFinal(CPopulation* pop){
 	wake_up_gpu_thread();
 	delete[](gflatInputs);
         free(globalGpuData);
+	free(globalThreads);
 	
 	\INSERT_FINALIZATION_FCT_CALL;
 }
@@ -816,6 +828,8 @@ void PopulationImpl::evaluateParentPopulation(){
   }
   
   wake_up_gpu_thread(); 
+  realEvaluationNb += EA->population->parentPopulationSize;
+  currentEvaluationNb += EA->population->parentPopulationSize;
 }
 
 void PopulationImpl::evaluateOffspringPopulation(){
@@ -833,6 +847,8 @@ void PopulationImpl::evaluateOffspringPopulation(){
   
   wake_up_gpu_thread(); 
   first_generation = false;
+  realEvaluationNb += EA->population->offspringPopulationSize;
+  currentEvaluationNb += EA->population->offspringPopulationSize;
 }
 
 

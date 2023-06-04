@@ -115,6 +115,7 @@ int lstGpu = 0;
 
 
 struct gpuEvaluationData<TO>* globalGpuData;
+pthread_t* globalThreads;
 float* fitnessTemp;  
 bool freeGPU = false;
 bool first_generation = true;
@@ -138,7 +139,7 @@ void dispatchPopulation(int populationSize){
     cudaError_t lastError = cudaGetDeviceProperties(&deviceProp, index+fstGpu);
     if( lastError!=cudaSuccess ){
       std::cerr << "Cannot get device information for device no : " << index+fstGpu << std::endl;
-      exit(-1);
+      exit(1);
     }
 
     globalGpuData[index].num_MP =  deviceProp.multiProcessorCount; 
@@ -229,7 +230,7 @@ void* gpuThreadMain(void* arg){
 
   if( lastError != cudaSuccess ){
     std::cerr << "Error, cannot set device properly for device no " << localGpuData->gpuId << std::endl;
-    exit(-1);
+    exit(1);
   }
   
   int nbr_cudaPreliminaryProcess = 2;
@@ -239,7 +240,7 @@ void* gpuThreadMain(void* arg){
 
   if( lastError != cudaSuccess ){
     std::cerr << "Error, cannot get function attribute for cudaEvaluatePopulation on card: " << localGpuData->gpuProp.name  << std::endl;
-    exit(-1);
+    exit(1);
   }
   
   // Because of the context of each GPU thread, we have to put all user's CUDA 
@@ -340,7 +341,7 @@ void wake_up_gpu_thread(){
 void InitialiseGPUs(){
 	//MultiGPU part on one CPU
 	globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
-	pthread_t* globalThreads = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
+	globalThreads = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
 	int gpuId = fstGpu;
 	//here we want to create on thread per GPU
 	for( int i=0 ; i<num_gpus ; i++ ){
@@ -355,7 +356,6 @@ void InitialiseGPUs(){
 	  	sem_init(&globalGpuData[i].sem_out,0,0);
 	  	if( pthread_create(&globalThreads[i],NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
 	}
-	free(globalThreads);
 }
 
 \INSERT_FINALIZATION_FUNCTION
@@ -376,14 +376,22 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 
 	if( lstGpu==fstGpu && fstGpu==0 ){
 	  // use all gpus available
-	  cudaGetDeviceCount(&num_gpus);
+	  auto code = cudaGetDeviceCount(&num_gpus);
+          if (code != cudaSuccess) {
+	    std::cerr << "Error: could not retrieve CUDA device(s): " << cudaGetErrorString(code) << std::endl;
+	    exit(1);
+	  }
 	}
 	else{
 	  int queryGpuNum;
-	  cudaGetDeviceCount(&queryGpuNum);
+	  auto code = cudaGetDeviceCount(&queryGpuNum);
+          if (code != cudaSuccess) {
+            std::cerr << "Error: could not retrieve CUDA device(s): " << cudaGetErrorString(code) << std::endl;
+	    exit(1);
+	  }
 	  if( (lstGpu - fstGpu)>queryGpuNum || fstGpu<0 || lstGpu>queryGpuNum){
 	    std::cerr << "Error, not enough devices found on the system ("<< queryGpuNum <<") to satisfy user configuration ["<<fstGpu<<","<<lstGpu<<"["<<std::endl;
-	    exit(-1);
+	    exit(1);
 	  }
 	  else{
 	    num_gpus = lstGpu-fstGpu;
@@ -399,6 +407,7 @@ void EASEAFinal(CPopulation* pop){
 	freeGPU=true;
 	wake_up_gpu_thread();
         free(globalGpuData);
+	free(globalThreads);
 
 	\INSERT_FINALIZATION_FCT_CALL;
 }
