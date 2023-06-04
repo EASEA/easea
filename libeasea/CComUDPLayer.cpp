@@ -15,9 +15,10 @@ using namespace boost::asio;
 using namespace boost::asio::ip;
 
 CComSharedContext::CComSharedContext()
-	: ctx(1), thread([this]() {
-		  auto work = make_work_guard(ctx.get_executor());
-		  ctx.run();
+	: ctx(std::make_shared<boost::asio::io_context>()), thread([this]() {
+		  auto my_ptr = ctx; // avoid use after free
+		  auto work = make_work_guard(my_ptr->get_executor());
+		  my_ptr->run();
 		  /*std::cerr << "io_service ended.\n";*/
 	  })
 {

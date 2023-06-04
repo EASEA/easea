@@ -36,12 +36,12 @@ class CComSharedContext
 	static inline context_t& get()
 	{
 		static CComSharedContext gctx;
-		return gctx.ctx;
+		return *gctx.ctx;
 	}
 
     private:
 	CComSharedContext();
-	boost::asio::io_context ctx;
+	std::shared_ptr<boost::asio::io_context> ctx;
 	std::thread thread;
 };
 
