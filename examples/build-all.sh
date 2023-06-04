@@ -214,7 +214,7 @@ for er in "${failed_list[@]}"; do
 	if $IGNORE; then
 		warnings+=($er)
 		failed=$((failed - 1))
-		#passed=$((passed + 1))
+		passed=$((passed + 1))
 		nb_warning=$((nb_warning + 1))
 	else
 		true_errors+=($er)
@@ -226,7 +226,7 @@ printf "\n### Results ###\n"
 printf "passed: $Green%d$Color_Off/%d\n" "$passed" "$nb_examples"
 
 if [[ "$nb_warning" != "0" ]]; then
-	printf "ignored:$Yellow %d$Color_Off/%d\n" "$nb_warning" "$nb_examples"
+	printf "failed but marked as passed:$Yellow %d$Color_Off/%d\n" "$nb_warning" "$nb_examples"
 fi
 
 
