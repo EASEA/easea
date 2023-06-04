@@ -15,12 +15,13 @@ IGNORE_ERRORS=""
 
 ### CLI args
 function help {
-	printf -- "usage: [ -v | --verbose ] [ -e | --ez-args <ARGS> ] [ -c | --cmake-args <ARGS> ] [ --ignore-errors <NAME>] [ --no-cuda ] <COMPILER>\n"
+	printf -- "usage: [ -v | --verbose ] [ -e | --ez-args <ARGS> ] [ -c | --cmake-args <ARGS> ] [ --ignore-errors <NAME>] [ --examples-directory <DIR> ][ --no-cuda ] <COMPILER>\n"
 	printf -- "<COMPILER> : path to the EASEA compiler.\n"
 	printf -- "--verbose or -v : (optional) print more informations, such as all ouputs of commands.\n"
 	printf -- "--ez-args <ARGS> or -e <ARGS> : (optional) arguments to pass to the final EASEA program.\n"
 	printf -- "--cmake-args <ARGS> or -c <ARGS> : (optional) arguments to pass to the first CMake command.\n"
 	printf -- "--ignore-errors <NAME> : (optional) ignore example <NAME>. DO NOT USE ON ERRORS YOU CAN FIX!\n"
+	printf -- "--examples-directory <DIR> : (optional) path to directory containing .ez files IN SUBDIRECTORIES.\n"
 	printf -- "--no-cuda : (optional) replace CUDA templates with non-CUDA ones.\n"
 	printf -- "--help : print this help message.\n"
 }
@@ -28,6 +29,7 @@ function help {
 NEXT_EZARGS=false
 NEXT_CMARGS=false
 NEXT_IGNORE=false
+NEXT_EDIR=false
 for var in "$@"; do
 	if $NEXT_EZARGS; then
 		EZARGS="$var"
@@ -35,6 +37,9 @@ for var in "$@"; do
 	elif $NEXT_CMARGS; then
 		CMARGS="$var"
 		NEXT_CMARGS=false
+	elif $NEXT_EDIR; then
+		examples_dir="$(realpath $var)"
+		NEXT_EDIR=false
 	elif $NEXT_IGNORE; then
 		IGNORE_ERRORS="$var $IGNORE_ERRORS"
 		NEXT_IGNORE=false
@@ -52,6 +57,8 @@ for var in "$@"; do
 			NEXT_CMARGS=true
 		elif [[ "$var" == "--ignore-errors" ]]; then
 			NEXT_IGNORE=true
+		elif [[ "$var" == "--examples-directory" ]]; then
+			NEXT_EDIR=true
 		else
 			if [[ "$EZ_BINARY" == "" ]]; then
 				EZ_BINARY="$(realpath "$var")"
