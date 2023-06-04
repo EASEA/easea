@@ -28,7 +28,7 @@ bool lhs_better(TIt lhs, TIt rhs)
 template <typename TIt, typename Gen, typename BinaryOp = decltype(lhs_better<TIt>)>
 TIt dumb_tournament(TIt begin, TIt end, size_t pressure, Gen&& generator, BinaryOp&& cmp = lhs_better<TIt>)
 {
-	std::uniform_int_distribution<size_t> pdis(0, std::distance(begin, end));
+	std::uniform_int_distribution<size_t> pdis(0, std::distance(begin, end)-1);
 	auto best = begin + pdis(generator);
 	for (size_t i = 0; i < pressure; ++i) {
 		auto cand = begin + pdis(generator);
