@@ -808,16 +808,22 @@ int easeaParse(int argc, char *argv[]){
       TARGET_FLAVOR = FLAVOR_GP;
     }
     else if (!mystricmp(sTemp,"std"))  {
+      // printf below because this is default
       TARGET=STD;
-      printf("Compiled with STD template\n");
       TARGET_FLAVOR = STD_FLAVOR_SO;
     }
     else if (!mystricmp(sTemp,"std_mo")) {
+      printf("Compiled with STD MO template\n");
       TARGET=STD;
       TARGET_FLAVOR = STD_FLAVOR_MO;
     }
     else if (!mystricmp(sTemp,"cmaes"))  {
       printf("Compiled with CMAES template\n");
+      TARGET_FLAVOR = CMAES;
+    }
+    else if (!mystricmp(sTemp,"cuda_cmaes"))  {
+      printf("Compiled with CUDA CMAES template\n");
+      TARGET=CUDA;
       TARGET_FLAVOR = CMAES;
     }
     else if (!mystricmp(sTemp,"de"))  {
@@ -905,7 +911,18 @@ int easeaParse(int argc, char *argv[]){
         strcpy(sEO_DIR,argv[nParamNb]);
       }
     }
-    else strcpy(sRAW_PROJECT_NAME,argv[nParamNb]);
+    else {
+    	if (argv[nParamNb][0]=='-' || argv[nParamNb][0]=='/') {
+		fprintf(stderr, "Error: Unknown CLI option: '%s'\n", argv[nParamNb]);
+		exit(1);
+	} else {
+        	strcpy(sRAW_PROJECT_NAME,argv[nParamNb]);
+	}
+    }
+  }
+
+  if (TARGET == STD && TARGET_FLAVOR == STD_FLAVOR_SO) {// default
+	printf("Compiled with STD template\n");
   }
 
   CEASEAParser_create();
