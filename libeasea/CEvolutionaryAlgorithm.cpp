@@ -431,12 +431,12 @@ void CEvolutionaryAlgorithm::showPopulationStats(std::chrono::time_point<std::ch
   if(params->printStats){
     if(currentGeneration==0){
 
-      printf("------------------------------------------------------------------------------------------------\n");
-      printf("|GENER.|    ELAPSED    |    PLANNED    |     ACTUAL    |BEST INDIVIDUAL|  AVG  | STAND | WORST |\n");
-      printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|  DEV  |FITNESS|\n");
-      printf("------------------------------------------------------------------------------------------------\n");
+      printf("--------------------------------------------------------------------------------------------------------\n");
+      printf("|GENER.|    ELAPSED    |    PLANNED    |     ACTUAL    | BEST INDIVIDUAL |   AVG   |  STAND  |  WORST  |\n");
+      printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |     FITNESS     | FITNESS |   DEV   | FITNESS |\n");
+      printf("--------------------------------------------------------------------------------------------------------\n");
     }
-    printf("%7u\t%10.3fs\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,elapsed_s,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+    printf("%7u %14.3fs %15u %15u % .10e % .2e % .2e % .2e\n",currentGeneration,elapsed_s,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
   }
 
   if((this->params->plotStats && this->grapher->valid) || this->params->generatePlotScript){
