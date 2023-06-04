@@ -117,6 +117,7 @@ typedef float TV;
 unsigned aborded_crossover;
 float** inputs;
 float* outputs;
+float* gflatInputs;
 
 
 struct gpuEvaluationData<TO>* gpuData;
@@ -500,6 +501,8 @@ void InitialiseGPUs(){
 
     globalGpuData[i].flatInputs = flatInputs;
   }
+  gflatInputs = flatInputs; // avoid leaks
+  free(t);
 }
 
 GPNode* pickNthNode(GPNode* root, int N, int* childId){
@@ -665,6 +668,7 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 void EASEAFinal(CPopulation* pop){
 	freeGPU=true;
 	wake_up_gpu_thread();
+	delete[](gflatInputs);
         free(globalGpuData);
 	
 	\INSERT_FINALIZATION_FCT_CALL;
@@ -916,19 +920,18 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-//	EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
-	 ea->addStoppingCriterion(generationalCriterion);
+	ea->addStoppingCriterion(generationalCriterion);
 	ea->addStoppingCriterion(controlCStopingCriterion);
 	ea->addStoppingCriterion(timeCriterion);
 
-	  EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
-	  EZ_current_generation=&(ea->currentGeneration);
+	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
+	EZ_current_generation=&(ea->currentGeneration);
 
-	 return ea;
+	return ea;
 }
 
 inline void IndividualImpl::copyToCudaBuffer(void* buffer, unsigned id){
@@ -965,8 +968,8 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 
 
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
-
   // warning cstats parameter is null
+  delete(this->population); // avoid memory leak
   this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params, this->cstats); // NULL);
   int popSize = (params->parentPopulationSize>params->offspringPopulationSize?params->parentPopulationSize:params->offspringPopulationSize);
   ((PopulationImpl*)this->population)->cudaBuffer = (void*)malloc(sizeof(IndividualImpl)*( popSize ));
@@ -984,6 +987,7 @@ PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspring
 }
 
 PopulationImpl::~PopulationImpl(){
+	free(cudaBuffer);
 }
 
 
