@@ -1263,8 +1263,8 @@ exponent  ([Ee][+-]?[0-9]+)
 if(OPERATING_SYSTEM=WINDOWS)
 	fprintf(fpOutputFile,"%s\\",getenv("NVSDKCUDA_ROOT"));
 }
-<TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  {if(fSURV_PAR_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_PAR_SIZE); else fprintf(fpOutputFile,"%f",(float)nPOP_SIZE);}
-<TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  {if(fSURV_OFF_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_OFF_SIZE); else fprintf(fpOutputFile,"%f",(float)nOFF_SIZE);}
+<TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  {if(fSURV_PAR_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_PAR_SIZE); else fprintf(fpOutputFile,"1.0f");}
+<TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  {if(fSURV_OFF_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_OFF_SIZE); else fprintf(fpOutputFile,"1.0f");}
 <TEMPLATE_ANALYSIS>"\\GENOME_NAME"  {fprintf(fpOutputFile,"%s",nGENOME_NAME);}
 <TEMPLATE_ANALYSIS>"\\PROBLEM_DIM"  {fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
 <TEMPLATE_ANALYSIS>"\\NB_GEN"  {fprintf(fpOutputFile,"%d",nNB_GEN);}
