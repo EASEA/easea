@@ -27,8 +27,8 @@ CIndividual** pPopulation = NULL;
 CIndividual* bBest = NULL;
 float* pEZ_MUT_PROB = NULL;
 float* pEZ_XOVER_PROB = NULL;
-size_t *EZ_NB_GEN;
-size_t *EZ_current_generation;
+unsigned *EZ_NB_GEN;
+unsigned *EZ_current_generation;
 CEvolutionaryAlgorithm *EA;
 
 CCmaesCuda *cma;
@@ -108,8 +108,8 @@ void cudaPreliminaryProcess(size_t populationSize, dim3* dimBlock, dim3* dimGrid
         lastError = cudaMalloc(((void**)deviceFitness),populationSize*sizeof(float));
         //DEBUG_PRT("Fitness buffer allocation : %s",cudaGetErrorString(lastError));
 
-        if( !repartition(populationSize, &nbBlock, &nbThreadPB, &nbThreadLB,30, 240))
-                 exit( -1 );
+        /*if( !repartition(populationSize, &nbBlock, &nbThreadPB, &nbThreadLB,30, 240))
+                 exit( -1 );*/
 
         //DEBUG_PRT("repartition is \n\tnbBlock %lu \n\tnbThreadPB %lu \n\tnbThreadLD %lu",nbBlock,nbThreadPB,nbThreadLB);
 
@@ -137,7 +137,7 @@ void EASEAInit(int argc, char** argv, ParametersImpl& p){
 	(void)setVariable;
 
 	\INSERT_INITIALISATION_FUNCTION
-  	cma = new CCmaes(p.offspringPopulationSize, p.parentPopulationSize, \PROBLEM_DIM);
+  	cma = new CCmaesCuda(p.offspringPopulationSize, p.parentPopulationSize, \PROBLEM_DIM);
 }
 
 void EASEAFinal(CPopulation* pop){
@@ -544,7 +544,7 @@ public:
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
 
-	void mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene);
 
 	void boundChecking();
 
