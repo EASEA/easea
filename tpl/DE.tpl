@@ -306,7 +306,7 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
         ss << "Best fitness: " << population[0].m_objective[0] << std::endl;
         
         LOG_MSG(msgType::INFO, ss.str());
-	if (params->isLogg == 1){
+	if (!params->noLogFile){
 	logg("\nBEST FITNESS;", to_string(population[0].m_objective[0]));
         logg("\nRUNTIME;",tmDur.count());
     }
