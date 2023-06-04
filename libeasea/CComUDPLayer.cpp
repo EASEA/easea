@@ -21,6 +21,7 @@ CComSharedContext::CComSharedContext()
 		  /*std::cerr << "io_service ended.\n";*/
 	  })
 {
+	thread.detach();
 }
 
 CComUDPServer::CComUDPServer(unsigned short port, bool verbose_)
