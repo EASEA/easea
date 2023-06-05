@@ -411,7 +411,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Installing dependencies
-        run: sudo apt install -y libboost-all-dev
+        run: sudo apt install -y libboost-all-dev libomp-dev
 
       - name: Installing clang toolchain
         run: sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
