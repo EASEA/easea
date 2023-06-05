@@ -9,13 +9,14 @@ examples_dir=$(dirname $path_to_script)
 EZ_BINARY=""
 VERBOSE=false
 CUDA=true
+NETWORK=false
 EZARGS=""
 CMARGS=""
 IGNORE_ERRORS=""
 
 ### CLI args
 function help {
-	printf -- "usage: [ -v | --verbose ] [ -e | --ez-args <ARGS> ] [ -c | --cmake-args <ARGS> ] [ --ignore-errors <NAME>] [ --examples-directory <DIR> ][ --no-cuda ] <COMPILER>\n"
+	printf -- "usage: [ -v | --verbose ] [ -e | --ez-args <ARGS> ] [ -c | --cmake-args <ARGS> ] [ --ignore-errors <NAME>] [ --examples-directory <DIR> ] [ --network ] [ --no-cuda ] <COMPILER>\n"
 	printf -- "<COMPILER> : path to the EASEA compiler.\n"
 	printf -- "--verbose or -v : (optional) print more informations, such as all ouputs of commands.\n"
 	printf -- "--ez-args <ARGS> or -e <ARGS> : (optional) arguments to pass to the final EASEA program.\n"
@@ -23,6 +24,7 @@ function help {
 	printf -- "--ignore-errors <NAME> : (optional) ignore example <NAME>. DO NOT USE ON ERRORS YOU CAN FIX!\n"
 	printf -- "--examples-directory <DIR> : (optional) path to directory containing .ez files IN SUBDIRECTORIES.\n"
 	printf -- "--no-cuda : (optional) replace CUDA templates with non-CUDA ones.\n"
+	printf -- "--network : (optional) test remote island model by adding arguments and ip.txt\n"
 	printf -- "--help : print this help message.\n"
 }
 
@@ -48,6 +50,8 @@ for var in "$@"; do
 			VERBOSE=true
 		elif [[ "$var" == "--no-cuda" ]]; then
 			CUDA=false
+		elif [[ "$var" == "--network" ]]; then
+			NETWORK=true
 		elif [[ "$var" == "--no-cuda" ]]; then
 			help
 			exit 0
@@ -177,8 +181,16 @@ for edir in $all_examples; do
 	#echo "DEBUG: " "$EASEA_OUT"
 
 	# run
-	printf "\tExecuting %s %s..." "$EASEA_OUT" "$EZARGS"
-	OUT=$($TIMEOUT -k 7s 5s "./$EASEA_OUT" $EZARGS)
+	if $NETWORK; then
+		printf "localhost:2929\nlocalhost:3000\n" > ip.txt
+		MORE_ARGS="--remoteIslandModel 1 --migrationProbability 1.0 --ipFile ip.txt"
+		$TIMEOUT -k 15s 10s "./$EASEA_OUT" $EZARGS $MORE_ARGS --serverPort 2929 &
+		printf "\tExecuting %s %s %s on two ports..." "$EASEA_OUT" "$EZARGS" "$MORE_ARGS"
+		OUT=$($TIMEOUT -k 15s 10s "./$EASEA_OUT" $EZARGS $MORE_ARGS --serverPort 3000)
+	else
+		printf "\tExecuting %s %s..." "$EASEA_OUT" "$EZARGS"
+		OUT=$($TIMEOUT -k 7s 5s "./$EASEA_OUT" $EZARGS)
+	fi
 	ret=$?
 	if [[ "$ret" == "0" ]] || [[ "$ret" == "124" ]] || [[ "$ret" == "137" ]]; then # ok
 		printf "$Green ok!$Color_Off\n"
