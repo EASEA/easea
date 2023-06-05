@@ -442,7 +442,7 @@ jobs:
       - name: Test remote island model for UB, leaks and OOB
         if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
         run: |
-         ASAN_OPTIONS=protect_shadow_gap=0 CC=clang CXX=clang++ ./examples/build-all.sh $EZ_PATH/bin/easena --ez-args "--nbGen 1000 --popSize 1000 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --network --no-cuda --examples-directory examples/templates
+         ASAN_OPTIONS=protect_shadow_gap=0 CC=clang CXX=clang++ ${{github.workspace}}/examples/build-all.sh $EZ_PATH/bin/easena --ez-args "--nbGen 1000 --popSize 1000 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --network --no-cuda --examples-directory ${{github.workspace}}/examples/templates
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
@@ -450,7 +450,7 @@ jobs:
       - name: Test templates for errors when loading population from .pop
         if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
         run: |
-         ASAN_OPTIONS=protect_shadow_gap=0 CC=clang CXX=clang++ ./examples/build-all.sh $EZ_PATH/bin/easena --ez-args "--startFromFile 1 --nbGen 3 --popSize 100 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --no-cuda --examples-directory examples/templates
+         ASAN_OPTIONS=protect_shadow_gap=0 CC=clang CXX=clang++ ${{github.workspace}}/examples/build-all.sh $EZ_PATH/bin/easena --ez-args "--startFromFile 1 --nbGen 3 --popSize 100 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --no-cuda --examples-directory ${{github.workspace}}/examples/templates
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
