@@ -38,6 +38,7 @@ public:
 	void setCurrentGeneration(size_t iGen);
 	size_t getLimitGeneration();
 	size_t getCurrentGeneration();
+	virtual void on_individuals_received() {}
 
 
 

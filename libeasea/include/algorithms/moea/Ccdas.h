@@ -52,6 +52,7 @@ public:
         TPopulation runBreeding(const TPopulation &parent);
         static bool isDominated(const TI &individual1, const TI &individual2);
         void convertObjective(const std::vector<TO> &angle, const std::vector<TO> &objective, std::vector<TO> &convertedObjective);
+	void on_individuals_received() override;
 
 
 protected:
@@ -94,6 +95,22 @@ void Ccdas<TIndividual, TRandom>::initialize()
                 std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
         }
+}
+
+template <typename TIndividual, typename TRandom>
+void Ccdas<TIndividual, TRandom>::on_individuals_received()
+{
+	// recalculate crowding distance
+	typedef typename TPopulation::pointer TPtr;
+	std::list<TPtr> population;
+	for (size_t i = 0; i < TBase::m_population.size(); ++i)
+		population.push_back(&TBase::m_population[i]);
+
+	while (!population.empty()) {
+		std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);
+		std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
+		easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
+	}
 }
 
 template <typename TIndividual, typename TRandom>

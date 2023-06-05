@@ -70,11 +70,13 @@ void CComUDPServer::handle_receive(const boost::system::error_code& error, std::
 
 void CComUDPServer::print_stats(std::vector<char> const& received) const
 {
-	std::istringstream iss(received.data());
+	std::string content(received.cbegin(), received.cend());
+	std::istringstream iss(std::move(content));
 	std::string tmp, last;
 	while (std::getline(iss, tmp, ' ')) {
 		last = std::move(tmp);
 	}
+	last.erase(std::remove(last.begin(), last.end(), '\n'));
 
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);

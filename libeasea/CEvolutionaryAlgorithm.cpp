@@ -541,9 +541,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
       
       //We're selecting the worst element to replace
-      auto data = server->consume();
-      string line = std::string{std::begin(data), std::end(data)};
-      this->population->parents[index]->deserialize(line);
+      server->consume_into(this->population->parents[index]);
       int reeval = params->reevaluateImmigrants;
       // Reevaluate individaul if the flag reevaluateImmigrants == 1	
       if (bReevaluate == true){ params->reevaluateImmigrants = 1;}

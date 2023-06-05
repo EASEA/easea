@@ -26,7 +26,9 @@ class CSerializable
 		auto* pop_owner = static_cast<Base*>(this);
 		auto& vars = pop_owner->m_variable;
 		auto& objs = pop_owner->m_objective;
+		auto& muts = pop_owner->m_mutStep;
 		ar & vars;
+		ar & muts;
 		ar & objs;
 	}
 

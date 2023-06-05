@@ -93,10 +93,17 @@ class CComUDPServer
 		auto raw = consume();
 		std::string str{raw.cbegin(), raw.cend()};
 		std::istringstream sbuf{std::move(str)};
-	
+
 		Serializable ret{};
 		sbuf >> ret;
 		return ret;
+	}
+
+	template <typename Deserializable>
+	void consume_into(Deserializable& individual) {
+		auto raw = consume();
+		std::string str{raw.cbegin(), raw.cend()};
+		individual->deserialize(str);
 	}
 
     private:

@@ -133,6 +133,7 @@ void CAlgorithmWrapper<MOAlgorithm>::network_receive()
 
 	auto& pop = m_algorithm->getPopulation();
 	using base_t = std::remove_cv_t<std::remove_reference_t<decltype(pop[0])>>;
+	bool received = false;
 	while (server->has_data()) {
 		auto cmoind = server->consume<base_t>();
 
@@ -142,7 +143,10 @@ void CAlgorithmWrapper<MOAlgorithm>::network_receive()
 		auto worst = impl::dumb_tournament(pop.begin(), pop.end(), apressure, m_algorithm->getRandom(),
 						   [](auto itl, auto itr) { return impl::lhs_better(itr, itl); });
 		*worst = std::move(cmoind);
+		received = true;
 	}
+	if (received)
+		m_algorithm->on_individuals_received();
 }
 
 template <typename MOAlgorithm>
