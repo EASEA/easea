@@ -1,0 +1,100 @@
+/*_________________________________________________________
+
+onemax.ez // Evolve individuals containing 111111111111111111...
+__________________________________________________________*/
+
+\User declarations :
+#define SIZE 1000
+ 
+float pMutPerGene=0.1;
+\end
+
+\User functions:
+\end
+
+\User CUDA:
+\end
+
+\Before everything else function:
+\end
+
+\After everything else function:
+\end
+
+\At the beginning of each generation function:
+\end
+
+\At the end of each generation function:
+\end
+
+\At each generation before reduce function:
+\end
+
+\User classes :
+GenomeClass { 
+  int x[SIZE];
+}
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser : // "initializer" is also accepted
+  for(int i=0; i<SIZE; i++ )
+     	Genome.x[i] = random(0,2);
+\end
+
+\GenomeClass::crossover :
+  int nLocus=random(1,SIZE);
+
+  for (int i=nLocus;i<SIZE;i++)
+     child.x[i]=parent2.x[i];
+\end
+
+\GenomeClass::mutator : // Must return a value (for historical reasons)
+  for (int i=0;i<SIZE;i++)
+    if (tossCoin(pMutPerGene)) Genome.x[i]=(Genome.x[i]+1)%2;
+  return 3;
+\end
+
+\GenomeClass::evaluator : // Returns the score
+  float fScore=0;
+  for (int i=0;i<SIZE;i++) fScore+=Genome.x[i];
+  return fScore;
+\end
+
+\User Makefile options: 
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 100   	// NB_GEN
+  Time limit: 0 			// In seconds, 0 to deactivate
+  Population size : 100			//POP_SIZE
+  Offspring size : 100 // 40% 
+  Mutation probability : 1       // MUT_PROB
+  Crossover probability : 1      // XOVER_PROB
+  Evaluator goal : maximise      // Maximise
+  Selection operator: Tournament 2
+  Surviving parents: 1//percentage or absolute  
+  Surviving offspring: 100%
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+  Final reduce operator: Tournament 2
+
+  Elitism: Strong			//Weak or Strong
+  Elite: 1
+  Print stats: true				//Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats:true				//Default: 0
+
+  Remote island model: false
+  IP file: ip.txt 			//File containing all the remote island's IP
+  Server port : 2929
+  Migration probability: 0.3
+
+  Save population: false
+  Start from file:false
+\end
+	

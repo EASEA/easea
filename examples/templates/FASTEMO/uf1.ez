@@ -1,0 +1,201 @@
+/*_____________________________________________________________
+
+Template for an EASEA evolutionary algorithm for easea v1.0.3
+
+This file contains template of UF1 problem.
+UF1 :  Test CProblem n1.
+UF1 function contains 2/3 objectives.
+
+Reference: 
+_______________________________________________________________*/
+
+
+\User declarations : // This section is copied on top of the output file
+
+#include <problems/CProblem.h> 
+#include <operators/crossover/continuous/CbetaCrossover.h>
+#include <operators/mutation/continuous/CSelfGaussianMutation.h>
+#include <operators/crossover/continuous/CsbxCrossover.h>
+#include <operators/mutation/continuous/CPolynomialMutation.h>
+
+
+#include <shared/CConstant.h>
+#include <CLogger.h>
+
+#include <cassert>
+#include <numeric>
+
+#include <math.h>
+
+
+#define NB_VARIABLES 30
+#define NB_OBJECTIVES 2
+#define NB_CONSTRAINTS 0
+
+#define XOVER_DIST_ID 20.0
+
+#define MUT_DIST_ID 20.0
+
+#define QMETRICS 
+
+#define PARETO_TRUE_FILE "../../uf/pf/uf1/2D/UF1.2D.pf"
+#define PBLM_NAME "WFG1"
+//typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
+//typedef easea::operators::mutation::continuous::pm::CPolynomialMutation<TT, TRandom &> TMutation;
+typedef easea::operators::crossover::continuous::beta::CbetaCrossover<TT, TRandom &> TCrossover;
+typedef easea::operators::mutation::continuous::pm::CSelfGaussianMutation<TT, TRandom &> TMutation;
+TBoundary setBoundary(const size_t dimension)
+{
+        TBoundary boundary(dimension);
+	boundary[0].first = 0;
+	boundary[0].second = 1;
+        for (size_t i = 1; i < boundary.size(); ++i)
+        {
+                boundary[i].first = -1;
+                boundary[i].second = 1;
+        }
+        return boundary;
+}
+
+TRandom m_generator;
+
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, setBoundary(NB_VARIABLES ));
+TCrossover crossover(m_generator, 1, m_problem.getBoundary(), XOVER_DIST_ID);
+TMutation m_mutation(m_generator, 1 / (TT)m_problem.getBoundary().size(), m_problem.getBoundary(), MUT_DIST_ID);
+
+
+\end
+
+\User functions:
+
+inline constexpr int getNumberOfObjectives()
+{
+	return NB_OBJECTIVES ;
+}
+inline constexpr int getNumberOfVariables()
+{
+	return NB_VARIABLES ;
+}
+
+template <typename TT>
+TT distance(const std::vector<TT> variable, const size_t index)
+{
+        assert(1 <= index && index < variable.size());
+        const size_t nbVariables = variable.size() - index;
+        const TT x = variable[0];
+        TT sum = 0;
+        for (size_t i = index; i < variable.size(); i += 2)
+        {
+                const size_t j = i + 1;
+                const TT temp = variable[i] - sin(6 * PI * x + j * PI / variable.size()
+);
+                sum += temp * temp;
+        }
+        const size_t count = nbVariables % 2 ? nbVariables / 2 + 1 : nbVariables / 2;
+        return sum / count;
+}
+
+
+
+\end
+
+\User CUDA:
+//Transfert some variables to GPU here (cudaMalloc, MemCpy)
+\end
+
+\User classes :
+
+GenomeClass { 
+  // need to declare the genome here
+ int x;
+}
+\end
+
+\Before everything else function:
+//cout<<"Before everything else function called "<<endl;
+\end
+
+\After everything else function:
+//cout << "After everything else function called" << endl;
+\end
+
+\At the beginning of each generation function:
+//cout << "At the beginning of each generation function called" << endl;
+\end
+
+\At the end of each generation function:
+//cout << "At the end of each generation function called" << endl;
+\end
+
+\At each generation before reduce function:
+//cout << "At each generation before replacement function called" << endl;
+\end
+
+\GenomeClass::display:
+\end
+
+\GenomeClass::initialiser : // "initializer" is also accepted
+  // the genome to initialise is known as "Genome"
+
+\end
+/*
+\GenomeClass::crossover : 
+  // must create "child" out of "parent1" and "parent2"
+\end
+
+\GenomeClass::mutator : // Must return the number of mutations
+  // must mutate "Genome"
+  return 0;
+\end
+*/
+\GenomeClass::evaluator : // Returns the score as a real value
+  // uses Genome to evaluate the quality of the individual
+
+        TI::m_objective.resize(getNumberOfObjectives());
+	TV variable = TI::m_variable;
+
+	const TT x = variable[0];
+	TI::m_objective[0] = x + 2 * distance(variable, 2);
+	TI::m_objective[1] = 1 - sqrt(x) + 2 *distance(variable, 1);
+
+	return 1;
+
+\end
+
+\User Makefile options: 
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 500    // NB_GEN
+  Time limit: 0 			           // In seconds, 0 to deactivate
+  Population size : 1000 			   //POP_SIZE
+  Offspring size : 1000           // or a xx%
+//  CMutation probability : 1.0      // MUT_PROB
+//  CCrossover probability : 0.9      // XOVER_PROB
+  Evaluator goal : maximize      // maximise
+  Selection operator: Tournament 2.0
+/*  Surviving parents: 100%        // Percentage or absolute  
+  Surviving offspring: 100%      // Percentage or absolute  */
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+/*  Final reduce operator: Tournament 2 */
+
+  Elitism: Strong			           // Weak or Strong
+  Elite: 1
+  Print stats: true				       // Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats: false				         // Default: 0
+  Save population: false
+
+/*  Remote island model: false
+  IP file: ip.txt 			         // List of IP:PORT of islands to send individuals to
+  Migration probability: 0.33    // Probability of sending an individual per generation
+  Server port : 2929
+
+  Save population: true
+  Start from file:false 
+*/
+\end
+
