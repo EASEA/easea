@@ -439,14 +439,6 @@ jobs:
           exit $result_code
         shell: bash
 
-      - name: Test remote island model for UB, leaks and OOB
-        if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
-        run: |
-         CC=clang CXX=clang++ EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena"--ez-args "--nbGen 1000 --popSize 1000 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --network --no-cuda --examples-directory ${{github.workspace}}/examples/templates
-          result_code=${PIPESTATUS[0]}
-          exit $result_code
-        shell: bash
-
       - name: Test templates for errors when loading population from .pop
         if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
         run: |
@@ -455,6 +447,13 @@ jobs:
           exit $result_code
         shell: bash
 
+      - name: Test remote island model for UB, leaks and OOB
+        if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
+        run: |
+         CC=clang CXX=clang++ EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --ez-args "--nbGen 1000 --popSize 1000 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --network --no-cuda --examples-directory ${{github.workspace}}/examples/templates
+          result_code=${PIPESTATUS[0]}
+          exit $result_code
+        shell: bash
 
       - name: Output examples status
         id: status
