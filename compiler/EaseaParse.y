@@ -821,11 +821,6 @@ int easeaParse(int argc, char *argv[]){
       printf("Compiled with CMAES template\n");
       TARGET_FLAVOR = CMAES;
     }
-    else if (!mystricmp(sTemp,"cuda_cmaes"))  {
-      printf("Compiled with CUDA CMAES template\n");
-      TARGET=CUDA;
-      TARGET_FLAVOR = CMAES;
-    }
     else if (!mystricmp(sTemp,"de"))  {
       printf("Compiled with DE template\n");
       TARGET_FLAVOR = DE;
