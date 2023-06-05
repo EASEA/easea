@@ -69,6 +69,7 @@ public:
   std::vector<typename TIndividual::TO> getIntercept(CMatrix<typename TIndividual::TO> &extremePoints);
   template <typename TIter> void normalizePopulation(const std::vector<typename TIndividual::TO> &idealPoint, const std::vector<typename TIndividual::TO> &intercepts, TIter begin, TIter end);
   template <typename TIter> void normalize(TIter begin, TIter end, const typename TIndividual::TO epsilon);
+  void on_individuals_received() override;
           
 protected:
   std::list<TI *> m_noncritical;
@@ -113,6 +114,20 @@ void Cnsga_iii<TIndividual, TRandom>::initialize() {
       TBase::getProblem()(individual);
     }*/
 }
+
+template <typename TIndividual, typename TRandom>
+void Cnsga_iii<TIndividual, TRandom>::on_individuals_received() {
+	// required for updating reObjective
+	auto& pop = TBase::m_population;
+	std::vector<TI *> ppop;
+	ppop.reserve(pop.size());
+	/*for (size_t i = 0; i < pop.size(); ++i)
+		ppop.push_back(&pop[i]);*/
+	std::transform(pop.begin(), pop.end(), std::back_inserter(ppop), [](auto& popit) { return &popit;});
+	normalize(ppop.begin(), ppop.end(), m_epsilon);
+}
+
+
 
 template <typename TIndividual, typename TRandom>
 Cnsga_iii<TIndividual, TRandom>::~Cnsga_iii(void)
