@@ -414,7 +414,7 @@ jobs:
         run: sudo apt install -y libboost-all-dev
 
       - name: Installing clang toolchain
-        run: bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+        run: sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 
       - name: CMake configure
         id: cmake-configure
