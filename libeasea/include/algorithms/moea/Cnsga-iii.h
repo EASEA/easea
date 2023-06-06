@@ -292,7 +292,7 @@ template <typename TIter> TIter Cnsga_iii<TIndividual, TRandom>::nicher(std::lis
 template <typename TIndividual, typename TRandom>
 typename TIndividual::TO Cnsga_iii<TIndividual, TRandom>::Distance(const std::vector<typename TI::TO> &referencePoint, const std::vector< typename TI::TO> &objective) const
 {
-  typename  TI::TO factor = std::inner_product(objective.begin(), objective.end(), referencePoint.begin(), (TO)0) / std::inner_product(objective.begin(), objective.end(), objective.begin(), (TO)0);
+  typename  TI::TO factor = std::inner_product(objective.begin(), objective.end(), referencePoint.begin(), (TO)1) / std::inner_product(objective.begin(), objective.end(), objective.begin(), (TO)1);
   TO sum = 0;
   for (size_t i = 0; i < objective.size(); ++i)
   {

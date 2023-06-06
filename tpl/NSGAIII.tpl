@@ -339,6 +339,9 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	size_t division = setNumberOfReferencePointDiv(nbObjectives);
 	std::list<std::vector<TO>> points = easea::shared::function::runNbi<TO>(nbObjectives, division);
 	std::vector<std::vector<TO>> m_reference(points.begin(), points.end());
+        m_popSize = m_reference.size();
+        m_popSize += (4 - m_popSize % 4) % 4;
+
 	const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
 
 	m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, m_reference);
