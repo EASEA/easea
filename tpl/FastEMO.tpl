@@ -103,16 +103,22 @@ typedef double TT;
 typedef easea::problem::CProblem<TT> TP;
 typedef TP::TV TV;
 typedef TP::TO TO;
+std::time_t m_seed = std::time(nullptr);
+TRandom m_generator{static_cast<std::mt19937::result_type>(m_seed)};
 
 typedef typename easea::Individual<TT, TV> TIndividual;
 typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
-\INSERT_USER_DECLARATIONS
-easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
 
 typedef easea::algorithms::sigma::Csigma< TIndividual, TRandom &> TAlgorithm;
 TAlgorithm *m_algorithm;
 size_t m_popSize = -1;
+
+
+
+\INSERT_USER_DECLARATIONS
+easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
+
 
 \ANALYSE_USER_CLASSES
 

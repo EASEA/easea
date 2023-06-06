@@ -111,7 +111,7 @@ typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 typedef easea::algorithms::gde::Cgde< TIndividual, TRandom &> TAlgorithm;
 typedef easea::operators::crossover::continuous::de::CdeCrossover<TT, TRandom &> TCrossover;
 std::time_t m_seed = std::time(nullptr);
-TRandom m_generator{m_seed};
+TRandom m_generator{static_cast<std::mt19937::result_type>(m_seed)};
 typedef easea::algorithms::gde::Cgde< TIndividual, TRandom &> TAlgorithm;
 TAlgorithm *m_algorithm;
 size_t m_popSize = -1;

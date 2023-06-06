@@ -53,7 +53,7 @@ typedef easea::operators::mutation::continuous::pm::CSelfGaussianMutation<TT, TR
         return boundary;
 }
 */
-TRandom m_generator;
+//TRandom m_generator;
 
 //TP m_problem(NB_OBJECTIVES, NB_VARIABLES, setBoundary(NB_VARIABLES ));
 TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(NB_OBJECTIVES - 1 + NB_VARIABLES, std::make_pair<TT, TT>(0, 1)));
