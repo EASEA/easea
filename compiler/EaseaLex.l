@@ -2610,25 +2610,30 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
   }
 
   /////////////////////////////////////////////////////////  
-  //strcpy(sTemp,"e:\\lutton\\easea\\debug");pour tester sous windows
   if ((sEZ_PATH==NULL)||(sEZ_PATH[0]==0)) {
     if (getenv("EZ_PATH")==NULL){
       //strcpy(sEZ_PATH,"./tpl/");	
-      strcpy(sEZ_PATH,"./");	
+      //strcpy(sEZ_PATH,"./");	
+      strcpy(sEZ_PATH, "");
     }else
       strcpy(sEZ_PATH,getenv("EZ_PATH"));
   }
+  
+  size_t len = strlen(sEZ_PATH);
+  bool windows_path = strstr(sEZ_PATH, "\\") != NULL;
+  bool posix_path = strstr(sEZ_PATH, "/") != NULL;
+  if (windows_path && len > 0 && sEZ_PATH[len-1] != '\\') {
+    strcat (sEZ_PATH,"\\");
+  } else if (posix_path && len > 0 && sEZ_PATH[len-1] != '/') {
+    strcat (sEZ_PATH,"/");
+  }
 
   strcpy(sTPL_DIR,sEZ_PATH);
-  strcat(sTPL_DIR,"tpl/");
-  
- 
-  switch (OPERATING_SYSTEM) {
-  case UNIX : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '/') strcat (sEZ_PATH,"./"); break;
-  case WINDOWS : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '\\') strcat (sEZ_PATH,"\\"); break;
-  case UNKNOWN_OS : fprintf(fpOutputFile,"UNKNOWN_OS"); break;
+  if (windows_path) {
+  	strcat(sTPL_DIR,"tpl\\");
+  } else {
+  	strcat(sTPL_DIR,"tpl/");
   }
-  //strcpy(sTemp,sEZ_PATH);
   strcpy(sTemp,sTPL_DIR);
 
   if (TARGET==CUDA){
