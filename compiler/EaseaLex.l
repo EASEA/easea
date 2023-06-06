@@ -96,7 +96,9 @@ size_t n = 0;
 int consumed = 0;
 int available = 0;
 static inline int min(int a, int b) { return a < b ? a : b; }
-static inline void yyinput_function(char* buf, int* result, size_t max_size) {
+
+template <typename T>
+static inline void yyinput_function(char* buf, T* result, size_t max_size) {
 	if(available <= 0) {
 	    consumed = 0;
 	    available = getline(&lineptr, &n, yyin);
