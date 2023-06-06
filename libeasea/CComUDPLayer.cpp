@@ -76,7 +76,9 @@ void CComUDPServer::print_stats(std::vector<char> const& received) const
 	while (std::getline(iss, tmp, ' ')) {
 		last = std::move(tmp);
 	}
-	last.erase(std::remove(last.begin(), last.end(), '\n'));
+	auto it = std::remove(last.begin(), last.end(), '\n');
+	if (it != last.end())
+		last.erase(it);
 
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
@@ -90,7 +92,7 @@ CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::st
 	: client_name(std::move(client_name_)), socket(CComSharedContext::get()), verbose(verbose_)
 {
 	udp::resolver resolver(CComSharedContext::get());
-	dest = *resolver.resolve(udp::v4(), ip, client_name).begin(); // throw if error (safe)
+	dest = *resolver.resolve(udp::v4(), ip, "").begin(); // throw if error (safe)
 	dest.port(port);
 	socket.open(udp::v4());
 }
@@ -108,10 +110,11 @@ void CComUDPClient::send(std::string const& individual)
 		std::cout << "[" << std::put_time(std::localtime(&in_time_t), "%H:%M:%S")
 			  << "] Sending my best individual to ";
 		if (getClientName().size() > 0) {
-			std::cout << getClientName() << "\n";
+			std::cout << getClientName();
 		} else {
-			std::cout << getIP() << ":" << getPort() << " \n";
+			std::cout << getIP();
 		}
+		std::cout << ":" << getPort() << " \n";
 	}
 	socket.send_to(boost::asio::buffer(individual), dest);
 }
@@ -167,7 +170,7 @@ std::unique_ptr<CComUDPClient> parse_line(std::string const& line, bool verbose_
 	auto port = std::string(sep + 1, std::end(line));
 	auto p = std::stoi(port);
 
-	return std::make_unique<CComUDPClient>(ip, p, "", verbose_clients);
+	return std::make_unique<CComUDPClient>(ip, p, ip, verbose_clients);
 }
 
 std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name, int thisPort, bool verbose_clients)
@@ -183,8 +186,8 @@ std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_n
 			if (!(ptr->getPort() == thisPort && isLocalMachine(ptr->getIP())))
 				ret.push_back(std::move(ptr));
 		} catch (std::exception const& e) {
-			std::cerr << "Error while reading ip file on line " << idx << ": " << tmp
-				  << "\nError: " << e.what();
+			std::cerr << "Error while reading ip file on line " << idx << " (\"" << tmp
+				  << "\"): " << e.what();
 		}
 		++idx;
 	}
