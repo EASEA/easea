@@ -252,11 +252,33 @@ void yyreset()
   unsigned iCOPY_GP_EVAL_STATUS;
   bool bIsCopyingGPEval;
 
+// better errors
+static int next_column = 1;
+int column = 1;
+#define HANDLE_COLUMN column = next_column; next_column += strlen(yytext)
 
+char* lineptr = NULL;
+size_t n = 0;
+int consumed = 0;
+int available = 0;
+static inline int min(int a, int b) { return a < b ? a : b; }
+static inline void yyinput_function(char* buf, int* result, size_t max_size) {
+	if(available <= 0) {
+	    consumed = 0;
+	    available = getline(&lineptr, &n, yyin);
+	    if (available < 0) {
+		if (ferror(yyin)) { perror("read error:"); }
+		    available = 0;
+		}
+	}
+	*result = min(available, (int)max_size);
+	strncpy(buf, lineptr + consumed, *result);
+	consumed += *result;
+	available -= *result;
+}
+#define YY_INPUT(buf,result,max_size) (yyinput_function(buf, &result, max_size))
 
-
-  // extract yylval for use later on in actions
-  //YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
+void switch_to_genome();
 %}                                                     
                                          
 %start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
@@ -266,8 +288,7 @@ void yyreset()
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
 %start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL GP_RULE_ANALYSIS GP_COPY_OPCODE_CODE COPY_GP_EVAL
 
-%option yylineno
-%option noyywrap
+%option yylineno noyywrap noinput nounput
 
  /* macros */
 exponent  ([Ee][+-]?[0-9]+)
@@ -308,42 +329,31 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_CMAKE" {
   if (bVERBOSE) printf ("Inserting user custom CMake code.\n");
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_USER_CMAKE;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_DECLARATIONS"  {
   if (bVERBOSE) printf ("Inserting user declarations.\n");
-  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_USER_DECLARATIONS;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_CUDA"  {
   if (bVERBOSE) printf ("Inserting user cuda.\n");
-  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_USER_CUDA;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting initialisation function.\n");
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter = 1;
+  switch_to_genome();
   BEGIN COPY_INITIALISATION_FUNCTION;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT"  {
   if (bVERBOSE) printf ("Inserting generation before reduce function.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   bGenerationFunctionBeforeReplacement = true;
   BEGIN COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT;
  }
@@ -354,11 +364,9 @@ exponent  ([Ee][+-]?[0-9]+)
   if (bVERBOSE) printf ("Inserting at the begining of each generation function.\n");
   print_line_indicator();
 
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   bBeginGeneration = true;
   bEndGeneration = false;
-  lineCounter = 1;
   BEGIN COPY_BEG_GENERATION_FUNCTION;
  }
 
@@ -439,10 +447,8 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_GP_OPCODE"  {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   if (bVERBOSE) printf ("Analysing GP OP code from ez file\n");
+  switch_to_genome();
   BEGIN COPY_GP_OPCODE;
  }
 
@@ -602,23 +608,19 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_HDR" { 
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval header\n"); 
+  switch_to_genome();
   bIsCopyingGPEval = false;
-  if( bVERBOSE ) printf("Insert GP eval header\n");
   iCOPY_GP_EVAL_STATUS = EVAL_HDR;
   fprintf(fpOutputFile,"  ");
   BEGIN COPY_GP_EVAL;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_BDY" {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval body\n");
+  switch_to_genome();
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_BDY;
-  if( bVERBOSE ) printf("Insert GP eval body\n");
   fprintf(fpOutputFile,"      ");
   bCOPY_GP_EVAL_GPU = false;
   BEGIN COPY_GP_EVAL;
@@ -627,12 +629,10 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_BDY_GPU" {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval body\n");
+  switch_to_genome();
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_BDY;
-  if( bVERBOSE ) printf("Insert GP eval body\n");
   fprintf(fpOutputFile,"      ");
   bCOPY_GP_EVAL_GPU = true;
   BEGIN COPY_GP_EVAL;
@@ -641,23 +641,19 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_FTR" {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval footer\n");
+  switch_to_genome();
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_FTR;
-  if( bVERBOSE ) printf("Insert GP eval footer\n");
   fprintf(fpOutputFile,"  ");
   BEGIN COPY_GP_EVAL;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_FTR_GPU" {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval footer\n");
+  switch_to_genome();
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_FTR;
-  if( bVERBOSE ) printf("Insert GP eval footer\n");
   fprintf(fpOutputFile,"  ");
   bCOPY_GP_EVAL_GPU = true;
   BEGIN COPY_GP_EVAL;
@@ -807,18 +803,14 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSTEAD_EVAL_FUNCTION"  {
-  //DEBUG_PRT_PRT("insert beg");
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   if (bVERBOSE) printf ("Evaluation population in a single function!!.\n");
-  lineCounter = 1;
+  switch_to_genome();
   BEGIN COPY_INSTEAD_EVAL;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_END_GENERATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting at the end of each generation function.\n");
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   bEndGeneration = true;
   bBeginGeneration = false;
   BEGIN COPY_END_GENERATION_FUNCTION;
@@ -826,15 +818,13 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING"  {
   if (bVERBOSE) printf ("Inserting Bound Checking function.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   BEGIN COPY_BOUND_CHECKING_FUNCTION;
  }
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_USER_CLASSES"  {
   if (bVERBOSE) printf ("Analysing user classes.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   BEGIN ANALYSE_USER_CLASSES;
  }
 
@@ -1076,17 +1066,15 @@ exponent  ([Ee][+-]?[0-9]+)
   }
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_DISPLAY"  {        
-  if (bVERBOSE) printf ("Inserting genome display function.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if (bVERBOSE) printf ("Inserting genome display function.\n"); 
+  switch_to_genome();
   BEGIN COPY_DISPLAY;   
  }
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_MAKEFILE_OPTION" {
   if( bVERBOSE ) printf("Inserting user LDFLAGS.\n");
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   BEGIN COPY_MAKEFILE_OPTION;
  }
 
@@ -1114,80 +1102,66 @@ exponent  ([Ee][+-]?[0-9]+)
   }                      
  }    
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_FUNCTIONS"  {
-  if (bVERBOSE) printf ("Inserting user functions.\n");
-  yyin = fpGenomeFile;                    
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=2;                                 // switch to .ez file and analyser
+  if (bVERBOSE) printf ("Inserting user functions.\n"); 
+  switch_to_genome();
   BEGIN COPY_USER_FUNCTIONS;
  }
-<TEMPLATE_ANALYSIS>"\\INSERT_EO_INITIALISER"  {        
+<TEMPLATE_ANALYSIS>"\\INSERT_EO_INITIALISER"  {
+  if (bVERBOSE) printf ("Inserting EO initialiser.\n"); 
   bWithinEO_Function=1;
-  lineCounter=1;
   if( TARGET==CUDA || TARGET==STD) bWithinCUDA_Initializer = 1;
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   BEGIN COPY_EO_INITIALISER;                               // not implemented as a function !
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISER"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter = 1;
+  if (bVERBOSE) printf ("Inserting initialiser.\n"); 
+  switch_to_genome();
   BEGIN COPY_INITIALISER;   
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_FINALIZATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting Finalization function.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_FINALIZATION_FUNCTION;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_CROSSOVER"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  if (bVERBOSE) printf ("Inserting crossover.\n");  
+  switch_to_genome();
   BEGIN COPY_CROSSOVER;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_MUTATOR"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  if (bVERBOSE) printf ("Inserting mutator.\n");  
+  switch_to_genome();
   BEGIN COPY_MUTATOR;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_EVALUATOR"  {
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  if (bVERBOSE) printf ("Inserting evaluator.\n");  
+  switch_to_genome();
   BEGIN COPY_EVALUATOR;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_OPTIMISER"  {      
   if( bVERBOSE ) fprintf(stdout,"Inserting optimization function\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_OPTIMISER;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_CUDA_EVALUATOR"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if (bVERBOSE) printf ("Inserting CUDA evaluator.\n");  
+  switch_to_genome();
   bWithinCUDA_Evaluator = 1;
-  lineCounter=1;
   BEGIN COPY_EVALUATOR;
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_CUDA_OPTIMISOR"  { 
   if( bVERBOSE ) fprintf(stdout,"Inserting cuda optimization function\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   bWithinCUDA_Evaluator = 1;
-  lineCounter=1;
   BEGIN COPY_OPTIMISER;
  }
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_PARAMETERS"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) fprintf(stdout,"Analysing parameters\n");
+  switch_to_genome();
   BEGIN PARAMETERS_ANALYSIS;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_GEN_FCT_CALL"  {
@@ -2649,14 +2623,7 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       strcat(sTemp,"CUDA_MEM.tpl");
     else 
       strcat(sTemp,"CUDA_MO.tpl");
-    printf("tpl file : %s\n",sTemp);
-    if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
-      fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
-      fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
-      exit(1);
-    } }
-
-  if (TARGET==STD){
+  } else if (TARGET==STD) {
     if(TARGET_FLAVOR == STD_FLAVOR_SO)
       strcat(sTemp,"STD.tpl");
     else if (TARGET_FLAVOR == CMAES)
@@ -2695,18 +2662,25 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
     else if (TARGET_FLAVOR == QIEA){
 	    strcat(sTemp, "QIEA.tpl");
     }
-    else if (TARGET_FLAVOR == MEMETIC )
+    else if (TARGET_FLAVOR == MEMETIC ) {
       strcat(sTemp,"STD_MEM.tpl");
-    //else if (TARGET_FLAVOR == STD_FLAVOR_GP )
-   //   strcat(sTemp,"GP.tpl");
-    else
+    } else {
       strcat(sTemp,"STD_MO.tpl");
-    if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
-      fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
-      fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
-      exit(1);
     }
   }
+
+  fpTemplateFile = fopen(sTemp, "r");
+  strcpy(sTPL_FILE_NAME, sTemp);
+  yyin = fpTemplateFile;
+  if (!yyin) {
+    fprintf(stderr,"\n*** %s ",sTemp);
+    perror("could not be opened");
+    fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
+    exit(1);
+  } else {
+    printf("Using template: %s\n", sTPL_FILE_NAME);
+  }
+
   
   if ((sRAW_PROJECT_NAME[0]=='"')&&(OPERATING_SYSTEM!=WINDOWS)){
     strcpy(sRAW_PROJECT_NAME,&(sRAW_PROJECT_NAME[1]));
@@ -2734,6 +2708,7 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
     fprintf(stderr,"\n*** Could not open %s\n",sEZ_FILE_NAME);
     exit(1);}
  
+  printf("\n");
   return 1;
 }
 
@@ -2751,3 +2726,10 @@ double myStrtod(){
   }
   return d;
 }                               
+
+void switch_to_genome() {
+	rewind(fpGenomeFile);
+	yyin = fpGenomeFile;
+  	yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+	lineCounter=1;
+}
