@@ -42,6 +42,7 @@ SET(easena_src
         ${CMAKE_SOURCE_DIR}/compiler/easena.cpp
         ${CMAKE_SOURCE_DIR}/compiler/NeuralLex.cpp
         ${CMAKE_SOURCE_DIR}/compiler/NeuralParse.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/errors.cpp
 )
 ADD_EXECUTABLE(easena ${easena_src})
 SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "")

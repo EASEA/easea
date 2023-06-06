@@ -287,7 +287,7 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 
-<COPY_GP_OPCODE>"\\begin operator description :" {
+<COPY_GP_OPCODE>"\\"[Bb]"egin operator description :" {
   if (bVERBOSE) printf ("found begin section\n");
   bGPOPCODE_ANALYSIS = true;
   BEGIN GP_RULE_ANALYSIS;
@@ -301,15 +301,8 @@ exponent  ([Ee][+-]?[0-9]+)
     bGPOPCODE_ANALYSIS = false;
     
     std::sort(opDesc.begin(), opDesc.end(), [](auto const& lhs, auto const& rhs) {
-    /*if (lhs.arity == rhs.arity && lhs.arity == 0) {
-    	return lhs.isERC - rhs.isERC;
-    } else {
-    	return static_cast<int>(lhs.arity) - static_cast<int>(rhs.arity);
-    }*/ return lhs.arity < rhs.arity;
+return lhs.arity < rhs.arity;
     });
-    /*for( unsigned i=0 ; i<iNoOp ; i++ ){
-      opDesc[i]->show();
-      }*/
     BEGIN TEMPLATE_ANALYSIS; 
   }  
  }
@@ -1807,7 +1800,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_DISPLAY>.|\n {/*putc(yytext[0],fpOutputFile);*/}                                      
 
 <COPY_MAKEFILE_OPTION>"\\User"[ \t\n]+[Mm]"akefile"[ \t\n]+"options"[ \t\n]*":" {
-  //DEBUG_PRT_PRT("LDFLAGS is beg: %s",yytext); 
+  printf("Warning: Makefile are deprecated, please use CMake.\n");
   bWithinMAKEFILEOPTION=1;
   return MAKEFILE_OPTION;
  }
@@ -1820,7 +1813,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_MAKEFILE_OPTION>"\\end" {
   if( bWithinMAKEFILEOPTION ){
-    //DEBUG_PRT_PRT("end of makefile options");
     yyin = fpTemplateFile;
     yypop_buffer_state();
     bWithinMAKEFILEOPTION = 0;
@@ -2727,4 +2719,33 @@ void switch_to_genome() {
 	yyin = fpGenomeFile;
   	yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
 	lineCounter=1;
+}
+
+Searches_t get_lexer_state() {
+	switch (YYSTATE) {
+	case COPY_USER_CMAKE: return USER_CMAKE;
+	case COPY_USER_DECLARATIONS: return USER_DECLARATIONS;
+	case COPY_USER_CUDA: return USER_CUDA;
+	case COPY_INITIALISATION_FUNCTION: return INITIALISATION_FUNCTION;
+	case COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT: return GENERATION_FUNCTION_BEFORE_REPLACEMENT;
+	case COPY_BEG_GENERATION_FUNCTION: return BEG_GENERATION_FUNCTION;
+	case COPY_GP_OPCODE: return GP_OPCODE;
+	case COPY_GP_EVAL: return GP_EVAL;
+	case COPY_INSTEAD_EVAL: return INSTEAD_EVAL;
+	case COPY_END_GENERATION_FUNCTION: return END_GENERATION_FUNCTION;
+	case COPY_BOUND_CHECKING_FUNCTION: return BOUND_CHECKING_FUNCTION;
+	case ANALYSE_USER_CLASSES: return SANALYSE_USER_CLASSES;
+	case COPY_DISPLAY: return DISPLAY;
+	case COPY_MAKEFILE_OPTION: return SMAKEFILE_OPTION;
+	case COPY_USER_FUNCTIONS: return USER_FUNCTIONS;
+	case COPY_EO_INITIALISER: return EO_INITIALISER;
+	case COPY_INITIALISER: return INIALISER;
+	case COPY_FINALIZATION_FUNCTION: return FINALIZATION_FUNCTION;
+	case COPY_CROSSOVER: return CROSSOVER;
+	case COPY_MUTATOR: return MUTATOR;
+	case COPY_EVALUATOR: return EVALUATOR;
+	case COPY_OPTIMISER: return OPTIMISER;
+	case GENOME_ANALYSIS: return SGENOME_ANALYSIS;
+	default: return NONCOPY;
+	}
 }

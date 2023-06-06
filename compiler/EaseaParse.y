@@ -13,10 +13,10 @@ Centre de Math�matiques Appliqu�es
 #include "debug.h"
 #include "EaseaYTools.h"
 #include "EaseaParse.hpp"
+#include "errors.h"
 
 #define YYEXIT_FAILURE	1
 #define YYEXIT_SUCCESS	0
-#define YYERROR_VERBOSE 1
 
 // Globals     
 CSymbol *pCURRENT_CLASS;
@@ -76,11 +76,6 @@ unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_SIZE,iMA
 
 extern int yylex();
 extern char * yytext;
-extern FILE* yyin;
-extern int lineCounter;
-extern int yylineno;
-extern int column;
-extern char* lineptr;
 
 void yyerror(const char * str);
 
@@ -88,6 +83,9 @@ char* concat_delete(char* lhs, char* rhs);
 char* sdup(const char* str);
 char* itos(int n);
 %}
+
+// better errors
+%define parse.error verbose
 
 %code provides {
 // forward references
@@ -950,28 +948,6 @@ double CEASEAParser_assign(CSymbol* spIdentifier, double dValue)
 
   spIdentifier->dValue = dValue;
   return spIdentifier->dValue;
-}
-
-void yyerror(const char * str) {
-  const char* fname = NULL;
-  int rline = 0;
-  if (yyin == fpTemplateFile) {
-  	fname = sTPL_FILE_NAME;
-	rline = yylineno;
-  } else if (yyin == fpGenomeFile) {
-  	fname = sEZ_FILE_NAME;
-	rline = lineCounter;
-  } else {
-  	fprintf(stderr, "Unknown yyin, dev need to fix this.\n");
-	exit(1);
-  }
-  	
-  fprintf(stderr, "%s:%d:%d : error: %s\n", fname, rline, column, str);
-  fprintf(stderr, "%s", lineptr);
-  for (int i = 0; i < column-1; ++i)
-  	fputc('~', stderr);
-  fprintf(stderr, "^\n");
-  fprintf(stderr, "=> For more details during the EASEA compiling, use the \"-v\" option\n");
 }
 
 char* concat_delete(char* lhs, char* rhs) {
