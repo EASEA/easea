@@ -43,81 +43,8 @@ using ssize_t = signed long long;
 
 #if defined(__APPLE__) || defined(OS_WINDOWS)
  /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
-char *strndup (const char *s, size_t n){
-    size_t len = strlen (s);
-    char *ret;
-
-    if (len <= n)
-	return strdup (s);
-
-    ret = (char *)malloc(n + 1);
-    strncpy(ret, s, n);
-    ret[n] = '\0';
-    return ret;
-}
-
-ssize_t getline (char **lineptr, size_t *n, FILE *fp){
-    ssize_t result;
-    size_t cur_len = 0;
-
-    if (lineptr == NULL || n == NULL || fp == NULL){
-	errno = EINVAL;
-	return -1;
-    }
-
-    if (*lineptr == NULL || *n == 0){
-	*n = 120;
-	*lineptr = (char *) malloc (*n);
-	if (*lineptr == NULL){
-	    result = -1;
-	    goto end;
-	}
-    }
-
-    for (;;){
-	int i;
-
-	i = getc (fp);
-	if (i == EOF){
-	    result = -1;
-	    break;
-	}
-
-	/* Make enough space for len+1 (for final NUL) bytes.  */
-	if (cur_len + 1 >= *n){
-	    size_t needed_max =	SSIZE_MAX < SIZE_MAX ? (size_t) SSIZE_MAX + 1 : SIZE_MAX;
-	    size_t needed = 2 * *n + 1;   /* Be generous. */
-	    char *new_lineptr;
-
-	    if (needed_max < needed)
-		needed = needed_max;
-	    if (cur_len + 1 >= needed){
-		result = -1;
-		goto end;
-	    }
-
-	    new_lineptr = (char *) realloc (*lineptr, needed);
-	    if (new_lineptr == NULL){
-		result = -1;
-		goto end;
-	    }
-
-	    *lineptr = new_lineptr;
-	    *n = needed;
-	}
-
-	(*lineptr)[cur_len] = i;
-	cur_len++;
-
-	if (i == '\n')
-	    break;
-    }
-    (*lineptr)[cur_len] = '\0';
-    result = cur_len ? (ssize_t) cur_len : result;
-
-end:
-    return result;
-}
+char *strndup (const char *s, size_t n);
+ssize_t getline (char **lineptr, size_t *n, FILE *fp);
 #endif
 
  /* getline implementation is copied from glibc. */
@@ -128,110 +55,17 @@ end:
   int lineCounter = 0;
 
   // local functions
-char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
-
-  char selectorName[50];  
-  selectorName[3] = 0;
-  if( nMINIMISE )
-    strcpy(selectorName,"Min");
-  else
-    strcpy(selectorName,"Max");
-  
-
-  if( mystricmp("Tournament",sSELECTOR)==0 )
-    strcat(selectorName,"Tournament(globalRandomGenerator)");
-  else if( mystricmp("dettour",sSELECTOR)==0 )
-    strcat(selectorName,"Tournament(globalRandomGenerator)");
-  else if( mystricmp("Deterministic",sSELECTOR)==0 )
-    strcat(selectorName,"Deterministic()");
-  else if( mystricmp("deterministic",sSELECTOR)==0 )
-    strcat(selectorName,"Deterministic()");
-  else if( mystricmp("Random",sSELECTOR)==0 )
-    strcat(selectorName,"Random(globalRandomGenerator)");
-  else if( mystricmp("Roulette",sSELECTOR)==0 )
-    strcat(selectorName,"Roulette(globalRandomGenerator)");
-
-  else{
-    //DEBUG_PRT_PRT("%s is not yet implemented",sSELECTOR);
-    return NULL;
-  }
-  
-  char* ret = (char*)malloc((strlen(selectorName)+1)*sizeof(char));
-  strcpy(ret,selectorName);
-
-  return ret;
-}
-
-inline void print_line_indicator() {
-	if( bLINE_NUM_EZ_FILE )
-    		fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-}
-
-int compute_cur_line(FILE* fp) {
-	long cur_pos = ftell(fp);
-	if (cur_pos == -1L) {
-		perror("Internal compiler error");
-		exit(1);
-	}
-	rewind(fp); // can't fail
-	int eol_counter = 0;
-	char c;
-	while ((c = fgetc(fp)) != EOF) {
-		if (c == '\n')
-			eol_counter++;
-	}
-	if (ferror(fp)) {
-		fprintf(stderr, "Internal compiler error while counting '\\n'\n");
-		exit(1);
-	}
-	if (fseek(fp, cur_pos, SEEK_SET) != 0) {
-		fprintf(stderr, "Internal compiler error: fseek\n");
-		exit(1);
-	}
-
-	return eol_counter;
-}
-
-inline void print_line_end() {
-	if (strstr(sOutputFileName, ".c") == NULL && // .cxx .cu .cpp
-		strstr(sOutputFileName, ".h") == NULL) // .h .hxx .hpp
-		return;
-
-	if( bLINE_NUM_EZ_FILE ) {
-		int real_line = compute_cur_line(fpOutputFile);
-    		fprintf(fpOutputFile,"#line %d \"%s\"\n", real_line+1, sOutputFileName);
-	}
-}
-
-inline void copy_to_sOutputFileName(const char* src) {
-	char* res = strncpy(sOutputFileName, src, 1000);
-	if (sOutputFileName[1000-1] != '\0') {
-		fprintf(stderr, "Internal compiler error: Filename too long\n");
-		exit(1);
-	}
-}
-
+char* selectorDetermination(int nMINIMISE, char* sSELECTOR);
+void print_line_indicator();
+int compute_cur_line(FILE* fp);
+void print_line_end();
+void copy_to_sOutputFileName(const char* src);
 
   // include file
   // forward references
   class CEASEAParser;
   class CSymbolTable;
   class OPCodeDesc;
-
-
-void yyreset()
-{
-	yyleng = 0;
-	yylineno = 1;
-    YY_FLUSH_BUFFER;
-	//yyunputindex = 0;
-	//yymoreflg = 0;
-	//yyrejectflg = 0;
-	//yyeol = 1;
-	//yyoldeol = 1;
-	//yystart = 0;
-}
-
 
 
   CSymbolTable* pSymbolTable;   // the symbol table
@@ -2712,6 +2546,167 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
   return 1;
 }
 
+// Moves functions to here to optimize compilation
+#if defined(__APPLE__) || defined(OS_WINDOWS)
+char *strndup (const char *s, size_t n){
+    size_t len = strlen (s);
+    char *ret;
+
+    if (len <= n)
+	return strdup (s);
+
+    ret = (char *)malloc(n + 1);
+    strncpy(ret, s, n);
+    ret[n] = '\0';
+    return ret;
+}
+
+ssize_t getline (char **lineptr, size_t *n, FILE *fp){
+    ssize_t result;
+    size_t cur_len = 0;
+
+    if (lineptr == NULL || n == NULL || fp == NULL){
+	errno = EINVAL;
+	return -1;
+    }
+
+    if (*lineptr == NULL || *n == 0){
+	*n = 120;
+	*lineptr = (char *) malloc (*n);
+	if (*lineptr == NULL){
+	    result = -1;
+	    goto end;
+	}
+    }
+
+    for (;;){
+	int i;
+
+	i = getc (fp);
+	if (i == EOF){
+	    result = -1;
+	    break;
+	}
+
+	/* Make enough space for len+1 (for final NUL) bytes.  */
+	if (cur_len + 1 >= *n){
+	    size_t needed_max =	SSIZE_MAX < SIZE_MAX ? (size_t) SSIZE_MAX + 1 : SIZE_MAX;
+	    size_t needed = 2 * *n + 1;   /* Be generous. */
+	    char *new_lineptr;
+
+	    if (needed_max < needed)
+		needed = needed_max;
+	    if (cur_len + 1 >= needed){
+		result = -1;
+		goto end;
+	    }
+
+	    new_lineptr = (char *) realloc (*lineptr, needed);
+	    if (new_lineptr == NULL){
+		result = -1;
+		goto end;
+	    }
+
+	    *lineptr = new_lineptr;
+	    *n = needed;
+	}
+
+	(*lineptr)[cur_len] = i;
+	cur_len++;
+
+	if (i == '\n')
+	    break;
+    }
+    (*lineptr)[cur_len] = '\0';
+    result = cur_len ? (ssize_t) cur_len : result;
+
+end:
+    return result;
+}
+#endif
+
+char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
+
+  char selectorName[50];  
+  selectorName[3] = 0;
+  if( nMINIMISE )
+    strcpy(selectorName,"Min");
+  else
+    strcpy(selectorName,"Max");
+  
+
+  if( mystricmp("Tournament",sSELECTOR)==0 )
+    strcat(selectorName,"Tournament(globalRandomGenerator)");
+  else if( mystricmp("dettour",sSELECTOR)==0 )
+    strcat(selectorName,"Tournament(globalRandomGenerator)");
+  else if( mystricmp("Deterministic",sSELECTOR)==0 )
+    strcat(selectorName,"Deterministic()");
+  else if( mystricmp("deterministic",sSELECTOR)==0 )
+    strcat(selectorName,"Deterministic()");
+  else if( mystricmp("Random",sSELECTOR)==0 )
+    strcat(selectorName,"Random(globalRandomGenerator)");
+  else if( mystricmp("Roulette",sSELECTOR)==0 )
+    strcat(selectorName,"Roulette(globalRandomGenerator)");
+
+  else{
+    //DEBUG_PRT_PRT("%s is not yet implemented",sSELECTOR);
+    return NULL;
+  }
+  
+  char* ret = (char*)malloc((strlen(selectorName)+1)*sizeof(char));
+  strcpy(ret,selectorName);
+
+  return ret;
+}
+
+inline void print_line_indicator() {
+	if( bLINE_NUM_EZ_FILE )
+    		fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+}
+
+int compute_cur_line(FILE* fp) {
+	long cur_pos = ftell(fp);
+	if (cur_pos == -1L) {
+		perror("Internal compiler error");
+		exit(1);
+	}
+	rewind(fp); // can't fail
+	int eol_counter = 0;
+	char c;
+	while ((c = fgetc(fp)) != EOF) {
+		if (c == '\n')
+			eol_counter++;
+	}
+	if (ferror(fp)) {
+		fprintf(stderr, "Internal compiler error while counting '\\n'\n");
+		exit(1);
+	}
+	if (fseek(fp, cur_pos, SEEK_SET) != 0) {
+		fprintf(stderr, "Internal compiler error: fseek\n");
+		exit(1);
+	}
+
+	return eol_counter;
+}
+
+inline void print_line_end() {
+	if (strstr(sOutputFileName, ".c") == NULL && // .cxx .cu .cpp
+		strstr(sOutputFileName, ".h") == NULL) // .h .hxx .hpp
+		return;
+
+	if( bLINE_NUM_EZ_FILE ) {
+		int real_line = compute_cur_line(fpOutputFile);
+    		fprintf(fpOutputFile,"#line %d \"%s\"\n", real_line+1, sOutputFileName);
+	}
+}
+
+void copy_to_sOutputFileName(const char* src) {
+	char* res = strncpy(sOutputFileName, src, 1000);
+	if (sOutputFileName[1000-1] != '\0') {
+		fprintf(stderr, "Internal compiler error: Filename too long\n");
+		exit(1);
+	}
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // calc_lexer attribute commands
