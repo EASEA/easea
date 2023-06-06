@@ -1404,7 +1404,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\TEMPLATE_END"  {
   if (nWARNINGS) printf ("\nWARNING !!!\nTarget file(s) generation went through WITH %d WARNING(S) !\n",nWARNINGS);
   else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded without warnings.\n");
-  printf ("You can now type \"make\" to compile your project.\n");
+  printf ("You can now type \"cmake .\" then \"cmake --build .\" to compile your project.\n");
   if (TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"\n# That's all folks ! \n");
   else fprintf(fpOutputFile,"\n// That's all folks ! \n");
   fflush(fpOutputFile);
