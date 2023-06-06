@@ -27,6 +27,7 @@ int nClasses_nb = 0;
 char sPROJECT_NAME[1000];
 char sLOWER_CASE_PROJECT_NAME[1000];
 char sEZ_FILE_NAME[1000];
+char sOutputFileName[1000];
 char sEO_DIR[1000];
 char sEZ_PATH[1000];
 char sTPL_DIR[1000];

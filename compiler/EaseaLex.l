@@ -162,6 +162,55 @@ char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
   return ret;
 }
 
+inline void print_line_indicator() {
+	if( bLINE_NUM_EZ_FILE )
+    		fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+}
+
+int compute_cur_line(FILE* fp) {
+	long cur_pos = ftell(fp);
+	if (cur_pos == -1L) {
+		perror("Internal compiler error");
+		exit(1);
+	}
+	rewind(fp); // can't fail
+	int eol_counter = 0;
+	char c;
+	while ((c = fgetc(fp)) != EOF) {
+		if (c == '\n')
+			eol_counter++;
+	}
+	if (ferror(fp)) {
+		fprintf(stderr, "Internal compiler error while counting '\\n'\n");
+		exit(1);
+	}
+	if (fseek(fp, cur_pos, SEEK_SET) != 0) {
+		fprintf(stderr, "Internal compiler error: fseek\n");
+		exit(1);
+	}
+
+	return eol_counter;
+}
+
+inline void print_line_end() {
+	if (strstr(sOutputFileName, ".c") == NULL && // .cxx .cu .cpp
+		strstr(sOutputFileName, ".h") == NULL) // .h .hxx .hpp
+		return;
+
+	if( bLINE_NUM_EZ_FILE ) {
+		int real_line = compute_cur_line(fpOutputFile);
+    		fprintf(fpOutputFile,"#line %d \"%s\"\n", real_line+1, sOutputFileName);
+	}
+}
+
+inline void copy_to_sOutputFileName(const char* src) {
+	char* res = strncpy(sOutputFileName, src, 1000);
+	if (sOutputFileName[1000-1] != '\0') {
+		fprintf(stderr, "Internal compiler error: Filename too long\n");
+		exit(1);
+	}
+}
+
 
   // include file
   // forward references
@@ -241,7 +290,8 @@ exponent  ([Ee][+-]?[0-9]+)
   char sFileName[1000];
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,".cpp"); 
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
+  copy_to_sOutputFileName(sFileName);
  }
 <TEMPLATE_ANALYSIS>"AESAE" {fprintf(fpOutputFile,"EASEA");}        
 <TEMPLATE_ANALYSIS>"EASEA" {fprintf(fpOutputFile,"%s",sPROJECT_NAME);}        
@@ -302,8 +352,7 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_BEGIN_GENERATION_FUNCTION"  {
   //DEBUG_PRT_PRT("insert beg");
   if (bVERBOSE) printf ("Inserting at the begining of each generation function.\n");
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter+1, sRAW_PROJECT_NAME);
+  print_line_indicator();
 
   yyin = fpGenomeFile;
   yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
@@ -657,6 +706,7 @@ exponent  ([Ee][+-]?[0-9]+)
     rewind(fpGenomeFile);
     yyin = fpTemplateFile;
     yypop_buffer_state();
+    print_line_end();
     BEGIN TEMPLATE_ANALYSIS;
   }
  }
@@ -1296,7 +1346,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   fclose(fpOutputFile);
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,"Individual.hpp");
-  fpOutputFile=fopen(sFileName,"w");    
+  fpOutputFile=fopen(sFileName, "w+");    
+  copy_to_sOutputFileName(sFileName);
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  }
 <TEMPLATE_ANALYSIS>"\\START_CUDA_GENOME_CU_TPL"  {
@@ -1307,7 +1358,8 @@ if(OPERATING_SYSTEM=WINDOWS)
     strcat(sFileName,"Individual.cu");
   else if( TARGET==STD )
     strcat(sFileName,"Individual.cpp");
-  fpOutputFile=fopen(sFileName,"w");    
+  fpOutputFile=fopen(sFileName, "w+");    
+  copy_to_sOutputFileName(sFileName);
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  }
 <TEMPLATE_ANALYSIS>"\\START_EO_PARAM_TPL"  {
@@ -1316,7 +1368,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,".prm");
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
+  copy_to_sOutputFileName(sFileName);
  }
 <TEMPLATE_ANALYSIS>"\\START_EO_MAKEFILE_TPL"  {
   char sFileName[1000];
@@ -1324,7 +1377,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,".mak");
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
+  copy_to_sOutputFileName(sFileName);
  }
 
 <TEMPLATE_ANALYSIS>"\\START_VISUAL_TPL"  {
@@ -1333,7 +1387,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,".vcproj");
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
+  copy_to_sOutputFileName(sFileName);
  }
 
 <TEMPLATE_ANALYSIS>"\\START_CUDA_MAKEFILE_TPL"  {
@@ -1387,17 +1442,19 @@ if(OPERATING_SYSTEM=WINDOWS)
     printf("Creating %s...\n",sFileName);
     printf("Creating %s symbolic link...\n",sPathName);
   }
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
   if( !fpOutputFile ) {
     fprintf(stderr,"Error in %s creation\n",sFileName);
     exit(-1);
   }
+  copy_to_sOutputFileName(sFileName);
 }
 
 <TEMPLATE_ANALYSIS>"\\START_CMAKELISTS"  {
   fclose(fpOutputFile);
   if (bVERBOSE) printf("Creating CMakeLists.txt...\n");
-  fpOutputFile=fopen("CMakeLists.txt","w");
+  fpOutputFile=fopen("CMakeLists.txt", "w+");
+  copy_to_sOutputFileName("CMakeLists.txt");
 }
 
 
@@ -1421,9 +1478,8 @@ if(OPERATING_SYSTEM=WINDOWS)
  *****************************************/
 
 <COPY_EO_INITIALISER>"\\GenomeClass::initiali"[sz]"er"[ \t\n]*":" {
-  fprintf (fpOutputFile,"// Genome Initialiser\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  fprintf (fpOutputFile,"// Genome Initialiser\n");
+  print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_EO_INITIALISER><<EOF>> {
@@ -1439,8 +1495,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_USER_DECLARATIONS>"\\User"[ \t\n]+"declarations"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User declarations\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_USER_DECLARATIONS><<EOF>> {
@@ -1459,8 +1514,7 @@ if(OPERATING_SYSTEM=WINDOWS)
                
 <COPY_USER_CUDA>"\\User"[ \t\n]+"CUDA"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User CUDA\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_USER_CUDA><<EOF>> {
@@ -1497,8 +1551,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_USER_FUNCTIONS>"\\User"[ \t\n]+"functions"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User functions\n\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_USER_FUNCTIONS><<EOF>> {
@@ -1518,9 +1571,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_INITIALISATION_FUNCTION>"\\Before"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
     //fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){\n");
   //bFunction=1; bInitFunction=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-      
+  print_line_indicator();
   BEGIN COPY;
  }
 <COPY_INITIALISATION_FUNCTION><<EOF>> {bInitFunction=0; // No before everything else function was found in the .ez file
@@ -1542,9 +1593,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_FINALIZATION_FUNCTION>"\\After"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
   fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n(void)population; // avoid warning\n");
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-
+  print_line_indicator();
   bFunction=1; bFinalizationFunction=1;
   BEGIN COPY;
  }
@@ -1594,8 +1643,7 @@ if(OPERATING_SYSTEM=WINDOWS)
     bFunction=1;
     bBeginGeneration = 0;
     bBeginGenerationFunction = 1;
-    if( bLINE_NUM_EZ_FILE )
-      fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+    print_line_indicator();
     BEGIN COPY_USER_GENERATION;
   }
  }
@@ -1605,9 +1653,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   if( (TARGET==CUDA || TARGET==STD)){
     fprintf (fpOutputFile,"{\n");
     bFunction=1;
-    if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-
+    print_line_indicator();
     BEGIN COPY_USER_GENERATION;
   }
  }
@@ -1820,6 +1866,7 @@ if(OPERATING_SYSTEM=WINDOWS)
     bFunction=0;
     bWithinCUDA_Initializer=0;
   }
+  print_line_end();
   bWithinEO_Function=0;
   rewind(fpGenomeFile); 
   yyin = fpTemplateFile; 
@@ -1935,7 +1982,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_DISPLAY>"\\GenomeClass::display"[ \t\n]*":" { 
  /*   //DEBUG_PRT_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
- /*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
+  print_line_indicator();
   bDisplayFunction=bWithinDisplayFunction=1;
   BEGIN COPY_USER_FUNCTION;
  }
@@ -2010,8 +2057,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_INITIALISER>.|\n {/*putc(yytext[0],fpOutputFile);*/}                                      
 <COPY_CROSSOVER>"\\GenomeClass::crossover"[ \t\n]*":" {
   bWithinXover=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY_USER_FUNCTION;
   return USER_XOVER;
  }
@@ -2019,8 +2065,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_CROSSOVER>\n {lineCounter++;}
 <COPY_MUTATOR>"\\GenomeClass::mutator"[ \t\n]*":" {
   bWithinMutator=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY_USER_FUNCTION;
   return USER_MUTATOR;
  }
@@ -2030,8 +2075,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_EVALUATOR>"\\GenomeClass::evaluator"[ \t\n]*":" {
   BEGIN COPY_USER_FUNCTION;            
   bWithinEvaluator=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   return USER_EVALUATOR;
  }
 <COPY_EVALUATOR>. {}
@@ -2041,8 +2085,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_OPTIMISER>"\\GenomeClass::optimiser"[ \t\n]*":" {
   BEGIN COPY_USER_FUNCTION;
   bWithinOptimiser=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   return USER_OPTIMISER;
  }
 <COPY_OPTIMISER>. {}
@@ -2196,7 +2239,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   yyin = fpTemplateFile;
   yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
-  fprintf(fpOutputFile,"}");} // Back to the template file
+  fprintf(fpOutputFile,"}\n"); // Back to the template file
+  print_line_end();}
 <COPY_USER_GENERATION>";" {if (bWaitingForSemiColon){
     bWaitingForSemiColon=0;
     if (bFinishMINIMISE) {fprintf(fpOutputFile,");\n  if (MINIMISE) g.minimize() else g.maximize();\n"); bFinishMINIMISE=0;}
@@ -2371,6 +2415,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bWithinInitialiser=bWithinXover=bWithinMutator=bWithinEvaluator=bWithinOptimiser=bWithinCUDA_Evaluator=0;
+  print_line_end();
   if (bWithinDisplayFunction){
     bWithinDisplayFunction=0; // display function
   }

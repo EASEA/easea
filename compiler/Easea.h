@@ -59,7 +59,7 @@ extern CSymbol *pCURRENT_CLASS, *pCURRENT_TYPE, *pGENOME, *pCLASSES[128];
 extern int nClasses_nb;
 
 extern FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile, *fpExplodedGenomeFile;
-extern char sRAW_PROJECT_NAME[], sPROJECT_NAME[], sEO_DIR[], sEZ_PATH[1000], sTPL_DIR[1000], sEZ_FILE_NAME[];
+extern char sRAW_PROJECT_NAME[], sPROJECT_NAME[], sEO_DIR[], sEZ_PATH[1000], sTPL_DIR[1000], sEZ_FILE_NAME[], sOutputFileName[1000];
 extern char sLOWER_CASE_PROJECT_NAME[];
 extern char sSELECTOR[], sSELECTOR_OPERATOR[], sRED_PAR[], sRED_PAR_OPERATOR[], sRED_FINAL[], sRED_FINAL_OPERATOR[],
 	sRED_OFF[], sRED_OFF_OPERATOR[];
