@@ -19,6 +19,7 @@ __________________________________________________________*/
 
 #define nb_sin 5
 #define MAX_SIN 5
+#define NB_OBJECTIVES 1
 #define NB_VARIABLES nb_sin*4
 
 

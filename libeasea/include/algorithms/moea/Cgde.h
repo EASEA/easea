@@ -128,7 +128,7 @@ typename Cgde<TIndividual, TRandom>::TI Cgde<TIndividual, TRandom>::runBreeding(
         do
         {
             p3 = m_distribution( this->getRandom() );
-        }while ( p2 == index || p2 == p1 || p3 == p2);
+        }while ( p3 == index || p3 == p1 || p3 == p2);
         assert( p1 != index && p2 != index && p3 != index );
         assert( p2 != p1 && p3 != p1 );
         assert ( p3 != p2 );
@@ -192,8 +192,10 @@ template <typename TIndividual, typename TRandom>
 template <typename TPtr, typename TIter> TIter Cgde<TIndividual, TRandom>::selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end)
 {
         TIter dest = begin;
+
         for ( auto i = front.begin(); i != front.end(); ++i, ++dest )
                 *dest = **i;
+        assert(dest < end);
         return dest;
 }
 
@@ -204,7 +206,7 @@ template <typename TPtr, typename TIter> TIter Cgde<TIndividual, TRandom>::selec
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
         std::partial_sort(iFront.begin(), iFront.begin() + std::distance(begin, end), iFront.end()
                 , [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;});
-        if (iFront.size() < std::distance(begin, end)) LOG_ERROR(errorCode::value, "Select critical : Error of front size!");
+        if (iFront.size() < static_cast<unsigned int>(std::distance(begin, end))) LOG_ERROR(errorCode::value, "Select critical : Error of front size!");
         TIter dest = begin;
         for (size_t i = 0; dest != end; ++i, ++dest)
                 *dest = *iFront[i];
