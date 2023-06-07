@@ -128,7 +128,7 @@ typename Cgde<TIndividual, TRandom>::TI Cgde<TIndividual, TRandom>::runBreeding(
         do
         {
             p3 = m_distribution( this->getRandom() );
-        }while ( p2 == index || p2 == p1 || p3 == p2);
+        }while ( p3 == index || p3 == p1 || p3 == p2);
         assert( p1 != index && p2 != index && p3 != index );
         assert( p2 != p1 && p3 != p1 );
         assert ( p3 != p2 );
