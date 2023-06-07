@@ -108,6 +108,8 @@ typedef TP::TO TO;
 
 typedef typename easea::Individual<TT, TV> TIndividual;
 typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
+std::time_t m_seed = std::time(nullptr);
+TRandom m_generator{static_cast<std::mt19937::result_type>(m_seed)};
 
 \INSERT_USER_DECLARATIONS
 easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
@@ -257,15 +259,32 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->outputFilename = setVariable("outputFile", "EASEA");
 	this->inputFilename = setVariable("inputFile", "EASEA.pop");
 	this->plotOutputFilename = (char*)"EASEA.png";
+	
+	
+	if (!this->noLogFile) {
 
-	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
+        auto tmStart = std::chrono::system_clock::now();
+        time_t t = std::chrono::system_clock::to_time_t(tmStart);
+        std::tm * ptm = std::localtime(&t);
+        char buf_start_time[32];
+        string log_fichier_name = this->outputFilename;
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tmStart.time_since_epoch()) % 1000;
+            std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
+            easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
+            logg("DATA of TEST;", std::string(buf_start_time).c_str());
+            logg("\n__RUN SETTINGS__");
+            logg("SEED;", m_seed);
+            logg("nCURRENT_GEN;", this->nbGen);
+            logg("POP_SIZE;", this->parentPopulationSize);
+            logg("CPU_THREADS_NB;", nbCPUThreads);
 
+
+	}
+		this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
 	this->ipFile = setVariable("ipFile", "\IP_FILE");
-	*ipFilename=setVariable("ipFile", "\IP_FILE");
-
-	this->ipFile =(char*)ipFilename->c_str();
 	this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
-        this->serverPort = setVariable("serverPort", \SERVER_PORT);
+    	this->serverPort = setVariable("serverPort", \SERVER_PORT);
+
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -274,11 +293,6 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	EZ_current_generation=0;
         EZ_POP_SIZE = parentPopulationSize;
         OFFSPRING_SIZE = offspringPopulationSize;
-
-	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
-	ea->addStoppingCriterion(generationalCriterion);
-	ea->addStoppingCriterion(controlCStopingCriterion);
-	ea->addStoppingCriterion(timeCriterion);
 
 	if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
 	const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
@@ -289,8 +303,16 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	CEvolutionaryAlgorithm* ea = new CAlgorithmWrapper(this, m_algorithm);
 
+
+	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
+	ea->addStoppingCriterion(generationalCriterion);
+	ea->addStoppingCriterion(controlCStopingCriterion);
+	ea->addStoppingCriterion(timeCriterion);
+
 	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
 	EZ_current_generation=&(ea->currentGeneration);
+	
+
 
 	return ea;
 }
