@@ -47,3 +47,16 @@ bool CIndividual::evaluate_wrapper(bool force_evaluation) {
 		return this->fitness;
 	}
 }
+
+std::ostream& operator<<(std::ostream& os, CIndividual const& ind) {
+	os << "\nIndividual:\n\t\t\t";
+	ind.printOn(os);
+	os << "\t\tfitness: ";
+	if (ind.valid) {
+		os << ind.getFitness();
+	} else {
+		os << "not yet computed";
+	}
+	os << "\n";
+	return os;
+}

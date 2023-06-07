@@ -270,20 +270,6 @@ void IndividualImpl::printOn([[maybe_unused]] std::ostream& os) const {
 	\INSERT_DISPLAY
 }
 
-std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
-{
-  // ********************
-  // Problem specific part
-  O << "\nIndividualImpl : "<< std::endl;
-  O << "\t\t\t";
-  B.printOn(O);
-
-  if( B.valid ) O << "\t\t\tfitness : " << B.fitness;
-  else O << "fitness is not yet computed" << std::endl;
-  return O;
-}
-
-
 unsigned IndividualImpl::mutate([[maybe_unused]] float pMutationPerGene ) {
   this->valid=false;
 
@@ -744,9 +730,6 @@ public:
 
 	string serialize() override;
 	void deserialize(string AESAE_Line) override;
-
-	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
-
 };
 
 

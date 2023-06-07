@@ -81,7 +81,7 @@ public:
     virtual void printOn(std::ostream& O) const = 0;
     virtual unsigned mutate(float pMutationPerGene)  = 0;
     virtual CIndividual* crossover(CIndividual** p2)  = 0;
-    virtual CIndividual* clone()  = 0;
+    virtual CIndividual* clone() = 0;
 
     virtual std::string serialize() = 0;
     virtual void deserialize(std::string EASEA_Line) = 0;
@@ -89,9 +89,9 @@ public:
     virtual void boundChecking() = 0;
 
     static unsigned getCrossoverArity(){ return 2; }
-    float getFitness(){ return this->fitness; }
-
-
+    float getFitness() const { return this->fitness; }
 };
+
+std::ostream& operator<<(std::ostream& os, CIndividual const& ind);
 
 #endif /* CINDIVIDUAL_H_ */

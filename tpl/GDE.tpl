@@ -413,34 +413,6 @@ extern int OFFSPRING_SIZE;
 
 namespace easea
 {
-/*
-class IndividualImpl : public CIndividual {
-
-public: // in EASEA the genome is public (for user functions,...)
-	// Class members
-  	\INSERT_GENOME
-
-public:
-	IndividualImpl();
-	IndividualImpl(const IndividualImpl& indiv);
-	virtual ~IndividualImpl();
-	float evaluate() override;
-	CIndividual* crossover(CIndividual** p2) override;
-	void printOn(std::ostream& O) const override;
-	CIndividual* clone() override;
-
-	unsigned mutate(float pMutationPerGene) override;
-
-	void boundChecking() override;
-
-	string serialize() override;
-	void deserialize(string AESAE_Line) override;
-
-	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
-
-};
-*/
-
 template <typename TObjective, typename TVariable>
 class Individual : public easea::CmoIndividual<TObjective, TVariable>
 {
