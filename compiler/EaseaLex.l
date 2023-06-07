@@ -598,17 +598,14 @@ return lhs.arity < rhs.arity;
   
  }
 
-<COPY_GP_EVAL>"return " {
+<COPY_GP_EVAL>"return" {
   if( bIsCopyingGPEval )
     if( iCOPY_GP_EVAL_STATUS==EVAL_FTR )
       if( bCOPY_GP_EVAL_GPU ){
 	fprintf(fpOutputFile,"k_results[index] =");
       }
-      else fprintf(fpOutputFile,"return fitness=");
+      else fprintf(fpOutputFile,"return");
  }
-
-
-
 
 <COPY_GP_EVAL>\n {
   if( bIsCopyingGPEval )
@@ -621,12 +618,6 @@ return lhs.arity < rhs.arity;
       fprintf(fpOutputFile,"\n      ");
       break;
     }
- }
-
-
-<COPY_GP_EVAL>"return"	{
-  if( bIsCopyingGPEval )
-    fprintf(fpOutputFile,"return fitness = "); 
  }
 
 
@@ -2193,17 +2184,17 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>"return"  {if (bWithinEvaluator) {
     if( TARGET==CUDA || TARGET==STD) {
       if( bWithinCUDA_Evaluator ){
-	fprintf(fpOutputFile,"return "); 
+	fprintf(fpOutputFile,"return");
 	//bWithinCUDA_Evaluator = 0;
       }
       else
-	fprintf(fpOutputFile,"return fitness = "); 
+	fprintf(fpOutputFile,"return");
       bCatchNextSemiColon=false;
     }
     //bWithinEvaluator=0;
   }
   else if ((bWithinMutator)) {
-    fprintf(fpOutputFile,"return ");
+    fprintf(fpOutputFile,"return");
     bCatchNextSemiColon=true;
   }
   else fprintf(fpOutputFile,"return"); }
