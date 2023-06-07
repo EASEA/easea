@@ -322,7 +322,7 @@ void CPopulation::reduceTotalPopulation(CIndividual** elitPop){
 
 
 void CPopulation::produceOffspringPopulation(){
-	const unsigned crossoverArrity = CIndividual::getCrossoverArrity();
+	const unsigned crossoverArrity = CIndividual::getCrossoverArity();
 	selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
 
 	int sum = 0;
