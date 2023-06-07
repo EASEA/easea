@@ -24,7 +24,7 @@ int CRandomGenerator::randInt(int min, int max)
 {
 	//assert(min != max - 1 && "integer range [a; a[ is impossible.");
 	if (min != max) {
-		std::uniform_int_distribution<int> dis(min, max - 1);
+		impl::fast_bounded_distribution<int> dis(min, max - 1);
 		return dis(engine);
 	} else {
 		return min;
@@ -48,7 +48,7 @@ bool CRandomGenerator::tossCoin()
 
 float CRandomGenerator::randFloat(float min, float max)
 {
-	std::uniform_real_distribution<float> dis(min, max);
+	impl::fast_bounded_distribution<float> dis(min, max);
 	return dis(engine);
 }
 
@@ -67,9 +67,8 @@ float CRandomGenerator::random(float min, float max)
 
 double CRandomGenerator::randDouble(double low, double high)
 {
-	std::uniform_real_distribution<double> dis(low, high);
+	impl::fast_bounded_distribution<double> dis(low, high);
 	return dis(engine);
-	;
 }
 
 double CRandomGenerator::random(double min, double max)

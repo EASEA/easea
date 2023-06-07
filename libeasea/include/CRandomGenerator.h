@@ -14,12 +14,13 @@
 
 #include <iostream>
 #include <random>
+#include <cassert>
 
 class CRandomGenerator
 {
     private:
 	unsigned seed;
-	std::mt19937 engine;
+	std::minstd_rand engine;
 
     public:
 	CRandomGenerator(unsigned int seed);
@@ -62,5 +63,35 @@ static inline bool tossCoin() {
 	extern CRandomGenerator* globalRandomGenerator;
 	return globalRandomGenerator->tossCoin();
 }
+
+namespace impl {
+	/* NOTE: this distribution was tested on :
+	 * - mt19937
+	 * - lcg
+	 * It is almost perfectly uniform +- 0.5% but is 7x times faster than std::uniform_...
+	 * Example of tests: https://godbolt.org/z/Kq7xsEdzo
+	 */
+	template <typename T>
+	class fast_bounded_distribution {
+		using span_t = std::conditional_t<std::is_floating_point_v<T>, T, std::size_t>;
+		T min, max;
+		span_t span;
+
+		public:
+		fast_bounded_distribution(T min_, T max_) : min(min_), max(max_), span(max_ - min_) {
+			assert(min < max && "[a; b] with a < b required");
+		}
+
+		template <typename Gen, typename V = T>
+		std::enable_if_t<std::is_floating_point_v<V>, V> operator()(Gen&& gen) const {
+			return ((static_cast<V>(gen() - gen.min()) / static_cast<V>(gen.max())) * span) + min;
+		}
+
+		template <typename Gen, typename V = T>
+		auto operator()(Gen&& gen) const -> std::enable_if_t<std::is_integral_v<V> && std::is_unsigned_v<decltype(gen())>, V> {
+			return static_cast<V>(span_t{gen() - gen.min()} % span) + min;
+		}
+	};
+};
 
 #endif /* CRANDOMGENERATOR_H_ */
