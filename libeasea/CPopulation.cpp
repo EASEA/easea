@@ -124,10 +124,8 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 #pragma omp parallel for reduction(+:real_evals)
 #endif
   for( int i=0 ; i < static_cast<int>(populationSize) ; i++ ){
-    if (params->alwaysEvaluate || !population[i]->valid) {
-	++real_evals;
-	population[i]->evaluate();
-    }
+	if (population[i]->evaluate_wrapper(params->alwaysEvaluate))
+		++real_evals;
   }
   realEvaluationNb += real_evals;
   currentEvaluationNb += populationSize;

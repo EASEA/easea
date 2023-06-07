@@ -13,17 +13,7 @@ CIndividual::CIndividual() : upperBound_(nullptr),
                             lowerBound_(nullptr),
                             objective_(nullptr),
                             variable_(nullptr)
-{
-  // TODO Auto-generated constructor stub
-
-}
-/*CIndividual::CIndividual(CIndividual *) {
-
-}*/
-
-/*CIndividual::~CIndividual() {
-  // TODO Auto-generated destructor stub
-}*/
+{}
 
 void CIndividual::setObjective(int index, double val) {
     if (index < 0 || index >= nbObj_)
@@ -48,3 +38,12 @@ double CIndividual::getObjective(const int index) {
     return objective_[index];
 }
 
+bool CIndividual::evaluate_wrapper(bool force_evaluation) {
+	if (force_evaluation || !this->valid) {
+		this->fitness = evaluate();
+		this->valid = true;
+		return true;
+	} else {
+		return this->fitness;
+	}
+}

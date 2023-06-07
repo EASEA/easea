@@ -546,9 +546,8 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       // Reevaluate individaul if the flag reevaluateImmigrants == 1	
       if (bReevaluate == true){ params->reevaluateImmigrants = 1;}
       if (params->reevaluateImmigrants == 1){
-	    this->population->parents[index]->valid = false;
 	    this->population->realEvaluationNb++;
-	    this->population->parents[index]->evaluate();
+	    this->population->parents[index]->evaluate_wrapper(true);
       }
       params->reevaluateImmigrants = reeval;
       //TAG THE INDIVIDUAL AS IMMIGRANT

@@ -313,7 +313,6 @@ float IndividualImpl::evaluate(){
      \INSERT_GENOME_EVAL_BDY
      sum += error;
    }
-  this->valid = true;
   error = sum;
   \INSERT_GENOME_EVAL_FTR    
 }

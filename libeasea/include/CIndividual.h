@@ -76,6 +76,7 @@ public:
     CIndividual(CIndividual&&) noexcept =default;
     CIndividual& operator=(CIndividual&&) noexcept =default;
     virtual ~CIndividual() =default;
+    virtual bool evaluate_wrapper(bool force_evaluation);
     virtual float evaluate()  =  0;
     virtual void printOn(std::ostream& O) const = 0;
     virtual unsigned mutate(float pMutationPerGene)  = 0;

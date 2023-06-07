@@ -134,7 +134,6 @@ IndividualImpl::~IndividualImpl(){
 
 
 float IndividualImpl::evaluate(){
-    valid = true;
     \INSERT_EVALUATOR
 }
 
