@@ -1183,7 +1183,6 @@ public:
 	IndividualImpl(std::vector<TV> ind);
 	virtual ~IndividualImpl();
 	float evaluate() override;
-	TO getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();

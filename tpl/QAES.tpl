@@ -734,7 +734,6 @@ public:
         IndividualImpl(std::vector<double> ind);
 	virtual ~IndividualImpl();
 	float evaluate() override;
-	float getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();

@@ -432,7 +432,6 @@ public:
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl();
 	float evaluate() override;
-	float getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void optimiser(int currentIteration);
 	void printOn(std::ostream& O) const;

@@ -696,7 +696,6 @@ public:
 	virtual ~IndividualImpl();
 	float evaluate() override;
 	void optimise(int currentIteration);
-	float getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void printOn(std::ostream& O) const;
 	CIndividual* clone();
