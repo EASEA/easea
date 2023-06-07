@@ -47,4 +47,20 @@ class CRandomGenerator
 
 std::ostream& operator<<(std::ostream& os, const CRandomGenerator& rg);
 
+template <typename T>
+T random(T min, T max) {
+	extern CRandomGenerator* globalRandomGenerator;
+	return globalRandomGenerator->random(min, max);
+}
+
+static inline bool tossCoin(float bias) {
+	extern CRandomGenerator* globalRandomGenerator;
+	return globalRandomGenerator->tossCoin(bias);
+}
+
+static inline bool tossCoin() {
+	extern CRandomGenerator* globalRandomGenerator;
+	return globalRandomGenerator->tossCoin();
+}
+
 #endif /* CRANDOMGENERATOR_H_ */

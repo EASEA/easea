@@ -2166,20 +2166,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>"REPL_PERC"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY_USER_FUNCTION>"false"  {fprintf(fpOutputFile,"false");} // local name
 <COPY_USER_FUNCTION>"true"  {fprintf(fpOutputFile,"true");} // local name
-<COPY_USER_FUNCTION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
-  fprintf(fpOutputFile,yytext);}
-<COPY_USER_FUNCTION>"tossCoin"  { // local random name
-  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
-<COPY_USER_FUNCTION>"random"  {
-  fprintf(fpOutputFile,"globalRandomGenerator->random");}
-<COPY_USER_FUNCTION>"child1"  {fprintf(fpOutputFile,"child1");
- }
-<COPY_USER_FUNCTION>"child2"  {fprintf(fpOutputFile,"child2");
- }
-<COPY_USER_FUNCTION>"parent1"  {fprintf(fpOutputFile,"parent1");
- }
-<COPY_USER_FUNCTION>"parent2"  {fprintf(fpOutputFile,"parent2");
- }
 <COPY_USER_FUNCTION>"identicalGenome"  {fprintf(fpOutputFile,"genome._evaluated");} // local name
 <COPY_USER_FUNCTION>"return"  {if (bWithinEvaluator) {
     if( TARGET==CUDA || TARGET==STD) {
