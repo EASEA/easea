@@ -696,16 +696,16 @@ public:
 	virtual ~IndividualImpl();
 	float evaluate() override;
 	void optimise(int currentIteration);
-	CIndividual* crossover(CIndividual** p2);
-	void printOn(std::ostream& O) const;
-	CIndividual* clone();
+	CIndividual* crossover(CIndividual** p2) override;
+	void printOn(std::ostream& O) const override;
+	CIndividual* clone() override;
 
-	unsigned mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene) override;
 
-	void boundChecking();
+	void boundChecking() override;
 
-        string serialize();
-        void deserialize(string AESAE_Line);
+        string serialize() override;
+        void deserialize(string AESAE_Line) override;
 	void copyToCudaBuffer(void* buffer, unsigned id);
 	void copyFromCudaBuffer(void* buffer, unsigned id);
 

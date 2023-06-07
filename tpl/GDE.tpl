@@ -425,16 +425,16 @@ public:
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl();
 	float evaluate() override;
-	CIndividual* crossover(CIndividual** p2);
-	void printOn(std::ostream& O) const;
-	CIndividual* clone();
+	CIndividual* crossover(CIndividual** p2) override;
+	void printOn(std::ostream& O) const override;
+	CIndividual* clone() override;
 
-	unsigned mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene) override;
 
-	void boundChecking();      
+	void boundChecking() override;
 
-	string serialize();
-	void deserialize(string AESAE_Line);
+	string serialize() override;
+	void deserialize(string AESAE_Line) override;
 
 	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
 	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
