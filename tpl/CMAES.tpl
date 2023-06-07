@@ -423,7 +423,6 @@ public:
         void deserialize(string AESAE_Line) override;
 
 	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
-	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
 
 };
 

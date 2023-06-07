@@ -1196,7 +1196,6 @@ public:
 	void copyToCudaBuffer(void* buffer, unsigned id);
 
 	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
-	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
 };
 
 
