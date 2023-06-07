@@ -647,7 +647,7 @@ class Individual{
   Individual();
   Individual(const Individual& indiv);
   virtual ~Individual();
-  float evaluate();
+  float evaluate() override;
   static size_t getCrossoverArrity(){ return 2; }
   float getFitness(){ return this->fitness; }
   Individual* crossover(Individual** p2);

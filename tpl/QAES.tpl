@@ -733,8 +733,7 @@ public:
 	IndividualImpl(const IndividualImpl& indiv);
         IndividualImpl(std::vector<double> ind);
 	virtual ~IndividualImpl();
-	float evaluate();
-	static unsigned getCrossoverArrity(){ return 2; }
+	float evaluate() override;
 	float getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void printOn(std::ostream& O) const;

@@ -431,8 +431,7 @@ public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl();
-	float evaluate();
-	static unsigned getCrossoverArrity(){ return 2; }
+	float evaluate() override;
 	float getFitness(){ return this->fitness; }
 	CIndividual* crossover(CIndividual** p2);
 	void optimiser(int currentIteration);

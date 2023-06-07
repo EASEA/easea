@@ -88,7 +88,7 @@ public:
 
     virtual void boundChecking() = 0;
 
-    static unsigned getCrossoverArrity(){ return 2; }
+    static unsigned getCrossoverArity(){ return 2; }
     float getFitness(){ return this->fitness; }
 
 
