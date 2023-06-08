@@ -162,7 +162,7 @@ void Cgde<TIndividual, TRandom>::makeOneGeneration(void)
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-	for ( size_t i = 0; i < parent.size(); ++i )
+	for ( int i = 0; i < static_cast<int>(parent.size()); ++i )
 	{
 	    TIndividual &ind = parent[i];
 	    TIndividual child = runBreeding( parent, i );

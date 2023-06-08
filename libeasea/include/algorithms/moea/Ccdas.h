@@ -135,7 +135,7 @@ typename Ccdas<TIndividual, TRandom>::TPopulation Ccdas<TIndividual, TRandom>::r
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-        for (size_t i = 0; i < offspring.size(); ++i)
+        for (int i = 0; i < static_cast<int>(offspring.size()); ++i)
         {
                 TIndividual &child = offspring[i];
                 this->getMutation()(child);
