@@ -78,17 +78,18 @@ namespace impl {
 		span_t span;
 
 		public:
-		fast_bounded_distribution(T min_, T max_) : min(min_), max(max_), span(max_ - min_) {
-			assert(min < max && "[a; b] with a < b required");
+		// NOTE: to reproduce std::uniform, we need [min, max[ to become [min, max], hence the + 1
+		constexpr fast_bounded_distribution(T min_, T max_) : min(min_), max(max_+1), span(max - min) {
+			assert(min < max && "[a; b[ with a < b required");
 		}
 
 		template <typename Gen, typename V = T>
-		std::enable_if_t<std::is_floating_point_v<V>, V> operator()(Gen&& gen) const {
+		constexpr std::enable_if_t<std::is_floating_point_v<V>, V> operator()(Gen&& gen) const {
 			return ((static_cast<V>(gen() - gen.min()) / static_cast<V>(gen.max())) * span) + min;
 		}
 
 		template <typename Gen, typename V = T>
-		auto operator()(Gen&& gen) const -> std::enable_if_t<std::is_integral_v<V> && std::is_unsigned_v<decltype(gen())>, V> {
+		constexpr auto operator()(Gen&& gen) const -> std::enable_if_t<std::is_integral_v<V> && std::is_unsigned_v<decltype(gen())>, V> {
 			return static_cast<V>(span_t{gen() - gen.min()} % span) + min;
 		}
 	};

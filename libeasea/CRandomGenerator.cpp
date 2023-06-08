@@ -20,10 +20,12 @@ CRandomGenerator::CRandomGenerator() : CRandomGenerator(std::random_device{}())
 {
 }
 
+// NOTE: expected behavior: [min, max[, hence the -1
+// but because of old code : [0, 0[ => 0 and [0, 1[ => 0
 int CRandomGenerator::randInt(int min, int max)
 {
-	//assert(min != max - 1 && "integer range [a; a[ is impossible.");
-	if (min != max) {
+	assert(min != max && "range [a, a[ is invalid");
+	if (min != max -1) {
 		impl::fast_bounded_distribution<int> dis(min, max - 1);
 		return dis(engine);
 	} else {
