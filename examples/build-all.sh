@@ -116,6 +116,7 @@ echo "Found $nb_examples examples to compile."
 passed=0
 failed=0
 failed_list=()
+exec_failed_list=()
 passed_list=()
 for edir in $all_examples; do
 	printf -- "- %d/%d %s:\n" $((passed+failed+1)) $nb_examples $(basename $edir)
@@ -200,7 +201,7 @@ for edir in $all_examples; do
 		printf "$Red ko!$Color_Off\n"
 		printf "\tError (RETURNED %d):$Red %s\n$Color_Off" "$ret" "$OUT"
 		failed=$((failed + 1))
-		failed_list+=($(basename $edir))
+		exec_failed_list+=($(basename $edir))
 	fi
 	if $VERBOSE; then
 		printf "Output:\n===\n%s\n===\n" "$OUT"
@@ -213,9 +214,8 @@ done
 
 # Compute ignored tests
 warnings=()
-true_errors=()
 nb_warning=0
-for er in "${failed_list[@]}"; do
+for er in "${exec_failed_list[@]}"; do
 	IGNORE=false
 	for si in $IGNORE_ERRORS; do
 		if [[ "$si" == "$er" ]]; then
@@ -229,7 +229,7 @@ for er in "${failed_list[@]}"; do
 		passed=$((passed + 1))
 		nb_warning=$((nb_warning + 1))
 	else
-		true_errors+=($er)
+		failed_list+=($er)
 	fi
 done
 
@@ -238,7 +238,7 @@ printf "\n### Results ###\n"
 printf "passed: $Green%d$Color_Off/%d\n" "$passed" "$nb_examples"
 
 if [[ "$nb_warning" != "0" ]]; then
-	printf "failed but marked as passed:$Yellow %d$Color_Off/%d\n" "$nb_warning" "$nb_examples"
+	printf "failed execution but marked as passed:$Yellow %d$Color_Off/%d\n" "$nb_warning" "$nb_examples"
 fi
 
 
@@ -246,7 +246,7 @@ EXIT_CODE=0
 if [[ "$failed" != "0" ]]; then # at least one fail
 	printf "failed:$Red %d$Color_Off/%d\n" "$failed" "$nb_examples"
 	printf "test failed:$Red"
-	for te in "${true_errors[@]}"; do
+	for te in "${failed_list[@]}"; do
 		printf " %s" "$te"
 	done
 	printf "$Red\nFAILED$Color_Off\n"
@@ -260,9 +260,9 @@ fi
 if [[ "$nb_warning" != "0" ]]; then
 	printf "\n$Yellow"
 	if [[ "$nb_warning" == "1" ]]; then
-		printf "Warning:$Color_Off %d test failed but was ignored:$Yellow" "$nb_warning"
+		printf "Warning:$Color_Off %d test execution failed but was ignored:$Yellow" "$nb_warning"
 	else
-		printf "Warning:$Color_Off %d tests failed but were ignored:$Yellow" "$nb_warning"
+		printf "Warning:$Color_Off %d tests executions failed but were ignored:$Yellow" "$nb_warning"
 	fi
 	for te in "${warnings[@]}"; do
 		printf " %s" "$te"
