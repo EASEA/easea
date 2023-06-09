@@ -15,6 +15,7 @@
 #include <iostream>
 #include <random>
 #include <cassert>
+#include <math/mft/include/mft.hpp>
 
 class CRandomGenerator
 {
@@ -79,7 +80,10 @@ namespace impl {
 
 		public:
 		// NOTE: to reproduce std::uniform, we need [min, max[ to become [min, max], hence the + 1
-		constexpr fast_bounded_distribution(T min_, T max_) : min(min_), max(max_+1), span(max - min) {
+		//constexpr fast_bounded_distribution(T min_, T max_) : min(min_), max(max_+1), span(max - min) {
+		// probably std::nextafter is better in order to convert from [min, max) to [min,max]
+		constexpr fast_bounded_distribution(T min_, T max_) : min(min_), max(std::nextafter(max_, max_+1)), span(max - min) {
+		        assert(!mft::impl::is_any_nan(min, max));
 			assert(min < max && "[a; b[ with a < b required");
 		}
 
@@ -93,6 +97,6 @@ namespace impl {
 			return static_cast<V>(span_t{gen() - gen.min()} % span) + min;
 		}
 	};
-};
+}
 
 #endif /* CRANDOMGENERATOR_H_ */
