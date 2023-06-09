@@ -51,12 +51,13 @@ bool CRandomGenerator::tossCoin()
 float CRandomGenerator::randFloat(float min, float max)
 {
 	impl::fast_bounded_distribution<float> dis(min, max);
+  
 	return dis(engine);
 }
 
 bool CRandomGenerator::tossCoin(float bias)
 {
-	assert(bias > 1.f && "Probability above 1 makes no sense");
+	assert(bias <= 1.f && "Probability above 1 makes no sense");
 	if (randFloat(0.f, 1.f) <= bias)
 		return true;
 	else
