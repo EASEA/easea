@@ -765,8 +765,7 @@ int easeaParse(int argc, char *argv[]){
   
   TARGET=STD;
   bVERBOSE=0;
-  sRAW_PROJECT_NAME[0]=0; // used to ask for a filename if no filename is found on the command line.
-    
+      
     std::cout << "EASENA version: " << easea::version::as_string() << std::endl;
 
   while ((++nParamNb) < argc) {

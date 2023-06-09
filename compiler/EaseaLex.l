@@ -115,6 +115,7 @@ static inline void yyinput_function(char* buf, T* result, size_t max_size) {
 #define YY_INPUT(buf,result,max_size) (yyinput_function(buf, &result, max_size))
 
 void switch_to_genome();
+void print_else_default(const char* const from, const char* const value, const char* const def);
 %}                                                     
                                          
 %start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
@@ -1050,13 +1051,13 @@ return lhs.arity < rhs.arity;
   }
   else fprintf(fpOutputFile,"%s",sSELECTOR);
 }
-<TEMPLATE_ANALYSIS>"\\SELECTOR_OPERATOR" {fprintf(fpOutputFile,"%s",sSELECTOR_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\SELECTOR_OPERATOR" {print_else_default("", sSELECTOR_OPERATOR, "Tournament");}
 <TEMPLATE_ANALYSIS>"\\SELECT_PRM"  {fprintf(fpOutputFile,"%f",fSELECT_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_PAR_OPERATOR" {fprintf(fpOutputFile,"%s",sRED_PAR_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\RED_PAR_OPERATOR" {print_else_default("Reduce parents operator", sRED_PAR_OPERATOR, "Tournament");}
 <TEMPLATE_ANALYSIS>"\\RED_PAR_PRM"  {fprintf(fpOutputFile,"%f",fRED_PAR_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_OFF_OPERATOR" {fprintf(fpOutputFile,"%s",sRED_OFF_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\RED_OFF_OPERATOR" {print_else_default("Reduce offspring operator", sRED_OFF_OPERATOR, "Tournament");}
 <TEMPLATE_ANALYSIS>"\\RED_OFF_PRM"  {fprintf(fpOutputFile,"%f",fRED_OFF_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_FINAL_OPERATOR" {fprintf(fpOutputFile,"%s",sRED_FINAL_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\RED_FINAL_OPERATOR" {print_else_default("Final reduce operator", sRED_FINAL_OPERATOR, "Tournament");}
 <TEMPLATE_ANALYSIS>"\\RED_FINAL_PRM"  {fprintf(fpOutputFile,"%f",fRED_FINAL_PRM);}
 <TEMPLATE_ANALYSIS>"\\POP_SIZE"  {fprintf(fpOutputFile,"%d",nPOP_SIZE);}
 <TEMPLATE_ANALYSIS>"\\OFF_SIZE"  {fprintf(fpOutputFile,"%d",nOFF_SIZE);}
@@ -2726,5 +2727,14 @@ Searches_t get_lexer_state() {
 	case COPY_OPTIMISER: return OPTIMISER;
 	case GENOME_ANALYSIS: return SGENOME_ANALYSIS;
 	default: return NONCOPY;
+	}
+}
+
+void print_else_default(const char* const from, const char* const value, const char* const def) {
+	if (strlen(value) == 0) {
+		fprintf(stderr, "Warning: '%s' was not defined in .ez, using default value '%s'.\n", from, def);
+		fputs(def, fpOutputFile);
+	} else {
+		fputs(value, fpOutputFile);
 	}
 }

@@ -643,7 +643,7 @@ find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
 	PATH_SUFFIXES include easena libeasea)
-find_package(Boost program_options)
+find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
