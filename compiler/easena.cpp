@@ -40,7 +40,8 @@ Mode detectModeUsed(int argc, char** argv) {
         if ((argv[1][0]=='-')&&(argv[1][1]=='-')){
             sTemp=&(argv[1][2]);
             if (!mystricmp(sTemp,"version")){
-             std::cout << "EASENA version: " << easea::version::as_string() << std::endl;
+             std::cout << "EASENA version " << easea::version::as_string() << "\n" <<
+		   "Compiled in " << EZ_BUILD_TYPE << " mode using " << EZ_BUILT_BY << " " << EZ_BUILT_BY_VERSION << "\n";
              result = END;
             }else{ 
 		 LOG_ERROR(errorCode::io, std::string("Unrecognised input option: ")+ std::string(sTemp));

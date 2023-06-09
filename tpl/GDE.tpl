@@ -457,7 +457,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
 	set(Boost_USE_MULTITHREADED ON)
 	set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
-find_package(Boost REQUIRED COMPONENTS iostreams serialization)
+find_package(Boost REQUIRED COMPONENTS iostreams serialization program_options)
 
 find_package(OpenMP)
 

@@ -23,8 +23,7 @@ namespace cxxopts {
 
 class Parameters {
   protected:
-    std::unique_ptr<cxxopts::ParseResult> vm;
-    std::unique_ptr<cxxopts::ParseResult> vm_file;
+    std::unique_ptr<vm_t> vm;
 
   public:
     CSelectionOperator* selectionOperator;
@@ -116,7 +115,7 @@ class Parameters {
 
     template <typename T>
     auto setVariable(std::string const& argumentName, T&& defaultValue) const {
-	    return ::setVariable(argumentName, std::forward<T>(defaultValue), vm, vm_file);
+	    return ::setVariable(argumentName, std::forward<T>(defaultValue), vm);
     }
 };
 

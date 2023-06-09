@@ -11,8 +11,8 @@
 #include <cmath>
 
 Parameters::Parameters(std::string const& filename, int argc, char* argv[]) : optimise(false), baldwinism(false) {
-	parseArguments(filename.c_str(), argc, argv, vm, vm_file);
-	
+	parseArguments(filename.c_str(), argc, argv, vm);
+
 	// set parameters that can only be defined using cmd line arguments or files
 	nbCPUThreads = setVariable("nbCPUThreads", 1);
 	noLogFile = setVariable("noLogFile", false);

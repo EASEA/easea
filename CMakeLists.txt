@@ -116,7 +116,7 @@ else ()
 endif ()
 
 ## Boost (asio)
-find_package(Boost REQUIRED COMPONENTS iostreams serialization)
+find_package(Boost REQUIRED COMPONENTS iostreams serialization program_options)
 target_include_directories(libeasea PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(libeasea PUBLIC ${Boost_LIBRARIES})
 
