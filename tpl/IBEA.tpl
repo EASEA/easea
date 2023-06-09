@@ -111,12 +111,14 @@ TRandom m_generator{static_cast<std::mt19937::result_type>(m_seed)};
 typedef typename easea::Individual<TT, TV> TIndividual;
 typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
-\INSERT_USER_DECLARATIONS
-easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
-
 typedef easea::algorithms::ibea::Cibea< TIndividual, TRandom &> TAlgorithm;
 TAlgorithm *m_algorithm;
 size_t m_popSize = -1;
+
+\INSERT_USER_DECLARATIONS
+easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
+
+
 
 \ANALYSE_USER_CLASSES
 
@@ -267,7 +269,24 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
 	this->ipFile = setVariable("ipFile", "\IP_FILE");
 	this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
-    	this->serverPort = setVariable("serverPort", \SERVER_PORT);
+  this->serverPort = setVariable("serverPort", \SERVER_PORT);
+  
+         if (!this->noLogFile) {
+    	    auto tmStart = std::chrono::system_clock::now();
+            time_t t = std::chrono::system_clock::to_time_t(tmStart);
+            std::tm * ptm = std::localtime(&t);
+            char buf_start_time[32];
+            string log_fichier_name = this->outputFilename;
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tmStart.time_since_epoch()) % 1000;
+            std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
+	    easena::log_file.open(log_fichier_name.c_str() +std::string("_") + std::string(buf_start_time) +std::string("-") + std::to_string(ms.count()) + std::string(".log"));
+            logg("DATA of TEST;", std::string(buf_start_time).c_str());
+            logg("\n__RUN SETTINGS__");
+            logg("SEED;", m_seed);
+            logg("nCURRENT_GEN;", this->nbGen);
+            logg("POP_SIZE;", this->parentPopulationSize);
+            logg("CPU_THREADS_NB;", nbCPUThreads);
+       }
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
