@@ -2444,11 +2444,9 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
 	strcat(sTemp, "QAES.tpl");
     else if (TARGET_FLAVOR == NSGAII){
 	strcat(sTemp, "NSGAII.tpl");
-	std::cout << "STD:NSGAII" << std::endl;
     }
     else if (TARGET_FLAVOR == ASREA){
 	strcat(sTemp, "ASREA.tpl");
-	std::cout << "STD:ASREA" << std::endl;
     }
     else if (TARGET_FLAVOR == FASTEMO){
 	strcat(sTemp, "FastEMO.tpl");

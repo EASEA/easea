@@ -18,7 +18,7 @@
 #include <string>
 #include <CLogger.h>
 
-enum Mode {ERROR, EVOLUTIONNARY_ALGORITHM, NEURAL_ALGORITHM, MIXED, END};
+enum Mode {ERROR, EVOLUTIONNARY_ALGORITHM, NEURAL_ALGORITHM, MIXED};
 
 void usage() {
 	std::cout << "EASEA : ./easena [-asrea | -cmaes | -cuda | -cuda_mo | -cuda_gp | -fastemo | -gp | -memetic | -nsgaii | nsgaiii | cdas | -std | -std_mo | -v ] file.ez | [--version]" << std::endl;
@@ -34,22 +34,22 @@ Mode detectModeUsed(int argc, char** argv) {
 
 	char *sTemp;
 	if (argc == 1){
-	    LOG_ERROR(errorCode::io, "Expected argument following easena");
-	    return result;
+	    std::cerr << "Error: expected argument following easena\n";
+	    usage();
+	    exit(1);
 	}
         if ((argv[1][0]=='-')&&(argv[1][1]=='-')){
             sTemp=&(argv[1][2]);
             if (!mystricmp(sTemp,"version")){
              std::cout << "EASENA version " << easea::version::as_string() << "\n" <<
 		   "Compiled in " << EZ_BUILD_TYPE << " mode using " << EZ_BUILT_BY << " " << EZ_BUILT_BY_VERSION << "\n";
-             result = END;
-            }else{ 
-		 LOG_ERROR(errorCode::io, std::string("Unrecognised input option: ")+ std::string(sTemp));
-		 result = ERROR;
+	     exit(0);
+            }else{
+		 std::cerr << "Error: unrecognised input option: " << sTemp << "\n";
+		 usage();
+		 exit(1);
 	    }
-	    return result;
-	    
-	}    
+	}
 	for(int i = 0; i < argc; i++)
 	{
 		if (result == ERROR) {
@@ -93,10 +93,8 @@ int main(int argc, char** argv)
 		case ERROR:
 			std::cout << "Usage :" << std::endl;
 			usage();
+			exit(1);
 			break;
-		case END:
-			break;
-	
 		default:
 			std::cout << "This shouldn't have happened !!!" << std::endl;
 			break;
