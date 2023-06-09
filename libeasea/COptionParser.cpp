@@ -42,31 +42,22 @@ std::vector<std::string> loadParametersFile(const std::string& filename)
 }
 
 void parseArguments(const char* parametersFileName, int ac, char** av, std::unique_ptr<vm_t> &vm){
-
-    std::vector<std::string> argv;
-    int argc = 0;
-    if( parametersFileName ) {
-	argv = loadParametersFile(parametersFileName);
-        argc = argv.size();
-    }
-
-
     po::options_description options("Allowed options");
     options.add_options()
-        ("h,help", "produce help message")
-	("v,version", "Print version")
-        ("s,seed", po::value<int>(), "set the global seed of the pseudo random generator")
-        ("p,popSize", po::value<int>(), "set the population size")
+        ("help,h", "produce help message")
+	("version,v", "Print version")
+        ("seed,s", po::value<int>(), "set the global seed of the pseudo random generator")
+        ("popSize,p", po::value<int>(), "set the population size")
         ("nbOffspring", po::value<float>(), "set the offspring population size")
         ("survivingParents", po::value<float>(), "set the reduction size for parent population")
         ("survivingOffspring", po::value<float>(), "set the reduction size for offspring population")
         ("elite", po::value<int>(), "Elite size")
         ("eliteType", po::value<int>(), "Strong (1) or weak (0)")
-        ("t,nbCPUThreads", po::value<int>(), "Set the number of threads")
+        ("nbCPUThreads,t", po::value<int>(), "Set the number of threads")
         ("noLogFile", po::value<bool>()->default_value("false"), "Disable logging to .log file")
 	("alwaysEvaluate", po::value<bool>()->default_value("false"), "Always evaluate individual, do not reuse previous fitness")
         ("reevaluateImmigrants", po::value<bool>()->default_value("false"), "Set flag if immigrants need to be reevaluated")
-        ("g,nbGen", po::value<int>(), "Set the number of generation")
+        ("nbGen,g", po::value<int>(), "Set the number of generation")
         ("timeLimit", po::value<int>(), "Set the timeLimit, (0) to desactivate")
         ("selectionOperator", po::value<std::string>(), "Set the Selection Operator (default : Tournament)")
         ("selectionPressure", po::value<float>(), "Set the Selection Pressure (default : 2.0)")
@@ -106,7 +97,16 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
 	vm = std::make_unique<vm_t>();
 	po::store(po::parse_command_line(ac, av, options), *vm);
 	po::notify(*vm);
-        if (vm->count("help")) {
+
+        if(parametersFileName){
+	    std::vector<std::string> argv = loadParametersFile(parametersFileName);
+	    std::vector<const char*> cstr;
+	    std::transform(argv.cbegin(), argv.cend(), std::back_inserter(cstr), [](auto const& s) {return s.c_str();});
+	    po::store(po::parse_command_line(cstr.size(), cstr.data(), options), *vm);
+	    po::notify(*vm);
+        }
+
+	if (vm->count("help")) {
 	    std::cout << options;
 	    exit(0);
         } else if (vm->count("version")) {
@@ -114,18 +114,10 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
 		   "Compiled in " << EZ_BUILD_TYPE << " mode using " << EZ_BUILT_BY << " " << EZ_BUILT_BY_VERSION << "\n";
 	   exit(0);
 	}
-        if(parametersFileName){
-	    std::vector<const char*> cstr;
-	    std::transform(argv.cbegin(), argv.cend(), std::back_inserter(cstr), [](auto const& s) {return s.c_str();});
-	    auto carr = cstr.data();
-	    po::store(po::parse_command_line(cstr.size(), carr, options), *vm);
-	    po::notify(*vm);
-        }
     }
     catch(const std::exception& e){
 	std::cerr << "Bad command line argument(s): " << e.what() << "\n" <<
 		options;
 	exit(1);
-        //LOG_ERROR(errorCode::value, msg.str());
   }
 }
