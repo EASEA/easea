@@ -24,13 +24,13 @@ CPseudoRandom::CPseudoRandom()
 /* Fetch a single random integer number between lowerLimit and upperLimit */
 int CPseudoRandom::randInt(int lowerLimit, int upperLimit)
 {
-	return CPseudoRandom::randomGenerator_.randInt(lowerLimit, upperLimit);
+	return CPseudoRandom::randomGenerator_.random(lowerLimit, upperLimit);
 }
 
 /* Fetch a single random double number between lowerLimit and upperLimit */
 double CPseudoRandom::randDouble(double lowerLimit, double upperLimit)
 {
-	return CPseudoRandom::randomGenerator_.randDouble(lowerLimit, upperLimit);
+	return CPseudoRandom::randomGenerator_.random(lowerLimit, upperLimit);
 }
 
 /* Fetch a single double number between 0.0 and 1.0 */

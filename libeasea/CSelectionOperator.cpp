@@ -271,7 +271,7 @@ size_t MaxRoulette::selectNext(size_t populationSize){
                 poidsCourant += (population[i]->getFitness()/poidsTotal);
                 poids[i] = poidsCourant;
         }
-        poidsSelectionne = rg->randFloat(0.0,1.0);
+        poidsSelectionne = rg->random(0.0,1.0);
         for(i=0; (unsigned)i<populationSize; i++){
                 if(poidsSelectionne<poids[i]){
                         bestIndex = i;
