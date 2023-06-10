@@ -6,13 +6,15 @@
  */
 
 #include "include/CRandomGenerator.h"
-#include "include/global.h"
 
 #include <chrono>
 #include <limits>
 #include <cassert>
 
-CRandomGenerator::CRandomGenerator(unsigned int seed_) : seed(seed_), engine(xoshiro::splitmix64(seed_))
+CRandomGenerator globGen{};
+CRandomGenerator* globalRandomGenerator = nullptr;
+
+CRandomGenerator::CRandomGenerator(unsigned int seed_) : seed(seed_), engine(Xoshiro::splitmix64(seed_)), engine64(Xoshiro::splitmix64(seed_))
 {
 }
 

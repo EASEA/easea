@@ -7,8 +7,12 @@
 
 #include "Parameters.h"
 #include "COptionParser.h"
+#include "CRandomGenerator.h"
 #include <stdio.h>
 #include <cmath>
+
+extern CRandomGenerator* globalRandomGenerator;
+
 
 Parameters::Parameters(std::string const& filename, int argc, char* argv[]) : optimise(false), baldwinism(false) {
 	parseArguments(filename.c_str(), argc, argv, vm);
@@ -19,7 +23,12 @@ Parameters::Parameters(std::string const& filename, int argc, char* argv[]) : op
 	reevaluateImmigrants = setVariable("reevaluateImmigrants", false);
 	silentNetwork = setVariable("silentNetwork", false);
 	alwaysEvaluate = setVariable("alwaysEvaluate", false);
+
 	seed = setVariable("seed", 0);
+	globGen = decltype(globGen){static_cast<unsigned int>(seed)};
+	globalRandomGenerator = &globGen;
+	randomGenerator = globalRandomGenerator;
+
 	printInitialPopulation = setVariable("printInitialPopulation", false);
 	printFinalPopulation = setVariable("printFinalPopulation", false);
 	u1 = setVariable("u1", "");

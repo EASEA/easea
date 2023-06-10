@@ -100,7 +100,6 @@ extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned p
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
-CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm *EA;
 
 #define CUDA_TPL
@@ -582,13 +581,10 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	omp_set_num_threads(this->nbCPUThreads);
 	#endif
 
-        globalRandomGenerator = new CRandomGenerator(seed);
-        this->randomGenerator = globalRandomGenerator;
-
-        selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
-        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
-        parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
-        offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
+        selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing);
+        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing);
+        parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing);
+        offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing);
         selectionPressure = setVariable("selectionPressure", (float)\SELECT_PRM);
         replacementPressure = setVariable("reduceFinalPressure", (float)\RED_FINAL_PRM);
         parentReductionPressure = setVariable("reduceParentsPressure", (float)\RED_PAR_PRM);
@@ -715,7 +711,7 @@ EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvol
   this->population = (CPopulation*)new
   PopulationImpl( this->params->parentPopulationSize,this->params->offspringPopulationSize,
                   this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,
-                  this->params->randomGenerator,this->params,this->cstats);
+                  this->params,this->cstats);
 
   int popSize = (params->parentPopulationSize>params->offspringPopulationSize?params->parentPopulationSize:params->offspringPopulationSize);
   ((PopulationImpl*)this->population)->cudaBuffer = (void*)malloc(sizeof(IndividualImpl)*( popSize ));
@@ -727,7 +723,7 @@ EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvol
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 }
 
-PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params, stats){
+PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, Parameters* params, CStats* stats) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, params, stats){
 }
 
 PopulationImpl::~PopulationImpl(){
@@ -740,7 +736,6 @@ PopulationImpl::~PopulationImpl(){
 #ifndef PROBLEM_DEP_H
 #define PROBLEM_DEP_H
 
-//#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
 #include <CIndividual.h>
@@ -752,7 +747,6 @@ PopulationImpl::~PopulationImpl(){
 
 using namespace std;
 
-class CRandomGenerator;
 class CSelectionOperator;
 class CGenerationalCriterion;
 class CEvolutionaryAlgorithm;
@@ -814,7 +808,7 @@ public:
   void* cudaBuffer;
 
 public:
-  PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats);
+  PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, Parameters* params, CStats* stats);
         virtual ~PopulationImpl();
         void evaluateParentPopulation();
 	void evaluateOffspringPopulation();

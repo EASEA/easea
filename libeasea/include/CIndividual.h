@@ -11,7 +11,6 @@
 
 #include <iostream>
 
-class CRandomGenerator;
 #include "CVariable.h"
 
 /* Class of individual's (solution) implementation */

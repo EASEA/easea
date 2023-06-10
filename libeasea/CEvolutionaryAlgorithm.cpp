@@ -43,7 +43,6 @@
 
 using namespace std;
 
-extern CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
@@ -67,7 +66,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
         params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
 	this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
-        params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
+        params->pCrossover,params->pMutation,params->pMutationPerGene,params, this->cstats);
 
 	this->currentGeneration = 0;
 	this->reduceParents = 0;
@@ -515,13 +514,13 @@ void CEvolutionaryAlgorithm::refreshClient(){
 
 void CEvolutionaryAlgorithm::sendIndividual(){
   //Sending an individual every n generations 
-  if(globalRandomGenerator->random(0.0,1.0)<=params->migrationProbability){
+  if(random(0.0,1.0)<=params->migrationProbability){
   //if((this->currentGeneration+this->myClientNumber)%3==0 && this->currentGeneration!=0){
     this->population->selectionOperator->initialize(this->population->parents, params->selectionPressure, this->population->actualParentPopulationSize);
     //unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
   
     //selecting a client randomly
-    int client = globalRandomGenerator->getRandomIntMax(static_cast<int>(this->numberOfClients));
+    int client = random(0, static_cast<int>(this->numberOfClients));
 
     this->Clients[client]->send(bBest->serialize());
   }
@@ -531,7 +530,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 
   //Checking every generation for received individuals
   if(server->has_data()){
-    CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);   
+    CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing);   
 
 
     //Treating all the individuals before continuing

@@ -17,6 +17,7 @@
 class CGenerationalCriterion;
 class CControlCStopingCriterion;
 class CSelectionOperator;
+class CRandomGenerator;
 namespace cxxopts {
   class ParseResult;
 }
@@ -53,7 +54,7 @@ class Parameters {
     float pMutationPerGene;
     CRandomGenerator* randomGenerator;
 
-    time_t seed;
+    int seed;
 
     unsigned int parentPopulationSize;
     unsigned int offspringPopulationSize;

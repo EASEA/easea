@@ -23,6 +23,17 @@
 
 namespace impl
 {
+template <typename T>
+std::enable_if_t<std::is_floating_point_v<T>, T> fast_nextafter(T val)
+{
+	return val;
+}
+
+template <typename T>
+std::enable_if_t<std::is_integral_v<T>, T> fast_nextafter(T val)
+{
+	return val + 1;
+}
 /* NOTE: this distribution was tested on :
 	 * - mt19937
 	 * - lcg
@@ -37,11 +48,8 @@ class fast_bounded_distribution
 	span_t span;
 
     public:
-	// NOTE: to reproduce std::uniform, we need [min, max[ to become [min, max], hence the + 1
-	//constexpr fast_bounded_distribution(T min_, T max_) : min(min_), max(max_+1), span(max - min) {
-	// probably std::nextafter is better in order to convert from [min, max) to [min,max]
-	constexpr fast_bounded_distribution(T min_, T max_)
-		: min(min_), max(std::nextafter(max_, max_ + 1)), span(max - min)
+	// NOTE: [min, max[
+	constexpr fast_bounded_distribution(T min_, T max_) : min(min_), max(max_), span(max - min)
 	{
 		assert(min < max && "[a; b[ with a < b required");
 	}
@@ -65,7 +73,8 @@ class CRandomGenerator
 {
     private:
 	unsigned seed;
-	xoshiro::Xoshiro256PP engine;
+	Xoshiro::Xoshiro128PP engine;
+	Xoshiro::Xoshiro256PP engine64;
 
     public:
 	CRandomGenerator(unsigned int seed);
@@ -76,13 +85,14 @@ class CRandomGenerator
 	template <typename T>
 	T random(T min, T max)
 	{
-		if constexpr (std::is_integral_v<T>) {
-			assert(min < max && "range [a, b[ with b <= a is impossible");
-			if (min == max - 1) // [a, a+1[ => a
-				return min;
-		}
+		assert(min <= max && "range [a, b[ with b < a is impossible");
+		if (min == max) // [a, a[ => a
+			return min;
 		impl::fast_bounded_distribution<T> dis(min, max);
-		return dis(engine);
+		if constexpr (sizeof(T) <= sizeof(decltype(engine)::result_type))
+			return dis(engine);
+		else
+			return dis(engine64);
 	}
 
 	template <typename T>
@@ -96,13 +106,18 @@ class CRandomGenerator
 		return random(0, 2) == 1;
 	}
 
-	bool tossCoin(float bias)
+	template <typename T>
+	std::enable_if_t<std::is_floating_point_v<T>, bool> tossCoin(float bias)
 	{
-		assert(bias <= 1.f && "Probability above 1 makes no sense");
-		if (random(0.f, 1.f) <= bias)
-			return true;
-		else
-			return false;
+		assert(0.f <= bias && bias <= 1.f && "Probability above 1 or below 0 makes no sense");
+		return random(0.f, 1.f) <= bias;
+	}
+
+	template <typename T>
+	std::enable_if_t<std::is_integral_v<T>, bool> tossCoin(int prct)
+	{
+		assert(0 <= prct && prct <= 100 && "Probability above 100% or below 0% makes no sens");
+		return random(0, 101) <= prct;
 	}
 
 	/*
@@ -127,23 +142,23 @@ class CRandomGenerator
 
 std::ostream& operator<<(std::ostream& os, const CRandomGenerator& rg);
 
+extern CRandomGenerator globGen;
+
 template <typename T>
 T random(T min, T max)
 {
-	extern CRandomGenerator* globalRandomGenerator;
-	return globalRandomGenerator->random(min, max);
+	return globGen.random(min, max);
 }
 
-static inline bool tossCoin(float bias)
+template <typename T>
+static inline bool tossCoin(T bias)
 {
-	extern CRandomGenerator* globalRandomGenerator;
-	return globalRandomGenerator->tossCoin(bias);
+	return globGen.tossCoin<T>(bias);
 }
 
 static inline bool tossCoin()
 {
-	extern CRandomGenerator* globalRandomGenerator;
-	return globalRandomGenerator->tossCoin();
+	return globGen.tossCoin();
 }
 
 #endif /* CRANDOMGENERATOR_H_ */

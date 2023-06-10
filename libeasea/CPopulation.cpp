@@ -45,8 +45,7 @@ CPopulation::CPopulation() {
 }
 
 CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
-           float pCrossover, float pMutation, float pMutationPerGene,
-           CRandomGenerator* rg, Parameters* params, CStats* cstats){
+           float pCrossover, float pMutation, float pMutationPerGene, Parameters* params, CStats* cstats){
 
   this->parents     = new CIndividual*[parentPopulationSize];
   this->offsprings  = new CIndividual*[offspringPopulationSize];
@@ -64,8 +63,6 @@ CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopula
   this->pMutationPerGene = pMutationPerGene;
   pPopulation = parents;
   bBest = Best;
-
-  this->rg = rg;
 
   this->currentEvaluationNb = 0;
   this->realEvaluationNb = 0;
@@ -346,7 +343,7 @@ void CPopulation::produceOffspringPopulation(){
 				++sum;
 			}
 
-			if( rg->tossCoin(pCrossover) ){
+			if( tossCoin(pCrossover) ){
 				for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
 					index = selectionOperator->selectNext(parentPopulationSize);
 					ps[j] = parents[index];
@@ -358,7 +355,7 @@ void CPopulation::produceOffspringPopulation(){
 			}
 			else child = parents[index]->clone();//new CIndividual(*parents[index]);
 
-			if( rg->tossCoin(pMutation) ){
+			if( tossCoin(pMutation) ){
 				child->mutate(pMutationPerGene);
 			}
 

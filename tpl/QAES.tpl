@@ -96,7 +96,6 @@ bool INSTEAD_EVAL_STEP = false;
 #define LIMIT_UPDATE 30
 #define SZ_POP_MAX 5000
 
-CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 extern std::ofstream easena::log_file;
 extern easena::log_stream logg;
@@ -289,14 +288,11 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	omp_set_num_threads(nbCPUThreads);
 	#endif
 	srand(seed);
-	globalRandomGenerator = new CRandomGenerator(seed);
-	this->randomGenerator = globalRandomGenerator;
 
-
-	selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
-	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
-	parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
-	offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
+	selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing);
+	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing);
+	parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing);
+	offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing);
 	selectionPressure = setVariable("selectionPressure", (float)\SELECT_PRM);
 	replacementPressure = setVariable("reduceFinalPressure", (float)\RED_FINAL_PRM);
 	parentReductionPressure = setVariable("reduceParentsPressure", (float)\RED_PAR_PRM);
@@ -685,7 +681,6 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #ifndef PROBLEM_DEP_H
 #define PROBLEM_DEP_H
 
-//#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
 #include <CIndividual.h>
@@ -696,7 +691,6 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 
 using namespace std;
 
-class CRandomGenerator;
 class CSelectionOperator;
 class CGenerationalCriterion;
 class CEvolutionaryAlgorithm;

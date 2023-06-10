@@ -97,7 +97,6 @@ bool bReevaluate = false;
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
-CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 #define STD_TPL
 typedef std::mt19937 TRandom;
@@ -296,7 +295,6 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 #ifndef PROBLEM_DEP_H
 #define PROBLEM_DEP_H
 
-//#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
 #include <core/CmoIndividual.h>
@@ -306,7 +304,6 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 using namespace std;
 
-class CRandomGenerator;
 class CSelectionOperator;
 class CGenerationalCriterion;
 class CEvolutionaryAlgorithm;

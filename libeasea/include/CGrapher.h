@@ -8,7 +8,6 @@
 #ifndef CGRAPHER_H_
 #define CGRAPHER_H_
 
-class CRandomGenerator;
 #include <iostream>
 #include <stdlib.h>
 #include "Parameters.h"

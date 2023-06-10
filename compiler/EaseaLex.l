@@ -1612,14 +1612,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"MINIMIZE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MAXIMISE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MAXIMIZE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
-<COPY>"false"  {fprintf(fpOutputFile,"false");} // local name
-<COPY>"true"  {fprintf(fpOutputFile,"true");} // local name
-<COPY>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
-  fprintf(fpOutputFile,yytext);}
-<COPY>"tossCoin"  { // local random name 
-  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
-<COPY>"random"  {
-  fprintf(fpOutputFile,"globalRandomGenerator->random");}
 <COPY>"Genome" {
   if (bWithinEO_Function && TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"_genotype");
   else if(bWithinEO_Function && bWithinCUDA_Initializer )fprintf(fpOutputFile,"(*this)");
@@ -2011,14 +2003,6 @@ if(OPERATING_SYSTEM=WINDOWS)
     }
 <COPY_USER_GENERATION>"MAXIMIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     }
-<COPY_USER_GENERATION>"false"  {fprintf(fpOutputFile,"false");} // local name
-<COPY_USER_GENERATION>"true"  {fprintf(fpOutputFile,"true");} // local name
-<COPY_USER_GENERATION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
-  fprintf(fpOutputFile,yytext);}
-<COPY_USER_GENERATION>"tossCoin"  { // local random name
-  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
-<COPY_USER_GENERATION>"random"  {
-  fprintf(fpOutputFile,"globalRandomGenerator->random");}
 <COPY_USER_GENERATION>"identicalGenome"  {fprintf(fpOutputFile,"genome._evaluated");} // local name
 <COPY_USER_GENERATION>"pPopulation" {
   if(bBeginGenerationFunction || bEndGenerationFunction || bGenerationFunctionBeforeReplacement){
@@ -2606,17 +2590,17 @@ char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
   
 
   if( mystricmp("Tournament",sSELECTOR)==0 )
-    strcat(selectorName,"Tournament(globalRandomGenerator)");
+    strcat(selectorName,"Tournament()");
   else if( mystricmp("dettour",sSELECTOR)==0 )
-    strcat(selectorName,"Tournament(globalRandomGenerator)");
+    strcat(selectorName,"Tournament()");
   else if( mystricmp("Deterministic",sSELECTOR)==0 )
     strcat(selectorName,"Deterministic()");
   else if( mystricmp("deterministic",sSELECTOR)==0 )
     strcat(selectorName,"Deterministic()");
   else if( mystricmp("Random",sSELECTOR)==0 )
-    strcat(selectorName,"Random(globalRandomGenerator)");
+    strcat(selectorName,"Random()");
   else if( mystricmp("Roulette",sSELECTOR)==0 )
-    strcat(selectorName,"Roulette(globalRandomGenerator)");
+    strcat(selectorName,"Roulette()");
 
   else{
     //DEBUG_PRT_PRT("%s is not yet implemented",sSELECTOR);

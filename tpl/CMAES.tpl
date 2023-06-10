@@ -78,7 +78,6 @@ bool bReevaluate = false;
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
-CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 #define STD_TPL
 
@@ -259,11 +258,8 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	omp_set_num_threads(nbCPUThreads);
 	#endif
 
-        globalRandomGenerator = new CRandomGenerator(seed);
-        this->randomGenerator = globalRandomGenerator;
-
-        selectionOperator = getSelectionOperator(setVariable("selectionOperator", "Tournament"), this->minimizing, globalRandomGenerator);
-        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
+        selectionOperator = getSelectionOperator(setVariable("selectionOperator", "Tournament"), this->minimizing);
+        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing);
         selectionPressure = 1;
         replacementPressure = setVariable("reduceFinalPressure", (float)\RED_FINAL_PRM);
 	parentReductionOperator = NULL;
@@ -360,7 +356,6 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #ifndef PROBLEM_DEP_H
 #define PROBLEM_DEP_H
 
-//#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
 #include <string>
@@ -370,7 +365,6 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 
 using namespace std;
 
-class CRandomGenerator;
 class CSelectionOperator;
 class CGenerationalCriterion;
 class CEvolutionaryAlgorithm;
