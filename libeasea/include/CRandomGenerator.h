@@ -95,6 +95,11 @@ class CRandomGenerator
 			return dis(engine64);
 	}
 
+	// compatibility....
+	int random(int min, int max) {
+		return random<int>(min, max);
+	}
+
 	template <typename T>
 	T random()
 	{
@@ -107,17 +112,23 @@ class CRandomGenerator
 	}
 
 	template <typename T>
-	std::enable_if_t<std::is_floating_point_v<T>, bool> tossCoin(float bias)
+	std::enable_if_t<std::is_floating_point_v<T>, bool> tossCoin_(float bias)
 	{
 		assert(0.f <= bias && bias <= 1.f && "Probability above 1 or below 0 makes no sense");
 		return random(0.f, 1.f) <= bias;
 	}
 
 	template <typename T>
-	std::enable_if_t<std::is_integral_v<T>, bool> tossCoin(int prct)
+	std::enable_if_t<std::is_integral_v<T>, bool> tossCoin_(int prct)
 	{
 		assert(0 <= prct && prct <= 100 && "Probability above 100% or below 0% makes no sens");
 		return random(0, 101) <= prct;
+	}
+
+	// for compatibility...
+	template <typename T>
+	bool tossCoin(T v) {
+		return tossCoin_<T>(v);
 	}
 
 	/*
@@ -153,7 +164,7 @@ T random(T min, T max)
 template <typename T>
 static inline bool tossCoin(T bias)
 {
-	return globGen.tossCoin<T>(bias);
+	return globGen.tossCoin(bias);
 }
 
 static inline bool tossCoin()
