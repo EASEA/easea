@@ -196,7 +196,7 @@ template <typename TPtr, typename TIter> TIter Ccdas<TIndividual, TRandom>::sele
 {
         std::vector<TPtr> iFront(front.begin(), front.end());
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
-        if (iFront.size() > std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
+        if (static_cast<long>(iFront.size()) > std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
         TIter dest = begin;
         for (size_t i = 0; i < iFront.size(); ++i, ++dest)
                 *dest = *iFront[i];
@@ -210,7 +210,7 @@ template <typename TPtr, typename TIter> TIter Ccdas<TIndividual, TRandom>::sele
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
         std::partial_sort(iFront.begin(), iFront.begin() + std::distance(begin, end), iFront.end(), [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;}
         );
-        if (iFront.size() < std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
+        if (static_cast<long>(iFront.size()) < std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
         TIter dest = begin;
         for (size_t i = 0; dest != end; ++i, ++dest)
                 *dest = *iFront[i];
