@@ -21,7 +21,7 @@ extern std::ofstream easena::log_file;
 // used to track static value and ensure retrocompatibility :(
 struct globalRandomGeneratorWrapper {
 	[[deprecated("globalRandomGenerator use is deprecated, use free functions 'random' instead")]]
-	CRandomGenerator& operator->() const { return globGen; }
+	CRandomGenerator* operator->() const { return &globGen; }
 	globalRandomGeneratorWrapper const& operator=(CRandomGenerator* new_gen) const { globGen = *new_gen; return *this; }
 	globalRandomGeneratorWrapper const& operator=(CRandomGenerator const& new_gen) const { globGen = new_gen; return *this; }
 };
