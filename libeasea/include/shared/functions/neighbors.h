@@ -18,7 +18,6 @@
 #include <numeric>
 #include <shared/CMatrix.h>
 
-
 namespace easea
 {
 namespace shared
@@ -66,27 +65,29 @@ CMatrix<TType> calcAdjacencyMatrix(TIter begin, TIter end)
 template <typename TType>
 std::vector<std::vector<size_t> > initNeighbors(const CMatrix<TType> &adjacencyMatrix, const size_t nNeighbors)
 {
-	//assert(adjacencyMatrix.size1() == adjacencyMatrix.size2()); // what are these functions ?
+	assert(adjacencyMatrix.Rows() == adjacencyMatrix.Cols()); 
         std::vector<std::vector<size_t> > neighbors(adjacencyMatrix.Rows());
+
         for (size_t i = 0; i < neighbors.size(); ++i)
         {
-                typedef std::pair<TType, size_t> Adjacency_t;
-                std::vector<Adjacency_t> adjacency(adjacencyMatrix.Cols());
-                std::vector<const Adjacency_t *> adjacency_(adjacencyMatrix.Cols());
-                for (size_t j = 0; j < adjacencyMatrix.Cols(); ++j)
+		std::vector<TType>  aDistances(adjacencyMatrix[i]);
+                typedef std::pair<TType, size_t> TA;
+                std::vector<TA> adjacency(aDistances.size()); //adjacencyMatrix.Cols());
+                std::vector<const TA *> pAdjacency(aDistances.size());//adjacencyMatrix.Cols());
+                for (size_t j = 0; j < /*adjacencyMatrix.Cols()*/aDistances.size(); ++j)
                 {
-		        adjacency[j].first = adjacencyMatrix[i][j];
+		        adjacency[j].first = aDistances[j];//adjacencyMatrix[i][j];
                         adjacency[j].second = j;
-                        adjacency_[j] = &adjacency[j];
+                        pAdjacency[j] = &adjacency[j];
                 }
-                std::partial_sort(adjacency_.begin(), adjacency_.begin() + nNeighbors, adjacency_.end()
-                        , [](const Adjacency_t *adjacency1, const Adjacency_t *adjacency2)->bool{return adjacency1->first < adjacency2->first;}
+                std::partial_sort(pAdjacency.begin(), pAdjacency.begin() + nNeighbors, pAdjacency.end()
+                        , [](const TA *adjacency1, const TA *adjacency2)->bool{return adjacency1->first < adjacency2->first;}
                 );
-                std::vector<size_t> &neighbors_ = neighbors[i];
-                neighbors_.resize(nNeighbors);
+                std::vector<size_t> &pNeighbors = neighbors[i];
+                pNeighbors.resize(nNeighbors);
                 for (size_t j = 0; j < nNeighbors; ++j)
-                        neighbors_[j] = adjacency_[j]->second;
-                assert(std::find(neighbors_.begin(), neighbors_.end(), i) != neighbors_.end());
+                        pNeighbors[j] = pAdjacency[j]->second;
+			assert(std::find(pNeighbors.begin(), pNeighbors.end(), i) != pNeighbors.end());
         }
         return neighbors;
 }

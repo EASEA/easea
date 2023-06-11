@@ -338,7 +338,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
         const size_t nbObjectives = m_problem.getNumberOfObjectives();
 	size_t division = setNumberOfReferencePointDiv(nbObjectives);
-	std::list<std::vector<TO>> points = easea::shared::function::runNbi<TO>(nbObjectives, division);
+	std::list<std::vector<TO>> points = easea::shared::function::getNbi<TO>(nbObjectives, division);
 	std::vector<std::vector<TO>> m_reference(points.begin(), points.end());
         m_popSize = m_reference.size();
         m_popSize += (4 - m_popSize % 4) % 4;

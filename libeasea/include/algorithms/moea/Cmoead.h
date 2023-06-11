@@ -86,14 +86,15 @@ Cmoead<TIndividual, TRandom>::Cmoead(TRandom random, TP &problem, const std::vec
         , m_weight(weight)
 	, m_nbNeighbors(nbNeighbors)
 {
+    if (weight.size() !=  initial.size()) LOG_ERROR(errorCode::value, "Wrong number of initial population");
 }
 
 template <typename TIndividual, typename TRandom>
 void Cmoead<TIndividual, TRandom>::initialize() {
 	TBase::initialize();
-	//if (weight.size() !=  initial.size()) LOG_ERROR(errorCode::value, "Wrong number of initial population");
 
 	m_refPoint = TBase::m_population[0].m_objective;
+
 	for (size_t i = 1; i < TBase::m_population.size(); ++i)
 		updateRef(TBase::m_population[i]);
 	m_neighbors = easea::shared::function::initNeighbors(easea::shared::function::calcAdjacencyMatrix<TO>(m_weight.begin(), m_weight.end()), m_nbNeighbors);

@@ -113,8 +113,7 @@ typedef typename easea::shared::CBoundary<TT>::TBoundary TBoundary;
 
 \INSERT_USER_DECLARATIONS
 TCrossover m_crossover = crossover;
-//easea::operators::crossover::CWrap2x2Crossover<TT, TV>(crossover);
-//easea::operators::crossover::C2x2CrossoverLauncher<TT, TV, TRandom &> m_crossover(crossover, m_generator);
+
 
 typedef easea::algorithms::moead::Cmoead< TIndividual, TRandom &> TAlgorithm;
 TAlgorithm *m_algorithm;
@@ -129,24 +128,7 @@ size_t m_popSize = -1;
     
  */ 
 
-size_t setNumberOfReferencePointDiv( const int nbObjectives)
-{
-    size_t division;
 
-    if (nbObjectives == 1) division = 100;
-    else if (nbObjectives == 2) division = 99;
-    else if (nbObjectives == 3) division = 12;
-    else if (nbObjectives == 4) division = 8;
-    else if (nbObjectives == 5) division = 6;
-    else if (nbObjectives == 6) division = 5;
-    else if (nbObjectives == 7) division = 3;
-    else if (nbObjectives == 8) division = 3;
-    else if (nbObjectives == 9) division = 3;
-    else if (nbObjectives == 10) division = 3;
-    else division = 2;
-
-    return division;
-}
 
 \INSERT_FINALIZATION_FUNCTION
 
@@ -326,6 +308,22 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->ipFile = setVariable("ipFile", "\IP_FILE");
 	this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
     	this->serverPort = setVariable("serverPort", \SERVER_PORT);
+    	if (!this->noLogFile) {
+    	    auto tmStart = std::chrono::system_clock::now();
+            time_t t = std::chrono::system_clock::to_time_t(tmStart);
+            std::tm * ptm = std::localtime(&t);
+            char buf_start_time[32];
+            string log_fichier_name = this->outputFilename;
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tmStart.time_since_epoch()) % 1000;
+            std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
+	    easena::log_file.open(log_fichier_name.c_str() +std::string("_") + std::string(buf_start_time) +std::string("-") + std::to_string(ms.count()) + std::string(".log"));
+            logg("DATA of TEST;", std::string(buf_start_time).c_str());
+            logg("\n__RUN SETTINGS__");
+            logg("SEED;", m_seed);
+            logg("nCURRENT_GEN;", this->nbGen);
+           // logg("POP_SIZE;", this->parentPopulationSize);
+            logg("CPU_THREADS_NB;", nbCPUThreads);
+       }
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
@@ -336,18 +334,28 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
         OFFSPRING_SIZE = offspringPopulationSize;
 
         if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population"); };
+
         const size_t nbObjectives = m_problem.getNumberOfObjectives();
-
-        size_t division = setNumberOfReferencePointDiv(nbObjectives);
-        auto weight = easea::shared::function::runNbi<TO>(nbObjectives, 43/*division*/);
+        
+        // One way direct and simple to calculate division according to wanted pop size
+        size_t division = static_cast<size_t>(sqrt(1.9*m_popSize));
+        
+        auto weight = easea::shared::function::getNbi<TO>(nbObjectives, division);
         std::vector<std::vector<TO>> tmp_weight(weight.begin(), weight.end());
-        for (size_t i = 0; i < tmp_weight.size(); ++i){
+        
+        for (size_t i = 0; i < tmp_weight.size(); ++i)
                 easea::shared::function::adjustWeight(tmp_weight[i], 0.00001);
-		//printf("WEIGHT: %i\n",tmp_weight.size());
-	}
-        const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), tmp_weight.size()/* m_popSize*/);
+	
+        const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), tmp_weight.size());
+        // Pop size should be set as a number of weights, but around the wanted value of pop size
+        // In fact, this can be done different
+	      m_popSize = initPop.size(); 
+	      
+	       if (!noLogFile) logg("POP_SIZE;", m_popSize);
 
-        m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, tmp_weight, initPop.size() / 10);
+       
+	      
+        m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover, m_mutation, tmp_weight, initPop.size());
 
 	CEvolutionaryAlgorithm* ea = new CAlgorithmWrapper(this, m_algorithm);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
