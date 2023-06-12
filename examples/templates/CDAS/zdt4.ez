@@ -32,7 +32,7 @@ _______________________________________________________________*/
 #define MUT_PROB  1.0/NB_VARIABLES
 #define MUT_DIST_ID 20.0
 #define QMETRICS 
-#define PARETO_TRUE_FILE "../pf/zdt4/paretoZDT4.dat" 
+#define PARETO_TRUE_FILE "../../zdt/pf/zdt4/paretoZDT4.dat" 
 #define PBLM_NAME "ZDT4"
 
 typedef easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &> TCrossover;
