@@ -62,6 +62,7 @@ public:
         ~Cmoead(void);
 	const std::vector<TPoint> &getWeight(void) const;
 	TO aggregate(const TPoint &obj, const TPoint &weight);
+	void on_individuals_received() override;
 	    
 protected:
 	std::vector<TO> m_refPoint;
@@ -105,6 +106,20 @@ Cmoead<TIndividual, TRandom>::~Cmoead(void)
 {
 }
 
+template <typename TIndividual, typename TRandom>
+void Cmoead<TIndividual, TRandom>::on_individuals_received()
+{
+    m_refPoint = TBase::m_population[0].m_objective;
+  
+    for (int i = 1; i < static_cast<int>(TBase::m_population.size()); ++i)
+    {
+      const std::vector<size_t> &neighbors = m_neighbors[i];
+      TIndividual &ind = TBase::m_population[i];
+      if (neighbors.size() <= 0) LOG_ERROR(errorCode::value, "Wrong neighbors  size");
+      updateRef(ind);
+    }
+    m_neighbors = easea::shared::function::initNeighbors(easea::shared::function::calcAdjacencyMatrix<TO>(m_weight.begin(), m_weight.end()), m_nbNeighbors);
+}
 template <typename TIndividual, typename TRandom> 
 typename Cmoead<TIndividual, TRandom>::TO Cmoead<TIndividual, TRandom>::doAggregate(const TPoint &obj, const TPoint &w) 
 {
