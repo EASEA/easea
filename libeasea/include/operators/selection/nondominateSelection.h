@@ -37,9 +37,10 @@ TIter nondominateSelection(std::list<TI> &donorPop, TIter recipPopBegin, TIter r
         if (static_cast<long int>(donorPop.size()) < std::distance(recipPopBegin, recipPopEnd)) 	LOG_ERROR(errorCode::value, "Wrong popultion size");
 
         TIter selected = recipPopBegin;
+	bool first_layer = true;
         while (!donorPop.empty())
         {
-                std::list<TI> nondominate = easea::shared::functions::getNondominated(donorPop, dominate);
+                std::list<TI> nondominate = easea::shared::functions::getNondominated(donorPop, dominate, first_layer);
                 
 		if(nondominate.empty()) 	LOG_ERROR(errorCode::value, "No nontominated solutions");
 
@@ -51,6 +52,7 @@ TIter nondominateSelection(std::list<TI> &donorPop, TIter recipPopBegin, TIter r
                         if (selected != recipPopEnd)		LOG_ERROR(errorCode::value, "Critical selection error");
                         return selected;
                 }
+		first_layer = false;
         }
         return selected;
 }

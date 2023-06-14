@@ -80,11 +80,13 @@ void Cnsga_ii<TIndividual, TRandom>::initialize() {
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
 	        population.push_back(&TBase::m_population[i]);
 
+	bool first_layer = true;
         while (!population.empty())
         {
-                std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);
+                std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate, first_layer);
                 std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
+		first_layer = false;
         }
 }
 
@@ -95,11 +97,13 @@ typedef typename TPopulation::pointer TPtr;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
 	        population.push_back(&TBase::m_population[i]);
 
+	bool first_layer = true;
         while (!population.empty())
         {
-                std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);
+                std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate, first_layer);
                 std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
+		first_layer = false;
         }
 }
 
@@ -132,7 +136,7 @@ typename Cnsga_ii<TIndividual, TRandom>::TPopulation Cnsga_ii<TIndividual, TRand
 template <typename TIndividual, typename TRandom>
 bool Cnsga_ii<TIndividual, TRandom>::isDominated(const TI &individual1, const TI &individual2)
 {
-        return easea::shared::functions::isDominated(individual1.m_objective, individual2.m_objective);
+        return easea::shared::functions::isDominated(individual1.m_objective, individual2.m_objective, std::less<TO>{});
 }
 
 template <typename TIndividual, typename TRandom>
