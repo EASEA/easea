@@ -31,8 +31,8 @@ namespace selection
  * \retutn - Pointer to the first individual of recipient population (new population)
  */
 
-template <typename TI, typename TIter, typename TDom, typename TNonCritic, typename TCritic>
-TIter nondominateSelection(std::list<TI> &donorPop, TIter recipPopBegin, TIter recipPopEnd, TDom dominate, TNonCritic noncritical, TCritic critical)
+template <typename TI, typename TIter, typename Comp, typename TNonCritic, typename TCritic>
+TIter nondominateSelection(std::list<TI> &donorPop, TIter recipPopBegin, TIter recipPopEnd, Comp&& comparator, TNonCritic noncritical, TCritic critical)
 {
         if (static_cast<long int>(donorPop.size()) < std::distance(recipPopBegin, recipPopEnd)) 	LOG_ERROR(errorCode::value, "Wrong popultion size");
 
@@ -40,7 +40,7 @@ TIter nondominateSelection(std::list<TI> &donorPop, TIter recipPopBegin, TIter r
 	bool first_layer = true;
         while (!donorPop.empty())
         {
-                std::list<TI> nondominate = easea::shared::functions::getNondominated(donorPop, dominate, first_layer);
+                std::list<TI> nondominate = easea::shared::functions::getNondominated(donorPop, std::forward<Comp>(comparator), first_layer);
                 
 		if(nondominate.empty()) 	LOG_ERROR(errorCode::value, "No nontominated solutions");
 

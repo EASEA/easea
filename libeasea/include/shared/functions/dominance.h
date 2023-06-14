@@ -43,48 +43,6 @@ bool isDominated(const std::vector<TObjective> &point1, const std::vector<TObjec
 }
 
 namespace impl {
-/*
- * \brief Check if individual is nondominated
- *
- * \param[in] 
- */
-template <typename TIterator, typename TIndividual, typename TDominate>
-bool isNondominated(TIterator individual, std::list<TIndividual> &population, std::list<TIndividual> &lstNondominated, TDominate dominate)
-{
-        for (TIterator nondominated = lstNondominated.begin(); nondominated != lstNondominated.end(); ++nondominated)
-        {
-                if (dominate(*individual, *nondominated))
-                {
-                        typename std::list<TIndividual>::iterator move = nondominated;
-                        population.splice(population.begin(), lstNondominated, move);
-                }
-                else if (dominate(*nondominated, *individual)) {
-                        return false;
-		}
-        }
-        return true;
-}
-
-// Complexity for extracting all layers : O(h * n^2)
-template <typename TIndividual, typename TDominate>
-std::list<TIndividual> slow_extract_maxima_nd(std::list<TIndividual> &population, TDominate dominate)
-{
-        assert(!population.empty() && "Population is empty");
-        typedef typename std::list<TIndividual>::iterator TIterator;
-        std::list<TIndividual> lstNondominated;
-
-	lstNondominated.splice(lstNondominated.end(), population, population.begin());
-        for (TIterator individual = population.begin(); individual != population.end(); ++individual)
-        {
-                if (lstNondominated.empty()) LOG_ERROR(errorCode::value,"The is no nondominated solutions");
-                if (isNondominated(individual, population, lstNondominated, dominate))
-                {
-                        typename std::list<TIndividual>::iterator move = individual;
-                        lstNondominated.splice(lstNondominated.begin(), population, move);
-                }
-        }
-        return lstNondominated;
-}
 
 template <typename TInd>
 auto const& get_objectives(TInd&& ind) {
@@ -95,6 +53,49 @@ template <typename TInd>
 auto get_objective(TInd&& ind, size_t n_obj) {
 	assert(n_obj < get_objectives(ind).size());
 	return get_objectives(ind)[n_obj];
+}
+
+/*
+ * \brief Check if individual is nondominated
+ *
+ * \param[in] 
+ */
+template <typename TIterator, typename TIndividual, typename Comp>
+bool isNondominated(TIterator individual, std::list<TIndividual> &population, std::list<TIndividual> &lstNondominated, Comp&& comparator)
+{
+        for (TIterator nondominated = lstNondominated.begin(); nondominated != lstNondominated.end(); ++nondominated)
+        {
+                if (isDominated(get_objectives(*individual), get_objectives(*nondominated), std::forward<Comp>(comparator)))
+                {
+                        typename std::list<TIndividual>::iterator move = nondominated;
+                        population.splice(population.begin(), lstNondominated, move);
+                }
+                else if (isDominated(get_objectives(*nondominated), get_objectives(*individual), std::forward<Comp>(comparator))) {
+                        return false;
+		}
+        }
+        return true;
+}
+
+// Complexity for extracting all layers : O(h * n^2)
+template <typename TIndividual, typename Comp>
+std::list<TIndividual> slow_extract_maxima_nd(std::list<TIndividual> &population, Comp&& comparator, [[maybe_unused]] bool first_layer)
+{
+        assert(!population.empty() && "Population is empty");
+        typedef typename std::list<TIndividual>::iterator TIterator;
+        std::list<TIndividual> lstNondominated;
+
+	lstNondominated.splice(lstNondominated.end(), population, population.begin());
+        for (TIterator individual = population.begin(); individual != population.end(); ++individual)
+        {
+                if (lstNondominated.empty()) LOG_ERROR(errorCode::value,"The is no nondominated solutions");
+                if (isNondominated(individual, population, lstNondominated, std::forward<Comp>(comparator)))
+                {
+                        typename std::list<TIndividual>::iterator move = individual;
+                        lstNondominated.splice(lstNondominated.begin(), population, move);
+                }
+        }
+        return lstNondominated;
 }
 
 // Complexity for extracting all layers : O(h * n log n) with h being the number of layers
@@ -169,13 +170,13 @@ std::list<TInd> fast_extract_maxima_2d(std::list<TInd>& pop, Comp&& comparator, 
 // complexity for extracting all layers : O(n log n)
 template <typename TInd, typename Comp>
 std::list<TInd> fast_extract_maxima_1d(std::list<TInd>& pop, Comp&& comparator, bool first_layer) {
-	assert(first_layer || std::is_sorted(pop.cbegin(), pop.cend(), std::forward<Comp>(comparator)));
-
 	// sort by x1 if needed (faster in the long run, O(n*log(n)) vs O(n^2))
+	const auto internal_cmp = [&](auto const& lhs, auto const& rhs) {return comparator(get_objective(lhs, 0), get_objective(rhs, 0));};
+	assert(first_layer || std::is_sorted(pop.cbegin(), pop.cend(), internal_cmp));
 	if (first_layer)
-		pop.sort(std::forward<Comp>(comparator));
+		pop.sort(internal_cmp);
 
-	auto best = std::min_element(pop.begin(), pop.end(), comparator);
+	auto best = pop.begin();
 	std::list<TInd> ret;
 	ret.splice(ret.begin(), pop, best);
 	return ret;
@@ -183,26 +184,31 @@ std::list<TInd> fast_extract_maxima_1d(std::list<TInd>& pop, Comp&& comparator, 
 
 }
 
-template <typename TInd, typename TDom>
-std::list<TInd> getNondominated(std::list<TInd>& pop, TDom&& dom, bool first_layer) {
+template <typename TInd, typename Comp>
+std::list<TInd> getNondominated(std::list<TInd>& pop, Comp&& comp, bool first_layer) {
 	assert(pop.size() > 0);
 	switch (impl::get_objectives(pop.front()).size()) {
 		case 0:
 			assert(false && "Objective size can't be 0");
 			exit(1);
 		case 1:
-			return impl::fast_extract_maxima_1d(pop, dom, first_layer);
+			return impl::fast_extract_maxima_1d(pop, std::forward<Comp>(comp), first_layer);
 		case 2:
 			// TODO: deduce if maximizing or minimizing instead of less
-			return impl::fast_extract_maxima_2d(pop, std::less<std::decay_t<decltype(impl::get_objectives(pop.front())[0])>>{}, first_layer);
+			return impl::fast_extract_maxima_2d(pop, std::forward<Comp>(comp), first_layer);
 		case 3:
 			// TODO: deduce if maximizing or minimizing instead of less
-			return impl::fast_extract_maxima_3d(pop, std::less<std::decay_t<decltype(impl::get_objectives(pop.front())[0])>>{}, first_layer);
+			return impl::fast_extract_maxima_3d(pop, std::forward<Comp>(comp), first_layer);
 		default:
-			return impl::slow_extract_maxima_nd(pop, dom);
+			// TODO: better algorithm
+			return impl::slow_extract_maxima_nd(pop, std::forward<Comp>(comp), first_layer);
 	}
 }
 
+template <typename Ind, typename Comp>
+bool isDominated(Ind&& lhs, Ind&& rhs, Comp&& comparator = std::less<decltype(get_objective(std::declval<Ind>(), 0))>{}) {
+	return isDominated(lhs.m_objective, rhs.m_objective, std::forward<Comp>(comparator));
+}
 
 
 }

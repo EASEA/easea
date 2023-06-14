@@ -52,17 +52,15 @@ public:
         Cnsga_ii(TRandom random, TP &problem, const std::vector<TV> &initial, TC &crossover, TM &mutation);
         ~Cnsga_ii(void);
         TPopulation runBreeding(const TPopulation &parent);
-        static bool isDominated(const TIndividual &individual1, const TIndividual &individual2);
-	void on_individuals_received() override;
-
+      	void on_individuals_received() override;
 
 protected:
-        static bool Dominate(const TI *individual1, const TI *individual2);
         void makeOneGeneration(void) override;
 	void initialize() override;
         template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
         static const TI *comparer(const std::vector<const TI *> &comparator);
+	constexpr static auto comparator = std::less<TO>{};
 };
 
 template <typename TIndividual, typename TRandom>
@@ -83,7 +81,7 @@ void Cnsga_ii<TIndividual, TRandom>::initialize() {
 	bool first_layer = true;
         while (!population.empty())
         {
-                std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate, first_layer);
+                std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, comparator, first_layer);
                 std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
 		first_layer = false;
@@ -100,7 +98,7 @@ typedef typename TPopulation::pointer TPtr;
 	bool first_layer = true;
         while (!population.empty())
         {
-                std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate, first_layer);
+                std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, comparator, first_layer);
                 std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
 		first_layer = false;
@@ -134,18 +132,6 @@ typename Cnsga_ii<TIndividual, TRandom>::TPopulation Cnsga_ii<TIndividual, TRand
 }
 
 template <typename TIndividual, typename TRandom>
-bool Cnsga_ii<TIndividual, TRandom>::isDominated(const TI &individual1, const TI &individual2)
-{
-        return easea::shared::functions::isDominated(individual1.m_objective, individual2.m_objective, std::less<TO>{});
-}
-
-template <typename TIndividual, typename TRandom>
-bool Cnsga_ii<TIndividual, TRandom>::Dominate(const TI *individual1, const TI *individual2)
-{
-        return isDominated(*individual1, *individual2);
-}
-
-template <typename TIndividual, typename TRandom>
 void Cnsga_ii<TIndividual, TRandom>::makeOneGeneration(void)
 {
         TPopulation parent = TBase::m_population;
@@ -160,7 +146,7 @@ void Cnsga_ii<TIndividual, TRandom>::makeOneGeneration(void)
                 unionPop.push_back(&offspring[i]);
         
 	typedef typename TPopulation::iterator TIter;
-        easea::operators::selection::nondominateSelection(unionPop, TBase::m_population.begin(), TBase::m_population.end(), &Dominate, &selectNoncrit<TPtr, TIter>, &selectCrit<TPtr, TIter>);
+        easea::operators::selection::nondominateSelection(unionPop, TBase::m_population.begin(), TBase::m_population.end(), comparator, &selectNoncrit<TPtr, TIter>, &selectCrit<TPtr, TIter>);
 }
 
 
@@ -191,17 +177,17 @@ template <typename TPtr, typename TIter> TIter Cnsga_ii<TIndividual, TRandom>::s
 }
 
 template <typename TIndividual, typename TRandom>
-const typename Cnsga_ii<TIndividual, TRandom>::TI *Cnsga_ii<TIndividual, TRandom>::comparer(const std::vector<const TI *> &comparator)
+const typename Cnsga_ii<TIndividual, TRandom>::TI *Cnsga_ii<TIndividual, TRandom>::comparer(const std::vector<const TI *> &comp)
 {
-        if (isDominated(*comparator[0], *comparator[1]))
-                return comparator[0];
-        else if (isDominated(*comparator[1], *comparator[0]))
-                return comparator[1];
-        if (comparator[0]->m_crowdingDistance < 0) LOG_ERROR(errorCode::value, "Crowding distance < 0 ");
-        if (comparator[1]->m_crowdingDistance < 0) LOG_ERROR(errorCode::value, "Crowding distance < 0 ");
+        if (easea::shared::functions::isDominated(*comp[0], *comp[1], comparator))
+                return comp[0];
+        else if (easea::shared::functions::isDominated(*comp[1], *comp[0], comparator))
+                return comp[1];
+        if (comp[0]->m_crowdingDistance < 0) LOG_ERROR(errorCode::value, "Crowding distance < 0 ");
+        if (comp[1]->m_crowdingDistance < 0) LOG_ERROR(errorCode::value, "Crowding distance < 0 ");
 
 
-        return comparator[0]->m_crowdingDistance > comparator[1]->m_crowdingDistance ? comparator[0] : comparator[1];
+        return comp[0]->m_crowdingDistance > comp[1]->m_crowdingDistance ? comp[0] : comp[1];
 }
 }
 }
