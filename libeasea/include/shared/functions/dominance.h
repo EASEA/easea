@@ -39,7 +39,11 @@ template <typename TObjective, typename Comp>
 bool isDominated(const std::vector<TObjective> &point1, const std::vector<TObjective> &point2, Comp&& comparator = std::less<TObjective>{})
 {
 	assert(point1.size() == point2.size() && "individuals have different size");
-	return std::equal(point1.cbegin(), point1.cend(), point2.cbegin(), std::forward<Comp>(comparator));
+	return std::equal(point1.cbegin(), point1.cend(), point2.cbegin(),
+			[&](auto const& l, auto const& r) {return comparator(l, r) || l == r;}); // for weak dominance
+			// std::forward<Comp>(comparator)); // for strong dominance
+	// IMPORTANT: weak dominance lambda is optimized to produce the same assembly as a code using std::less_equal or std::more_equal.
+	// This was proved here: https://godbolt.org/z/s4KqvjKds
 }
 
 namespace impl {
