@@ -109,6 +109,9 @@ void CAlgorithm<TObjective, TVariable>::run()
 	}
 	m_iGen++;
 }
+
+// speedup compîlation of .ez
+extern template class CAlgorithm<double, std::vector<double>>;
 }
 }
 

@@ -57,15 +57,19 @@ template <typename TObjective, typename TVariable>
 bool CmoIndividual<TObjective, TVariable>::operator ==(const CmoIndividual<TO, TV> &individual) const
 {
 
-	for (std::size_t i = 0; i < individual.m_mutStep.size(); i++)
-		m_mutStep[i] = individual.m_mutStep[i];
-        return m_variable == individual.m_variable;
+	return std::equal(m_mutStep.cbegin(), m_mutStep.cend(), individual.m_mutStep.cbegin(), individual.m_mutStep.cend()) 
+		&& std::equal(m_variable.cbegin(), m_variable.cend(), individual.m_variable.cbegin(), individual.m_variable.cend());
 }
 
+// never used
 /*
 template <typename TObjective, typename TVariable>
 void CmoIndividual<TObjective, TVariable>::initMutStep(const size_t size, const TO value)
 {
     	m_mutStep[i] = value
 }*/
+
+// speedup compile time + detect compile errors when compiling library
+extern template class CmoIndividual<double, std::vector<double>>;
 }
+

@@ -132,5 +132,8 @@ void CProblem<TType>::operator ()(TI &individual)
 
         m_nEvaluations += i_nEvaluation;
 }
+
+// speedup compîlation of .ez
+extern template class CProblem<double>;
 }
 }

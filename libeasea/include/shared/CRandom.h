@@ -15,6 +15,7 @@
 
 #include <type_traits>
 #include <functional>
+#include <random>
 
 namespace easea
 {
