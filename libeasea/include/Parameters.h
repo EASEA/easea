@@ -38,8 +38,8 @@ class Parameters {
 
     int nbGen;
     int nbCPUThreads;
-    int noLogFile;
-    int reevaluateImmigrants;
+    bool noLogFile;
+    bool reevaluateImmigrants;
 
     bool alwaysEvaluate;
 

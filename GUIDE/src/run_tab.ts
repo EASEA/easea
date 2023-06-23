@@ -705,8 +705,8 @@ export class Run_tab {
         if (!isNaN(this.option_obj.optimize_it))
             this.options = this.options.concat(' --optimiseIterations ' + this.option_obj.optimize_it);
 
-        if (!isNaN(this.option_obj.baldwinism))
-            this.options = this.options.concat(' --baldwinism ' + this.option_obj.baldwinism);
+        if (!isNaN(this.option_obj.baldwinism) && this.option_obj.baldwinism)
+            this.options = this.options.concat(' --baldwinism');
 
         if (this.option_obj.output_file)
             this.options = this.options.concat(' --outputfile ' + this.option_obj.output_file);
@@ -724,10 +724,10 @@ export class Run_tab {
             this.options = this.options.concat(' --generateRScript 1');
 
         if (this.option_obj.print_init_pop)
-            this.options = this.options.concat(' --printInitialPopulation 1');
+            this.options = this.options.concat(' --printInitialPopulation');
 
         if (this.option_obj.print_final_pop)
-            this.options = this.options.concat(' --printFinalPopulation 1');
+            this.options = this.options.concat(' --printFinalPopulation');
 
         if (rank === 0 && !this.option_obj.print_stats)
             this.options = this.options.concat(' --printStats 0');
@@ -794,7 +794,7 @@ export class Run_tab {
                 this.options = this.options.concat(' --migrationProbability ' + this.island_obj.migration_proba.toString());
 
             if (this.island_obj.reevaluate)
-                this.options = this.options.concat(' --reevaluateImmigrants 1');
+                this.options = this.options.concat(' --reevaluateImmigrants');
         }
 
         // offspring options
