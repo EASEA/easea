@@ -29,9 +29,8 @@ int OFFSPRING_SIZE;
 CEvolutionaryAlgorithm* EA;
 
 int main(int argc, char** argv){
-
-
 	ParametersImpl p("EASEA.prm", argc, argv);
+
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
@@ -45,7 +44,6 @@ int main(int argc, char** argv){
 	EASEAFinal(pop);
 
 	delete pop;
-
 
 	return 0;
 }
@@ -75,7 +73,6 @@ using namespace std;
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
-CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 #define STD_TPL
 
@@ -88,7 +85,7 @@ extern CEvolutionaryAlgorithm* EA;
 
 \INSERT_FINALIZATION_FUNCTION
 
-void evale_pop_chunk(CIndividual** population, int popSize){
+void evale_pop_chunk([[maybe_unused]] CIndividual** population, [[maybe_unused]] int popSize) {
   \INSTEAD_EVAL_FUNCTION
 }
 
@@ -106,15 +103,15 @@ void EASEAFinal(CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
 }
 
-void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_BEGIN_GENERATION_FUNCTION
 }
 
-void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEEndGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_END_GENERATION_FUNCTION
 }
 
-void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEGenerationFunctionBeforeReplacement([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT
 }
 
@@ -136,7 +133,6 @@ IndividualImpl::~IndividualImpl(){
 
 
 float IndividualImpl::evaluate(){
-    valid = true;
     \INSERT_EVALUATOR
 }
 
@@ -197,25 +193,11 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 }
 
 
-void IndividualImpl::printOn(std::ostream& os) const{
+void IndividualImpl::printOn([[maybe_unused]] std::ostream& os) const {
 	\INSERT_DISPLAY
 }
 
-std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
-{
-  // ********************
-  // Problem specific part
-  O << "\nIndividualImpl : "<< std::endl;
-  O << "\t\t\t";
-  B.printOn(O);
-
-  if( B.valid ) O << "\t\t\tfitness : " << B.fitness;
-  else O << "fitness is not yet computed" << std::endl;
-  return O;
-}
-
-
-unsigned IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate([[maybe_unused]] float pMutationPerGene ) {
   this->valid=false;
 
 
@@ -264,13 +246,10 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	omp_set_num_threads(nbCPUThreads);
 	#endif
 
-	globalRandomGenerator = new CRandomGenerator(seed);
-	this->randomGenerator = globalRandomGenerator;
-
-	selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
-	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
-	parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
-	offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
+	selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing);
+	replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing);
+	parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing);
+	offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing);
 	selectionPressure = setVariable("selectionPressure", (float)\SELECT_PRM);
 	replacementPressure = setVariable("reduceFinalPressure", (float)\RED_FINAL_PRM);
 	parentReductionPressure = setVariable("reduceParentsPressure", (float)\RED_PAR_PRM);
@@ -280,7 +259,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	pMutationPerGene = 0.05;
 
 	parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
-	offspringPopulationSize = setVariable("nbOffspring", (int)\OFF_SIZE);
+	offspringPopulationSize = getOffspringSize((int)\OFF_SIZE, \POP_SIZE);
 
 
 	parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents", (float)\SURV_PAR_SIZE));
@@ -333,20 +312,20 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         this->savePopulation = setVariable("savePopulation", \SAVE_POPULATION);
         this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
-	this->outputFilename = (char*)"EASEA";
+	this->outputFilename = setVariable("outputFile", "EASEA");
+	this->inputFilename = setVariable("inputFile", "EASEA.pop");
 	this->plotOutputFilename = (char*)"EASEA.png";
 
-    this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
-    this->ipFile = (char*)setVariable("ipFile", "\IP_FILE").c_str();
-    this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
-    this->serverPort = setVariable("serverPort", \SERVER_PORT);
+	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
+	this->ipFile = (char*)setVariable("ipFile", "\IP_FILE").c_str();
+	this->migrationProbability = setVariable("migrationProbability", (float)\MIGRATION_PROBABILITY);
+	this->serverPort = setVariable("serverPort", \SERVER_PORT);
 }
 
 CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-	EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
 	EZ_current_generation=0;
 	EZ_POP_SIZE = parentPopulationSize;
 	OFFSPRING_SIZE = offspringPopulationSize;
@@ -355,7 +334,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
 	ea->addStoppingCriterion(generationalCriterion);
 	ea->addStoppingCriterion(controlCStopingCriterion);
-	ea->addStoppingCriterion(timeCriterion);	
+	ea->addStoppingCriterion(timeCriterion);
 
 	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
 	EZ_current_generation=&(ea->currentGeneration);
@@ -365,7 +344,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
         if(this->params->startFromFile){
-          ifstream AESAE_File("EASEA.pop");
+          ifstream AESAE_File(this->params->inputFilename);
           string AESAE_Line;
           for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
                   getline(AESAE_File, AESAE_Line);
@@ -385,7 +364,6 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
 	this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params);
-	;
 }
 
 EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
@@ -393,7 +371,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 }
 
 PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params){
-        ;
+
 }
 
 PopulationImpl::~PopulationImpl(){
@@ -404,7 +382,6 @@ PopulationImpl::~PopulationImpl(){
 #ifndef PROBLEM_DEP_H
 #define PROBLEM_DEP_H
 
-//#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <string>
 #include <iostream>
@@ -413,7 +390,6 @@ PopulationImpl::~PopulationImpl(){
 
 using namespace std;
 
-class CRandomGenerator;
 class CSelectionOperator;
 class CGenerationalCriterion;
 class CEvolutionaryAlgorithm;
@@ -435,24 +411,18 @@ public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl();
-	float evaluate();
-	static unsigned getCrossoverArrity(){ return 2; }
-	float getFitness(){ return this->fitness; }
-	CIndividual* crossover(CIndividual** p2);
+	float evaluate() override;
+	CIndividual* crossover(CIndividual** p2) override;
 	void optimiser(int currentIteration);
-	void printOn(std::ostream& O) const;
-	CIndividual* clone();
+	void printOn(std::ostream& O) const override;
+	CIndividual* clone() override;
 
-	unsigned mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene) override;
 
-	void boundChecking();
+	void boundChecking() override;
 
-        string serialize();
-        void deserialize(string AESAE_Line);
-
-	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
-	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
-
+        string serialize() override;
+        void deserialize(string AESAE_Line) override;
 };
 
 
@@ -461,11 +431,6 @@ public:
 	ParametersImpl(std::string const& file, int argc, char* argv[]);
 	CEvolutionaryAlgorithm* newEvolutionaryAlgorithm();
 };
-
-/**
- * @TODO ces functions devraient s'appeler weierstrassInit, weierstrassFinal etc... (en gros EASEAFinal dans le tpl).
- *
- */
 
 void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
@@ -490,58 +455,8 @@ public:
 
 #endif /* PROBLEM_DEP_H */
 
-\START_CUDA_MAKEFILE_TPL
-
-UNAME := $(shell uname)
-
-ifeq($(shell uname -o 2>/dev/null),Msys)
-	OS := MINGW
-endif
-
-ifneq ("$(OS)","")
-	EZ_PATH=../../
-endif
-
-EASEALIB_PATH=$(EZ_PATH)libeasea/
-
-CXXFLAGS = -std=c++14 -fopenmp -O2 -g -Wall -fmessage-length=0 -I$(EASEALIB_PATH)include 
-
-OBJS = EASEA.o EASEAIndividual.o 
-
-LIBS = -lpthread -fopenmp
-ifneq ("$(OS)","")
-	LIBS += -lw2_32 -lwinmm -L"C:\MinGW\lib"
-endif
-
-#USER MAKEFILE OPTIONS :
-\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
-
-TARGET =	EASEA
-
-$(TARGET):	$(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LDFLAGS) -g $(EASEALIB_PATH)libeasea.a $(LIBS)
-
-	
-#%.o:%.cpp
-#	$(CXX) -c $(CXXFLAGS) $^
-
-all:	$(TARGET)
-clean:
-ifneq ("^$(OS)","")
-	-del $(OBJS) $(TARGET).exe
-else
-	rm -f $(OBJS) $(TARGET)
-endif
-easeaclean:
-ifneq ("$(OS)","")
-	-del $(TARGET).exe *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
-else	
-	rm -f $(TARGET) *.o *.cpp *.hpp EASEA.png EASEA.dat EASEA.prm EASEA.mak Makefile EASEA.vcproj EASEA.csv EASEA.r EASEA.plot EASEA.pop
-endif
-
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(EZ_ROOT $ENV{EZ_PATH})
 
 project(EASEA)
@@ -558,12 +473,12 @@ endif()
 file(GLOB EASEA_src ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/*.c)
 add_executable(EASEA ${EASEA_src})
 
-target_compile_features(EASEA PUBLIC cxx_std_14)
+target_compile_features(EASEA PUBLIC cxx_std_17)
 target_compile_options(EASEA PUBLIC
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /W3>
 	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -march=native -mtune=native -Wall -Wextra -pedantic>
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/W4 /DEBUG:FULL>
-	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O2 -g -Wall -Wextra -pedantic>
+	$<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O0 -g -Wall -Wextra -pedantic>
 	)
 
 find_library(libeasea_LIB
@@ -574,11 +489,19 @@ find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
 	PATH_SUFFIXES include easena libeasea)
-find_package(Boost)
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
+	add_definitions(-DBOOST_ALL_NO_LIB)
+	set(Boost_USE_STATIC_LIBS ON)
+	set(Boost_USE_MULTITHREADED ON)
+	set(Boost_USE_STATIC_RUNTIME OFF)
+endif()
+find_package(Boost REQUIRED COMPONENTS program_options)
+
 find_package(OpenMP)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE})
-target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm> ${Boost_LIBRARIES})
 
 if (SANITIZE)
         target_compile_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>
@@ -626,8 +549,6 @@ endif()
 #####	Stats Ouput 	#####
 --printStats=\PRINT_STATS #print Stats to screen
 --plotStats=\PLOT_STATS #plot Stats
---printInitialPopulation=0 #Print initial population
---printFinalPopulation=0 #Print final population
 --generateCSVFile=\GENERATE_CSV_FILE
 --generatePlotScript=\GENERATE_GNUPLOT_SCRIPT
 --generateRScript=\GENERATE_R_SCRIPT

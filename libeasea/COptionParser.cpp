@@ -10,20 +10,16 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include <stdio.h>
 #include <memory>
 #include <sstream>
+
 #include "COptionParser.h"
-#include <CLogger.h>
+#include "CLogger.h"
+#include "version.h"
 
-using namespace cxxopts;
-using namespace std;
+namespace po = boost::program_options;
 
-/* Option parser is based on lightweighted header only library
- * cxxopts.
- */
-
-std::vector<std::string> loadParametersFile(const string& filename)
+std::vector<std::string> loadParametersFile(const std::string& filename)
 {
 	std::ifstream paramFile{filename, std::ios_base::in};
 	std::vector<std::string> ret;
@@ -45,86 +41,83 @@ std::vector<std::string> loadParametersFile(const string& filename)
 	return ret;
 }
 
-void parseArguments(const char* parametersFileName, int ac, char** av, std::unique_ptr<cxxopts::ParseResult> &vm, std::unique_ptr<cxxopts::ParseResult>& vm_file){
-
-    std::vector<std::string> argv;
-    int argc = 0;
-    if( parametersFileName ) {
-	argv = loadParametersFile(parametersFileName);
-        argc = argv.size();
-    }
-
-
-    cxxopts::Options options("Allowed options");
-    options
-        .add_options()
-        ("h,help", "produce help message")
-        ("s,seed", "set the global seed of the pseudo random generator", cxxopts::value<int>())
-        ("p,popSize","set the population size",cxxopts::value<int>())
-        ("nbOffspring","set the offspring population size", cxxopts::value<int>())
-        ("survivingParents","set the reduction size for parent population", cxxopts::value<float>())
-        ("survivingOffspring","set the reduction size for offspring population",cxxopts::value<float>())
-        ("elite","Elite size",cxxopts::value<int>())
-        ("eliteType","Strong (1) or weak (0)",cxxopts::value<int>())
-        ("t,nbCPUThreads","Set the number of threads", cxxopts::value<int>())
-        ("noLogFile","Disable logging to .log file", cxxopts::value<bool>()->default_value("false"))
-	("alwaysEvaluate","Always evaluate individual, do not reuse previous fitness", cxxopts::value<bool>()->default_value("false"))
-        ("reevaluateImmigrants","Set flag if immigrants need to be reevaluated", cxxopts::value<bool>()->default_value("false"))
-        ("g,nbGen","Set the number of generation", cxxopts::value<int>())
-        ("timeLimit","Set the timeLimit, (0) to desactivate",cxxopts::value<int>())
-        ("selectionOperator","Set the Selection Operator (default : Tournament)",cxxopts::value<string>())
-        ("selectionPressure","Set the Selection Pressure (default : 2.0)",cxxopts::value<float>())
-        ("reduceParentsOperator","Set the Parents Reducing Operator (default : Tournament)",cxxopts::value<string>())
-        ("reduceParentsPressure","Set the Parents Reducing Pressure (default : 2.0)",cxxopts::value<float>())
-        ("reduceOffspringOperator","Set the Offspring Reducing Operator (default : Tournament)",cxxopts::value<string>())
-        ("reduceOffspringPressure","Set the Offspring Reducing Pressure (default : 2.0)",cxxopts::value<float>())
-        ("reduceFinalOperator","Set the Final Reducing Operator (default : Tournament)",cxxopts::value<string>())
-        ("reduceFinalPressure","Set the Final Reducing Pressure (default : 2.0)",cxxopts::value<float>())
-        ("optimiseIterations","Set the number of optimisation iterations (default : 100)",cxxopts::value<int>())
-        ("baldwinism","Only keep fitness",cxxopts::value<bool>()->default_value("false"))
-        ("remoteIslandModel","Boolean to activate the individual exchange with remote islands (default : 0)",cxxopts::value<int>())
-        ("ipFile","File containing all the IPs of the remote islands)",cxxopts::value<string>())
-        ("migrationProbability","Probability to send an individual each generation", cxxopts::value<float>())
-        ("serverPort","Port of the Server", cxxopts::value<int>())
-        ("outputFile","Set an output file for the final population (default : none)",cxxopts::value<string>())
-        ("inputFile","Set an input file for the initial population (default : none)",cxxopts::value<string>())
-        ("printStats","Print the Stats (default : 1)",cxxopts::value<int>())
-        ("plotStats","Plot the Stats (default : 0)",cxxopts::value<int>())
-        ("generateCSVFile","Prints the Stats to a CSV File (Filename: ProjectName.dat) (default : 0)",cxxopts::value<int>())
-        ("generatePlotScript","Generate a Gnuplot script to plot the Stats (Filename: ProjectName.plot) (default : 0)",cxxopts::value<int>())
-        ("generateRScript","Generate a R script to plot the Stats (Filename: ProjectName.r) (default : 0)",cxxopts::value<int>())
-//  ("printStatsFile",cxxopts::value<int>(),"Prints the Stats to a File (Filename: ProjectName.dat) (default : 0)")
-        ("printInitialPopulation","Print the initial population",cxxopts::value<bool>()->default_value("false"))
-        ("printFinalPopulation","Print the final population",cxxopts::value<bool>()->default_value("false"))
-        ("savePopulation","Save population at the end (default : 0)",cxxopts::value<int>())
-        ("startFromFile","Load the population from a .pop file (default : 0",cxxopts::value<int>())
-        ("fstgpu","The number of the first GPU used for computation",cxxopts::value<int>())
-        ("lstgpu","The number of the first GPU NOT used for computation",cxxopts::value<int>())
-        ("u1","User defined parameter 1",cxxopts::value<string>())
-        ("u2","User defined parameter 2",cxxopts::value<string>())
-        ("u3","User defined parameter 3", cxxopts::value<string>())
-        ("u4","User defined parameter 4",cxxopts::value<string>())
-        ("u5","User defined parameter 5",cxxopts::value<string>());
+void parseArguments(const char* parametersFileName, int ac, char** av, std::unique_ptr<vm_t> &vm){
+    po::options_description options("Allowed options");
+    options.add_options()
+        ("help,h", "produce help message")
+	("version,v", "Print version")
+        ("seed,s", po::value<int>(), "set the global seed of the pseudo random generator")
+        ("popSize,p", po::value<int>(), "set the population size")
+        ("nbOffspring", po::value<float>(), "set the offspring population size")
+        ("survivingParents", po::value<float>(), "set the reduction size for parent population")
+        ("survivingOffspring", po::value<float>(), "set the reduction size for offspring population")
+        ("elite", po::value<int>(), "Elite size")
+        ("eliteType", po::value<int>(), "Strong (1) or weak (0)")
+        ("nbCPUThreads,t", po::value<int>(), "Set the number of threads")
+        ("noLogFile", po::value<bool>()->implicit_value(true)->default_value(false), "Disable logging to .log file")
+	("alwaysEvaluate", po::value<bool>()->implicit_value(true)->default_value(false), "Always evaluate individual, do not reuse previous fitness")
+        ("reevaluateImmigrants", po::value<bool>()->implicit_value(true)->default_value(false), "Set flag if immigrants need to be reevaluated")
+        ("nbGen,g", po::value<int>(), "Set the number of generation")
+        ("timeLimit", po::value<int>(), "Set the timeLimit, (0) to desactivate")
+        ("selectionOperator", po::value<std::string>(), "Set the Selection Operator (default : Tournament)")
+        ("selectionPressure", po::value<float>(), "Set the Selection Pressure (default : 2.0)")
+        ("reduceParentsOperator", po::value<std::string>(), "Set the Parents Reducing Operator (default : Tournament)")
+        ("reduceParentsPressure", po::value<float>(), "Set the Parents Reducing Pressure (default : 2.0)")
+        ("reduceOffspringOperator", po::value<std::string>(), "Set the Offspring Reducing Operator (default : Tournament)")
+        ("reduceOffspringPressure", po::value<float>(), "Set the Offspring Reducing Pressure (default : 2.0)")
+        ("reduceFinalOperator", po::value<std::string>(), "Set the Final Reducing Operator (default : Tournament)")
+        ("reduceFinalPressure", po::value<float>(), "Set the Final Reducing Pressure (default : 2.0)")
+        ("optimiseIterations", po::value<int>(), "Set the number of optimisation iterations (default : 100)")
+        ("baldwinism", po::value<bool>()->implicit_value(true)->default_value(false), "Only keep fitness")
+        ("remoteIslandModel", po::value<bool>()->implicit_value(true)->default_value(false), "Boolean to activate the individual exchange with remote islands (default : 0)")
+	("silentNetwork", po::value<bool>()->implicit_value(true)->default_value(false), "Do not log informations about sent and received individuals")
+        ("ipFile", po::value<std::string>(), "File containing all the IPs of the remote islands)")
+        ("migrationProbability", po::value<float>(), "Probability to send an individual each generation")
+        ("serverPort", po::value<int>(), "Port of the Server")
+        ("outputFile", po::value<std::string>(), "Set an output file for the final population (default : none)")
+        ("inputFile", po::value<std::string>(), "Set an input file for the initial population (default : none)")
+        ("printStats", po::value<bool>()->implicit_value(true)->default_value(false), "Print the Stats (default : 1)")
+        ("plotStats", po::value<bool>()->implicit_value(true)->default_value(false), "Plot the Stats (default : 0)")
+        ("generateCSVFile", po::value<bool>()->implicit_value(true)->default_value(false), "Prints the Stats to a CSV File (Filename: ProjectName.dat) (default : 0)")
+        ("generatePlotScript", po::value<bool>()->implicit_value(true)->default_value(false), "Generate a Gnuplot script to plot the Stats (Filename: ProjectName.plot) (default : 0)")
+        ("generateRScript", po::value<bool>()->implicit_value(true)->default_value(false), "Generate a R script to plot the Stats (Filename: ProjectName.r) (default : 0)")
+//  ("printStatsFile",po::value<int>(),"Prints the Stats to a File (Filename: ProjectName.dat) (default : 0)")
+        ("printInitialPopulation", po::value<bool>()->implicit_value(true)->default_value(false), "Print the initial population")
+        ("printFinalPopulation", po::value<bool>()->implicit_value(true)->default_value(false), "Print the final population")
+        ("savePopulation", po::value<bool>()->implicit_value(true)->default_value(false), "Save population at the end (default : 0)")
+        ("startFromFile", po::value<bool>()->implicit_value(true)->default_value(false), "Load the population from a .pop file (default : 0")
+        ("fstgpu", po::value<int>(), "The number of the first GPU used for computation")
+        ("lstgpu", po::value<int>(), "The number of the first GPU NOT used for computation")
+        ("u1", po::value<std::string>(), "User defined parameter 1")
+        ("u2", po::value<std::string>(), "User defined parameter 2")
+        ("u3", po::value<std::string>(), "User defined parameter 3")
+        ("u4", po::value<std::string>(), "User defined parameter 4")
+        ("u5", po::value<std::string>(), "User defined parameter 5");
     try{
-        auto vm_value = options.parse(ac,av);
-        vm = std::make_unique<cxxopts::ParseResult>(std::move(vm_value));
-        if (vm->count("help")) {
-            ostringstream msg;
-            LOG_MSG(msgType::INFO,options.help({""}));
-	    exit(1);
-        }
+	vm = std::make_unique<vm_t>();
+	po::store(po::parse_command_line(ac, av, options), *vm);
+	po::notify(*vm);
+
         if(parametersFileName){
+	    std::vector<std::string> argv = loadParametersFile(parametersFileName);
 	    std::vector<const char*> cstr;
 	    std::transform(argv.cbegin(), argv.cend(), std::back_inserter(cstr), [](auto const& s) {return s.c_str();});
-	    auto carr = cstr.data();
-            auto vm_file_value = options.parse(argc, carr);
-            vm_file = std::make_unique<cxxopts::ParseResult>(std::move(vm_file_value));
+	    po::store(po::parse_command_line(cstr.size(), cstr.data(), options), *vm);
+	    po::notify(*vm);
         }
+
+	if (vm->count("help")) {
+	    std::cout << options;
+	    exit(0);
+        } else if (vm->count("version")) {
+	   std::cout << "EASENA version " << easea::version::as_string() << "\n" <<
+		   "Compiled in " << EZ_BUILD_TYPE << " mode using " << EZ_BUILT_BY << " " << EZ_BUILT_BY_VERSION << "\n";
+	   exit(0);
+	}
     }
     catch(const std::exception& e){
 	std::cerr << "Bad command line argument(s): " << e.what() << "\n" <<
-		options.help({""});
+		options;
 	exit(1);
-        //LOG_ERROR(errorCode::value, msg.str());
   }
 }

@@ -51,11 +51,13 @@ public:
         ~Cgde(void);
         TI runBreeding(const TPopulation &parent, const size_t index);
         static bool isDominated(const TIndividual &individual1, const TIndividual &individual2);
+	void on_individuals_received() override;
 
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+  	void initialize() override;
         template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
 private:
@@ -69,7 +71,13 @@ Cgde<TIndividual, TRandom>::Cgde(TRandom random, TP &problem, const std::vector<
         , easea::operators::crossover::CWrap3x1Crossover<TO, TV>(crossover)
 	, m_distribution(0, initial.size()-1)
 {
-        typedef typename TPopulation::pointer TPtr;
+}
+
+template <typename TIndividual, typename TRandom>
+void Cgde<TIndividual, TRandom>::initialize()
+{
+	TBase::initialize();
+ 	typedef typename TPopulation::pointer TPtr;
         std::list<TPtr> population;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
 	        population.push_back(&TBase::m_population[i]);
@@ -80,6 +88,22 @@ Cgde<TIndividual, TRandom>::Cgde(TRandom random, TP &problem, const std::vector<
                 std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
         }
+}
+
+template <typename TIndividual, typename TRandom>
+void Cgde<TIndividual, TRandom>::on_individuals_received()
+{
+	// recalculate crowding distance
+	typedef typename TPopulation::pointer TPtr;
+	std::list<TPtr> population;
+	for (size_t i = 0; i < TBase::m_population.size(); ++i)
+		population.push_back(&TBase::m_population[i]);
+
+	while (!population.empty()) {
+		std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);
+		std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
+		easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
+	}
 }
 
 template <typename TIndividual, typename TRandom>
@@ -104,7 +128,7 @@ typename Cgde<TIndividual, TRandom>::TI Cgde<TIndividual, TRandom>::runBreeding(
         do
         {
             p3 = m_distribution( this->getRandom() );
-        }while ( p2 == index || p2 == p1 || p3 == p2);
+        }while ( p3 == index || p3 == p1 || p3 == p2);
         assert( p1 != index && p2 != index && p3 != index );
         assert( p2 != p1 && p3 != p1 );
         assert ( p3 != p2 );
@@ -138,7 +162,7 @@ void Cgde<TIndividual, TRandom>::makeOneGeneration(void)
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-	for ( size_t i = 0; i < parent.size(); ++i )
+	for ( int i = 0; i < static_cast<int>(parent.size()); ++i )
 	{
 	    TIndividual &ind = parent[i];
 	    TIndividual child = runBreeding( parent, i );
@@ -168,8 +192,10 @@ template <typename TIndividual, typename TRandom>
 template <typename TPtr, typename TIter> TIter Cgde<TIndividual, TRandom>::selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end)
 {
         TIter dest = begin;
+
         for ( auto i = front.begin(); i != front.end(); ++i, ++dest )
                 *dest = **i;
+        assert(dest < end);
         return dest;
 }
 
@@ -180,7 +206,7 @@ template <typename TPtr, typename TIter> TIter Cgde<TIndividual, TRandom>::selec
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
         std::partial_sort(iFront.begin(), iFront.begin() + std::distance(begin, end), iFront.end()
                 , [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;});
-        if (iFront.size() < std::distance(begin, end)) LOG_ERROR(errorCode::value, "Select critical : Error of front size!");
+        if (iFront.size() < static_cast<unsigned int>(std::distance(begin, end))) LOG_ERROR(errorCode::value, "Select critical : Error of front size!");
         TIter dest = begin;
         for (size_t i = 0; dest != end; ++i, ++dest)
                 *dest = *iFront[i];

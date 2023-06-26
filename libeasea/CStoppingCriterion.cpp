@@ -64,11 +64,15 @@ bool CTimeCriterion::reached(){
   else return false;
 }
 
+unsigned CTimeCriterion::getLimit() const {
+	return timeLimit;
+}
+
 void CTimeCriterion::setElapsedTime(double elapsedTime){
   this->elapsedTime = elapsedTime;
 }
 
-double CTimeCriterion::getElapsedTime(){
+double CTimeCriterion::getElapsedTime() const{
   return this->elapsedTime;
 }
 

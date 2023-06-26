@@ -92,8 +92,9 @@ typename Ccde<TIndividual, TRandom>::TI Ccde<TIndividual, TRandom>::runBreeding(
 	do
 	{
 	    p3 = m_distribution( this->getRandom() );
-	}while ( p2 == index || p2 == p1 || p3 == p2);
+	}while ( p3 == index || p3 == p1 || p3 == p2);
 	assert( p1 != index && p2 != index && p3 != index );
+
 	assert( p2 != p1 && p3 != p1 );
 	assert ( p3 != p2 );
 	TI child;
@@ -111,7 +112,7 @@ void Ccde<TIndividual, TRandom>::makeOneGeneration(void)
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-	for (size_t i = 0; i < parent.size(); ++i)
+	for (int i = 0; i < static_cast<int>(parent.size()); ++i)
 	{
 	    TIndividual child = runBreeding(parent, i);
 	    if (child.m_objective[0] < parent[i].m_objective[0])

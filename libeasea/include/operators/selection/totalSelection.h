@@ -35,10 +35,10 @@ namespace selection
 template <typename TI, typename TIter>
 TIter totalSelection(std::vector<TI> &donorPop, TIter recipPopBegin, TIter recipPopEnd)
 {
-        if (donorPop.size() > std::distance(recipPopBegin, recipPopEnd)) 	LOG_ERROR(errorCode::value, "Donor populaton size must be smaller or the same as the recipient population!");
+        if (static_cast<long int>(donorPop.size()) > std::distance(recipPopBegin, recipPopEnd)) 	LOG_ERROR(errorCode::value, "Donor populaton size must be smaller or the same as the recipient population!");
 
         TIter selected = recipPopBegin;
-		if (std::distance(selected, recipPopEnd) >= donorPop.size())
+		if (std::distance(selected, recipPopEnd) >= static_cast<long int>(donorPop.size()))
 		{
 			for (size_t i = 0; i < donorPop.size(); ++i, ++selected)
                     	    *selected = *donorPop[i];

@@ -60,7 +60,6 @@ public:
     std::vector<CIndividual*> pop_vect;
     unsigned currentEvaluationNb;
     unsigned realEvaluationNb;
-    CRandomGenerator* rg;
     Parameters* params;
     CStats* cstats;
 
@@ -69,7 +68,7 @@ public:
 
     CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
                 float pCrossover, float pMutation, float pMutationPerGene,
-                CRandomGenerator* rg, Parameters* params, CStats* cstats);
+                Parameters* params, CStats* cstats);
     virtual ~CPopulation();
 
     //virtual void initializeParentPopulation() = 0;
@@ -113,7 +112,7 @@ public:
 
     static void sortRPopulation(CIndividual** population, unsigned populationSize);
 
-    void serializePopulation();
+    void serializePopulation(std::string const& file);
     int getWorstIndividualIndex(CIndividual** population);
 
     void sortParentPopulation(){ CPopulation::sortPopulation(parents,actualParentPopulationSize);}

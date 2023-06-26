@@ -11,6 +11,7 @@ Centre de Math�matiques Appliqu�es
 Updated on june 2022 by Léo Chéneau to improve windows portability
   ****************************************************************************/
 #include "config.h"
+#include "version.h"
 #ifdef OS_WINDOWS
 #define _CRT_SECURE_NO_WARNINGS
 #define YY_NO_UNISTD_H
@@ -39,86 +40,11 @@ using ssize_t = signed long long;
 #include <memory>
 #include <vector>
 #include <algorithm>
-//#include <iostream>
-//#include <sstream>
 
 #if defined(__APPLE__) || defined(OS_WINDOWS)
  /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
-char *strndup (const char *s, size_t n){
-    size_t len = strlen (s);
-    char *ret;
-
-    if (len <= n)
-	return strdup (s);
-
-    ret = (char *)malloc(n + 1);
-    strncpy(ret, s, n);
-    ret[n] = '\0';
-    return ret;
-}
-
-ssize_t getline (char **lineptr, size_t *n, FILE *fp){
-    ssize_t result;
-    size_t cur_len = 0;
-
-    if (lineptr == NULL || n == NULL || fp == NULL){
-	errno = EINVAL;
-	return -1;
-    }
-
-    if (*lineptr == NULL || *n == 0){
-	*n = 120;
-	*lineptr = (char *) malloc (*n);
-	if (*lineptr == NULL){
-	    result = -1;
-	    goto end;
-	}
-    }
-
-    for (;;){
-	int i;
-
-	i = getc (fp);
-	if (i == EOF){
-	    result = -1;
-	    break;
-	}
-
-	/* Make enough space for len+1 (for final NUL) bytes.  */
-	if (cur_len + 1 >= *n){
-	    size_t needed_max =	SSIZE_MAX < SIZE_MAX ? (size_t) SSIZE_MAX + 1 : SIZE_MAX;
-	    size_t needed = 2 * *n + 1;   /* Be generous. */
-	    char *new_lineptr;
-
-	    if (needed_max < needed)
-		needed = needed_max;
-	    if (cur_len + 1 >= needed){
-		result = -1;
-		goto end;
-	    }
-
-	    new_lineptr = (char *) realloc (*lineptr, needed);
-	    if (new_lineptr == NULL){
-		result = -1;
-		goto end;
-	    }
-
-	    *lineptr = new_lineptr;
-	    *n = needed;
-	}
-
-	(*lineptr)[cur_len] = i;
-	cur_len++;
-
-	if (i == '\n')
-	    break;
-    }
-    (*lineptr)[cur_len] = '\0';
-    result = cur_len ? (ssize_t) cur_len : result;
-
-end:
-    return result;
-}
+char *strndup (const char *s, size_t n);
+ssize_t getline (char **lineptr, size_t *n, FILE *fp);
 #endif
 
  /* getline implementation is copied from glibc. */
@@ -129,61 +55,17 @@ end:
   int lineCounter = 0;
 
   // local functions
-char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
-
-  char selectorName[50];  
-  selectorName[3] = 0;
-  if( nMINIMISE )
-    strcpy(selectorName,"Min");
-  else
-    strcpy(selectorName,"Max");
-  
-
-  if( mystricmp("Tournament",sSELECTOR)==0 )
-    strcat(selectorName,"Tournament(globalRandomGenerator)");
-  else if( mystricmp("dettour",sSELECTOR)==0 )
-    strcat(selectorName,"Tournament(globalRandomGenerator)");
-  else if( mystricmp("Deterministic",sSELECTOR)==0 )
-    strcat(selectorName,"Deterministic()");
-  else if( mystricmp("deterministic",sSELECTOR)==0 )
-    strcat(selectorName,"Deterministic()");
-  else if( mystricmp("Random",sSELECTOR)==0 )
-    strcat(selectorName,"Random(globalRandomGenerator)");
-  else if( mystricmp("Roulette",sSELECTOR)==0 )
-    strcat(selectorName,"Roulette(globalRandomGenerator)");
-
-  else{
-    //DEBUG_PRT_PRT("%s is not yet implemented",sSELECTOR);
-    return NULL;
-  }
-  
-  char* ret = (char*)malloc((strlen(selectorName)+1)*sizeof(char));
-  strcpy(ret,selectorName);
-
-  return ret;
-}
-
+char* selectorDetermination(int nMINIMISE, char* sSELECTOR);
+void print_line_indicator();
+int compute_cur_line(FILE* fp);
+void print_line_end();
+void copy_to_sOutputFileName(const char* src);
 
   // include file
   // forward references
   class CEASEAParser;
   class CSymbolTable;
   class OPCodeDesc;
-
-
-void yyreset()
-{
-	yyleng = 0;
-	yylineno = 1;
-    YY_FLUSH_BUFFER;
-	//yyunputindex = 0;
-	//yymoreflg = 0;
-	//yyrejectflg = 0;
-	//yyeol = 1;
-	//yyoldeol = 1;
-	//yystart = 0;
-}
-
 
 
   CSymbolTable* pSymbolTable;   // the symbol table
@@ -204,11 +86,37 @@ void yyreset()
   unsigned iCOPY_GP_EVAL_STATUS;
   bool bIsCopyingGPEval;
 
+// better errors
+static int next_column = 1;
+int column = 1;
+#define HANDLE_COLUMN column = next_column; next_column += strlen(yytext)
 
+char* lineptr = NULL;
+size_t n = 0;
+int consumed = 0;
+int available = 0;
+static inline int min(int a, int b) { return a < b ? a : b; }
 
+template <typename T>
+static inline void yyinput_function(char* buf, T* result, size_t max_size) {
+	if(available <= 0) {
+	    consumed = 0;
+	    available = getline(&lineptr, &n, yyin);
+	    if (available < 0) {
+		if (ferror(yyin)) { perror("read error:"); }
+		    available = 0;
+		}
+	}
+	*result = min(available, (int)max_size);
+	strncpy(buf, lineptr + consumed, *result);
+	consumed += *result;
+	available -= *result;
+}
+#define YY_INPUT(buf,result,max_size) (yyinput_function(buf, &result, max_size))
 
-  // extract yylval for use later on in actions
-  //YYSTYPE& yylval = *(YYSTYPE*)yyparserptr->yylvalptr;
+void switch_to_genome();
+void print_else_default(const char* const from, const char* const value, const char* const def);
+static inline void print_bool(FILE* fp, bool value) { fprintf(fp, "%s", value ? "true" : "false"); }
 %}                                                     
                                          
 %start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
@@ -218,8 +126,7 @@ void yyreset()
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
 %start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL GP_RULE_ANALYSIS GP_COPY_OPCODE_CODE COPY_GP_EVAL
 
-%option yylineno
-%option noyywrap
+%option yylineno noyywrap noinput nounput
 
  /* macros */
 exponent  ([Ee][+-]?[0-9]+)
@@ -242,7 +149,8 @@ exponent  ([Ee][+-]?[0-9]+)
   char sFileName[1000];
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,".cpp"); 
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
+  copy_to_sOutputFileName(sFileName);
  }
 <TEMPLATE_ANALYSIS>"AESAE" {fprintf(fpOutputFile,"EASEA");}        
 <TEMPLATE_ANALYSIS>"EASEA" {fprintf(fpOutputFile,"%s",sPROJECT_NAME);}        
@@ -259,42 +167,31 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_CMAKE" {
   if (bVERBOSE) printf ("Inserting user custom CMake code.\n");
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_USER_CMAKE;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_DECLARATIONS"  {
   if (bVERBOSE) printf ("Inserting user declarations.\n");
-  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_USER_DECLARATIONS;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_CUDA"  {
   if (bVERBOSE) printf ("Inserting user cuda.\n");
-  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_USER_CUDA;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting initialisation function.\n");
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;                                                    // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter = 1;
+  switch_to_genome();
   BEGIN COPY_INITIALISATION_FUNCTION;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT"  {
   if (bVERBOSE) printf ("Inserting generation before reduce function.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   bGenerationFunctionBeforeReplacement = true;
   BEGIN COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT;
  }
@@ -303,14 +200,11 @@ exponent  ([Ee][+-]?[0-9]+)
 <TEMPLATE_ANALYSIS>"\\INSERT_BEGIN_GENERATION_FUNCTION"  {
   //DEBUG_PRT_PRT("insert beg");
   if (bVERBOSE) printf ("Inserting at the begining of each generation function.\n");
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter+1, sRAW_PROJECT_NAME);
+  print_line_indicator();
 
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   bBeginGeneration = true;
   bEndGeneration = false;
-  lineCounter = 1;
   BEGIN COPY_BEG_GENERATION_FUNCTION;
  }
 
@@ -391,15 +285,13 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_GP_OPCODE"  {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   if (bVERBOSE) printf ("Analysing GP OP code from ez file\n");
+  switch_to_genome();
   BEGIN COPY_GP_OPCODE;
  }
 
 
-<COPY_GP_OPCODE>"\\begin operator description :" {
+<COPY_GP_OPCODE>"\\"[Bb]"egin operator description :" {
   if (bVERBOSE) printf ("found begin section\n");
   bGPOPCODE_ANALYSIS = true;
   BEGIN GP_RULE_ANALYSIS;
@@ -413,15 +305,8 @@ exponent  ([Ee][+-]?[0-9]+)
     bGPOPCODE_ANALYSIS = false;
     
     std::sort(opDesc.begin(), opDesc.end(), [](auto const& lhs, auto const& rhs) {
-    /*if (lhs.arity == rhs.arity && lhs.arity == 0) {
-    	return lhs.isERC - rhs.isERC;
-    } else {
-    	return static_cast<int>(lhs.arity) - static_cast<int>(rhs.arity);
-    }*/ return lhs.arity < rhs.arity;
+return lhs.arity < rhs.arity;
     });
-    /*for( unsigned i=0 ; i<iNoOp ; i++ ){
-      opDesc[i]->show();
-      }*/
     BEGIN TEMPLATE_ANALYSIS; 
   }  
  }
@@ -554,23 +439,19 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_HDR" { 
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval header\n"); 
+  switch_to_genome();
   bIsCopyingGPEval = false;
-  if( bVERBOSE ) printf("Insert GP eval header\n");
   iCOPY_GP_EVAL_STATUS = EVAL_HDR;
   fprintf(fpOutputFile,"  ");
   BEGIN COPY_GP_EVAL;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_BDY" {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval body\n");
+  switch_to_genome();
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_BDY;
-  if( bVERBOSE ) printf("Insert GP eval body\n");
   fprintf(fpOutputFile,"      ");
   bCOPY_GP_EVAL_GPU = false;
   BEGIN COPY_GP_EVAL;
@@ -579,12 +460,10 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_BDY_GPU" {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval body\n");
+  switch_to_genome();
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_BDY;
-  if( bVERBOSE ) printf("Insert GP eval body\n");
   fprintf(fpOutputFile,"      ");
   bCOPY_GP_EVAL_GPU = true;
   BEGIN COPY_GP_EVAL;
@@ -593,23 +472,19 @@ exponent  ([Ee][+-]?[0-9]+)
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_FTR" {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval footer\n");
+  switch_to_genome();
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_FTR;
-  if( bVERBOSE ) printf("Insert GP eval footer\n");
   fprintf(fpOutputFile,"  ");
   BEGIN COPY_GP_EVAL;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_GENOME_EVAL_FTR_GPU" {
-  rewind(fpGenomeFile);
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) printf("Insert GP eval footer\n");
+  switch_to_genome();
   bIsCopyingGPEval = false;
   iCOPY_GP_EVAL_STATUS = EVAL_FTR;
-  if( bVERBOSE ) printf("Insert GP eval footer\n");
   fprintf(fpOutputFile,"  ");
   bCOPY_GP_EVAL_GPU = true;
   BEGIN COPY_GP_EVAL;
@@ -658,6 +533,7 @@ exponent  ([Ee][+-]?[0-9]+)
     rewind(fpGenomeFile);
     yyin = fpTemplateFile;
     yypop_buffer_state();
+    print_line_end();
     BEGIN TEMPLATE_ANALYSIS;
   }
  }
@@ -724,17 +600,14 @@ exponent  ([Ee][+-]?[0-9]+)
   
  }
 
-<COPY_GP_EVAL>"return " {
+<COPY_GP_EVAL>"return" {
   if( bIsCopyingGPEval )
     if( iCOPY_GP_EVAL_STATUS==EVAL_FTR )
       if( bCOPY_GP_EVAL_GPU ){
 	fprintf(fpOutputFile,"k_results[index] =");
       }
-      else fprintf(fpOutputFile,"return fitness=");
+      else fprintf(fpOutputFile,"return");
  }
-
-
-
 
 <COPY_GP_EVAL>\n {
   if( bIsCopyingGPEval )
@@ -750,26 +623,16 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 
-<COPY_GP_EVAL>"return"	{
-  if( bIsCopyingGPEval )
-    fprintf(fpOutputFile,"return fitness = "); 
- }
-
-
 
 <TEMPLATE_ANALYSIS>"\\INSTEAD_EVAL_FUNCTION"  {
-  //DEBUG_PRT_PRT("insert beg");
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
   if (bVERBOSE) printf ("Evaluation population in a single function!!.\n");
-  lineCounter = 1;
+  switch_to_genome();
   BEGIN COPY_INSTEAD_EVAL;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_END_GENERATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting at the end of each generation function.\n");
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   bEndGeneration = true;
   bBeginGeneration = false;
   BEGIN COPY_END_GENERATION_FUNCTION;
@@ -777,15 +640,13 @@ exponent  ([Ee][+-]?[0-9]+)
 
 <TEMPLATE_ANALYSIS>"\\INSERT_BOUND_CHECKING"  {
   if (bVERBOSE) printf ("Inserting Bound Checking function.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   BEGIN COPY_BOUND_CHECKING_FUNCTION;
  }
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_USER_CLASSES"  {
   if (bVERBOSE) printf ("Analysing user classes.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   BEGIN ANALYSE_USER_CLASSES;
  }
 
@@ -1027,17 +888,15 @@ exponent  ([Ee][+-]?[0-9]+)
   }
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_DISPLAY"  {        
-  if (bVERBOSE) printf ("Inserting genome display function.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if (bVERBOSE) printf ("Inserting genome display function.\n"); 
+  switch_to_genome();
   BEGIN COPY_DISPLAY;   
  }
 
 
 <TEMPLATE_ANALYSIS>"\\INSERT_MAKEFILE_OPTION" {
   if( bVERBOSE ) printf("Inserting user LDFLAGS.\n");
-  yyin = fpGenomeFile;
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   BEGIN COPY_MAKEFILE_OPTION;
  }
 
@@ -1065,80 +924,66 @@ exponent  ([Ee][+-]?[0-9]+)
   }                      
  }    
 <TEMPLATE_ANALYSIS>"\\INSERT_USER_FUNCTIONS"  {
-  if (bVERBOSE) printf ("Inserting user functions.\n");
-  yyin = fpGenomeFile;                    
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=2;                                 // switch to .ez file and analyser
+  if (bVERBOSE) printf ("Inserting user functions.\n"); 
+  switch_to_genome();
   BEGIN COPY_USER_FUNCTIONS;
  }
-<TEMPLATE_ANALYSIS>"\\INSERT_EO_INITIALISER"  {        
+<TEMPLATE_ANALYSIS>"\\INSERT_EO_INITIALISER"  {
+  if (bVERBOSE) printf ("Inserting EO initialiser.\n"); 
   bWithinEO_Function=1;
-  lineCounter=1;
   if( TARGET==CUDA || TARGET==STD) bWithinCUDA_Initializer = 1;
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   BEGIN COPY_EO_INITIALISER;                               // not implemented as a function !
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_INITIALISER"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter = 1;
+  if (bVERBOSE) printf ("Inserting initialiser.\n"); 
+  switch_to_genome();
   BEGIN COPY_INITIALISER;   
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_FINALIZATION_FUNCTION"  {
   if (bVERBOSE) printf ("Inserting Finalization function.\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_FINALIZATION_FUNCTION;
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_CROSSOVER"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  if (bVERBOSE) printf ("Inserting crossover.\n");  
+  switch_to_genome();
   BEGIN COPY_CROSSOVER;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_MUTATOR"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  if (bVERBOSE) printf ("Inserting mutator.\n");  
+  switch_to_genome();
   BEGIN COPY_MUTATOR;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_EVALUATOR"  {
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  if (bVERBOSE) printf ("Inserting evaluator.\n");  
+  switch_to_genome();
   BEGIN COPY_EVALUATOR;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_OPTIMISER"  {      
   if( bVERBOSE ) fprintf(stdout,"Inserting optimization function\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
-  lineCounter=1;
+  switch_to_genome();
   BEGIN COPY_OPTIMISER;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_CUDA_EVALUATOR"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if (bVERBOSE) printf ("Inserting CUDA evaluator.\n");  
+  switch_to_genome();
   bWithinCUDA_Evaluator = 1;
-  lineCounter=1;
   BEGIN COPY_EVALUATOR;
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_CUDA_OPTIMISOR"  { 
   if( bVERBOSE ) fprintf(stdout,"Inserting cuda optimization function\n");
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  switch_to_genome();
   bWithinCUDA_Evaluator = 1;
-  lineCounter=1;
   BEGIN COPY_OPTIMISER;
  }
 
 <TEMPLATE_ANALYSIS>"\\ANALYSE_PARAMETERS"  {        
-  yyin = fpGenomeFile;                                                     // switch to .ez file and analyser
-  yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+  if( bVERBOSE ) fprintf(stdout,"Analysing parameters\n");
+  switch_to_genome();
   BEGIN PARAMETERS_ANALYSIS;   
  }
 <TEMPLATE_ANALYSIS>"\\INSERT_GEN_FCT_CALL"  {
@@ -1178,11 +1023,11 @@ exponent  ([Ee][+-]?[0-9]+)
  }        
 
 <TEMPLATE_ANALYSIS>"\\IS_PARENT_REDUCTION" {
-    fprintf(fpOutputFile,"%d",bIsParentReduce);
+    print_bool(fpOutputFile, bIsParentReduce);
  }
 
 <TEMPLATE_ANALYSIS>"\\IS_OFFSPRING_REDUCTION" {
-  fprintf(fpOutputFile,"%d",bIsOffspringReduce);
+  print_bool(fpOutputFile, bIsOffspringReduce);
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_FINALIZATION_FCT_CALL"  {
@@ -1207,13 +1052,13 @@ exponent  ([Ee][+-]?[0-9]+)
   }
   else fprintf(fpOutputFile,"%s",sSELECTOR);
 }
-<TEMPLATE_ANALYSIS>"\\SELECTOR_OPERATOR" {fprintf(fpOutputFile,"%s",sSELECTOR_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\SELECTOR_OPERATOR" {print_else_default("", sSELECTOR_OPERATOR, "Tournament");}
 <TEMPLATE_ANALYSIS>"\\SELECT_PRM"  {fprintf(fpOutputFile,"%f",fSELECT_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_PAR_OPERATOR" {fprintf(fpOutputFile,"%s",sRED_PAR_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\RED_PAR_OPERATOR" {print_else_default("Reduce parents operator", sRED_PAR_OPERATOR, "Tournament");}
 <TEMPLATE_ANALYSIS>"\\RED_PAR_PRM"  {fprintf(fpOutputFile,"%f",fRED_PAR_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_OFF_OPERATOR" {fprintf(fpOutputFile,"%s",sRED_OFF_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\RED_OFF_OPERATOR" {print_else_default("Reduce offspring operator", sRED_OFF_OPERATOR, "Tournament");}
 <TEMPLATE_ANALYSIS>"\\RED_OFF_PRM"  {fprintf(fpOutputFile,"%f",fRED_OFF_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_FINAL_OPERATOR" {fprintf(fpOutputFile,"%s",sRED_FINAL_OPERATOR);}
+<TEMPLATE_ANALYSIS>"\\RED_FINAL_OPERATOR" {print_else_default("Final reduce operator", sRED_FINAL_OPERATOR, "Tournament");}
 <TEMPLATE_ANALYSIS>"\\RED_FINAL_PRM"  {fprintf(fpOutputFile,"%f",fRED_FINAL_PRM);}
 <TEMPLATE_ANALYSIS>"\\POP_SIZE"  {fprintf(fpOutputFile,"%d",nPOP_SIZE);}
 <TEMPLATE_ANALYSIS>"\\OFF_SIZE"  {fprintf(fpOutputFile,"%d",nOFF_SIZE);}
@@ -1264,8 +1109,8 @@ exponent  ([Ee][+-]?[0-9]+)
 if(OPERATING_SYSTEM=WINDOWS)
 	fprintf(fpOutputFile,"%s\\",getenv("NVSDKCUDA_ROOT"));
 }
-<TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  {if(fSURV_PAR_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_PAR_SIZE); else fprintf(fpOutputFile,"%f",(float)nPOP_SIZE);}
-<TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  {if(fSURV_OFF_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_OFF_SIZE); else fprintf(fpOutputFile,"%f",(float)nOFF_SIZE);}
+<TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  {if(fSURV_PAR_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_PAR_SIZE); else fprintf(fpOutputFile,"1.0");}
+<TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  {if(fSURV_OFF_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_OFF_SIZE); else fprintf(fpOutputFile,"1.0");}
 <TEMPLATE_ANALYSIS>"\\GENOME_NAME"  {fprintf(fpOutputFile,"%s",nGENOME_NAME);}
 <TEMPLATE_ANALYSIS>"\\PROBLEM_DIM"  {fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
 <TEMPLATE_ANALYSIS>"\\NB_GEN"  {fprintf(fpOutputFile,"%d",nNB_GEN);}
@@ -1273,31 +1118,32 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\MUT_PROB"  {fprintf(fpOutputFile,"%f",fMUT_PROB);}
 <TEMPLATE_ANALYSIS>"\\XOVER_PROB"  {fprintf(fpOutputFile,"%f",fXOVER_PROB);}
 <TEMPLATE_ANALYSIS>"\\MINIMAXI"  {fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); }
-<TEMPLATE_ANALYSIS>"\\ELITISM"  {fprintf(fpOutputFile,"%d",bELITISM);}
+<TEMPLATE_ANALYSIS>"\\ELITISM"  {fprintf(fpOutputFile, "%d", bELITISM);}
 
 <TEMPLATE_ANALYSIS>"\\NB_OPT_IT"  {fprintf(fpOutputFile,"%d",nNB_OPT_IT);}
-<TEMPLATE_ANALYSIS>"\\BALDWINISM" {fprintf(fpOutputFile,"%d",bBALDWINISM);}
+<TEMPLATE_ANALYSIS>"\\BALDWINISM" {print_bool(fpOutputFile, bBALDWINISM);}
 
-<TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {fprintf(fpOutputFile,"%d",bREMOTE_ISLAND_MODEL);}
+<TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {print_bool(fpOutputFile, bREMOTE_ISLAND_MODEL);}
 <TEMPLATE_ANALYSIS>"\\IP_FILE" {if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
 <TEMPLATE_ANALYSIS>"\\MIGRATION_PROBABILITY" {fprintf(fpOutputFile,"%f",fMIGRATION_PROBABILITY);}
 <TEMPLATE_ANALYSIS>"\\SERVER_PORT" {fprintf(fpOutputFile,"%d",nSERVER_PORT);}
 
-<TEMPLATE_ANALYSIS>"\\PRINT_STATS" {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
-<TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CSV_FILE);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_GNUPLOT_SCRIPT);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_R_SCRIPT);}
+<TEMPLATE_ANALYSIS>"\\PRINT_STATS" {print_bool(fpOutputFile, bPRINT_STATS);}
+<TEMPLATE_ANALYSIS>"\\PLOT_STATS" {print_bool(fpOutputFile, bPLOT_STATS);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" {print_bool(fpOutputFile, bGENERATE_CSV_FILE);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" {print_bool(fpOutputFile, bGENERATE_GNUPLOT_SCRIPT);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" {print_bool(fpOutputFile, bGENERATE_R_SCRIPT);}
 
-<TEMPLATE_ANALYSIS>"\\SAVE_POPULATION" {fprintf(fpOutputFile,"%d",bSAVE_POPULATION);}
-<TEMPLATE_ANALYSIS>"\\START_FROM_FILE" {fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);}
+<TEMPLATE_ANALYSIS>"\\SAVE_POPULATION" {print_bool(fpOutputFile, bSAVE_POPULATION);}
+<TEMPLATE_ANALYSIS>"\\START_FROM_FILE" {print_bool(fpOutputFile, bSTART_FROM_FILE);}
 
 <TEMPLATE_ANALYSIS>"\\START_CUDA_GENOME_H_TPL"  {
   char sFileName[1000];
   fclose(fpOutputFile);
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,"Individual.hpp");
-  fpOutputFile=fopen(sFileName,"w");    
+  fpOutputFile=fopen(sFileName, "w+");    
+  copy_to_sOutputFileName(sFileName);
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  }
 <TEMPLATE_ANALYSIS>"\\START_CUDA_GENOME_CU_TPL"  {
@@ -1308,7 +1154,8 @@ if(OPERATING_SYSTEM=WINDOWS)
     strcat(sFileName,"Individual.cu");
   else if( TARGET==STD )
     strcat(sFileName,"Individual.cpp");
-  fpOutputFile=fopen(sFileName,"w");    
+  fpOutputFile=fopen(sFileName, "w+");    
+  copy_to_sOutputFileName(sFileName);
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
  }
 <TEMPLATE_ANALYSIS>"\\START_EO_PARAM_TPL"  {
@@ -1317,7 +1164,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,".prm");
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
+  copy_to_sOutputFileName(sFileName);
  }
 <TEMPLATE_ANALYSIS>"\\START_EO_MAKEFILE_TPL"  {
   char sFileName[1000];
@@ -1325,7 +1173,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,".mak");
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
+  copy_to_sOutputFileName(sFileName);
  }
 
 <TEMPLATE_ANALYSIS>"\\START_VISUAL_TPL"  {
@@ -1334,7 +1183,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   strcpy(sFileName, sRAW_PROJECT_NAME);
   strcat(sFileName,".vcproj");
   if (bVERBOSE) printf("Creating %s...\n",sFileName);
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
+  copy_to_sOutputFileName(sFileName);
  }
 
 <TEMPLATE_ANALYSIS>"\\START_CUDA_MAKEFILE_TPL"  {
@@ -1388,24 +1238,26 @@ if(OPERATING_SYSTEM=WINDOWS)
     printf("Creating %s...\n",sFileName);
     printf("Creating %s symbolic link...\n",sPathName);
   }
-  fpOutputFile=fopen(sFileName,"w");
+  fpOutputFile=fopen(sFileName, "w+");
   if( !fpOutputFile ) {
     fprintf(stderr,"Error in %s creation\n",sFileName);
     exit(-1);
   }
+  copy_to_sOutputFileName(sFileName);
 }
 
 <TEMPLATE_ANALYSIS>"\\START_CMAKELISTS"  {
   fclose(fpOutputFile);
   if (bVERBOSE) printf("Creating CMakeLists.txt...\n");
-  fpOutputFile=fopen("CMakeLists.txt","w");
+  fpOutputFile=fopen("CMakeLists.txt", "w+");
+  copy_to_sOutputFileName("CMakeLists.txt");
 }
 
 
 <TEMPLATE_ANALYSIS>"\\TEMPLATE_END"  {
   if (nWARNINGS) printf ("\nWARNING !!!\nTarget file(s) generation went through WITH %d WARNING(S) !\n",nWARNINGS);
   else printf ("\nCONGRATULATIONS !!!\nTarget file(s) generation succeeded without warnings.\n");
-  printf ("You can now type \"make\" to compile your project.\n");
+  printf ("You can now type \"cmake .\" then \"cmake --build .\" to compile your project.\n");
   if (TARGET==CUDA || TARGET==STD) fprintf(fpOutputFile,"\n# That's all folks ! \n");
   else fprintf(fpOutputFile,"\n// That's all folks ! \n");
   fflush(fpOutputFile);
@@ -1422,9 +1274,8 @@ if(OPERATING_SYSTEM=WINDOWS)
  *****************************************/
 
 <COPY_EO_INITIALISER>"\\GenomeClass::initiali"[sz]"er"[ \t\n]*":" {
-  fprintf (fpOutputFile,"// Genome Initialiser\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  fprintf (fpOutputFile,"// Genome Initialiser\n");
+  print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_EO_INITIALISER><<EOF>> {
@@ -1440,8 +1291,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_USER_DECLARATIONS>"\\User"[ \t\n]+"declarations"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User declarations\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_USER_DECLARATIONS><<EOF>> {
@@ -1460,8 +1310,7 @@ if(OPERATING_SYSTEM=WINDOWS)
                
 <COPY_USER_CUDA>"\\User"[ \t\n]+"CUDA"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User CUDA\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_USER_CUDA><<EOF>> {
@@ -1479,7 +1328,8 @@ if(OPERATING_SYSTEM=WINDOWS)
  }                
 
 <COPY_USER_CMAKE>"\\User"[ \t\n]+[Cc][Mm][Aa][Kk][Ee][^ \t\n]*[ \t\n]*":" {
-  fprintf (fpOutputFile,"# User CMAKE\n"); 
+  fprintf (fpOutputFile,"# User CMAKE\n");
+  bFunction = 0;
   BEGIN COPY;
  }
 <COPY_USER_CMAKE><<EOF>> {
@@ -1497,8 +1347,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_USER_FUNCTIONS>"\\User"[ \t\n]+"functions"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User functions\n\n"); 
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_USER_FUNCTIONS><<EOF>> {
@@ -1518,9 +1367,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_INITIALISATION_FUNCTION>"\\Before"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
     //fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){\n");
   //bFunction=1; bInitFunction=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-      
+  print_line_indicator();
   BEGIN COPY;
  }
 <COPY_INITIALISATION_FUNCTION><<EOF>> {bInitFunction=0; // No before everything else function was found in the .ez file
@@ -1541,10 +1388,8 @@ if(OPERATING_SYSTEM=WINDOWS)
  *****************************************/
 
 <COPY_FINALIZATION_FUNCTION>"\\After"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
-  fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n");
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-
+  fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n(void)population; // avoid warning\n");
+  print_line_indicator();
   bFunction=1; bFinalizationFunction=1;
   BEGIN COPY;
  }
@@ -1594,8 +1439,7 @@ if(OPERATING_SYSTEM=WINDOWS)
     bFunction=1;
     bBeginGeneration = 0;
     bBeginGenerationFunction = 1;
-    if( bLINE_NUM_EZ_FILE )
-      fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+    print_line_indicator();
     BEGIN COPY_USER_GENERATION;
   }
  }
@@ -1605,9 +1449,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   if( (TARGET==CUDA || TARGET==STD)){
     fprintf (fpOutputFile,"{\n");
     bFunction=1;
-    if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
-
+    print_line_indicator();
     BEGIN COPY_USER_GENERATION;
   }
  }
@@ -1771,14 +1613,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY>"MINIMIZE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MAXIMISE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY>"MAXIMIZE"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The evaluation goal can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
-<COPY>"false"  {fprintf(fpOutputFile,"false");} // local name
-<COPY>"true"  {fprintf(fpOutputFile,"true");} // local name
-<COPY>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
-  fprintf(fpOutputFile,yytext);}
-<COPY>"tossCoin"  { // local random name 
-  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
-<COPY>"random"  {
-  fprintf(fpOutputFile,"globalRandomGenerator->random");}
 <COPY>"Genome" {
   if (bWithinEO_Function && TARGET!=CUDA && TARGET!=STD) fprintf(fpOutputFile,"_genotype");
   else if(bWithinEO_Function && bWithinCUDA_Initializer )fprintf(fpOutputFile,"(*this)");
@@ -1820,6 +1654,7 @@ if(OPERATING_SYSTEM=WINDOWS)
     bFunction=0;
     bWithinCUDA_Initializer=0;
   }
+  print_line_end();
   bWithinEO_Function=0;
   rewind(fpGenomeFile); 
   yyin = fpTemplateFile; 
@@ -1935,7 +1770,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_DISPLAY>"\\GenomeClass::display"[ \t\n]*":" { 
  /*   //DEBUG_PRT_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
- /*   fprintf(fpOutputFile,"\n#line %d \"%s.ez\"\n",yylineno,sRAW_PROJECT_NAME); */
+  print_line_indicator();
   bDisplayFunction=bWithinDisplayFunction=1;
   BEGIN COPY_USER_FUNCTION;
  }
@@ -1952,7 +1787,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_DISPLAY>.|\n {/*putc(yytext[0],fpOutputFile);*/}                                      
 
 <COPY_MAKEFILE_OPTION>"\\User"[ \t\n]+[Mm]"akefile"[ \t\n]+"options"[ \t\n]*":" {
-  //DEBUG_PRT_PRT("LDFLAGS is beg: %s",yytext); 
+  printf("Warning: Makefile are deprecated, please use CMake.\n");
   bWithinMAKEFILEOPTION=1;
   return MAKEFILE_OPTION;
  }
@@ -1965,7 +1800,6 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_MAKEFILE_OPTION>"\\end" {
   if( bWithinMAKEFILEOPTION ){
-    //DEBUG_PRT_PRT("end of makefile options");
     yyin = fpTemplateFile;
     yypop_buffer_state();
     bWithinMAKEFILEOPTION = 0;
@@ -2010,8 +1844,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_INITIALISER>.|\n {/*putc(yytext[0],fpOutputFile);*/}                                      
 <COPY_CROSSOVER>"\\GenomeClass::crossover"[ \t\n]*":" {
   bWithinXover=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY_USER_FUNCTION;
   return USER_XOVER;
  }
@@ -2019,8 +1852,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_CROSSOVER>\n {lineCounter++;}
 <COPY_MUTATOR>"\\GenomeClass::mutator"[ \t\n]*":" {
   bWithinMutator=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   BEGIN COPY_USER_FUNCTION;
   return USER_MUTATOR;
  }
@@ -2030,8 +1862,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_EVALUATOR>"\\GenomeClass::evaluator"[ \t\n]*":" {
   BEGIN COPY_USER_FUNCTION;            
   bWithinEvaluator=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   return USER_EVALUATOR;
  }
 <COPY_EVALUATOR>. {}
@@ -2041,8 +1872,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_OPTIMISER>"\\GenomeClass::optimiser"[ \t\n]*":" {
   BEGIN COPY_USER_FUNCTION;
   bWithinOptimiser=1;
-  if( bLINE_NUM_EZ_FILE )
-    fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+  print_line_indicator();
   return USER_OPTIMISER;
  }
 <COPY_OPTIMISER>. {}
@@ -2174,14 +2004,6 @@ if(OPERATING_SYSTEM=WINDOWS)
     }
 <COPY_USER_GENERATION>"MAXIMIZE"[ \t\n]*"="  {if (bDoubleQuotes) fprintf(fpOutputFile,"%s",yytext);
     }
-<COPY_USER_GENERATION>"false"  {fprintf(fpOutputFile,"false");} // local name
-<COPY_USER_GENERATION>"true"  {fprintf(fpOutputFile,"true");} // local name
-<COPY_USER_GENERATION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
-  fprintf(fpOutputFile,yytext);}
-<COPY_USER_GENERATION>"tossCoin"  { // local random name
-  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
-<COPY_USER_GENERATION>"random"  {
-  fprintf(fpOutputFile,"globalRandomGenerator->random");}
 <COPY_USER_GENERATION>"identicalGenome"  {fprintf(fpOutputFile,"genome._evaluated");} // local name
 <COPY_USER_GENERATION>"pPopulation" {
   if(bBeginGenerationFunction || bEndGenerationFunction || bGenerationFunctionBeforeReplacement){
@@ -2196,7 +2018,8 @@ if(OPERATING_SYSTEM=WINDOWS)
   yyin = fpTemplateFile;
   yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
-  fprintf(fpOutputFile,"}");} // Back to the template file
+  fprintf(fpOutputFile,"}\n"); // Back to the template file
+  print_line_end();}
 <COPY_USER_GENERATION>";" {if (bWaitingForSemiColon){
     bWaitingForSemiColon=0;
     if (bFinishMINIMISE) {fprintf(fpOutputFile,");\n  if (MINIMISE) g.minimize() else g.maximize();\n"); bFinishMINIMISE=0;}
@@ -2329,35 +2152,21 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_FUNCTION>"REPL_PERC"[ \t\n]*"=" {fprintf(stderr,"\n%s - Error line %d: The replacement percentage can only be changed within the generation function.\n",sEZ_FILE_NAME,yylineno); exit (1);}
 <COPY_USER_FUNCTION>"false"  {fprintf(fpOutputFile,"false");} // local name
 <COPY_USER_FUNCTION>"true"  {fprintf(fpOutputFile,"true");} // local name
-<COPY_USER_FUNCTION>[^a-zA-Z0-9_]"bool"[^a-zA-Z0-9_]  {
-  fprintf(fpOutputFile,yytext);}
-<COPY_USER_FUNCTION>"tossCoin"  { // local random name
-  fprintf(fpOutputFile,"globalRandomGenerator->tossCoin");}
-<COPY_USER_FUNCTION>"random"  {
-  fprintf(fpOutputFile,"globalRandomGenerator->random");}
-<COPY_USER_FUNCTION>"child1"  {fprintf(fpOutputFile,"child1");
- }
-<COPY_USER_FUNCTION>"child2"  {fprintf(fpOutputFile,"child2");
- }
-<COPY_USER_FUNCTION>"parent1"  {fprintf(fpOutputFile,"parent1");
- }
-<COPY_USER_FUNCTION>"parent2"  {fprintf(fpOutputFile,"parent2");
- }
 <COPY_USER_FUNCTION>"identicalGenome"  {fprintf(fpOutputFile,"genome._evaluated");} // local name
 <COPY_USER_FUNCTION>"return"  {if (bWithinEvaluator) {
     if( TARGET==CUDA || TARGET==STD) {
       if( bWithinCUDA_Evaluator ){
-	fprintf(fpOutputFile,"return "); 
+	fprintf(fpOutputFile,"return");
 	//bWithinCUDA_Evaluator = 0;
       }
       else
-	fprintf(fpOutputFile,"return fitness = "); 
+	fprintf(fpOutputFile,"return");
       bCatchNextSemiColon=false;
     }
     //bWithinEvaluator=0;
   }
   else if ((bWithinMutator)) {
-    fprintf(fpOutputFile,"return ");
+    fprintf(fpOutputFile,"return");
     bCatchNextSemiColon=true;
   }
   else fprintf(fpOutputFile,"return"); }
@@ -2371,6 +2180,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   yypop_buffer_state();
   BEGIN TEMPLATE_ANALYSIS;
   bWithinInitialiser=bWithinXover=bWithinMutator=bWithinEvaluator=bWithinOptimiser=bWithinCUDA_Evaluator=0;
+  print_line_end();
   if (bWithinDisplayFunction){
     bWithinDisplayFunction=0; // display function
   }
@@ -2537,7 +2347,7 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
 
   if (bVERBOSE) {
 	printf("\n                                                                   ");
-  	printf("\n                                   E A S E A                   (v1.0.3)");
+  	printf("\n                                   E A S E A                   (v%s)", easea::version::full);
   	printf("\n                              ___________________     ");
  	printf("\n                                                                    ");
 	printf("\n		Stochastic Optimisation and Nature Inspired Computing");
@@ -2565,32 +2375,35 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
   }
 
   /////////////////////////////////////////////////////////  
-  //strcpy(sTemp,"e:\\lutton\\easea\\debug");pour tester sous windows
   if ((sEZ_PATH==NULL)||(sEZ_PATH[0]==0)) {
     if (getenv("EZ_PATH")==NULL){
       //strcpy(sEZ_PATH,"./tpl/");	
-      strcpy(sEZ_PATH,"./");	
+      //strcpy(sEZ_PATH,"./");	
+      strcpy(sEZ_PATH, "");
     }else
       strcpy(sEZ_PATH,getenv("EZ_PATH"));
   }
+  
+  size_t len = strlen(sEZ_PATH);
+  bool windows_path = strstr(sEZ_PATH, "\\") != NULL;
+  bool posix_path = strstr(sEZ_PATH, "/") != NULL;
+  if (windows_path && len > 0 && sEZ_PATH[len-1] != '\\') {
+    strcat (sEZ_PATH,"\\");
+  } else if (posix_path && len > 0 && sEZ_PATH[len-1] != '/') {
+    strcat (sEZ_PATH,"/");
+  }
 
   strcpy(sTPL_DIR,sEZ_PATH);
-  strcat(sTPL_DIR,"tpl/");
-  
- 
-  switch (OPERATING_SYSTEM) {
-  case UNIX : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '/') strcat (sEZ_PATH,"./"); break;
-  case WINDOWS : if (sEZ_PATH[strlen(sEZ_PATH)-1] != '\\') strcat (sEZ_PATH,"\\"); break;
-  case UNKNOWN_OS : fprintf(fpOutputFile,"UNKNOWN_OS"); break;
+  if (windows_path) {
+  	strcat(sTPL_DIR,"tpl\\");
+  } else {
+  	strcat(sTPL_DIR,"tpl/");
   }
-  //strcpy(sTemp,sEZ_PATH);
   strcpy(sTemp,sTPL_DIR);
 
   if (TARGET==CUDA){
     if(TARGET_FLAVOR == CUDA_FLAVOR_SO )
       strcat(sTemp,"CUDA.tpl");
-    else if(TARGET_FLAVOR == CMAES )
-      strcat(sTemp,"CMAES_CUDA.tpl");
     else if (TARGET_FLAVOR == CUDA_QAES )
 	 strcat(sTemp,"CUDA_QAES.tpl");
     else if (TARGET_FLAVOR == NSGAII_CUDA)
@@ -2601,14 +2414,7 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
       strcat(sTemp,"CUDA_MEM.tpl");
     else 
       strcat(sTemp,"CUDA_MO.tpl");
-    printf("tpl file : %s\n",sTemp);
-    if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
-      fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
-      fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
-      exit(1);
-    } }
-
-  if (TARGET==STD){
+  } else if (TARGET==STD) {
     if(TARGET_FLAVOR == STD_FLAVOR_SO)
       strcat(sTemp,"STD.tpl");
     else if (TARGET_FLAVOR == CMAES)
@@ -2623,17 +2429,12 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
 	strcat(sTemp, "QAES.tpl");
     else if (TARGET_FLAVOR == NSGAII){
 	strcat(sTemp, "NSGAII.tpl");
-	std::cout << "STD:NSGAII" << std::endl;
     }
     else if (TARGET_FLAVOR == ASREA){
 	strcat(sTemp, "ASREA.tpl");
-	std::cout << "STD:ASREA" << std::endl;
     }
     else if (TARGET_FLAVOR == FASTEMO){
 	strcat(sTemp, "FastEMO.tpl");
-    }
-    else if (TARGET_FLAVOR ==  FASTEMOII){    
-		strcat(sTemp, "FASTEMOII.tpl");
     }
     else  if  (TARGET_FLAVOR  ==  NSGAIII){
 	        strcat(sTemp, "NSGAIII.tpl");
@@ -2650,18 +2451,25 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
     else if (TARGET_FLAVOR == QIEA){
 	    strcat(sTemp, "QIEA.tpl");
     }
-    else if (TARGET_FLAVOR == MEMETIC )
+    else if (TARGET_FLAVOR == MEMETIC ) {
       strcat(sTemp,"STD_MEM.tpl");
-    //else if (TARGET_FLAVOR == STD_FLAVOR_GP )
-   //   strcat(sTemp,"GP.tpl");
-    else
+    } else {
       strcat(sTemp,"STD_MO.tpl");
-    if (!(yyin = fpTemplateFile = fopen(sTemp, "r"))){
-      fprintf(stderr,"\n*** Could not open %s.\n",sTemp);
-      fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
-      exit(1);
     }
   }
+
+  fpTemplateFile = fopen(sTemp, "r");
+  strcpy(sTPL_FILE_NAME, sTemp);
+  yyin = fpTemplateFile;
+  if (!yyin) {
+    fprintf(stderr,"\n*** %s ",sTemp);
+    perror("could not be opened");
+    fprintf(stderr,"*** Please modify the EZ_PATH environment variable.\n");
+    exit(1);
+  } else {
+    printf("Using template: %s\n", sTPL_FILE_NAME);
+  }
+
   
   if ((sRAW_PROJECT_NAME[0]=='"')&&(OPERATING_SYSTEM!=WINDOWS)){
     strcpy(sRAW_PROJECT_NAME,&(sRAW_PROJECT_NAME[1]));
@@ -2686,11 +2494,174 @@ int CEASEALexer_create(CSymbolTable* pSymTable)
     fprintf(stderr,"\n*** Project names starting with non-letters are invalid.\n*** Please choose another name.\n"); return 0;}
                                                                            
   if (!(fpGenomeFile = fopen(sEZ_FILE_NAME, "r"))){
-    fprintf(stderr,"\n*** Could not open %s\n",sEZ_FILE_NAME); return 0;}
+    fprintf(stderr,"\n*** Could not open %s\n",sEZ_FILE_NAME);
+    exit(1);}
  
+  printf("\n");
   return 1;
 }
 
+// Moves functions to here to optimize compilation
+#if defined(__APPLE__) || defined(OS_WINDOWS)
+char *strndup (const char *s, size_t n){
+    size_t len = strlen (s);
+    char *ret;
+
+    if (len <= n)
+	return strdup (s);
+
+    ret = (char *)malloc(n + 1);
+    strncpy(ret, s, n);
+    ret[n] = '\0';
+    return ret;
+}
+
+ssize_t getline (char **lineptr, size_t *n, FILE *fp){
+    ssize_t result;
+    size_t cur_len = 0;
+
+    if (lineptr == NULL || n == NULL || fp == NULL){
+	errno = EINVAL;
+	return -1;
+    }
+
+    if (*lineptr == NULL || *n == 0){
+	*n = 120;
+	*lineptr = (char *) malloc (*n);
+	if (*lineptr == NULL){
+	    result = -1;
+	    goto end;
+	}
+    }
+
+    for (;;){
+	int i;
+
+	i = getc (fp);
+	if (i == EOF){
+	    result = -1;
+	    break;
+	}
+
+	/* Make enough space for len+1 (for final NUL) bytes.  */
+	if (cur_len + 1 >= *n){
+	    size_t needed_max =	SSIZE_MAX < SIZE_MAX ? (size_t) SSIZE_MAX + 1 : SIZE_MAX;
+	    size_t needed = 2 * *n + 1;   /* Be generous. */
+	    char *new_lineptr;
+
+	    if (needed_max < needed)
+		needed = needed_max;
+	    if (cur_len + 1 >= needed){
+		result = -1;
+		goto end;
+	    }
+
+	    new_lineptr = (char *) realloc (*lineptr, needed);
+	    if (new_lineptr == NULL){
+		result = -1;
+		goto end;
+	    }
+
+	    *lineptr = new_lineptr;
+	    *n = needed;
+	}
+
+	(*lineptr)[cur_len] = i;
+	cur_len++;
+
+	if (i == '\n')
+	    break;
+    }
+    (*lineptr)[cur_len] = '\0';
+    result = cur_len ? (ssize_t) cur_len : result;
+
+end:
+    return result;
+}
+#endif
+
+char* selectorDetermination(int nMINIMISE, char* sSELECTOR){
+
+  char selectorName[50];  
+  selectorName[3] = 0;
+  if( nMINIMISE )
+    strcpy(selectorName,"Min");
+  else
+    strcpy(selectorName,"Max");
+  
+
+  if( mystricmp("Tournament",sSELECTOR)==0 )
+    strcat(selectorName,"Tournament()");
+  else if( mystricmp("dettour",sSELECTOR)==0 )
+    strcat(selectorName,"Tournament()");
+  else if( mystricmp("Deterministic",sSELECTOR)==0 )
+    strcat(selectorName,"Deterministic()");
+  else if( mystricmp("deterministic",sSELECTOR)==0 )
+    strcat(selectorName,"Deterministic()");
+  else if( mystricmp("Random",sSELECTOR)==0 )
+    strcat(selectorName,"Random()");
+  else if( mystricmp("Roulette",sSELECTOR)==0 )
+    strcat(selectorName,"Roulette()");
+
+  else{
+    //DEBUG_PRT_PRT("%s is not yet implemented",sSELECTOR);
+    return NULL;
+  }
+  
+  char* ret = (char*)malloc((strlen(selectorName)+1)*sizeof(char));
+  strcpy(ret,selectorName);
+
+  return ret;
+}
+
+inline void print_line_indicator() {
+	if( bLINE_NUM_EZ_FILE )
+    		fprintf(fpOutputFile,"#line %d \"%s.ez\"\n",lineCounter, sRAW_PROJECT_NAME);
+}
+
+int compute_cur_line(FILE* fp) {
+	long cur_pos = ftell(fp);
+	if (cur_pos == -1L) {
+		perror("Internal compiler error");
+		exit(1);
+	}
+	rewind(fp); // can't fail
+	int eol_counter = 0;
+	char c;
+	while ((c = fgetc(fp)) != EOF) {
+		if (c == '\n')
+			eol_counter++;
+	}
+	if (ferror(fp)) {
+		fprintf(stderr, "Internal compiler error while counting '\\n'\n");
+		exit(1);
+	}
+	if (fseek(fp, cur_pos, SEEK_SET) != 0) {
+		fprintf(stderr, "Internal compiler error: fseek\n");
+		exit(1);
+	}
+
+	return eol_counter;
+}
+
+inline void print_line_end() {
+	if (strstr(sOutputFileName, ".c") == NULL && // .cxx .cu .cpp
+		strstr(sOutputFileName, ".h") == NULL) // .h .hxx .hpp
+		return;
+
+	if( bLINE_NUM_EZ_FILE ) {
+		int real_line = compute_cur_line(fpOutputFile);
+    		fprintf(fpOutputFile,"#line %d \"%s\"\n", real_line+1, sOutputFileName);
+	}
+}
+
+void copy_to_sOutputFileName(const char* src) {
+	char* res = strncpy(sOutputFileName, src, 1000);
+	if (sOutputFileName[1000-1] != '\0') {
+		fprintf(stderr, "Internal compiler error: Filename too long\n");
+		exit(1);
+	}
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // calc_lexer attribute commands
@@ -2705,3 +2676,48 @@ double myStrtod(){
   }
   return d;
 }                               
+
+void switch_to_genome() {
+	rewind(fpGenomeFile);
+	yyin = fpGenomeFile;
+  	yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE ));
+	lineCounter=1;
+}
+
+Searches_t get_lexer_state() {
+	switch (YYSTATE) {
+	case COPY_USER_CMAKE: return USER_CMAKE;
+	case COPY_USER_DECLARATIONS: return USER_DECLARATIONS;
+	case COPY_USER_CUDA: return USER_CUDA;
+	case COPY_INITIALISATION_FUNCTION: return INITIALISATION_FUNCTION;
+	case COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT: return GENERATION_FUNCTION_BEFORE_REPLACEMENT;
+	case COPY_BEG_GENERATION_FUNCTION: return BEG_GENERATION_FUNCTION;
+	case COPY_GP_OPCODE: return GP_OPCODE;
+	case COPY_GP_EVAL: return GP_EVAL;
+	case COPY_INSTEAD_EVAL: return INSTEAD_EVAL;
+	case COPY_END_GENERATION_FUNCTION: return END_GENERATION_FUNCTION;
+	case COPY_BOUND_CHECKING_FUNCTION: return BOUND_CHECKING_FUNCTION;
+	case ANALYSE_USER_CLASSES: return SANALYSE_USER_CLASSES;
+	case COPY_DISPLAY: return DISPLAY;
+	case COPY_MAKEFILE_OPTION: return SMAKEFILE_OPTION;
+	case COPY_USER_FUNCTIONS: return USER_FUNCTIONS;
+	case COPY_EO_INITIALISER: return EO_INITIALISER;
+	case COPY_INITIALISER: return INIALISER;
+	case COPY_FINALIZATION_FUNCTION: return FINALIZATION_FUNCTION;
+	case COPY_CROSSOVER: return CROSSOVER;
+	case COPY_MUTATOR: return MUTATOR;
+	case COPY_EVALUATOR: return EVALUATOR;
+	case COPY_OPTIMISER: return OPTIMISER;
+	case GENOME_ANALYSIS: return SGENOME_ANALYSIS;
+	default: return NONCOPY;
+	}
+}
+
+void print_else_default(const char* const from, const char* const value, const char* const def) {
+	if (strlen(value) == 0) {
+		fprintf(stderr, "Warning: '%s' was not defined in .ez, using default value '%s'.\n", from, def);
+		fputs(def, fpOutputFile);
+	} else {
+		fputs(value, fpOutputFile);
+	}
+}

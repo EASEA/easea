@@ -52,11 +52,13 @@ public:
         TPopulation runBreeding(const TPopulation &parent);
         static bool isDominated(const TI &individual1, const TI &individual2);
         void convertObjective(const std::vector<TO> &angle, const std::vector<TO> &objective, std::vector<TO> &convertedObjective);
+	void on_individuals_received() override;
 
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+  	void initialize() override;
         template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
         static const TIndividual *comparer(const std::vector<const TIndividual *> &comparator);
@@ -70,7 +72,13 @@ Ccdas<TIndividual, TRandom>::Ccdas(TRandom random, TP &problem, const std::vecto
         : TBase(random, problem, initPop), easea::operators::crossover::CWrapCrossover<TO, TV>(crossover)
         , easea::operators::mutation::CWrapMutation<TO, TV>(mutation), m_angle(angle)
 {
-        for (size_t i = 0; i < initPop.size(); ++i)
+}
+
+template <typename TIndividual, typename TRandom>
+void Ccdas<TIndividual, TRandom>::initialize()
+{
+	TBase::initialize();
+	for (size_t i = 0; i < TBase::m_population.size(); ++i)
         {
                 TIndividual &individual = TBase::m_population[i];
 
@@ -88,6 +96,24 @@ Ccdas<TIndividual, TRandom>::Ccdas(TRandom random, TP &problem, const std::vecto
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
         }
 }
+
+template <typename TIndividual, typename TRandom>
+void Ccdas<TIndividual, TRandom>::on_individuals_received()
+{
+	// recalculate crowding distance
+	typedef typename TPopulation::pointer TPtr;
+	std::list<TPtr> population;
+	for ( auto &ind : TBase::m_population){
+		convertObjective(m_angle, ind.m_objective, ind.m_convertedObjective);
+		population.push_back(&ind);
+	}
+	while (!population.empty()) {
+		std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);
+		std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
+		easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
+	}
+}
+
 template <typename TIndividual, typename TRandom>
 Ccdas<TIndividual, TRandom>::~Ccdas(void)
 {
@@ -110,7 +136,7 @@ typename Ccdas<TIndividual, TRandom>::TPopulation Ccdas<TIndividual, TRandom>::r
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-        for (size_t i = 0; i < offspring.size(); ++i)
+        for (int i = 0; i < static_cast<int>(offspring.size()); ++i)
         {
                 TIndividual &child = offspring[i];
                 this->getMutation()(child);
@@ -171,7 +197,7 @@ template <typename TPtr, typename TIter> TIter Ccdas<TIndividual, TRandom>::sele
 {
         std::vector<TPtr> iFront(front.begin(), front.end());
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
-        if (iFront.size() > std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
+        if (static_cast<long>(iFront.size()) > std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
         TIter dest = begin;
         for (size_t i = 0; i < iFront.size(); ++i, ++dest)
                 *dest = *iFront[i];
@@ -185,7 +211,7 @@ template <typename TPtr, typename TIter> TIter Ccdas<TIndividual, TRandom>::sele
         easea::shared::functions::setCrowdingDistance<TO>(iFront.begin(), iFront.end());
         std::partial_sort(iFront.begin(), iFront.begin() + std::distance(begin, end), iFront.end(), [](TPtr individual1, TPtr individual2)->bool{return individual1->m_crowdingDistance > individual2->m_crowdingDistance;}
         );
-        if (iFront.size() < std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
+        if (static_cast<long>(iFront.size()) < std::distance(begin, end))		LOG_ERROR(errorCode::value, "Wrong front size");
         TIter dest = begin;
         for (size_t i = 0; dest != end; ++i, ++dest)
                 *dest = *iFront[i];

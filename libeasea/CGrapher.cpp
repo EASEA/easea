@@ -46,10 +46,24 @@ this->valid=0;
                         char* pPath;
                         pPath = getenv("EZ_PATH");
                         if(pPath != NULL){
-                            pPath = strcat(pPath, "easeagrapher/EaseaGrapher.jar");
+				bool windows_path = strstr(pPath, "\\") != NULL;
+				bool posix_path = strstr(pPath, "/") != NULL;
+				int len = strlen(pPath);
+				if (windows_path && len > 0 && pPath[len-1] != '\\') {
+					strcat (pPath,"\\");
+			  	} else if (posix_path && len > 0 && pPath[len-1] != '/') {
+			    		strcat (pPath,"/");
+			  	}
+
+				if (windows_path) {
+					pPath = strcat(pPath, "easeagrapher\\EaseaGrapher.jar");
+				} else if (posix_path) {
+					pPath = strcat(pPath, "easeagrapher/EaseaGrapher.jar");
+				}
                         }
                         else{
-                            pPath = (char*)"../../easeagrapher/EaseaGrapher.jar";
+                            fprintf(stderr, "Warning: define environment variable 'EZ_PATH' to be able to use easeagrapher.\n");
+			    pPath = (char*)"EaseaGrapher.jar";
                         }
                         char *arg[4];
                         arg[0] = (char*)"java";

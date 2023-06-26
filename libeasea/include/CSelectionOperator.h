@@ -25,34 +25,28 @@ class CSelectionOperator {
     std::string name;
 };
 
-extern float getSelectionPressure(std::string const& selectop);
-extern CSelectionOperator* getSelectionOperator(std::string const& selectop, int minimizing, CRandomGenerator* globalRandomGenerator);
+float getSelectionPressure(std::string const& selectop);
+CSelectionOperator* getSelectionOperator(std::string const& selectop, int minimizing);
 
 /* ****************************************
    Tournament classes (min and max)
  ****************************************/
 class MaxTournament : public CSelectionOperator{
   public:
-    MaxTournament(CRandomGenerator* rg, std::string const& name){ this->rg = rg; this->name = name; }
+    MaxTournament(std::string const& name){ this->name = name; }
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
     float getExtremum();
-  private:
-    CRandomGenerator* rg;
-
 };
 
 
 
 class MinTournament : public CSelectionOperator{
   public:
-    MinTournament(CRandomGenerator* rg, std::string const& name){ this->rg = rg; this->name = name; }
+    MinTournament(std::string const& name){ this->name = name; }
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
     float getExtremum();
-  private:
-    CRandomGenerator* rg;
-
 };
 
 
@@ -80,25 +74,18 @@ class MinDeterministic : public CSelectionOperator{
 
 class MaxRandom : public CSelectionOperator{
   public:
-    MaxRandom(CRandomGenerator* globalCRandomGenerator, std::string const& name);
+    MaxRandom(std::string const& name);
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
     float getExtremum();
-  private:
-    //size_t populationSize;
-    CRandomGenerator* rg;
-
 };
 
 class MinRandom : public CSelectionOperator{
   public:
-    MinRandom(CRandomGenerator* globalCRandomGenerator, std::string const& name);
+    MinRandom(std::string const& name);
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
     float getExtremum();
-  private:
-    //size_t populationSize;
-    CRandomGenerator* rg;
 };
 
 /* ****************************************
@@ -107,13 +94,12 @@ class MinRandom : public CSelectionOperator{
 
 class MaxRoulette : public CSelectionOperator{
   public:
-    MaxRoulette(CRandomGenerator* rg, std::string const& name){ this->rg = rg; this->name = name; }
+    MaxRoulette(std::string const& name){ this->name = name; }
     virtual void initialize(CIndividual** population, float selectionPressure, size_t populationSize);
     virtual size_t selectNext(size_t populationSize);
     float getExtremum();
   private:
     size_t populationSize;
-    CRandomGenerator* rg;
 };
 
 

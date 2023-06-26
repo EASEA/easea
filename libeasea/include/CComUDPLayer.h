@@ -19,6 +19,7 @@
 #include <queue>
 #include <memory>
 #include <thread>
+#include <sstream>
 
 /**
  * @brief Global common io_context
@@ -35,12 +36,12 @@ class CComSharedContext
 	static inline context_t& get()
 	{
 		static CComSharedContext gctx;
-		return gctx.ctx;
+		return *gctx.ctx;
 	}
 
     private:
 	CComSharedContext();
-	boost::asio::io_context ctx;
+	std::shared_ptr<boost::asio::io_context> ctx;
 	std::thread thread;
 };
 
@@ -51,8 +52,9 @@ class CComUDPServer
 	* @brief Construct local UDP server
 	*
 	* @param port Port to listen on
+	* @param verbose Should server print informations ?
 	*/
-	CComUDPServer(unsigned short port);
+	CComUDPServer(unsigned short port, bool verbose = true);
 
 	CComUDPServer(CComUDPServer const&) = delete;
 	CComUDPServer(CComUDPServer&&) = delete;
@@ -71,19 +73,45 @@ class CComUDPServer
 	 * @return true if new data can be consumed, false otherwise
 	 */
 	bool has_data() const;
+
 	/**
 	 * @brief Consume available data
-	 * @waring Check if there's data first...
+	 * @warning Check if there's data first...
 	 *
 	 * @return A buffer with the data
 	 */
 	std::vector<char> consume();
+
+	/*
+	 * @brief Consume and convert available data to Serializable type
+	 * @warning Check if there's data first...
+	 *
+	 * @return An individual
+	 */
+	template <typename Serializable>
+	auto consume() {
+		auto raw = consume();
+		std::string str{raw.cbegin(), raw.cend()};
+		std::istringstream sbuf{std::move(str)};
+
+		Serializable ret{};
+		sbuf >> ret;
+		return ret;
+	}
+
+	template <typename Deserializable>
+	void consume_into(Deserializable& individual) {
+		auto raw = consume();
+		std::string str{raw.cbegin(), raw.cend()};
+		individual->deserialize(str);
+	}
 
     private:
 	boost::asio::ip::udp::socket socket; ///< Socket used by the server
 	std::queue<std::vector<char>> recv_queue; ///< Queue used to store data received until consumption
 	buffer_t recv_buffer; ///< Buffer used to receive
 	boost::asio::ip::udp::endpoint last_endpoint; /// Last endpoint who sent data
+	bool verbose; /// Should server print informations ?
 
 	/**
 	 * @brief Receive asynchronously
@@ -114,8 +142,9 @@ class CComUDPClient
 	* @param port Port the destination is listening on
 	* @param destination Resolvable adress of destination
 	* @param client_name Human-readable name of client
+	* @param verbose Should client print informations ?
 	*/
-	CComUDPClient(std::string const& destination, unsigned short port, std::string client_name = "");
+	CComUDPClient(std::string const& destination, unsigned short port, std::string client_name = "", bool verbose = true);
 
 	CComUDPClient(CComUDPClient const&) = delete;
 	CComUDPClient(CComUDPClient&&) = delete;
@@ -129,6 +158,19 @@ class CComUDPClient
 	 * @param individual Individual to send to destination
 	 */
 	void send(std::string const& individual);
+
+	/**
+	 * @brief send a Serializable object
+	 *
+	 * @param Serializable to send to destination
+	 */
+	template<typename Serializable>
+	void send(Serializable const& ind) {
+		std::ostringstream os;
+		os << ind;
+		send(os.str());
+	}
+
 	/**
 	 * @brief Get IP related to this client
 	 *
@@ -152,6 +194,7 @@ class CComUDPClient
 	std::string client_name; ///< Human-readble name
 	boost::asio::ip::udp::endpoint dest; ///< Destination endpoint
 	boost::asio::ip::udp::socket socket; ///< Socket used to communicate with destination
+	bool verbose; ///< Should client print informations ?
 };
 
 /**
@@ -177,9 +220,10 @@ bool checkValidLine(std::string const& line);
  *
  * @param file_name Path to config file
  * @param thisPort port used by this instance
+ * @param verbose_clients create verbose clients
  *
  * @return A list of client generated from the config
  */
-std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name, int thisPort);
+std::vector<std::unique_ptr<CComUDPClient>> parse_file(std::string const& file_name, int thisPort, bool verbose_clients = true);
 
 #endif /* CCOMUDPLAYER_H_ */

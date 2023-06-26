@@ -61,10 +61,12 @@ public:
 
 	TO calcIndicator(const TIndividual &individual1, const TIndividual &individual2);
 	template <typename TIter, typename TF> void setFitness(TIter begin, TIter end, TF f);
+	void on_individuals_received() override;
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration();
+        void makeOneGeneration() override;
+	void initialize() override;
         static const TI *comparer(const std::vector<const TI *> &comparator);
 
 	TO runCalcIndicator(const TIndividual &individual1, const TIndividual &individual2);
@@ -82,7 +84,12 @@ Csigma<TIndividual, TRandom>::Csigma(TRandom random, TP &problem, const std::vec
         , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover), easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
 	, m_distribution(0,1)	
 {
-        typedef typename TPopulation::pointer TPtr;
+}
+
+template <typename TIndividual, typename TRandom>
+void Csigma<TIndividual, TRandom>::initialize() {
+	TBase::initialize();
+	typedef typename TPopulation::pointer TPtr;
         std::list<TPtr> population;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
                 population.push_back(&TBase::m_population[i]);
@@ -94,6 +101,22 @@ Csigma<TIndividual, TRandom>::Csigma(TRandom random, TP &problem, const std::vec
                 std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
         }
+}
+
+template <typename TIndividual, typename TRandom>
+void Csigma<TIndividual, TRandom>::on_individuals_received()
+{
+	// recalculate crowding distance
+	typedef typename TPopulation::pointer TPtr;
+	std::list<TPtr> population;
+	for (size_t i = 0; i < TBase::m_population.size(); ++i)
+		population.push_back(&TBase::m_population[i]);
+
+	while (!population.empty()) {
+		std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);
+		std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
+		easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
+	}
 }
 
 template <typename TIndividual, typename TRandom>
@@ -114,7 +137,7 @@ typename Csigma<TIndividual, TRandom>::TPopulation Csigma<TIndividual, TRandom>:
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-        for (int i = 0; i < offspring.size(); ++i)
+        for (int i = 0; i < static_cast<int>(offspring.size()); ++i)
         {
                 TI &child = offspring[i];
 
@@ -162,7 +185,7 @@ typename TIndividual::TO Csigma<TIndividual, TRandom>::calcIndicator(const TIndi
         return runCalcIndicator(individual1, individual2);
 }
 template <typename TIndividual, typename TRandom>
-template <typename TIter, typename TF> void Csigma<TIndividual, TRandom>::setFitness(TIter begin, TIter end, TF f)
+template <typename TIter, typename TF> void Csigma<TIndividual, TRandom>::setFitness(TIter begin, TIter end, [[maybe_unused]] TF f)
 {
         for (TIter individual = begin; individual != end; ++individual)
         {
@@ -189,7 +212,7 @@ void Csigma<TIndividual, TRandom>::makeOneGeneration()
 
         TPopulation offspring = runBreeding(parent);
         typedef typename TPopulation::pointer TPtr;
-	typedef typename TPopulation::iterator TIter;
+	//typedef typename TPopulation::iterator TIter; // unused
 	bool epsilon = false;
 	
 	if (TBase::checkIsLast() == true){
@@ -206,7 +229,7 @@ void Csigma<TIndividual, TRandom>::makeOneGeneration()
 		easea::shared::CArchive<TIndividual>::updateArchiveEpsilon(offspring[i], epsilon);
 		//if (TBaseArchive::m_same == true) cc++;
 	}
-	size_t szPopDiv2 = (offspring.size() - TBaseArchive::m_archive.size()) / 2;
+	[[maybe_unused]] size_t szPopDiv2 = (offspring.size() - TBaseArchive::m_archive.size()) / 2;
 	size_t icounter = TBaseArchive::m_archive.size();
 	TBase::m_population.resize(icounter);
 

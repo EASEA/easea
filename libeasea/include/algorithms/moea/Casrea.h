@@ -57,11 +57,13 @@ public:
         ~Casrea(void);
         TPopulation runBreeding(const TPopulation &parent);
         static bool isDominated(const TIndividual &individual1, const TIndividual &individual2);
+	void on_individuals_received() override;
 
 
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+  	void initialize() override;
         template <typename TPtr, typename TIter> static TIter selectNoncrit(const std::list<TPtr> &front, TIter begin, TIter end);
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
         static const TI *comparer(const std::vector<const TI *> &comparator);
@@ -75,6 +77,12 @@ Casrea<TIndividual, TRandom>::Casrea(TRandom random, TP &problem, const std::vec
         , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover), easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
 	, m_distribution(0,1)	
 {
+}
+
+template <typename TIndividual, typename TRandom>
+void Casrea<TIndividual, TRandom>::initialize()
+{
+	TBase::initialize();
         typedef typename TPopulation::pointer TPtr;
         std::list<TPtr> population;
         for (size_t i = 0; i < TBase::m_population.size(); ++i)
@@ -85,6 +93,22 @@ Casrea<TIndividual, TRandom>::Casrea(TRandom random, TP &problem, const std::vec
                 std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
                 easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
         }
+}
+
+template <typename TIndividual, typename TRandom>
+void Casrea<TIndividual, TRandom>::on_individuals_received()
+{
+	// recalculate crowding distance
+	typedef typename TPopulation::pointer TPtr;
+	std::list<TPtr> population;
+	for (size_t i = 0; i < TBase::m_population.size(); ++i)
+		population.push_back(&TBase::m_population[i]);
+
+	while (!population.empty()) {
+		std::list<TPtr> nondominate = easea::shared::functions::getNondominated(population, &Dominate);
+		std::vector<TPtr> _nondominate(nondominate.begin(), nondominate.end());
+		easea::shared::functions::setCrowdingDistance<TO>(_nondominate.begin(), _nondominate.end());
+	}
 }
 
 template <typename TIndividual, typename TRandom>
@@ -103,7 +127,7 @@ typename Casrea<TIndividual, TRandom>::TPopulation Casrea<TIndividual, TRandom>:
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-        for (int i = 0; i < offspring.size(); ++i)
+        for (int i = 0; i < static_cast<int>(offspring.size()); ++i)
         {
                 TI &child = offspring[i];
                 this->getMutation()(child);
@@ -131,8 +155,8 @@ void Casrea<TIndividual, TRandom>::makeOneGeneration(void)
 {
         TPopulation parent = TBase::m_population;
         TPopulation offspring = runBreeding(parent);
-        typedef typename TPopulation::pointer TPtr;
-	typedef typename TPopulation::iterator TIter;
+        //typedef typename TPopulation::pointer TPtr;
+	//typedef typename TPopulation::iterator TIter;
 
     
 	for (size_t i = 0; i < offspring.size(); ++i)

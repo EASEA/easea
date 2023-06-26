@@ -121,9 +121,9 @@ Mutation probability: 1.0
   Selection operator: Tournament 2 // ou 0,7 // deterministic // random // roulette
   Offspring size: 100%
   Reduce offspring operator: Roulette
-  Surviving offspring: 5 
+  Surviving offspring: 100%
   Reduce parents operator: Tournament 2 
-  Surviving parents: 5 
+  Surviving parents: 100%
   Final reduce operator: Tournament 2
   Elitism: Weak
 

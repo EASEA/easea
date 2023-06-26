@@ -102,8 +102,8 @@ public:
     CMatrix<T> inverse1();
 
     CMatrix<T>& operator=(const std::vector<std::vector<T>> &m);
-    std::vector<T>& operator[](unsigned i) { return mat[i]; }
-    std::vector<T> operator[](unsigned i) const { return mat[i]; }
+    std::vector<T>& operator[](unsigned i) { assert(i < mat.size()); return mat[i]; }
+    std::vector<T> operator[](unsigned i) const { assert(i < mat.size()); return mat[i]; }
     CMatrix<T>& operator+=(const CMatrix<T> &m);
     CMatrix<T>& operator-=(const CMatrix<T> &m);
     CMatrix<T>& operator*=(const CMatrix<T> &m);
@@ -223,7 +223,7 @@ CMatrix<TE> operator*(const CMatrix<TE>& a, const TE& b)
 template <typename TE>
 bool operator==(const CMatrix<TE>& a, const CMatrix<TE>& b)
 {
-    if (a.N != b.N || a.M |= b.M)
+    if (a.N != b.N || a.M != b.M)
         return false;
 
     for (unsigned i=0; i<a.N; i++)

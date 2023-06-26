@@ -69,12 +69,14 @@ public:
   std::vector<typename TIndividual::TO> getIntercept(CMatrix<typename TIndividual::TO> &extremePoints);
   template <typename TIter> void normalizePopulation(const std::vector<typename TIndividual::TO> &idealPoint, const std::vector<typename TIndividual::TO> &intercepts, TIter begin, TIter end);
   template <typename TIter> void normalize(TIter begin, TIter end, const typename TIndividual::TO epsilon);
+  void on_individuals_received() override;
           
 protected:
   std::list<TI *> m_noncritical;
   
   static bool Dominate(const TI *individual1, const TI *individual2);
-  void makeOneGeneration(void);
+  void makeOneGeneration(void) override;
+  void initialize() override;
   template <typename TPtr, typename TIter> TIter selectNoncrit(std::list<TPtr> &front, TIter begin, TIter end);
   template <typename TPtr, typename TIter> TIter selectCrit(std::list<TPtr> &front, TIter begin, TIter end);
   size_t nnReferencePoint(TIndividual &individual) const;
@@ -94,6 +96,12 @@ Cnsga_iii<TIndividual, TRandom>::Cnsga_iii(TRandom random, TP &problem, const st
   , easea::operators::crossover::CWrapCrossover<TO, TV>(crossover)
   , easea::operators::mutation::CWrapMutation<TO, TV>(mutation), m_referenceSet(referenceSet), m_epsilon(epsilon)
   {
+  }
+
+template <typename TIndividual, typename TRandom>
+void Cnsga_iii<TIndividual, TRandom>::initialize() {
+	TBase::initialize();
+	//NOTE: this was commented when initialize() and deferred evaluation were introduced
 /*    TBase::m_population.resize(initial.size());
     for (size_t i = 0; i < initial.size(); ++i)
     {
@@ -105,7 +113,21 @@ Cnsga_iii<TIndividual, TRandom>::Cnsga_iii(TRandom random, TP &problem, const st
 
       TBase::getProblem()(individual);
     }*/
-  }
+}
+
+template <typename TIndividual, typename TRandom>
+void Cnsga_iii<TIndividual, TRandom>::on_individuals_received() {
+	// required for updating reObjective
+	auto& pop = TBase::m_population;
+	std::vector<TI *> ppop;
+	ppop.reserve(pop.size());
+	/*for (size_t i = 0; i < pop.size(); ++i)
+		ppop.push_back(&pop[i]);*/
+	std::transform(pop.begin(), pop.end(), std::back_inserter(ppop), [](auto& popit) { return &popit;});
+	normalize(ppop.begin(), ppop.end(), m_epsilon);
+}
+
+
 
 template <typename TIndividual, typename TRandom>
 Cnsga_iii<TIndividual, TRandom>::~Cnsga_iii(void)
@@ -135,7 +157,7 @@ typename Cnsga_iii<TIndividual, TRandom>::TPopulation Cnsga_iii<TIndividual, TRa
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-    for (int i = 0; i < offspring.size(); ++i)
+    for (int i = 0; i < static_cast<int>(offspring.size()); ++i)
     {
 	TIndividual &child = offspring[i];
 	this->getMutation()(child);
@@ -178,8 +200,9 @@ void Cnsga_iii<TIndividual, TRandom>::makeOneGeneration(void)
 template <typename TIndividual, typename TRandom>
 template <typename TPtr, typename TIter> TIter Cnsga_iii<TIndividual, TRandom>::selectNoncrit(std::list<TPtr> &front, TIter begin, TIter end)
 {
+  /* Note: end was unused before, this could create an overflow */
   TIter dest = begin;
-  for (auto i = front.begin(); i != front.end(); ++i, ++dest)
+  for (auto i = front.begin(); i != front.end() && dest != end; ++i, ++dest) // NOTE: && dest != end added to prevent OOB
     *dest = **i;
   m_noncritical.splice(m_noncritical.end(), front, front.begin(), front.end());
   return dest;
@@ -188,8 +211,8 @@ template <typename TPtr, typename TIter> TIter Cnsga_iii<TIndividual, TRandom>::
 template <typename TIndividual, typename TRandom>
 template <typename TPtr, typename TIter> TIter Cnsga_iii<TIndividual, TRandom>::selectCrit(std::list<TPtr> &front, TIter begin, TIter end)
 {
-  assert(front.size() >= std::distance(begin, end));
-  if (front.size() == std::distance(begin, end))
+  assert(static_cast<long>(front.size()) >= std::distance(begin, end));
+  if (static_cast<long>(front.size()) == std::distance(begin, end))
     return selectNoncrit(front, begin, end);
   {
       std::list<TPtr> population(m_noncritical.begin(), m_noncritical.end());
@@ -269,7 +292,7 @@ template <typename TIter> TIter Cnsga_iii<TIndividual, TRandom>::nicher(std::lis
 template <typename TIndividual, typename TRandom>
 typename TIndividual::TO Cnsga_iii<TIndividual, TRandom>::Distance(const std::vector<typename TI::TO> &referencePoint, const std::vector< typename TI::TO> &objective) const
 {
-  typename  TI::TO factor = std::inner_product(objective.begin(), objective.end(), referencePoint.begin(), (TO)0) / std::inner_product(objective.begin(), objective.end(), objective.begin(), (TO)0);
+  typename  TI::TO factor = std::inner_product(objective.begin(), objective.end(), referencePoint.begin(), (TO)1) / std::inner_product(objective.begin(), objective.end(), objective.begin(), (TO)1);
   TO sum = 0;
   for (size_t i = 0; i < objective.size(); ++i)
   {
@@ -397,8 +420,11 @@ std::vector<typename TIndividual::TO> Cnsga_iii<TIndividual, TRandom>::getInterc
     CMatrix<typename TIndividual::TO> temp1(inverse.Rows(),1, 1.);
     CMatrix<typename TIndividual::TO> temp = inverse*temp1;
     std::vector<typename TIndividual::TO> intercepts(temp.Rows());
-    for (size_t i = 0; i < intercepts.size(); ++i)
-      intercepts[i] = 1 / temp[i][1];
+    for (size_t i = 0; i < intercepts.size(); ++i) {
+      /* Old line below was OOB because M = 1 and indices start at 0, not 1. */
+      // intercepts[i] = 1 / temp[i][1];
+      intercepts[i] = 1. / temp[i][0];
+    }
     return intercepts;
   }
   catch (...)

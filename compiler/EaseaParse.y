@@ -13,6 +13,7 @@ Centre de Math�matiques Appliqu�es
 #include "debug.h"
 #include "EaseaYTools.h"
 #include "EaseaParse.hpp"
+#include "errors.h"
 
 #define YYEXIT_FAILURE	1
 #define YYEXIT_SUCCESS	0
@@ -27,6 +28,8 @@ int nClasses_nb = 0;
 char sPROJECT_NAME[1000];
 char sLOWER_CASE_PROJECT_NAME[1000];
 char sEZ_FILE_NAME[1000];
+char sOutputFileName[1000];
+char sTPL_FILE_NAME[1000];
 char sEO_DIR[1000];
 char sEZ_PATH[1000];
 char sTPL_DIR[1000];
@@ -74,34 +77,15 @@ unsigned iMAX_INIT_TREE_D,iMIN_INIT_TREE_D,iMAX_TREE_D,iNB_GPU,iPRG_BUF_SIZE,iMA
 extern int yylex();
 extern char * yytext;
 
-void yyerror(const char * s){
-  printf("%s\nSyntax Error at line : %d (on text : %s)\nFor more details during the EASEA compiling, use the \"-v\" option\n",
-	 s,yylineno,yytext);
-}
+void yyerror(const char * str);
 
-char* concat_delete(char* lhs, char* rhs) {
-	int len = strlen(lhs) + strlen(rhs) + 1;
-	char* ret = new char[len]();
-	ret = strncat(ret, lhs, len);
-	ret = strncat(ret, rhs, len);
-	delete[] lhs;
-	return ret;
-}
-
-char* sdup(const char* str) {
-	int len = strlen(str)+1;
-	char* ret = new char[len];
-	memcpy(ret, str, len);
-	return ret;
-}
-
-char* itos(int n) {
-	char buf[32];
-	snprintf(buf, 32, "%d", n);
-	return sdup(buf);
-}
-
+char* concat_delete(char* lhs, char* rhs);
+char* sdup(const char* str);
+char* itos(int n);
 %}
+
+// better errors
+%define parse.error verbose
 
 %code provides {
 // forward references
@@ -781,8 +765,7 @@ int easeaParse(int argc, char *argv[]){
   
   TARGET=STD;
   bVERBOSE=0;
-  sRAW_PROJECT_NAME[0]=0; // used to ask for a filename if no filename is found on the command line.
-    
+      
     std::cout << "EASENA version: " << easea::version::as_string() << std::endl;
 
   while ((++nParamNb) < argc) {
@@ -808,11 +791,12 @@ int easeaParse(int argc, char *argv[]){
       TARGET_FLAVOR = FLAVOR_GP;
     }
     else if (!mystricmp(sTemp,"std"))  {
+      // printf below because this is default
       TARGET=STD;
-      printf("Compiled with STD template\n");
       TARGET_FLAVOR = STD_FLAVOR_SO;
     }
     else if (!mystricmp(sTemp,"std_mo")) {
+      printf("Compiled with STD MO template\n");
       TARGET=STD;
       TARGET_FLAVOR = STD_FLAVOR_MO;
     }
@@ -905,7 +889,18 @@ int easeaParse(int argc, char *argv[]){
         strcpy(sEO_DIR,argv[nParamNb]);
       }
     }
-    else strcpy(sRAW_PROJECT_NAME,argv[nParamNb]);
+    else {
+    	if (argv[nParamNb][0]=='-' || argv[nParamNb][0]=='/') {
+		fprintf(stderr, "Error: Unknown CLI option: '%s'\n", argv[nParamNb]);
+		exit(1);
+	} else {
+        	strcpy(sRAW_PROJECT_NAME,argv[nParamNb]);
+	}
+    }
+  }
+
+  if (TARGET == STD && TARGET_FLAVOR == STD_FLAVOR_SO) {// default
+	printf("Compiled with STD template\n");
   }
 
   CEASEAParser_create();
@@ -954,22 +949,24 @@ double CEASEAParser_assign(CSymbol* spIdentifier, double dValue)
   return spIdentifier->dValue;
 }
 
-/*double CEASEAParser_divide(double a, double b)
-{
-  if (b == 0) {
-    printf("division by zero\n");
-    YYERROR;
-    return 0;
-  }
-  else {
-    return a / b;
-  }
-}
-*/
-
-void CEASEAParser_yysyntaxerror(){
-
-  printf("Syntax Error at line : %d (on text : %s)\nFor more details during the EASEA compiling, use the \"-v\" option\n",
-	 yylineno,yytext);
+char* concat_delete(char* lhs, char* rhs) {
+	int len = strlen(lhs) + strlen(rhs) + 1;
+	char* ret = new char[len]();
+	ret = strncat(ret, lhs, len);
+	ret = strncat(ret, rhs, len);
+	delete[] lhs;
+	return ret;
 }
 
+char* sdup(const char* str) {
+	int len = strlen(str)+1;
+	char* ret = new char[len];
+	memcpy(ret, str, len);
+	return ret;
+}
+
+char* itos(int n) {
+	char buf[32];
+	snprintf(buf, 32, "%d", n);
+	return sdup(buf);
+}

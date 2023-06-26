@@ -72,7 +72,7 @@ void C3x1CrossoverLauncher<TObjective, TVariable, TRandom>::runCrossover(std::ve
     std::vector<const TVariable *> _parent(parent.begin(), parent.end());
     for (size_t child = 0, prnt = 0; child < offspring.size();)
     {
-	std::random_shuffle(_parent.begin(), _parent.end(), [this](const size_t n)-> size_t{return std::uniform_int_distribution<size_t> (0, n - 1)(this->getRandom());});
+	std::shuffle(_parent.begin(), _parent.end(), this->getRandom());
 	for (size_t parent1 = 0; child < offspring.size() && parent1 < parent.size(); ++child, parent1 += 3, prnt = (prnt + 1) % parent.size())
 	{
 	    const size_t parent2 = (parent1 + 1) % parent.size();

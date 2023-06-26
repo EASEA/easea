@@ -11,7 +11,6 @@
 
 #include <iostream>
 
-class CRandomGenerator;
 #include "CVariable.h"
 
 /* Class of individual's (solution) implementation */
@@ -67,7 +66,7 @@ public:
     bool valid;
     bool isImmigrant;
     float fitness;
-    static CRandomGenerator* rg;
+
 public:
 
     CIndividual();
@@ -76,21 +75,22 @@ public:
     CIndividual(CIndividual&&) noexcept =default;
     CIndividual& operator=(CIndividual&&) noexcept =default;
     virtual ~CIndividual() =default;
+    virtual bool evaluate_wrapper(bool force_evaluation);
     virtual float evaluate()  =  0;
     virtual void printOn(std::ostream& O) const = 0;
     virtual unsigned mutate(float pMutationPerGene)  = 0;
     virtual CIndividual* crossover(CIndividual** p2)  = 0;
-    virtual CIndividual* clone()  = 0;
+    virtual CIndividual* clone() = 0;
 
     virtual std::string serialize() = 0;
     virtual void deserialize(std::string EASEA_Line) = 0;
 
     virtual void boundChecking() = 0;
 
-    static unsigned getCrossoverArrity(){ return 2; }
-    float getFitness(){ return this->fitness; }
-
-
+    static unsigned getCrossoverArity(){ return 2; }
+    float getFitness() const { return this->fitness; }
 };
+
+std::ostream& operator<<(std::ostream& os, CIndividual const& ind);
 
 #endif /* CINDIVIDUAL_H_ */

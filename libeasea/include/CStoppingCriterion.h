@@ -50,7 +50,8 @@ class CTimeCriterion : public CStoppingCriterion {
     virtual bool reached();
     CTimeCriterion(unsigned timeLimit);
     void setElapsedTime(double elapsedTime);
-    double getElapsedTime();
+    double getElapsedTime() const;
+    unsigned getLimit() const;
 };
 
 /* ****************************************

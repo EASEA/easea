@@ -106,7 +106,7 @@ typename CGaussianMutation<TObjective, TRandom>::TO CGaussianMutation<TObjective
 }
 
 template <typename TObjective, typename TRandom>
-typename CGaussianMutation<TObjective, TRandom>::TO CGaussianMutation<TObjective, TRandom> ::boundedMutate(TRandom &random, const TObjective distributionIndex, const TObjective idecision, const TObjective lower, const TObjective upper)
+typename CGaussianMutation<TObjective, TRandom>::TO CGaussianMutation<TObjective, TRandom> ::boundedMutate(TRandom &random, [[maybe_unused]] const TObjective distributionIndex, const TObjective idecision, const TObjective lower, const TObjective upper)
 {
 	static std::uniform_real_distribution<TObjective> dist(0, 1);
 	TO sigma = m_tau * 2.1;

@@ -8,7 +8,6 @@
 
 using namespace std;
 
-extern CRandomGenerator* globalRandomGenerator;
 extern unsigned opArity[];
 //extern const unsigned* opArity;
 
@@ -99,7 +98,7 @@ en
 */
 GPNode* selectNode( GPNode* root, int* childId, int* depth){
   
-  int xoverDepth = globalRandomGenerator->random(0,depthOfTree(root));
+  int xoverDepth = random(0,depthOfTree(root));
   (*depth) = xoverDepth;
   
   GPNode** dNodes;
@@ -119,7 +118,7 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
 
   int reminderP = 0, parentIndexP = 0;
 
-  int xoverP = globalRandomGenerator->random(0,stockPointCount);
+  int xoverP = random(0,stockPointCount);
   for( int i=0 ; ; )
     if( (i+static_cast<int>(opArity[(int)dNodes[parentIndexP]->opCode]))>xoverP ){
       reminderP = xoverP-i;
@@ -157,12 +156,12 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
   GPNode* node = new GPNode();
   // first select the opCode for the current Node.
   if( full ){
-    if( currentDepth<maxDepth ) node->opCode = globalRandomGenerator->random(constLen,totalLen);
-    else node->opCode = globalRandomGenerator->random(0, constLen);
+    if( currentDepth<maxDepth ) node->opCode = random(constLen,totalLen);
+    else node->opCode = random(0, constLen);
   }
   else{
-    if( currentDepth<maxDepth ) node->opCode = globalRandomGenerator->random(0, totalLen);
-    else node->opCode = globalRandomGenerator->random(0, constLen);
+    if( currentDepth<maxDepth ) node->opCode = random(0, totalLen);
+    else node->opCode = random(0, constLen);
   }
  
   int arity = static_cast<int>(opArity[(int)node->opCode]);
@@ -177,7 +176,7 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
     node->children[i] = NULL;
 
   if( node->opCode==OP_ERC ){
-    node->erc_value = globalRandomGenerator->random(0.,1.);
+    node->erc_value = random(0.,1.);
   }
   //else if( node->opCode==OP_VAR )
   //node->var_id = globalRandomGenerator->random(1,VAR_LEN);

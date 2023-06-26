@@ -17,14 +17,14 @@
 class CGenerationalCriterion;
 class CControlCStopingCriterion;
 class CSelectionOperator;
+class CRandomGenerator;
 namespace cxxopts {
   class ParseResult;
 }
 
 class Parameters {
   protected:
-    std::unique_ptr<cxxopts::ParseResult> vm;
-    std::unique_ptr<cxxopts::ParseResult> vm_file;
+    std::unique_ptr<vm_t> vm;
 
   public:
     CSelectionOperator* selectionOperator;
@@ -38,8 +38,8 @@ class Parameters {
 
     int nbGen;
     int nbCPUThreads;
-    int noLogFile;
-    int reevaluateImmigrants;
+    bool noLogFile;
+    bool reevaluateImmigrants;
 
     bool alwaysEvaluate;
 
@@ -54,7 +54,7 @@ class Parameters {
     float pMutationPerGene;
     CRandomGenerator* randomGenerator;
 
-    time_t seed;
+    int seed;
 
     unsigned int parentPopulationSize;
     unsigned int offspringPopulationSize;
@@ -76,24 +76,26 @@ class Parameters {
     bool baldwinism;
 
     //Miscalleous parameters
-    int printStats;
-    int generateCSVFile;
-    int generatePlotScript;
-    int generateRScript;	
-    int plotStats;
-    int printInitialPopulation;
-    int printFinalPopulation;
+    bool printStats;
+    bool generateCSVFile;
+    bool generatePlotScript;
+    bool generateRScript;
+    bool plotStats;
+    bool printInitialPopulation;
+    bool printFinalPopulation;
 
     bool savePopulation;
     bool startFromFile;
+    std::string outputFilename;
+    std::string inputFilename;
 
     //Parameters for the Island Model
     bool remoteIslandModel;
     std::string ipFile;
     float migrationProbability;
     int serverPort;
+    bool silentNetwork;
 
-    char* outputFilename;
     char* plotOutputFilename;
 
     int fstGpu;
@@ -110,10 +112,11 @@ class Parameters {
     virtual ~Parameters();
     virtual CEvolutionaryAlgorithm* newEvolutionaryAlgorithm() = 0;
     int setReductionSizes(int popSize, float popReducSize);
+    int getOffspringSize(int defaut_value, int parent_size) const;
 
     template <typename T>
-    auto setVariable(std::string const& argumentName, T&& defaultValue) {
-	    return ::setVariable(argumentName, std::forward<T>(defaultValue), vm, vm_file);
+    auto setVariable(std::string const& argumentName, T&& defaultValue) const {
+	    return ::setVariable(argumentName, std::forward<T>(defaultValue), vm);
     }
 };
 

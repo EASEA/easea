@@ -8,12 +8,7 @@
 #ifndef CPSEUDORANDOM_H
 #define CPSEUDORANDOM_H
 
-#include "CRandomGenerator.h"
-
 class CPseudoRandom {
-private:
-    static CRandomGenerator randomGenerator_;
-
 public:
     CPseudoRandom();
 

@@ -45,8 +45,7 @@ CPopulation::CPopulation() {
 }
 
 CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopulationSize,
-           float pCrossover, float pMutation, float pMutationPerGene,
-           CRandomGenerator* rg, Parameters* params, CStats* cstats){
+           float pCrossover, float pMutation, float pMutationPerGene, Parameters* params, CStats* cstats){
 
   this->parents     = new CIndividual*[parentPopulationSize];
   this->offsprings  = new CIndividual*[offspringPopulationSize];
@@ -64,8 +63,6 @@ CPopulation::CPopulation(unsigned parentPopulationSize, unsigned offspringPopula
   this->pMutationPerGene = pMutationPerGene;
   pPopulation = parents;
   bBest = Best;
-
-  this->rg = rg;
 
   this->currentEvaluationNb = 0;
   this->realEvaluationNb = 0;
@@ -124,10 +121,8 @@ void CPopulation::evaluatePopulation(CIndividual** population, unsigned populati
 #pragma omp parallel for reduction(+:real_evals)
 #endif
   for( int i=0 ; i < static_cast<int>(populationSize) ; i++ ){
-    if (params->alwaysEvaluate || !population[i]->valid) {
-	++real_evals;
-	population[i]->evaluate();
-    }
+	if (population[i]->evaluate_wrapper(params->alwaysEvaluate))
+		++real_evals;
   }
   realEvaluationNb += real_evals;
   currentEvaluationNb += populationSize;
@@ -257,16 +252,11 @@ void CPopulation::sortRPopulation(CIndividual** population, unsigned populationS
 }
 
 /* Fonction qui va serializer la population */
-void CPopulation::serializePopulation(){
-  ofstream EASEA_File;
-  std::string fichier = params->outputFilename;
-  fichier.append(".pop");
-  EASEA_File.open(fichier.c_str(), ios::app);
-  for(int i=0; (unsigned)i<parentPopulationSize; i++){
-  EASEA_File << parents[i]->serialize() << endl;
-
+void CPopulation::serializePopulation(std::string const& file){
+  ofstream EASEA_File { file, ios::trunc };
+  for(unsigned i=0; (unsigned)i<parentPopulationSize; i++){
+  	EASEA_File << parents[i]->serialize() << endl;
   }
-  EASEA_File.close();
 }
 
 int CPopulation::getWorstIndividualIndex(CIndividual** population){
@@ -329,7 +319,7 @@ void CPopulation::reduceTotalPopulation(CIndividual** elitPop){
 
 
 void CPopulation::produceOffspringPopulation(){
-	const unsigned crossoverArrity = CIndividual::getCrossoverArrity();
+	const unsigned crossoverArrity = CIndividual::getCrossoverArity();
 	selectionOperator->initialize(parents,selectionPressure,actualParentPopulationSize);
 
 	int sum = 0;
@@ -353,7 +343,7 @@ void CPopulation::produceOffspringPopulation(){
 				++sum;
 			}
 
-			if( rg->tossCoin(pCrossover) ){
+			if( tossCoin(pCrossover) ){
 				for( unsigned j=0 ; j<crossoverArrity-1 ; j++ ){
 					index = selectionOperator->selectNext(parentPopulationSize);
 					ps[j] = parents[index];
@@ -365,7 +355,7 @@ void CPopulation::produceOffspringPopulation(){
 			}
 			else child = parents[index]->clone();//new CIndividual(*parents[index]);
 
-			if( rg->tossCoin(pMutation) ){
+			if( tossCoin(pMutation) ){
 				child->mutate(pMutationPerGene);
 			}
 

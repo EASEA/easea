@@ -33,7 +33,6 @@ int EZ_POP_SIZE;
 int OFFSPRING_SIZE;
 
 
-
 int main(int argc, char** argv){
 	if (argc > 1){
     	    for (int i = 1; i < argc; i++){
@@ -42,8 +41,8 @@ int main(int argc, char** argv){
     	    }
     	}
 
-
 	ParametersImpl p("EASEA.prm", argc, argv);
+
 	CEvolutionaryAlgorithm* ea = p.newEvolutionaryAlgorithm();
 
 	EA = ea;
@@ -58,9 +57,6 @@ int main(int argc, char** argv){
 
 	delete pop;
 
-#ifdef WIN32
-	system("pause");
-#endif
 	return 0;
 }
 
@@ -105,7 +101,6 @@ EvaluatePostFixIndividuals( const float * k_progs, const int maxprogssize,  cons
 #include "EASEAIndividual.hpp"
 bool INSTEAD_EVAL_STEP = false;
 
-CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm *EA;
 
 #define CUDAGP_TPL
@@ -121,6 +116,7 @@ typedef float TV;
 unsigned aborded_crossover;
 float** inputs;
 float* outputs;
+float* gflatInputs;
 
 
 struct gpuEvaluationData<TO>* gpuData;
@@ -130,6 +126,7 @@ int lstGpu = 0;
 
 
 struct gpuEvaluationData<TO>* globalGpuData;
+pthread_t* globalThreads;
 float* fitnessTemp;  
 bool freeGPU = false;
 bool first_generation = true;
@@ -144,8 +141,6 @@ PopulationImpl* Pop = NULL;
 \ANALYSE_GP_OPCODE
 /* Insert declarations about opcodes*/
 \INSERT_GP_OPCODE_DECL
-
-
 
 
 GPNode* ramped_hh(){
@@ -172,7 +167,7 @@ void dispatchPopulation(int populationSize){
     cudaError_t lastError = cudaGetDeviceProperties(&deviceProp, index+fstGpu);
     if( lastError!=cudaSuccess ){
       std::cerr << "Cannot get device information for device no : " << index+fstGpu << std::endl;
-      exit(-1);
+      exit(1);
     }
 
     globalGpuData[index].num_MP =  deviceProp.multiProcessorCount; 
@@ -237,7 +232,6 @@ void cudaPreliminaryProcessGP(struct gpuEvaluationData<TO>* localGpuData){
 
 }
 
-
 float recEval(GPNode* root, float* input) {
   float OP1=0, OP2= 0, RESULT = 0;
   if( opArity[(int)root->opCode]>=1) OP1 = recEval(root->children[0],input);
@@ -246,7 +240,7 @@ float recEval(GPNode* root, float* input) {
 \INSERT_GP_CPU_SWITCH
   default:
     fprintf(stderr,"error unknown terminal opcode %d\n",root->opCode);
-    exit(-1);
+    exit(1);
   }
   return RESULT;
 }
@@ -363,7 +357,7 @@ int flatteningSubPopulation( struct gpuEvaluationData<TO>* localGpuData, Individ
     localGpuData->progs[index++] = OP_RETURN;
     if( index > MAX_PROGS_SIZE ){
       std::cerr << "Error, impossible to flatten the population. Consider to increase the MAX_PROGS_SIZE. " << std::endl;
-      exit(-1);
+      exit(1);
     }
   }
   return index;
@@ -402,7 +396,7 @@ void* gpuThreadMain(void* arg){
     sem_wait(&localGpuData->sem_in);
     
     if( freeGPU ) {
-      // do we need to free gpu memory ?
+      // do we need to free gpu memory ? WTF yes
       cudaFree(localGpuData->d_fitness);
       //cudaFree(localGpuData->d_population);
 
@@ -410,7 +404,9 @@ void* gpuThreadMain(void* arg){
       cudaFree(localGpuData->d_progs);
 
       delete[] localGpuData->progs;
-      delete[] localGpuData->indexes;	break;
+      delete[] localGpuData->indexes;
+      delete[] localGpuData->fitness;
+      break;
     }
 
     if(nbr_cudaPreliminaryProcess > 0) {
@@ -418,7 +414,8 @@ void* gpuThreadMain(void* arg){
       if( nbr_cudaPreliminaryProcess==2 ) 
 	cudaPreliminaryProcessGP(localGpuData);
       else {
-	cudaPreliminaryProcessGP(localGpuData);
+        // not needed
+	//cudaPreliminaryProcessGP(localGpuData);
       }
       nbr_cudaPreliminaryProcess--;
 	
@@ -490,7 +487,7 @@ void InitialiseGPUs(){
 
   //MultiGPU part on one CPU
   globalGpuData = (struct gpuEvaluationData<TO>*)malloc(sizeof(struct gpuEvaluationData<TO>)*num_gpus);
-  pthread_t* t = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
+  globalThreads = (pthread_t*)malloc(sizeof(pthread_t)*num_gpus);
   int gpuId = fstGpu;
   //here we want to create on thread per GPU
   for( int i=0 ; i<num_gpus ; i++ ){
@@ -503,10 +500,11 @@ void InitialiseGPUs(){
     globalGpuData[i].threadId = i;
     sem_init(&globalGpuData[i].sem_in,0,0);
     sem_init(&globalGpuData[i].sem_out,0,0);
-    if( pthread_create(t+i,NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
+    if( pthread_create(globalThreads+i,NULL,gpuThreadMain,globalGpuData+i) ){ perror("pthread_create : "); }
 
     globalGpuData[i].flatInputs = flatInputs;
   }
+  gflatInputs = flatInputs; // avoid leaks
 }
 
 GPNode* pickNthNode(GPNode* root, int N, int* childId){
@@ -569,8 +567,8 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
   int stockPointChildId=0;
   int graftPointChildId=0;
 
-  bool stockCouldBeTerminal = globalRandomGenerator->tossCoin(0.1);
-  bool graftCouldBeTerminal = globalRandomGenerator->tossCoin(0.1);
+  bool stockCouldBeTerminal = tossCoin(0.1);
+  bool graftCouldBeTerminal = tossCoin(0.1);
 
   int childrenDepth = 0, Np1 = 0 , Np2 = 0;
   GPNode* stockParentNode = NULL;
@@ -589,9 +587,9 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
     }
 
     if( nbNodeP1<2 ) Np1=0;
-    else Np1 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP1);
+    else Np1 = (int)random((int)0,(int)nbNodeP1);
     if( nbNodeP2<2 ) Np2=0;
-    else Np2 = (int)globalRandomGenerator->random((int)0,(int)nbNodeP2);
+    else Np2 = (int)random((int)0,(int)nbNodeP2);
 
 
     
@@ -634,7 +632,7 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
   }
 }
 
-void evale_pop_chunk(CIndividual** population, int popSize){
+void evale_pop_chunk([[maybe_unused]] CIndividual** population, [[maybe_unused]] int popSize) {
   \INSTEAD_EVAL_FUNCTION
 }
 
@@ -649,14 +647,22 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 
 	if( lstGpu==fstGpu && fstGpu==0 ){
 	  // use all gpus available
-	  cudaGetDeviceCount(&num_gpus);
+	  auto code = cudaGetDeviceCount(&num_gpus);
+          if (code != cudaSuccess) {
+	    std::cerr << "Error: could not retrieve CUDA device(s): " << cudaGetErrorString(code) << std::endl;
+	    exit(1);
+	  }
 	}
 	else{
 	  int queryGpuNum;
-	  cudaGetDeviceCount(&queryGpuNum);
+	  auto code = cudaGetDeviceCount(&queryGpuNum);
+          if (code != cudaSuccess) {
+            std::cerr << "Error: could not retrieve CUDA device(s): " << cudaGetErrorString(code) << std::endl;
+	    exit(1);
+	  }
 	  if( (lstGpu - fstGpu)>queryGpuNum || fstGpu<0 || lstGpu>queryGpuNum){
 	    std::cerr << "Error, not enough devices found on the system ("<< queryGpuNum <<") to satisfy user configuration ["<<fstGpu<<","<<lstGpu<<"["<<std::endl;
-	    exit(-1);
+	    exit(1);
 	  }
 	  else{
 	    num_gpus = lstGpu-fstGpu;
@@ -672,20 +678,22 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 void EASEAFinal(CPopulation* pop){
 	freeGPU=true;
 	wake_up_gpu_thread();
+	delete[](gflatInputs);
         free(globalGpuData);
+	free(globalThreads);
 	
 	\INSERT_FINALIZATION_FCT_CALL;
 }
 
-void AESAEBeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_BEGIN_GENERATION_FUNCTION
 }
 
-void AESAEEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEEndGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_END_GENERATION_FUNCTION
 }
 
-void AESAEGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm){
+void AESAEGenerationFunctionBeforeReplacement([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
         \INSERT_GENERATION_FUNCTION_BEFORE_REPLACEMENT
 }
 
@@ -780,25 +788,11 @@ CIndividual* IndividualImpl::crossover(CIndividual** ps){
 }
 
 
-void IndividualImpl::printOn(std::ostream& os) const{
+void IndividualImpl::printOn([[maybe_unused]] std::ostream& os) const {
 	\INSERT_DISPLAY
 }
 
-std::ostream& operator << (std::ostream& O, const IndividualImpl& B)
-{
-  // ********************
-  // Problem specific part
-  O << "\nIndividualImpl : "<< std::endl;
-  O << "\t\t\t";
-  B.printOn(O);
-
-  if( B.valid ) O << "\t\t\tfitness : " << B.fitness;
-  else O << "fitness is not yet computed" << std::endl;
-  return O;
-}
-
-
-unsigned IndividualImpl::mutate( float pMutationPerGene ){
+unsigned IndividualImpl::mutate([[maybe_unused]] float pMutationPerGene ) {
   this->valid=false;
 
 
@@ -819,6 +813,8 @@ void PopulationImpl::evaluateParentPopulation(){
   }
   
   wake_up_gpu_thread(); 
+  realEvaluationNb += EA->population->parentPopulationSize;
+  currentEvaluationNb += EA->population->parentPopulationSize;
 }
 
 void PopulationImpl::evaluateOffspringPopulation(){
@@ -836,9 +832,9 @@ void PopulationImpl::evaluateOffspringPopulation(){
   
   wake_up_gpu_thread(); 
   first_generation = false;
+  realEvaluationNb += EA->population->offspringPopulationSize;
+  currentEvaluationNb += EA->population->offspringPopulationSize;
 }
-
-
 
 
 
@@ -849,13 +845,10 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	omp_set_num_threads(this->nbCPUThreads);
 	#endif
 
-        globalRandomGenerator = new CRandomGenerator(seed);
-        this->randomGenerator = globalRandomGenerator;
-
-        selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing, globalRandomGenerator);
-        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing, globalRandomGenerator);
-        parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing, globalRandomGenerator);
-        offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing, globalRandomGenerator);
+        selectionOperator = getSelectionOperator(setVariable("selectionOperator", "\SELECTOR_OPERATOR"), this->minimizing);
+        replacementOperator = getSelectionOperator(setVariable("reduceFinalOperator", "\RED_FINAL_OPERATOR"),this->minimizing);
+        parentReductionOperator = getSelectionOperator(setVariable("reduceParentsOperator", "\RED_PAR_OPERATOR"),this->minimizing);
+        offspringReductionOperator = getSelectionOperator(setVariable("reduceOffspringOperator", "\RED_OFF_OPERATOR"),this->minimizing);
         selectionPressure = setVariable("selectionPressure", (float)\SELECT_PRM);
         replacementPressure = setVariable("reduceFinalPressure", (float)\RED_FINAL_PRM);
         parentReductionPressure = setVariable("reduceParentsPressure", (float)\RED_PAR_PRM);
@@ -865,7 +858,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         pMutationPerGene = 0.05;
 
         parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
-        offspringPopulationSize = setVariable("nbOffspring", (int)\OFF_SIZE);
+        offspringPopulationSize = getOffspringSize((int)\OFF_SIZE, \POP_SIZE);
 
 
         parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents", (float)\SURV_PAR_SIZE));
@@ -910,7 +903,8 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	this->savePopulation = setVariable("savePopulation", \SAVE_POPULATION);
 	this->startFromFile = setVariable("startFromFile", \START_FROM_FILE);
 
-        this->outputFilename = (char*)"EASEA";
+        this->outputFilename = setVariable("outputFile", "EASEA");
+        this->inputFilename = setVariable("inputFile", "EASEA.pop");
         this->plotOutputFilename = (char*)"EASEA.png";
 
 	this->remoteIslandModel = setVariable("remoteIslandModel", \REMOTE_ISLAND_MODEL);
@@ -924,19 +918,18 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	pEZ_MUT_PROB = &pMutationPerGene;
 	pEZ_XOVER_PROB = &pCrossover;
-//	EZ_NB_GEN = (unsigned*)setVariable("nbGen", \NB_GEN);
 	EZ_current_generation=0;
 
 	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
-	 ea->addStoppingCriterion(generationalCriterion);
+	ea->addStoppingCriterion(generationalCriterion);
 	ea->addStoppingCriterion(controlCStopingCriterion);
 	ea->addStoppingCriterion(timeCriterion);
 
-	  EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
-	  EZ_current_generation=&(ea->currentGeneration);
+	EZ_NB_GEN=((CGenerationalCriterion*)ea->stoppingCriteria[0])->getGenerationalLimit();
+	EZ_current_generation=&(ea->currentGeneration);
 
-	 return ea;
+	return ea;
 }
 
 inline void IndividualImpl::copyToCudaBuffer(void* buffer, unsigned id){
@@ -950,7 +943,7 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
     int index,Size = this->params->parentPopulationSize;
     
     if(this->params->startFromFile){
-          ifstream AESAE_File("EASEA.pop");
+          ifstream AESAE_File(this->params->inputFilename);
           string AESAE_Line;
           for( index=(Size-1); index>=0; index--) {
              getline(AESAE_File, AESAE_Line);
@@ -973,9 +966,9 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 
 
 EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
-
   // warning cstats parameter is null
-  this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params->randomGenerator,this->params, this->cstats); // NULL);
+  delete(this->population); // avoid memory leak
+  this->population = (CPopulation*)new PopulationImpl(this->params->parentPopulationSize,this->params->offspringPopulationSize, this->params->pCrossover,this->params->pMutation,this->params->pMutationPerGene,this->params, this->cstats); // NULL);
   int popSize = (params->parentPopulationSize>params->offspringPopulationSize?params->parentPopulationSize:params->offspringPopulationSize);
   ((PopulationImpl*)this->population)->cudaBuffer = (void*)malloc(sizeof(IndividualImpl)*( popSize ));
   
@@ -987,11 +980,12 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 
 }
 
-PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, rg, params, stats){
-	;
+PopulationImpl::PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, Parameters* params, CStats* stats) : CPopulation(parentPopulationSize, offspringPopulationSize, pCrossover, pMutation, pMutationPerGene, params, stats){
+
 }
 
 PopulationImpl::~PopulationImpl(){
+	free(cudaBuffer);
 }
 
 
@@ -1000,7 +994,6 @@ PopulationImpl::~PopulationImpl(){
 #ifndef PROBLEM_DEP_H
 #define PROBLEM_DEP_H
 
-//#include "CRandomGenerator.h"
 #include <stdlib.h>
 #include <iostream>
 #include <CIndividual.h>
@@ -1013,7 +1006,6 @@ PopulationImpl::~PopulationImpl(){
 
 using namespace std;
 
-class CRandomGenerator;
 class CSelectionOperator;
 class CGenerationalCriterion;
 class CEvolutionaryAlgorithm;
@@ -1035,24 +1027,18 @@ public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl();
-	float evaluate();
-	static unsigned getCrossoverArrity(){ return 2; }
-	float getFitness(){ return this->fitness; }
-	CIndividual* crossover(CIndividual** p2);
-	void printOn(std::ostream& O) const;
-	CIndividual* clone();
+	float evaluate() override;
+	CIndividual* crossover(CIndividual** p2) override;
+	void printOn(std::ostream& O) const override;
+	CIndividual* clone() override;
 
-	unsigned mutate(float pMutationPerGene);
+	unsigned mutate(float pMutationPerGene) override;
 
-	void boundChecking();
+	void boundChecking() override;
 
-	string serialize();
-	void deserialize(string AESAE_Line);
-	void copyToCudaBuffer(void* buffer, unsigned id);
-
-	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
-	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
-};
+	string serialize() override;
+	void deserialize(string AESAE_Line) override;
+	void copyToCudaBuffer(void* buffer, unsigned id);};
 
 
 class ParametersImpl : public Parameters {
@@ -1060,11 +1046,6 @@ public:
 	ParametersImpl(std::string const& file, int argc, char* argv[]);
 	CEvolutionaryAlgorithm* newEvolutionaryAlgorithm();
 };
-
-/**
- * @TODO ces functions devraient s'appeler weierstrassInit, weierstrassFinal etc... (en gros EASEAFinal dans le tpl).
- *
- */
 
 void EASEAInit(int argc, char** argv, ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
@@ -1086,7 +1067,7 @@ public:
   void* cudaBuffer;
 
 public:
-  PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, CRandomGenerator* rg, Parameters* params, CStats* stats);
+  PopulationImpl(unsigned parentPopulationSize, unsigned offspringPopulationSize, float pCrossover, float pMutation, float pMutationPerGene, Parameters* params, CStats* stats);
         virtual ~PopulationImpl();
         void evaluateParentPopulation();
 	void evaluateOffspringPopulation();
@@ -1094,51 +1075,8 @@ public:
 
 #endif /* PROBLEM_DEP_H */
 
-\START_CUDA_MAKEFILE_TPL
-NVCC= nvcc
-CPPC= g++
-LIBAESAE=$(EZ_PATH)libeasea/
-CXXFLAGS+= -std=c++14 -g -Wall -O2 -I$(LIBAESAE)include 
-LDFLAGS= $(LIBAESAE)libeasea.a -lpthread 
-
-
-
-EASEA_SRC= EASEAIndividual.cpp
-EASEA_MAIN_HDR= EASEA.cpp
-EASEA_UC_HDR= EASEAIndividual.hpp
-
-EASEA_HDR= $(EASEA_SRC:.cpp=.hpp) 
-
-SRC= $(EASEA_SRC) $(EASEA_MAIN_HDR)
-CUDA_SRC = EASEAIndividual.cu
-HDR= $(EASEA_HDR) $(EASEA_UC_HDR)
-OBJ= $(EASEA_SRC:.cpp=.o) $(EASEA_MAIN_HDR:.cpp=.o)
-
-#USER MAKEFILE OPTIONS :
-\INSERT_MAKEFILE_OPTION#END OF USER MAKEFILE OPTIONS
-
-CPPFLAGS+= -I$(LIBAESAE)include  -I/usr/local/cuda/include/
-NVCCFLAGS+= -std=c++11 #--ptxas-options="-v"# --gpu-architecture sm_23 --compiler-options -fpermissive 
-
-
-BIN= EASEA
-  
-all:$(BIN)
-
-$(BIN):$(OBJ)
-	$(NVCC) $^ -o $@ $(LDFLAGS) -Xcompiler -fopenmp
-
-%.o:%.cu
-	$(NVCC) $(NVCCFLAGS) -o $@ $< -c -DTIMING $(CPPFLAGS) -g -Xcompiler -fopenmp 
-
-easeaclean: clean
-	rm -f Makefile EASEA.prm $(SRC) $(HDR) EASEA.mak $(CUDA_SRC) *.linkinfo EASEA.png EASEA.dat EASEA.vcproj EASEA.plot EASEA.r EASEA.csv EASEA.pop
-clean:
-	rm -f $(OBJ) $(BIN) 	
-
 \START_CMAKELISTS
 cmake_minimum_required(VERSION 3.9) # 3.9: OpenMP improved support
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(EZ_ROOT $ENV{EZ_PATH})
 
 project(EASEA LANGUAGES CUDA CXX C)
@@ -1157,12 +1095,12 @@ list(FILTER EASEA_src EXCLUDE REGEX .*EASEAIndividual.cpp)
 add_executable(EASEA ${EASEA_src})
 set_target_properties(EASEA PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-target_compile_features(EASEA PUBLIC cxx_std_14)
+target_compile_features(EASEA PUBLIC cxx_std_17)
 target_compile_options(EASEA PRIVATE
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/O2 /W3>
 	$<$<AND:$<NOT:$<COMPILE_LANGUAGE:CUDA>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Release>>:-O3 -march=native -mtune=native -Wall -Wextra>
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/O1 /W4 /DEBUG:FULL>
-	$<$<AND:$<NOT:$<COMPILE_LANGUAGE:CUDA>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O2 -g -Wall -Wextra>
+	$<$<AND:$<NOT:$<COMPILE_LANGUAGE:CUDA>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-O0 -g -Wall -Wextra>
 	)
 
 find_library(libeasea_LIB
@@ -1173,14 +1111,22 @@ find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
 	PATH_SUFFIXES include easena libeasea)
-find_package(Boost REQUIRED)
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
+	add_definitions(-DBOOST_ALL_NO_LIB)
+	set(Boost_USE_STATIC_LIBS ON)
+	set(Boost_USE_MULTITHREADED ON)
+	set(Boost_USE_STATIC_RUNTIME OFF)
+endif()
+find_package(Boost REQUIRED program_options)
+
 find_package(OpenMP REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
 message(STATUS ${libeasea_INCLUDE} ${CLOGGER} ${CUDAToolkit_INCLUDE_DIRS})
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE} ${CUDAToolkit_INCLUDE_DIRS})
-target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm>)
+target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm> ${Boost_LIBRARIES})
 
 if (SANITIZE)
         target_compile_options(EASEA PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr> $<$<CXX_COMPILER_ID:MSVC>:/fsanitize=address>
@@ -1189,149 +1135,6 @@ if (SANITIZE)
 endif()
 
 \INSERT_USER_CMAKE
-
-\START_VISUAL_TPL<?xml version="1.0" encoding="Windows-1252"?>
-<VisualStudioProject
-	ProjectType="Visual C++"
-	Version="9,00"
-	Name="EASEA"
-	ProjectGUID="{E73D5A89-F262-4F0E-A876-3CF86175BC30}"
-	RootNamespace="EASEA"
-	Keyword="WIN32Proj"
-	TargetFrameworkVersion="196613"
-	>
-	<Platforms>
-		<Platform
-			Name="WIN32"
-		/>
-	</Platforms>
-	<ToolFiles>
-		<ToolFile
-			RelativePath="\CUDA_RULE_DIRcommon\Cuda.rules"
-		/>
-	</ToolFiles>
-	<Configurations>
-		<Configuration
-			Name="Release|WIN32"
-			OutputDirectory="$(SolutionDir)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="\EZ_PATHlibEasea"
-				Keep="false"
-				Runtime="0"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;\EZ_PATHlibEasea&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="$(CUDA_LIB_PATH)\cudart.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;\EZ_PATHlibEasea&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-	</Configurations>
-	<References>
-	</References>
-	<Files>
-		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-			>
-			<File
-				RelativePath=".\EASEA.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\EASEAIndividual.cu"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath=".\EASEAIndividual.hpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
-		</Filter>
-	</Files>
-	<Globals>
-	</Globals>
-</VisualStudioProject>
 
 \START_EO_PARAM_TPL#****************************************
 #

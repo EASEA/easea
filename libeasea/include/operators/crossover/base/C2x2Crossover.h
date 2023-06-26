@@ -47,8 +47,6 @@ protected:
 template <typename TObjective, typename TVariable>
 C2x2Crossover<TObjective, TVariable>::C2x2Crossover(void)
 {
-	m_nbGen;
-	m_iGen;
 }
 
 template <typename TObjective, typename TVariable>

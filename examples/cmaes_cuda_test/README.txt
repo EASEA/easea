@@ -1,5 +1,5 @@
 To Compile this example:
-  $ easea -cmaes_cuda cigtabGPU.ez
+  $ easea -cuda cigtabGPU.ez
   $ cmake . && cmake --build . --config Release
 
 To test it:

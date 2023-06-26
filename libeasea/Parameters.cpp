@@ -7,17 +7,28 @@
 
 #include "Parameters.h"
 #include "COptionParser.h"
+#include "CRandomGenerator.h"
 #include <stdio.h>
+#include <cmath>
+
+extern CRandomGenerator* globalRandomGenerator;
+
 
 Parameters::Parameters(std::string const& filename, int argc, char* argv[]) : optimise(false), baldwinism(false) {
-	parseArguments(filename.c_str(), argc, argv, vm, vm_file);
-	
+	parseArguments(filename.c_str(), argc, argv, vm);
+
 	// set parameters that can only be defined using cmd line arguments or files
 	nbCPUThreads = setVariable("nbCPUThreads", 1);
 	noLogFile = setVariable("noLogFile", false);
 	reevaluateImmigrants = setVariable("reevaluateImmigrants", false);
+	silentNetwork = setVariable("silentNetwork", false);
 	alwaysEvaluate = setVariable("alwaysEvaluate", false);
+
 	seed = setVariable("seed", 0);
+	globGen = decltype(globGen){static_cast<unsigned int>(seed)};
+	globalRandomGenerator = &globGen;
+	randomGenerator = globalRandomGenerator;
+
 	printInitialPopulation = setVariable("printInitialPopulation", false);
 	printFinalPopulation = setVariable("printFinalPopulation", false);
 	u1 = setVariable("u1", "");
@@ -44,5 +55,15 @@ int Parameters::setReductionSizes(int popSize, float popReducSize){
         }
         else
                 return static_cast<int>(popReducSize);
+}
+
+int Parameters::getOffspringSize(int defaut_value, int parent_size) const {
+	float cur = setVariable("nbOffspring", static_cast<float>(defaut_value));
+	if (cur <= 1.0) { // relative
+		auto parentSize = setVariable("popSize", parent_size);
+		return static_cast<int>(cur * static_cast<float>(parentSize));
+	} else {
+		return static_cast<int>(std::round(cur));
+	}
 }
 

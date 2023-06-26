@@ -53,7 +53,7 @@ void ndi(const size_t component, const size_t division, std::vector<TType> &poin
 }
 
 template <typename TType>
-std::list<std::vector<TType> > runNbi(const size_t nbObjectives, const size_t division)
+std::list<std::vector<TType> > getNbi(const size_t nbObjectives, const size_t division)
 {
         if (nbObjectives <= 1)	LOG_ERROR(errorCode::value, "Wrong number of objectives");
 

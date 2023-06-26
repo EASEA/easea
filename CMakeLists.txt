@@ -6,7 +6,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.9) # 3.9: OpenMP improved support
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 PROJECT(EASENA VERSION 3.2.0)
-#set(PROJECT_NAME "EASENA")
 
 message("-- PROJECT NAME: ${PROJECT_NAME}")
 message("-- PROJECT VERSION: ${PROJECT_VERSION}")
@@ -43,6 +42,7 @@ SET(easena_src
         ${CMAKE_SOURCE_DIR}/compiler/easena.cpp
         ${CMAKE_SOURCE_DIR}/compiler/NeuralLex.cpp
         ${CMAKE_SOURCE_DIR}/compiler/NeuralParse.cpp
+        ${CMAKE_SOURCE_DIR}/compiler/errors.cpp
 )
 ADD_EXECUTABLE(easena ${easena_src})
 SET_TARGET_PROPERTIES(libeasea PROPERTIES OUTPUT_NAME "libeasea" PREFIX "")
@@ -50,8 +50,8 @@ SET_TARGET_PROPERTIES(libeasna PROPERTIES OUTPUT_NAME "libeasna" PREFIX "")
 
 ### Base flags
 SET(CMAKE_STATIC_LIBRARY_PREFIX="")
-target_compile_features(libeasea PUBLIC cxx_std_14)
-target_compile_features(libeasna PUBLIC cxx_std_14)
+target_compile_features(libeasea PUBLIC cxx_std_17)
+target_compile_features(libeasna PUBLIC cxx_std_17)
 target_compile_options(libeasea PUBLIC
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -g>
 	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -march=native -mtune=native>
@@ -116,8 +116,9 @@ else ()
 endif ()
 
 ## Boost (asio)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS iostreams serialization program_options)
 target_include_directories(libeasea PUBLIC ${Boost_INCLUDE_DIRS})
+target_link_libraries(libeasea PUBLIC ${Boost_LIBRARIES})
 
 ## Bison & Flex: FLEX and BISON management to create the easea language and soon the easna/neural language
 

@@ -63,20 +63,16 @@ private:
  * \param[in] boundary    List of up and low limit values of dicision variables
  */
 template <typename TType>
-CProblem<TType>::CProblem(const size_t nObjectives, const size_t nVariables, const TBoundary &boundary) : easea::shared::CBoundary<TO>(boundary)
+CProblem<TType>::CProblem(const size_t nObjectives, const size_t nVariables, const TBoundary &boundary) : easea::shared::CBoundary<TO>(boundary), m_nObjectives(nObjectives), m_nVariables(nVariables), m_nEvaluations(0)
 {
-        if (nObjectives < 0)
+        if (nObjectives <= 0)
 		LOG_ERROR(errorCode::value, "Wrong number of objectives");
 
-	
-	m_nObjectives = nObjectives;
-	
 	if (nVariables < 1)
 		LOG_ERROR(errorCode::value, "Wrong number of variables");
 
-	m_nVariables = nObjectives - 1 + nVariables;
-
-        m_nEvaluations = 0;
+	// WHY ?? this is not used anywhere after
+	//m_nVariables = nObjectives - 1 + nVariables;}
 }
 
 /*

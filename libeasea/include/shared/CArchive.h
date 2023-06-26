@@ -73,7 +73,7 @@ CArchive<TIndividual>::~CArchive(void)
 template <typename TIndividual>
 bool CArchive<TIndividual>::isEmpty()
 {
-	if (m_archive.size() < 0) LOG_ERROR(errorCode::value, "Size of archive < 0!");
+	if (m_archive.size() <= 0) LOG_ERROR(errorCode::value, "Size of archive <= 0!");
 	
 	return m_archive.empty();
 }
@@ -87,6 +87,7 @@ void CArchive<TIndividual>::setMaxSize(size_t maxSize)
 template <typename TIndividual>
 bool CArchive<TIndividual>::Dominate(const TI &individual1, const TI &individual2, bool is_convert)
 {
+	(void) is_convert; //unused
 	return easea::shared::functions::isDominated(individual1.m_objective, individual2.m_objective);
 
 }
@@ -110,7 +111,7 @@ bool CArchive<TIndividual>::isEqual(const TI *individual1, const TI *individual2
 template <typename TIndividual>
 void CArchive<TIndividual>::updateArchive(const TI candidate) 
 { 
-	if (m_archive.size() < 0) LOG_ERROR(errorCode::value, "Size of archive < 0!");
+	//if (m_archive.size() <= 0) LOG_ERROR(errorCode::value, "Size of archive <= 0!"); // makes no sense, we should be able to add individuals
 
 	// NOTE: this is tested and works as intended
 	for (auto it = m_archive.begin(); it != m_archive.end();)
@@ -143,7 +144,7 @@ void CArchive<TIndividual>::updateArchive(const TI candidate)
 template <typename TIndividual>
 void CArchive<TIndividual>::updateArchiveEpsilon(const TI candidate, bool epsilon)
 {
-        if (m_archive.size() < 0) LOG_ERROR(errorCode::value, "Size of archive < 0!");
+        //if (m_archive.size() <= 0) LOG_ERROR(errorCode::value, "Size of archive <= 0!"); // this makes no sense because we want to grow 0 sized archive
         for (auto it = m_archive.begin(); it != m_archive.end();)
         {
                 if (Dominate(candidate, *it, true))

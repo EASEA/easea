@@ -43,7 +43,6 @@
 
 using namespace std;
 
-extern CRandomGenerator* globalRandomGenerator;
 extern CEvolutionaryAlgorithm* EA;
 void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
@@ -55,53 +54,11 @@ extern bool bReevaluate;
 std::ofstream easena::log_file; 
 easena::log_stream logg;
 
-/**
- * @DEPRECATED the next contructor has to be used instead of this one.
- */
-/*CEvolutionaryAlgorithm::CEvolutionaryAlgorithm( unsigned parentPopulationSize,
-                unsigned offspringPopulationSize,
-                float selectionPressure, float replacementPressure, float parentReductionPressure, float offspringReductionPressure,
-                CSelectionOperator* selectionOperator, CSelectionOperator* replacementOperator,
-                CSelectionOperator* parentReductionOperator, CSelectionOperator* offspringReductionOperator,
-                float pCrossover, float pMutation,
-                float pMutationPerGene){
-
-  CRandomGenerator* rg = globalRandomGenerator;
-
-  CSelectionOperator* so = selectionOperator;
-  CSelectionOperator* ro = replacementOperator;
-
-  //CIndividual::initRandomGenerator(rg);
-  CPopulation::initPopulation(so,ro,parentReductionOperator,offspringReductionOperator,selectionPressure,replacementPressure,parentReductionPressure,offspringReductionPressure);
-
-  this->population = new CPopulation(parentPopulationSize,offspringPopulationSize,
-            pCrossover,pMutation,pMutationPerGene,rg,NULL);
-
-  this->currentGeneration = 0;
-
-  this->reduceParents = 0;
-  this->reduceOffsprings = 0;
-  
-  // INITIALIZE SERVER OBJECT ISLAND MODEL
-  if(params->remoteIslandModel){
-    this->server = new CComUDPServer(2909,0);
-  this->treatedIndividuals = 0;
-  this->numberOfClients = 0;
-
-  this->initializeClients();
-  }
-}*/
-
 /*****
  * REAL CONSTRUCTOR
  */
 
 CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
-	
-	//ostringstream ss;
-	//ss << "EASEA Starting...."<< std::endl;
-	//LOG_MSG(msgType::WARNING, ss.str());
-
 	this->params = params;
 	this->cstats = new CStats();
 
@@ -109,7 +66,7 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
         params->selectionPressure,params->replacementPressure,params->parentReductionPressure,params->offspringReductionPressure);
 
 	this->population = new CPopulation(params->parentPopulationSize,params->offspringPopulationSize,
-        params->pCrossover,params->pMutation,params->pMutationPerGene,params->randomGenerator,params, this->cstats);
+        params->pCrossover,params->pMutation,params->pMutationPerGene,params, this->cstats);
 
 	this->currentGeneration = 0;
 	this->reduceParents = 0;
@@ -150,17 +107,13 @@ CEvolutionaryAlgorithm::CEvolutionaryAlgorithm(Parameters* params){
     this->numberOfClients = 0;
     this->myClientNumber=0; 
     this->initializeClients();
-    //if(params->remoteIslandModel)
-    server = new CComUDPServer(params->serverPort); //1 if debug
+    server = std::make_unique<CComUDPServer>(params->serverPort, !params->silentNetwork);
   }
 }
 
 /* DESTRUCTOR */
 CEvolutionaryAlgorithm::~CEvolutionaryAlgorithm(){
   delete population;
-        if(this->params->remoteIslandModel){
-                delete this->server;
-        }
 }
 void CEvolutionaryAlgorithm::addStoppingCriterion(CStoppingCriterion* sc){
   this->stoppingCriteria.push_back(sc);
@@ -405,14 +358,12 @@ if (!params->noLogFile){
 
   //IF SAVING THE POPULATION, ERASE THE OLD FILE
   if(params->savePopulation){
-  
   string fichier = params->outputFilename;
   fichier.append(".pop");
-  remove(fichier.c_str());
-    population->serializePopulation();
+    population->serializePopulation(fichier);
   }
 
-  if(this->params->generatePlotScript || !this->params->plotStats)
+  if(this->params->generatePlotScript /*|| !this->params->plotStats*/)
   generatePlotScript();
 
   if(this->params->generateRScript)
@@ -479,12 +430,12 @@ void CEvolutionaryAlgorithm::showPopulationStats(std::chrono::time_point<std::ch
   if(params->printStats){
     if(currentGeneration==0){
 
-      printf("------------------------------------------------------------------------------------------------\n");
-      printf("|GENER.|    ELAPSED    |    PLANNED    |     ACTUAL    |BEST INDIVIDUAL|  AVG  | STAND | WORST |\n");
-      printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |    FITNESS    |FITNESS|  DEV  |FITNESS|\n");
-      printf("------------------------------------------------------------------------------------------------\n");
+      printf("--------------------------------------------------------------------------------------------------------\n");
+      printf("|GENER.|    ELAPSED    |    PLANNED    |     ACTUAL    | BEST INDIVIDUAL |   AVG   |  STAND  |  WORST  |\n");
+      printf("|NUMBER|     TIME      | EVALUATION NB | EVALUATION NB |     FITNESS     | FITNESS |   DEV   | FITNESS |\n");
+      printf("--------------------------------------------------------------------------------------------------------\n");
     }
-    printf("%7u\t%10.3fs\t%15u\t%15u\t%.9e\t%.1e\t%.1e\t%.1e\n",currentGeneration,elapsed_s,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
+    printf("%7u %14.3fs %15u %15u % .10e % .2e % .2e % .2e\n",currentGeneration,elapsed_s,(int)population->currentEvaluationNb,(int)population->realEvaluationNb,population->Best->getFitness(),this->cstats->currentAverageFitness,this->cstats->currentStdDev, population->Worst->getFitness());
   }
 
   if((this->params->plotStats && this->grapher->valid) || this->params->generatePlotScript){
@@ -547,40 +498,15 @@ currentEvaluationNb, population->Best->fitness, this->cstats->currentAverageFitn
   
 //REMOTE ISLAND MODEL FUNCTIONS
 void CEvolutionaryAlgorithm::initializeClients(){
-  /*int clientNumber=0;
-  char (*clients)[16] = (char(*)[16])calloc(1,sizeof(char)*16);
-  
-  cout << "Reading IP address file: " << this->params->ipFile << endl;
-  ifstream IP_File(this->params->ipFile);
-  string line;
-  while(getline(IP_File, line)){
-    if(!isLocalMachine(line.c_str())){
-      memmove(clients[this->numberOfClients],line.c_str(),sizeof(char)*16);
-      this->numberOfClients++;
-      clients = (char(*)[16])realloc(clients,sizeof(char)*16*(this->numberOfClients*16));
-      clientNumber++;
-    }
-    else{
-      this->myClientNumber = clientNumber;  
-    }
-  }*/
     this->refreshClient();
 
-  /*if(this->numberOfClients>0){
-    this->Clients = (CComUDPClient**)malloc(this->numberOfClients*sizeof(CComUDPClient*));
-    for(int i=0; i<(signed)this->numberOfClients; i++){
-      this->Clients[i] = new CComUDPClient(2909,(const char*)clients[i],0);
-    }
-  }
-  else{*/
     if(this->numberOfClients<=0){
     cout << "***WARNING***\nNo islands to communicate with." << endl;
-  //  params->remoteIslandModel=0;
   }
 }
 
 void CEvolutionaryAlgorithm::refreshClient(){
-    this->Clients = parse_file(this->params->ipFile, this->params->serverPort);
+    this->Clients = parse_file(this->params->ipFile, this->params->serverPort, !params->silentNetwork);
     this->numberOfClients = Clients.size();
 
     cout << "ip file : " << this->params->ipFile << " contains " << numberOfClients << " client ip(s)" << endl;
@@ -588,27 +514,14 @@ void CEvolutionaryAlgorithm::refreshClient(){
 
 void CEvolutionaryAlgorithm::sendIndividual(){
   //Sending an individual every n generations 
-  if(globalRandomGenerator->random(0.0,1.0)<=params->migrationProbability){
+  if(random(0.0,1.0)<=params->migrationProbability){
   //if((this->currentGeneration+this->myClientNumber)%3==0 && this->currentGeneration!=0){
-    //cout << "I'm going to send an Individual now" << endl;
     this->population->selectionOperator->initialize(this->population->parents, params->selectionPressure, this->population->actualParentPopulationSize);
     //unsigned index = this->population->selectionOperator->selectNext(this->population->actualParentPopulationSize);
   
     //selecting a client randomly
-    int client = globalRandomGenerator->getRandomIntMax(static_cast<int>(this->numberOfClients));
-    //for(int client=0; client<this->numberOfClients; client++){
-    //cout << "    Sending my best individual (fitness = " << bBest->getFitness() <<") to "
-    auto now = std::chrono::system_clock::now();
-    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    int client = random(0, static_cast<int>(this->numberOfClients));
 
-    std::stringstream ss;
-    ss <<std::put_time(std::localtime(&in_time_t),  "%H:%M:%S");
-    if (Clients[client]->getClientName() != ""s)
-	cout << "[" << ss.str()<<"]"<<  " Sending my best individual to " << this->Clients[client]->getClientName() <<  endl;
-    else
-	cout << "[" << ss.str()<<"]" << " Sending my best individual to " << this->Clients[client]->getIP() << ":" << this->Clients[client]->getPort() << endl;
-    //cout << "Sending individual " << index << " to client " << client << " now" << endl;
-    //cout << this->population->parents[index]->serialize() << endl;
     this->Clients[client]->send(bBest->serialize());
   }
 }
@@ -617,9 +530,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
 
   //Checking every generation for received individuals
   if(server->has_data()){
-    //cout << "number of received individuals :" << this->server->nb_data << endl;
-    //cout << "number of treated individuals :" << this->treatedIndividuals << endl;
-    CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing, globalRandomGenerator);   
+    CSelectionOperator *antiTournament = getSelectionOperator("Tournament",!this->params->minimizing);   
 
 
     //Treating all the individuals before continuing
@@ -629,26 +540,17 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
       
       //We're selecting the worst element to replace
-      //size_t index = this->population->getWorstIndividualIndex(this->population->parents);
-
-      //cout << "old individual fitness :" << this->population->parents[index]->fitness << endl;
-      //cout << "old Individual :" << this->population->parents[index]->serialize() << endl;
-      auto data = server->consume();
-      string line = std::string{std::begin(data), std::end(data)};
-      this->population->parents[index]->deserialize(line);
+      server->consume_into(this->population->parents[index]);
       int reeval = params->reevaluateImmigrants;
       // Reevaluate individaul if the flag reevaluateImmigrants == 1	
       if (bReevaluate == true){ params->reevaluateImmigrants = 1;}
       if (params->reevaluateImmigrants == 1){
-	    this->population->parents[index]->valid = false;
 	    this->population->realEvaluationNb++;
-	    this->population->parents[index]->evaluate();
+	    this->population->parents[index]->evaluate_wrapper(true);
       }
       params->reevaluateImmigrants = reeval;
       //TAG THE INDIVIDUAL AS IMMIGRANT
       this->population->parents[index]->isImmigrant = true;
-
-      //cout << "DBG: new Individual with fitness=" << this->population->parents[index]->getFitness() << " :" << this->population->parents[index]->serialize() << endl;
     }
   }
 }
@@ -673,7 +575,7 @@ void CEvolutionaryAlgorithm::generatePlotScript(){
   fprintf(f,"set xrange[0:%d]\n",(int)population->currentEvaluationNb);
   fprintf(f,"set xlabel \"Number of Evaluations\"\n");
         fprintf(f,"set ylabel \"Fitness\"\n");
-  fprintf(f,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines, \'%s.dat\' using 3:5 t  \'Average\' w lines, \'%s.dat\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename,params->outputFilename,params->outputFilename);
+  fprintf(f,"plot \'%s.dat\' using 3:4 t \'Best Fitness\' w lines, \'%s.dat\' using 3:5 t  \'Average\' w lines, \'%s.dat\' using 3:6 t \'StdDev\' w lines\n", params->outputFilename.c_str(),params->outputFilename.c_str(),params->outputFilename.c_str());
   fclose(f);  
 }
 
@@ -684,7 +586,7 @@ void CEvolutionaryAlgorithm::generateRScript(){
   f=fopen(fichier.c_str(),"a");
   fprintf(f,"#Plotting for R\n"),
   fprintf(f,"png(\"%s\")\n",params->plotOutputFilename);
-  fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename);
+  fprintf(f,"data <- read.table(\"./%s.csv\",sep=\",\")\n",params->outputFilename.c_str());
   fprintf(f,"plot(0, type = \"n\", main = \"Plot Title\", xlab = \"Number of Evaluations\", ylab = \"Fitness\", xlim = c(0,%d) )\n",(int)population->currentEvaluationNb);
   fprintf(f,"grid() # add grid\n");
   fprintf(f,"lines(data[,3], data[,4], lty = 1) #draw first dataset\n");

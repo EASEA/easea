@@ -20,9 +20,6 @@ Reformated on june 2022 by Léo Chéneau to improved portability with Windows
 #include <assert.h>
 #include <errno.h>
 
-//#define true 1
-//#define false 0 // BRUH
-
 #define CUDA 4
 #define STD 5
 #define CMAES 6
@@ -55,14 +52,16 @@ Reformated on june 2022 by Léo Chéneau to improved portability with Windows
 
 class CSymbol;
 
+typedef enum { NONCOPY, USER_CMAKE, USER_DECLARATIONS, USER_CUDA, INITIALISATION_FUNCTION, GENERATION_FUNCTION_BEFORE_REPLACEMENT, BEG_GENERATION_FUNCTION,  GP_OPCODE, GP_EVAL, INSTEAD_EVAL, END_GENERATION_FUNCTION, BOUND_CHECKING_FUNCTION, SANALYSE_USER_CLASSES, DISPLAY, SMAKEFILE_OPTION, USER_FUNCTIONS, EO_INITIALISER, INIALISER, FINALIZATION_FUNCTION, CROSSOVER, MUTATOR, EVALUATOR, OPTIMISER, SGENOME_ANALYSIS } Searches_t;
 extern CSymbol *pCURRENT_CLASS, *pCURRENT_TYPE, *pGENOME, *pCLASSES[128];
 extern int nClasses_nb;
 
 extern FILE *fpOutputFile, *fpTemplateFile, *fpGenomeFile, *fpExplodedGenomeFile;
-extern char sRAW_PROJECT_NAME[], sPROJECT_NAME[], sEO_DIR[], sEZ_PATH[1000], sTPL_DIR[1000], sEZ_FILE_NAME[];
+extern char sRAW_PROJECT_NAME[], sPROJECT_NAME[], sEO_DIR[], sEZ_PATH[1000], sTPL_DIR[1000], sEZ_FILE_NAME[], sOutputFileName[1000], sTPL_FILE_NAME[1000];
 extern char sLOWER_CASE_PROJECT_NAME[];
 extern char sSELECTOR[], sSELECTOR_OPERATOR[], sRED_PAR[], sRED_PAR_OPERATOR[], sRED_FINAL[], sRED_FINAL_OPERATOR[],
 	sRED_OFF[], sRED_OFF_OPERATOR[];
+extern char sCURRENT_TPL_SEARCH[1000];
 extern char sIP_FILE[];
 extern bool bELITISM, bVERBOSE;
 extern bool bBALDWINISM;
@@ -83,6 +82,8 @@ extern float fMIGRATION_PROBABILITY;
 
 extern unsigned iMAX_INIT_TREE_D, iMIN_INIT_TREE_D, iMAX_TREE_D, iNB_GPU, iPRG_BUF_SIZE, iMAX_TREE_DEPTH,
 	iNO_FITNESS_CASES;
+
+Searches_t get_lexer_state();
 
 // Prototypes
 static inline char mytolower(char c)

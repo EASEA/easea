@@ -46,7 +46,7 @@ public:
         
         typedef std::vector<TI> TPopulation;
         typedef CmoeaAlgorithm<TPopulation, TRandom> TBase;
-;
+
         typedef typename TBase::TP TP;
         typedef typename easea::operators::crossover::CWrapCrossover<TO, TV>::TC TC;
         typedef typename easea::operators::mutation::CWrapMutation<TO, TV>::TM TM;
@@ -63,7 +63,8 @@ public:
         static bool isDominated(const TI &individual1, const TI &individual2);
 protected:
         static bool Dominate(const TI *individual1, const TI *individual2);
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+  	void initialize() override;
 
 	static const TIndividual *comparer(const std::vector<const TIndividual *> &comparator);
         TO runCalcIndicator(const TIndividual &individual1, const TIndividual &individual2);
@@ -73,7 +74,6 @@ protected:
 
 private:
         TO m_scale;
-
 };
 
 template <typename TIndividual, typename TRandom>
@@ -84,6 +84,12 @@ Cibea<TIndividual, TRandom>::Cibea(TRandom random, TP &problem, const std::vecto
         , easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
         , m_scale(scale)
 {
+}
+
+template <typename TIndividual, typename TRandom>
+void Cibea<TIndividual, TRandom>::initialize()
+{
+	TBase::initialize();
 	setFitness(TBase::m_population.begin(), TBase::m_population.end(), [](TIndividual &individual)->TIndividual &{return individual;});
 }
 
@@ -165,7 +171,7 @@ typename Cibea<TIndividual, TRandom>::TPopulation Cibea<TIndividual, TRandom>::r
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-        for (int i = 0; i < offspring.size(); ++i)
+        for (int i = 0; i < static_cast<int>(offspring.size()); ++i)
         {
                 TI &child = offspring[i];
                 this->getMutation()(child);

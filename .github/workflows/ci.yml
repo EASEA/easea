@@ -82,7 +82,7 @@ jobs:
 
       - name: Build examples
         run: |
-          EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" | tee examples.output
+          EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --ignore-errors "CUDA_GP CUDA_STD cmaes_cuda_test regression_cuda memetic_cuda memetic_cuda_custom" | tee examples.output
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
@@ -394,3 +394,77 @@ jobs:
             github_token: ${{ secrets.GITHUB_TOKEN }}
             branch: badges
             directory: badges
+
+  Sanitizers:
+    name: Advanced tests using all functionnalities and detecting UB, leaks, etc.
+    runs-on: ubuntu-latest
+    needs: [pre-ci]
+    outputs:
+      configure: ${{ steps.cmake-configure.outcome }}
+      build: ${{ steps.cmake-build.outcome }}
+      install: ${{ steps.cmake-install.outcome }}
+      total: ${{ steps.status.outputs.total }}
+      passed: ${{ steps.status.outputs.passed }}
+      failed: ${{ steps.status.outputs.failed }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Installing dependencies
+        run: sudo apt install -y libboost-all-dev libomp-dev
+
+      - name: Installing clang toolchain
+        run: sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+
+      - name: CMake configure
+        id: cmake-configure
+        run: CC=clang CXX=clang++ cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug
+        shell: bash
+
+      - name: CMake build
+        id: cmake-build
+        run: CC=clang CXX=clang++ cmake --build ${{github.workspace}}/build --config Debug
+        shell: bash
+
+      - name: CMake Install
+        id: cmake-install
+        run: sudo cmake --install ${{github.workspace}}/build
+        shell: bash
+
+      - name: Test templates for UB, leaks and OOB
+        if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
+        run: |
+          CC=clang CXX=clang++ EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --no-cuda --ez-args "--savePopulation 1 --nbGen 3 --popSize 100 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --examples-directory ${{github.workspace}}/examples/templates --verbose | tee examples.output
+          result_code=${PIPESTATUS[0]}
+          exit $result_code
+        shell: bash
+
+      - name: Test templates for errors when loading population from .pop
+        if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
+        run: |
+         CC=clang CXX=clang++ EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --ez-args "--startFromFile 1 --nbGen 3 --popSize 100 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --no-cuda --examples-directory ${{github.workspace}}/examples/templates
+          result_code=${PIPESTATUS[0]}
+          exit $result_code
+        shell: bash
+
+      - name: Test remote island model for UB, leaks and OOB
+        if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
+        run: |
+         CC=clang CXX=clang++ EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --ez-args "--nbGen 1000 --popSize 1000 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --network --no-cuda --examples-directory ${{github.workspace}}/examples/templates
+          result_code=${PIPESTATUS[0]}
+          exit $result_code
+        shell: bash
+
+      - name: Output examples status
+        id: status
+        if: ${{ always() }}
+        run: |
+          LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
+          NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
+          PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
+          FAILED=$((NBE - PASSED))
+          echo "total=${NBE}" >> $GITHUB_OUTPUT
+          echo "passed=${PASSED}" >> $GITHUB_OUTPUT
+          echo "failed=${FAILED}" >> $GITHUB_OUTPUT
+        shell: bash
+

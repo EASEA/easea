@@ -50,7 +50,7 @@ public:
         
         typedef std::vector<TI> TPopulation;
         typedef CmoeaAlgorithm<TPopulation, TRandom> TBase;
-;
+
         typedef typename TBase::TP TP;
         typedef typename easea::operators::crossover::CWrap2x2Crossover<TO, TV>::TC TC;
         typedef typename easea::operators::mutation::CWrapMutation<TO, TV>::TM TM;
@@ -62,20 +62,20 @@ public:
         ~Cmoead(void);
 	const std::vector<TPoint> &getWeight(void) const;
 	TO aggregate(const TPoint &obj, const TPoint &weight);
+	void on_individuals_received() override;
 	    
 protected:
 	std::vector<TO> m_refPoint;
 	std::vector<TNb> m_neighbors;
-        void makeOneGeneration(void);
+        void makeOneGeneration(void) override;
+  	void initialize() override;
 	void updateRef(const TI &individual);
 	void updateNeighbors(const TI &individual, const TNb &neibors);
 	TO doAggregate(const TPoint &obj, const TPoint &w);
 
 private:
         std::vector<TPoint> m_weight;
-
-
-
+	size_t m_nbNeighbors;
 };
 
 template <typename TIndividual, typename TRandom>
@@ -85,14 +85,20 @@ Cmoead<TIndividual, TRandom>::Cmoead(TRandom random, TP &problem, const std::vec
         , easea::operators::crossover::CWrap2x2Crossover<TO, TV>(/*this->getCrossover()*/crossover)
         , easea::operators::mutation::CWrapMutation<TO, TV>(mutation)
         , m_weight(weight)
+	, m_nbNeighbors(nbNeighbors)
 {
-	//if (weight.size() !=  initial.size()) LOG_ERROR(errorCode::value, "Wrong number of initial population");
-	
+    if (weight.size() !=  initial.size()) LOG_ERROR(errorCode::value, "Wrong number of initial population");
+}
+
+template <typename TIndividual, typename TRandom>
+void Cmoead<TIndividual, TRandom>::initialize() {
+	TBase::initialize();
+
 	m_refPoint = TBase::m_population[0].m_objective;
+
 	for (size_t i = 1; i < TBase::m_population.size(); ++i)
 		updateRef(TBase::m_population[i]);
-	m_neighbors = easea::shared::function::initNeighbors(easea::shared::function::calcAdjacencyMatrix<TO>(m_weight.begin(), m_weight.end()),nbNeighbors);
-
+	m_neighbors = easea::shared::function::initNeighbors(easea::shared::function::calcAdjacencyMatrix<TO>(m_weight.begin(), m_weight.end()), m_nbNeighbors);
 }
 
 template <typename TIndividual, typename TRandom>
@@ -100,6 +106,20 @@ Cmoead<TIndividual, TRandom>::~Cmoead(void)
 {
 }
 
+template <typename TIndividual, typename TRandom>
+void Cmoead<TIndividual, TRandom>::on_individuals_received()
+{
+    m_refPoint = TBase::m_population[0].m_objective;
+  
+    for (int i = 1; i < static_cast<int>(TBase::m_population.size()); ++i)
+    {
+      const std::vector<size_t> &neighbors = m_neighbors[i];
+      TIndividual &ind = TBase::m_population[i];
+      if (neighbors.size() <= 0) LOG_ERROR(errorCode::value, "Wrong neighbors  size");
+      updateRef(ind);
+    }
+    m_neighbors = easea::shared::function::initNeighbors(easea::shared::function::calcAdjacencyMatrix<TO>(m_weight.begin(), m_weight.end()), m_nbNeighbors);
+}
 template <typename TIndividual, typename TRandom> 
 typename Cmoead<TIndividual, TRandom>::TO Cmoead<TIndividual, TRandom>::doAggregate(const TPoint &obj, const TPoint &w) 
 {
@@ -147,7 +167,7 @@ void Cmoead<TIndividual, TRandom>::makeOneGeneration(void)
 #ifdef USE_OPENMP
     EASEA_PRAGMA_OMP_PARALLEL
 #endif
-    for (int i = 0; i < TBase::m_population.size(); ++i)
+    for (int i = 0; i < static_cast<int>(TBase::m_population.size()); ++i)
     {
 	const std::vector<size_t> &neighbors = m_neighbors[i];
 	if (neighbors.size() <= 0) LOG_ERROR(errorCode::value, "Wrong neighbors  size");

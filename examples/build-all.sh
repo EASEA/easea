@@ -3,12 +3,87 @@
 # Léo Chéneau - 2022
 # $1 = easea binary to call
 # $2 = --no-cuda
+# $3 = --verbose
 path_to_script=$(realpath $BASH_SOURCE)
 examples_dir=$(dirname $path_to_script)
-EZ_BINARY="$(realpath "$1")"
+EZ_BINARY=""
+VERBOSE=false
+CUDA=true
+NETWORK=false
+EZARGS=""
+CMARGS=""
+IGNORE_ERRORS=""
+
+### CLI args
+function help {
+	printf -- "usage: [ -v | --verbose ] [ -e | --ez-args <ARGS> ] [ -c | --cmake-args <ARGS> ] [ --ignore-errors <NAME>] [ --examples-directory <DIR> ] [ --network ] [ --no-cuda ] <COMPILER>\n"
+	printf -- "<COMPILER> : path to the EASEA compiler.\n"
+	printf -- "--verbose or -v : (optional) print more informations, such as all ouputs of commands.\n"
+	printf -- "--ez-args <ARGS> or -e <ARGS> : (optional) arguments to pass to the final EASEA program.\n"
+	printf -- "--cmake-args <ARGS> or -c <ARGS> : (optional) arguments to pass to the first CMake command.\n"
+	printf -- "--ignore-errors <NAME> : (optional) ignore example <NAME>. DO NOT USE ON ERRORS YOU CAN FIX!\n"
+	printf -- "--examples-directory <DIR> : (optional) path to directory containing .ez files IN SUBDIRECTORIES.\n"
+	printf -- "--no-cuda : (optional) replace CUDA templates with non-CUDA ones.\n"
+	printf -- "--network : (optional) test remote island model by adding arguments and ip.txt\n"
+	printf -- "--help : print this help message.\n"
+}
+
+NEXT_EZARGS=false
+NEXT_CMARGS=false
+NEXT_IGNORE=false
+NEXT_EDIR=false
+for var in "$@"; do
+	if $NEXT_EZARGS; then
+		EZARGS="$var"
+		NEXT_EZARGS=false
+	elif $NEXT_CMARGS; then
+		CMARGS="$var"
+		NEXT_CMARGS=false
+	elif $NEXT_EDIR; then
+		examples_dir="$(realpath $var)"
+		NEXT_EDIR=false
+	elif $NEXT_IGNORE; then
+		IGNORE_ERRORS="$var $IGNORE_ERRORS"
+		NEXT_IGNORE=false
+	else
+		if [[ "$var" == "--verbose" ]] || [[ "$var" == "-v" ]]; then
+			VERBOSE=true
+		elif [[ "$var" == "--no-cuda" ]]; then
+			CUDA=false
+		elif [[ "$var" == "--network" ]]; then
+			NETWORK=true
+		elif [[ "$var" == "--no-cuda" ]]; then
+			help
+			exit 0
+		elif [[ "$var" == "--ez-args" ]] || [[ "$var" == "-e" ]]; then
+			NEXT_EZARGS=true
+		elif [[ "$var" == "--cmake-args" ]] || [[ "$var" == "-c" ]]; then
+			NEXT_CMARGS=true
+		elif [[ "$var" == "--ignore-errors" ]]; then
+			NEXT_IGNORE=true
+		elif [[ "$var" == "--examples-directory" ]]; then
+			NEXT_EDIR=true
+		else
+			if [[ "$EZ_BINARY" == "" ]]; then
+				EZ_BINARY="$(realpath "$var")"
+			else
+				printf "Unknow CLI args: \"%s\"\n" "$var"
+				help
+				exit 1
+			fi
+		fi
+	fi
+done
+
 Color_Off='\033[0m'
 Red='\033[0;31m'
 Green='\033[0;32m'
+Yellow='\033[0;33m'
+
+if [[ $IGNORE_ERRORS != "" ]]; then
+	printf "$Yellow"
+	printf "Warning: Please DO NOT use '--ignore-errors' for errors you introduced!\n$Color_Off"
+fi
 
 SED=sed
 # Use GNU version of sed
@@ -41,6 +116,7 @@ echo "Found $nb_examples examples to compile."
 passed=0
 failed=0
 failed_list=()
+exec_failed_list=()
 passed_list=()
 for edir in $all_examples; do
 	printf -- "- %d/%d %s:\n" $((passed+failed+1)) $nb_examples $(basename $edir)
@@ -60,7 +136,7 @@ for edir in $all_examples; do
 	printf "$Green ok!$Color_Off\n"
 
 	# Convert args if CUDA not available
-	if [[ "$2" == "--no-cuda" ]]; then
+	if ! $CUDA; then
 		EASEA_ARGS=$(echo $EASEA_ARGS | $SED 's/\(cuda_\|_cuda\)//')
 		EASEA_ARGS=$(echo $EASEA_ARGS | $SED 's/\(-cuda\)//')
 	fi
@@ -76,8 +152,12 @@ for edir in $all_examples; do
 		continue
 	fi
 	printf "$Green ok!$Color_Off\n"
+	if $VERBOSE; then
+		printf "Output:\n===\n%s\n===\n" "$OUT"
+	fi
 
 	# compile
+	EASEA_BUILD="$(echo "$EASEA_BUILD" | sed 's/cmake/cmake '"$CMARGS"'/')"
 	printf -- "\t$EASEA_BUILD..."
 	OUT=$(bash -c "$EASEA_BUILD" 2>&1)
 	if [[ "$?" != "0" ]]; then # error
@@ -89,6 +169,9 @@ for edir in $all_examples; do
 		continue
 	fi
 	printf "$Green ok!$Color_Off\n"
+	if $VERBOSE; then
+		printf "Output:\n===\n%s\n===\n" "$OUT"
+	fi
 
 	# Match output file
 	CURATED_BIN=$(echo $EASEA_OUT | $SED -n 's/\.\///p')
@@ -99,8 +182,16 @@ for edir in $all_examples; do
 	#echo "DEBUG: " "$EASEA_OUT"
 
 	# run
-	printf "\tExecuting %s ..." "$EASEA_OUT"
-	OUT=$($TIMEOUT -k 7s 5s "./$EASEA_OUT")
+	if $NETWORK; then
+		printf "localhost:2929\nlocalhost:3000\n" > ip.txt
+		MORE_ARGS="--remoteIslandModel 1 --migrationProbability 1.0 --ipFile ip.txt"
+		$TIMEOUT -k 15s 10s "./$EASEA_OUT" $EZARGS $MORE_ARGS --serverPort 2929 &
+		printf "\tExecuting %s %s %s on two ports..." "$EASEA_OUT" "$EZARGS" "$MORE_ARGS"
+		OUT=$($TIMEOUT -k 15s 10s "./$EASEA_OUT" $EZARGS $MORE_ARGS --serverPort 3000)
+	else
+		printf "\tExecuting %s %s..." "$EASEA_OUT" "$EZARGS"
+		OUT=$($TIMEOUT -k 7s 5s "./$EASEA_OUT" $EZARGS)
+	fi
 	ret=$?
 	if [[ "$ret" == "0" ]] || [[ "$ret" == "124" ]] || [[ "$ret" == "137" ]]; then # ok
 		printf "$Green ok!$Color_Off\n"
@@ -110,28 +201,73 @@ for edir in $all_examples; do
 		printf "$Red ko!$Color_Off\n"
 		printf "\tError (RETURNED %d):$Red %s\n$Color_Off" "$ret" "$OUT"
 		failed=$((failed + 1))
-		failed_list+=($(basename $edir))
+		exec_failed_list+=($(basename $edir))
+	fi
+	if $VERBOSE; then
+		printf "Output:\n===\n%s\n===\n" "$OUT"
 	fi
 
 	# clean
 	make clean easeaclean >/dev/null 2>/dev/null
-	rm -rf *.log *.prm CMakeLists.txt CMakeFiles CMakeCache 
+	rm -rf *.log *.prm CMakeLists.txt CMakeFiles CMakeCache *.plot
+done
+
+# Compute ignored tests
+warnings=()
+nb_warning=0
+for er in "${exec_failed_list[@]}"; do
+	IGNORE=false
+	for si in $IGNORE_ERRORS; do
+		if [[ "$si" == "$er" ]]; then
+			IGNORE=true
+			break
+		fi
+	done
+	if $IGNORE; then
+		warnings+=($er)
+		failed=$((failed - 1))
+		passed=$((passed + 1))
+		nb_warning=$((nb_warning + 1))
+	else
+		failed_list+=($er)
+	fi
 done
 
 # Stats
 printf "\n### Results ###\n"
 printf "passed: $Green%d$Color_Off/%d\n" "$passed" "$nb_examples"
 
-if [[ "$((nb_examples-passed))" != "0" ]]; then # at least one fail
+if [[ "$nb_warning" != "0" ]]; then
+	printf "failed execution but marked as passed:$Yellow %d$Color_Off/%d\n" "$nb_warning" "$nb_examples"
+fi
+
+
+EXIT_CODE=0
+if [[ "$failed" != "0" ]]; then # at least one fail
 	printf "failed:$Red %d$Color_Off/%d\n" "$failed" "$nb_examples"
 	printf "test failed:$Red"
 	for te in "${failed_list[@]}"; do
 		printf " %s" "$te"
 	done
 	printf "$Red\nFAILED$Color_Off\n"
-	exit 1
+	EXIT_CODE=1
 else
 	printf "$Green"
 	printf "PASSED$Color_Off\n"
-	exit 0
+	EXIT_CODE=0
 fi
+
+if [[ "$nb_warning" != "0" ]]; then
+	printf "\n$Yellow"
+	if [[ "$nb_warning" == "1" ]]; then
+		printf "Warning:$Color_Off %d test execution failed but was ignored:$Yellow" "$nb_warning"
+	else
+		printf "Warning:$Color_Off %d tests executions failed but were ignored:$Yellow" "$nb_warning"
+	fi
+	for te in "${warnings[@]}"; do
+		printf " %s" "$te"
+	done
+	printf "$Color_Off\n"
+fi
+
+exit $EXIT_CODE

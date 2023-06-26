@@ -123,6 +123,7 @@ typename CSelfGaussianMutation<TObjective, TRandom>::TO CSelfGaussianMutation<TO
 template <typename TObjective, typename TRandom>
 typename CSelfGaussianMutation<TObjective, TRandom>::TO CSelfGaussianMutation<TObjective, TRandom> ::boundedMutate(TRandom &random, const TObjective distributionIndex, const TObjective idecision, const TObjective u, TObjective &istep, const TObjective lower, const TObjective upper)
 {
+	(void)distributionIndex; // unused
 	static std::uniform_real_distribution<TObjective> dist(0, 1);
 //	TO sigma = m_tau * 2.1;
 	if (lower >= upper)
