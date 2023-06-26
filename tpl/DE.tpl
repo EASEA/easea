@@ -260,10 +260,10 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 
 	if (m_popSize <= 0){ LOG_ERROR(errorCode::value, "Wrong size of parent population");  };
     	const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), m_popSize);
+
     	m_algorithm  = new TAlgorithm(m_generator, m_problem, initPop, m_crossover);
 
-	// TODO : use wrapper
-	CEvolutionaryAlgorithm* ea = new EvolutionaryAlgorithmImpl(this);
+	CEvolutionaryAlgorithm* ea = new CAlgorithmWrapper(this, m_algorithm);
 	generationalCriterion->setCounterEa(ea->getCurrentGenerationPtr());
 	ea->addStoppingCriterion(generationalCriterion);
 	ea->addStoppingCriterion(controlCStopingCriterion);
@@ -273,69 +273,6 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 	EZ_current_generation=&(ea->currentGeneration);
 
 	return ea;
-}
-void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
-	LOG_MSG(msgType::INFO, "Classical Differential Evolution starting....");
-
-	auto tmStart = std::chrono::system_clock::now();
-        time_t t = std::chrono::system_clock::to_time_t(tmStart);
-	while( this->allCriteria() == false){
-                ostringstream ss;
-		if ( currentGeneration % 10 == 0 ){
-                    ss << "Generation: " << currentGeneration << 
-		    " Best fitness = " << m_algorithm->getPopulation()[0].m_objective[0] << std::endl;
-                    LOG_MSG(msgType::INFO, ss.str());
-		}
-	        m_algorithm->run();
-		
-    		currentGeneration += 1;
-	}
-	const auto &population = m_algorithm->getPopulation();
-        ostringstream ss;
-        std::chrono::duration<double> tmDur = std::chrono::system_clock::now() - tmStart;
-        ss << "Total execution time (in sec.): " << tmDur.count() << std::endl;
-        ss << "Best fitness: " << population[0].m_objective[0] << std::endl;
-        
-        LOG_MSG(msgType::INFO, ss.str());
-	if (!params->noLogFile){
-	logg("\nBEST FITNESS;", to_string(population[0].m_objective[0]));
-        logg("\nRUNTIME;",tmDur.count());
-    }
-
-}
-
-
-void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
-/*const std::vector<TV> initial = easea::variables::continuous::uniform(generator, problem.getBoundary(), \POP_SIZE);
-algorithm  = new _TAlgorithm(generator, problem, initial, crossover, mutation);
-
-	if(this->params->startFromFile){
-	  ifstream AESAE_File(this->params->inputFilename);
-	  string AESAE_Line;
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-	  	  getline(AESAE_File, AESAE_Line);
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-		  ((IndividualImpl*)this->population->parents[i])->deserialize(AESAE_Line);
-	  }
-	  
-	}
-	else{
-	#ifdef USE_OPENMP
-        #pragma omp parallel for
-        #endif
-  	  for( int i=0 ; i< this->params->parentPopulationSize ; i++){
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-	  }
-	}
-        this->population->actualParentPopulationSize = this->params->parentPopulationSize;*/
-}
-
-
-EvolutionaryAlgorithmImpl::EvolutionaryAlgorithmImpl(Parameters* params) : CEvolutionaryAlgorithm(params){
-}
-
-EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
-
 }
 
 \START_CUDA_GENOME_H_TPL
@@ -374,13 +311,12 @@ public:
         typedef TVariable TV;
         typedef CmoIndividual<TO, TV> TI;
 
-//        TO m_crowdingDistance;
 	float fitness; 		// this is variable for return the value 1 from function evaluate()
 
 
         Individual(void);
         ~Individual() = default;
-	size_t evaluate();
+	size_t evaluate() override;
 };
 }
 
@@ -389,14 +325,6 @@ public:
 	ParametersImpl(std::string const& file, int argc, char* argv[]);
 	CEvolutionaryAlgorithm* newEvolutionaryAlgorithm();
 };
-class EvolutionaryAlgorithmImpl: public CEvolutionaryAlgorithm {
-public:
-        EvolutionaryAlgorithmImpl(Parameters* params);
-        virtual ~EvolutionaryAlgorithmImpl();
-        void initializeParentPopulation();
-        void runEvolutionaryLoop();
-};
-
 
 void EASEAInit(int argc, char* argv[], ParametersImpl& p);
 void EASEAFinal(CPopulation* pop);
@@ -404,15 +332,6 @@ void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgori
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 
-/*
-class EvolutionaryAlgorithmImpl: public CEvolutionaryAlgorithm {
-public:
-	EvolutionaryAlgorithmImpl(Parameters* params);
-	virtual ~EvolutionaryAlgorithmImpl();
-	void initializeParentPopulation();
-	void runEvolutionaryLoop();
-};
-*/
 #endif /* PROBLEM_DEP_H */
 
 \START_CMAKELISTS

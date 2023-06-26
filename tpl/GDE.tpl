@@ -192,8 +192,6 @@ void EASEAFinal(CPopulation* pop){
 
 void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_BEGIN_GENERATION_FUNCTION
-
-
 }
 
 void AESAEEndGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
@@ -341,37 +339,6 @@ extern int OFFSPRING_SIZE;
 
 namespace easea
 {
-/*
-class IndividualImpl : public CIndividual {
-
-public: // in EASEA the genome is public (for user functions,...)
-	// Class members
-  	\INSERT_GENOME
-
-public:
-	IndividualImpl();
-	IndividualImpl(const IndividualImpl& indiv);
-	virtual ~IndividualImpl();
-	float evaluate();
-	static unsigned getCrossoverArrity(){ return 2; }
-	float getFitness(){ return this->fitness; }
-	CIndividual* crossover(CIndividual** p2);
-	void printOn(std::ostream& O) const;
-	CIndividual* clone();
-
-	unsigned mutate(float pMutationPerGene);
-
-	void boundChecking();      
-
-	string serialize();
-	void deserialize(string AESAE_Line);
-
-	friend std::ostream& operator << (std::ostream& O, const IndividualImpl& B) ;
-	void initRandomGenerator(CRandomGenerator* rg){ IndividualImpl::rg = rg;}
-
-};
-*/
-
 template <typename TObjective, typename TVariable>
 class Individual : public easea::CmoIndividual<TObjective, TVariable>
 {
@@ -386,7 +353,7 @@ public:
 
         Individual(void);
         ~Individual() = default;
-	size_t evaluate();
+	size_t evaluate() override;
 };
 }
 
@@ -402,15 +369,6 @@ void EASEABeginningGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgori
 void EASEAEndGenerationFunction(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutionaryAlgorithm);
 
-/*
-class EvolutionaryAlgorithmImpl: public CEvolutionaryAlgorithm {
-public:
-	EvolutionaryAlgorithmImpl(Parameters* params);
-	virtual ~EvolutionaryAlgorithmImpl();
-	void initializeParentPopulation();
-	void runEvolutionaryLoop();
-};
-*/
 #endif /* PROBLEM_DEP_H */
 
 \START_CMAKELISTS
