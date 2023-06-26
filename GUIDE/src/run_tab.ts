@@ -667,9 +667,9 @@ export class Run_tab {
 
         // general options
         if (rank !== 0 || !this.option_obj.plot_stats) {
-            this.options = this.options.concat(' --plotStats 0')
+            this.options = this.options.concat(' --plotStats=0')
         } else {
-            this.options = this.options.concat(' --plotStats 1')
+            this.options = this.options.concat(' --plotStats=1')
         }
 
         if (!isNaN(this.option_obj.compression))
@@ -715,13 +715,13 @@ export class Run_tab {
             this.options = this.options.concat(' --inputfile ' + this.option_obj.input_file);
 
         if (this.option_obj.generate_csv_file)
-            this.options = this.options.concat(' --generateCSVFile 1');
+            this.options = this.options.concat(' --generateCSVFile');
 
         if (this.option_obj.generate_plot_script)
-            this.options = this.options.concat(' --generatePlotScript 1');
+            this.options = this.options.concat(' --generatePlotScript');
 
         if (this.option_obj.generate_r_script)
-            this.options = this.options.concat(' --generateRScript 1');
+            this.options = this.options.concat(' --generateRScript');
 
         if (this.option_obj.print_init_pop)
             this.options = this.options.concat(' --printInitialPopulation');
@@ -730,13 +730,13 @@ export class Run_tab {
             this.options = this.options.concat(' --printFinalPopulation');
 
         if (rank === 0 && !this.option_obj.print_stats)
-            this.options = this.options.concat(' --printStats 0');
+            this.options = this.options.concat(' --printStats=0');
 
         if (this.option_obj.save_pop)
-            this.options = this.options.concat(' --savePopulation 1');
+            this.options = this.options.concat(' --savePopulation');
 
         if (this.option_obj.start_file)
-            this.options = this.options.concat(' --startFromFile 1');
+            this.options = this.options.concat(' --startFromFile');
 
         if (!isNaN(this.option_obj.fstgpu_param))
             this.options = this.options.concat(' --fstgpu ' + this.option_obj.fstgpu_param);
@@ -763,11 +763,8 @@ export class Run_tab {
             this.options = this.options.concat(' --u5 ' + this.option_obj.u5);
 
         if (this.island_model){
-            this.options = this.options.concat(' --remoteIslandModel 1');
-        } else {
-            this.options = this.options.concat(' --remoteIslandModel 0');
-        }
-            
+            this.options = this.options.concat(' --remoteIslandModel');
+	}
         // const timestamp_seed = Math.trunc(Date.now() / 1000);
 
         if (!isNaN(this.option_obj.proc_tab[rank].seed_value)) {

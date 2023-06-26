@@ -116,6 +116,7 @@ static inline void yyinput_function(char* buf, T* result, size_t max_size) {
 
 void switch_to_genome();
 void print_else_default(const char* const from, const char* const value, const char* const def);
+static inline void print_bool(FILE* fp, bool value) { fprintf(fp, "%s", value ? "true" : "false"); }
 %}                                                     
                                          
 %start GENOME_ANALYSIS TEMPLATE_ANALYSIS MACRO_IDENTIFIER MACRO_DEFINITION 
@@ -1022,11 +1023,11 @@ return lhs.arity < rhs.arity;
  }        
 
 <TEMPLATE_ANALYSIS>"\\IS_PARENT_REDUCTION" {
-    fprintf(fpOutputFile,"%d",bIsParentReduce);
+    print_bool(fpOutputFile, bIsParentReduce);
  }
 
 <TEMPLATE_ANALYSIS>"\\IS_OFFSPRING_REDUCTION" {
-  fprintf(fpOutputFile,"%d",bIsOffspringReduce);
+  print_bool(fpOutputFile, bIsOffspringReduce);
  }
 
 <TEMPLATE_ANALYSIS>"\\INSERT_FINALIZATION_FCT_CALL"  {
@@ -1117,24 +1118,24 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\MUT_PROB"  {fprintf(fpOutputFile,"%f",fMUT_PROB);}
 <TEMPLATE_ANALYSIS>"\\XOVER_PROB"  {fprintf(fpOutputFile,"%f",fXOVER_PROB);}
 <TEMPLATE_ANALYSIS>"\\MINIMAXI"  {fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); }
-<TEMPLATE_ANALYSIS>"\\ELITISM"  {fprintf(fpOutputFile,"%d",bELITISM);}
+<TEMPLATE_ANALYSIS>"\\ELITISM"  {fprintf(fpOutputFile, "%d", bELITISM);}
 
 <TEMPLATE_ANALYSIS>"\\NB_OPT_IT"  {fprintf(fpOutputFile,"%d",nNB_OPT_IT);}
-<TEMPLATE_ANALYSIS>"\\BALDWINISM" {fprintf(fpOutputFile,"%d",bBALDWINISM);}
+<TEMPLATE_ANALYSIS>"\\BALDWINISM" {print_bool(fpOutputFile, bBALDWINISM);}
 
-<TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {fprintf(fpOutputFile,"%d",bREMOTE_ISLAND_MODEL);}
+<TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {print_bool(fpOutputFile, bREMOTE_ISLAND_MODEL);}
 <TEMPLATE_ANALYSIS>"\\IP_FILE" {if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
 <TEMPLATE_ANALYSIS>"\\MIGRATION_PROBABILITY" {fprintf(fpOutputFile,"%f",fMIGRATION_PROBABILITY);}
 <TEMPLATE_ANALYSIS>"\\SERVER_PORT" {fprintf(fpOutputFile,"%d",nSERVER_PORT);}
 
-<TEMPLATE_ANALYSIS>"\\PRINT_STATS" {fprintf(fpOutputFile,"%d",bPRINT_STATS);}
-<TEMPLATE_ANALYSIS>"\\PLOT_STATS" {fprintf(fpOutputFile,"%d",bPLOT_STATS);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" {fprintf(fpOutputFile,"%d",bGENERATE_CSV_FILE);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_GNUPLOT_SCRIPT);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" {fprintf(fpOutputFile,"%d",bGENERATE_R_SCRIPT);}
+<TEMPLATE_ANALYSIS>"\\PRINT_STATS" {print_bool(fpOutputFile, bPRINT_STATS);}
+<TEMPLATE_ANALYSIS>"\\PLOT_STATS" {print_bool(fpOutputFile, bPLOT_STATS);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" {print_bool(fpOutputFile, bGENERATE_CSV_FILE);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" {print_bool(fpOutputFile, bGENERATE_GNUPLOT_SCRIPT);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" {print_bool(fpOutputFile, bGENERATE_R_SCRIPT);}
 
-<TEMPLATE_ANALYSIS>"\\SAVE_POPULATION" {fprintf(fpOutputFile,"%d",bSAVE_POPULATION);}
-<TEMPLATE_ANALYSIS>"\\START_FROM_FILE" {fprintf(fpOutputFile,"%d",bSTART_FROM_FILE);}
+<TEMPLATE_ANALYSIS>"\\SAVE_POPULATION" {print_bool(fpOutputFile, bSAVE_POPULATION);}
+<TEMPLATE_ANALYSIS>"\\START_FROM_FILE" {print_bool(fpOutputFile, bSTART_FROM_FILE);}
 
 <TEMPLATE_ANALYSIS>"\\START_CUDA_GENOME_H_TPL"  {
   char sFileName[1000];

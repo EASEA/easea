@@ -76,13 +76,13 @@ class Parameters {
     bool baldwinism;
 
     //Miscalleous parameters
-    int printStats;
-    int generateCSVFile;
-    int generatePlotScript;
-    int generateRScript;	
-    int plotStats;
-    int printInitialPopulation;
-    int printFinalPopulation;
+    bool printStats;
+    bool generateCSVFile;
+    bool generatePlotScript;
+    bool generateRScript;
+    bool plotStats;
+    bool printInitialPopulation;
+    bool printFinalPopulation;
 
     bool savePopulation;
     bool startFromFile;
