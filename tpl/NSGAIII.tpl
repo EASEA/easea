@@ -219,8 +219,6 @@ void EASEAFinal(CPopulation* pop){
 
 void AESAEBeginningGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
 	\INSERT_BEGIN_GENERATION_FUNCTION
-
-
 }
 
 void AESAEEndGenerationFunction([[maybe_unused]] CEvolutionaryAlgorithm* evolutionaryAlgorithm) {
@@ -396,11 +394,9 @@ public:
 
         TO m_minDistance;
 	std::vector<TO> m_trObjective;
-	float fitness; 		// this is variable for return the value 1 from function evaluate()
-
         Individual(void);
         ~Individual() = default;
-	size_t evaluate();
+	size_t evaluate() override;
 };
 }
 

@@ -348,8 +348,6 @@ public:
         typedef CmoIndividual<TO, TV> TI;
 
         TO m_crowdingDistance;
-	float fitness; 		// this is variable for return the value 1 from function evaluate()
-
 
         Individual(void);
         ~Individual() = default;
