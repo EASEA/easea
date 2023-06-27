@@ -91,7 +91,7 @@ jobs:
         id: status
         if: ${{ always() }}
         run: |
-          LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
+          LINE=$(cat examples.output | sed -n 's/^passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
           NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
           PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
           FAILED=$((NBE - PASSED))
@@ -154,7 +154,7 @@ jobs:
         id: status
         if: ${{ always() }}
         run: |
-          LINE=$(cat examples.output | gsed -n 's/passed://p' | gsed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
+          LINE=$(cat examples.output | gsed -n 's/^passed://p' | gsed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
           NBE=$(echo ${LINE} | gsed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
           PASSED=$(echo ${LINE} | gsed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
           FAILED=$((NBE - PASSED))
@@ -223,7 +223,7 @@ jobs:
         id: status
         if: ${{ always() }}
         run: |
-          LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
+          LINE=$(cat examples.output | sed -n 's/^passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
           NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
           PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
           FAILED=$((NBE - PASSED))
@@ -459,7 +459,7 @@ jobs:
         id: status
         if: ${{ always() }}
         run: |
-          LINE=$(cat examples.output | sed -n 's/passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
+          LINE=$(cat examples.output | sed -n 's/^passed://p' | sed -n 's/\(.\[[[:digit:]]\+\)*\(;[[:digit:]]\+\)*\(m\)*//pg')
           NBE=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\2/p')
           PASSED=$(echo ${LINE} | sed -n 's/\([[:digit:]]\+\)\/\([[:digit:]]\+\)/\1/p')
           FAILED=$((NBE - PASSED))
