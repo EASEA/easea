@@ -79,7 +79,7 @@ bool bReevaluate = false;
 bool INSTEAD_EVAL_STEP = false;
 
 extern CEvolutionaryAlgorithm* EA;
-#define STD_TPL
+
 
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES

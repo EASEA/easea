@@ -100,7 +100,7 @@ extern CEvolutionaryAlgorithm* EA;
 extern std::ofstream easena::log_file;
 extern easena::log_stream logg;
 
-#define STD_TPL
+
 
 typedef double TT;
 typedef easea::problem::CProblem<TT> TP;
