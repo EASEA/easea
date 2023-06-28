@@ -69,7 +69,7 @@ void C3x1CrossoverLauncher<TObjective, TVariable, TRandom>::operator ()(const TI
 template <typename TObjective, typename TVariable, typename TRandom>
 void C3x1CrossoverLauncher<TObjective, TVariable, TRandom>::runCrossover(std::vector<const TI *> &parent, std::vector<TI *> &offspring)
 {
-    std::vector<const TVariable *> _parent(parent.begin(), parent.end());
+    auto _parent = parent;
     for (size_t child = 0, prnt = 0; child < offspring.size();)
     {
 	std::shuffle(_parent.begin(), _parent.end(), this->getRandom());
@@ -81,6 +81,10 @@ void C3x1CrossoverLauncher<TObjective, TVariable, TRandom>::runCrossover(std::ve
 	}
     }
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class C3x1CrossoverLauncher<float, std::vector<float>, DefaultGenerator_t>;
+extern template class C3x1CrossoverLauncher<double, std::vector<double>, DefaultGenerator_t>;
 }
 }
 }
