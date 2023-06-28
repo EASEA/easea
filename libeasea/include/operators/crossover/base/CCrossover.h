@@ -83,6 +83,11 @@ std::size_t CCrossover<TObjective, TVariable>::getCurrentGen()
 	return m_iGen;
 }
 
+// reduce compilation time and check for errors while compiling lib
+extern template class CCrossover<float, std::vector<float>>;
+extern template class CCrossover<double, std::vector<double>>;
+
+
 }
 }
 }

@@ -432,7 +432,6 @@ CMatrix<T> CMatrix<T>::Inverse() const
 
 }
 
-
-
-
-
+// reduce compilation time and check for errors while compiling lib
+extern template class CMatrix<double>;
+extern template class CMatrix<float>;

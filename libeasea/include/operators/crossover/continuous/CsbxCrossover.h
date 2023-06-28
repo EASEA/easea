@@ -184,6 +184,10 @@ void CsbxCrossover<TType, TRandom>::launch(const TVariable &parent1, const TVari
                 offspring2 = parent2;
         }
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CsbxCrossover<float, DefaultGenerator_t>;
+extern template class CsbxCrossover<double, DefaultGenerator_t>;
 }
 }
 }

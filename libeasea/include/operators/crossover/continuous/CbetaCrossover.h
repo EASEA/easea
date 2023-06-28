@@ -188,6 +188,10 @@ void CbetaCrossover<TType, TRandom>::launch(const TVariable &parent1, const TVar
         }
 
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CbetaCrossover<float, DefaultGenerator_t>;
+extern template class CbetaCrossover<double, DefaultGenerator_t>;
 }
 }
 }

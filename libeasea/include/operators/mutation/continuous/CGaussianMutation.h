@@ -145,6 +145,10 @@ void CGaussianMutation<TObjective, TRandom>::launch(TV &decision)
     			decision[i] = boundedMutate(this->getRandom(), getDistributionIndex(), decision[i], range.first, range.second);
 	}
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CGaussianMutation<float, DefaultGenerator_t>;
+extern template class CGaussianMutation<double, DefaultGenerator_t>;
 }
 }
 }

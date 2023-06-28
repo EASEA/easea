@@ -163,6 +163,10 @@ void CPolynomialMutation<TObjective, TRandom>::launch(TV &decision)
       decision[i] = boundedMutate(this->getRandom(), getDistributionIndex(), decision[i], range.first, range.second);
   }
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CPolynomialMutation<float, DefaultGenerator_t>;
+extern template class CPolynomialMutation<double, DefaultGenerator_t>;
 }
 }
 }

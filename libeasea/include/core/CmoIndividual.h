@@ -53,14 +53,15 @@ CmoIndividual<TObjective, TVariable>::~CmoIndividual(void)
 {
 }
 
-template <typename TObjective, typename TVariable>
+// NOTE: this operator should not modify this. This causes compiler error
+/*template <typename TObjective, typename TVariable>
 bool CmoIndividual<TObjective, TVariable>::operator ==(const CmoIndividual<TO, TV> &individual) const
 {
 
 	for (std::size_t i = 0; i < individual.m_mutStep.size(); i++)
 		m_mutStep[i] = individual.m_mutStep[i];
         return m_variable == individual.m_variable;
-}
+}*/
 
 /*
 template <typename TObjective, typename TVariable>
@@ -68,4 +69,8 @@ void CmoIndividual<TObjective, TVariable>::initMutStep(const size_t size, const 
 {
     	m_mutStep[i] = value
 }*/
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CmoIndividual<double, std::vector<double>>;
+extern template class CmoIndividual<float, std::vector<float>>;
 }

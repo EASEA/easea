@@ -173,6 +173,10 @@ m_tau = k*log((TO)variables.size())/((TO)variables.size());
 		}
 	}
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CSelfGaussianMutation<float, DefaultGenerator_t>;
+extern template class CSelfGaussianMutation<double, DefaultGenerator_t>;
 }
 }
 }

@@ -109,6 +109,10 @@ void CdeCrossover<TType, TRandom>::launch(const TVariable &parent, const TVariab
                 offspring[i] = parent[i];
 	}
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CdeCrossover<float, DefaultGenerator_t>;
+extern template class CdeCrossover<double, DefaultGenerator_t>;
 }
 }
 }

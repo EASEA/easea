@@ -52,6 +52,10 @@ typename CWrapMutation<TObjective, TVariable>::TM &CWrapMutation<TObjective, TVa
 {
         return m_mutation;
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CWrapMutation<float, std::vector<float>>;
+extern template class CWrapMutation<double, std::vector<double>>;
 }
 }
 }
