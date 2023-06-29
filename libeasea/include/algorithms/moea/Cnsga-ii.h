@@ -193,8 +193,9 @@ const typename Cnsga_ii<TIndividual, TRandom>::TI *Cnsga_ii<TIndividual, TRandom
                 return comparator[0];
         else if (isDominated(*comparator[1], *comparator[0]))
                 return comparator[1];
-        if (comparator[0]->m_crowdingDistance < 0) LOG_ERROR(errorCode::value, "Crowding distance < 0 ");
-        if (comparator[1]->m_crowdingDistance < 0) LOG_ERROR(errorCode::value, "Crowding distance < 0 ");
+
+        if (comparator[0]->m_crowdingDistance < TO{0}) LOG_ERROR(errorCode::value, "Crowding distance < 0 ");
+        if (comparator[1]->m_crowdingDistance < TO{0}) LOG_ERROR(errorCode::value, "Crowding distance < 0 ");
 
 
         return comparator[0]->m_crowdingDistance > comparator[1]->m_crowdingDistance ? comparator[0] : comparator[1];
