@@ -33,7 +33,8 @@ std::vector<TType> getUniform(TRandom &random, const std::vector<std::pair<TType
         {
                 if (boundary[i].first >= boundary[i].second)
                 LOG_ERROR(errorCode::value,  "Wrong boundary values");
-                std::uniform_real_distribution<TType> dist(boundary[i].first, boundary[i].second);
+		using TProba = std::conditional_t<sizeof(TType) <= 4, float, double>;
+                std::uniform_real_distribution<TProba> dist(static_cast<TProba>(boundary[i].first), static_cast<TProba>(boundary[i].second));
                 individual[i] = dist(random);
         }
 

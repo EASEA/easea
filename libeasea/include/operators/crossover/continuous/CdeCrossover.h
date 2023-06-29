@@ -40,6 +40,7 @@ class CdeCrossover : public C3x1Crossover<TType, std::vector<TType> >, public ea
 {
 public:
         typedef TType TT;
+	using TProba = std::conditional_t<sizeof(TT) <= 4, float, double>;
         typedef TRandom TR;
         typedef std::vector<TT> TVariable;
         typedef C3x1Crossover<TT, TVariable> TBase;
@@ -57,7 +58,7 @@ protected:
         void launch(const TVariable &parent, const TVariable &parent1, const TVariable &parent2, const TVariable &parent3, TVariable &offspring);
 
 private:
-        std::uniform_real_distribution<TT> m_distribution;
+        std::uniform_real_distribution<TProba> m_distribution;
         TT m_scalingFactor;
 };
 

@@ -39,6 +39,7 @@ class CGaussianMutation : public CMutation<TObjective, std::vector<TObjective> >
 {
 public:
 	typedef TObjective TO;
+	using TProba = std::conditional_t<sizeof(TO) <= 4, float, double>;
 	typedef TRandom TR;
 	typedef std::vector<TO> TV;
 	typedef CMutation<TO, TV> TBase;
@@ -59,7 +60,7 @@ protected:
 	TO boundedMutate(TRandom &random, const TObjective distributionIndex, const TObjective idecision, const TObjective lower, const TObjective upper);
 
 private:
-	std::uniform_real_distribution<TO> m_distribution;	// uniform distribution
+	std::uniform_real_distribution<TProba> m_distribution;	// uniform distribution
 	TO m_distributionIndex;					// distribution index
 	TO m_tau;
 };
@@ -82,7 +83,7 @@ template <typename TObjective, typename TRandom>
 typename CGaussianMutation<TObjective, TRandom>::TO CGaussianMutation<TObjective,TRandom>::getGaussian(TRandom &random)
 {
 	TO v1, v2, s;
-	static std::uniform_real_distribution<TObjective> dist(0, 1);
+	static std::uniform_real_distribution<TProba> dist(0, 1);
 
 	do
 	{
@@ -91,7 +92,7 @@ typename CGaussianMutation<TObjective, TRandom>::TO CGaussianMutation<TObjective
 
 		s = v1 * v1 + v2 * v2;
 	}while( s >= 1.0 || s == 0 );
-	s = std::sqrt((-2.0 * std::log(s))/s);
+	s = sqrt((-2.0 * log(s))/s);
 	
 	return v1 * s; 
     
@@ -108,7 +109,7 @@ typename CGaussianMutation<TObjective, TRandom>::TO CGaussianMutation<TObjective
 template <typename TObjective, typename TRandom>
 typename CGaussianMutation<TObjective, TRandom>::TO CGaussianMutation<TObjective, TRandom> ::boundedMutate(TRandom &random, [[maybe_unused]] const TObjective distributionIndex, const TObjective idecision, const TObjective lower, const TObjective upper)
 {
-	static std::uniform_real_distribution<TObjective> dist(0, 1);
+	static std::uniform_real_distribution<TProba> dist(0, 1);
 	TO sigma = m_tau * 2.1;
 	if (lower >= upper)
 		LOG_ERROR(errorCode::value, "Wrong boundary mutation values");

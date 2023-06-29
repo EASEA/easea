@@ -1,0 +1,111 @@
+/*
+ * Viennet function benchmark using custom precision type
+ */
+
+// required to use boost improved precision types
+\User CMake:
+find_package(Boost REQUIRED COMPONENTS headers)
+target_include_directories(CMAKE_TARGET PUBLIC ${Boost_INCLUDE_DIRS})
+
+# test for compatibility with native float128
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
+CHECK_CXX_SOURCE_COMPILES("
+	#include <boost/multiprecision/float128.hpp>
+        int main(void){
+		boost::multiprecision::float128 v = 2;
+	}" FLOAT128_WORKS)
+if (FLOAT128_WORKS)
+	message(STATUS "using float128")
+else()
+	message(STATUS "float128 doesn't work. Falling back to boost cpp_bin_float<34>")
+endif()
+
+configure_file(config.h.in config.h) 
+\end
+
+\User header:
+
+#ifdef FLOAT128_WORKS
+#include <boost/multiprecision/float128.hpp>
+using real_t = boost::multiprecision::float128;
+#define CUSTOM_PRECISION_TYPE real_t;
+#else
+#include <boost/multiprecision/cpp_bin_float.hpp>
+using real_t = boost::multiprecision::cpp_bin_float_quad; // equivalent to float128
+#define CUSTOM_PRECISION_TYPE real_t;
+#endif
+\end
+
+\User declarations:
+#include <operators/crossover/continuous/CsbxCrossover.h>
+#include <operators/mutation/continuous/CSelfGaussianMutation.h>
+
+#define NB_VARIABLES 2
+#define NB_OBJECTIVES 3
+#define NB_CONSTRAINTS 0
+#define XOVER_PROB  0.9
+#define XOVER_DIST_ID 20.0 //0.5 //20.0
+#define MUT_PROB  1.0/NB_VARIABLES
+#define MUT_DIST_ID 20.0
+
+std::vector<std::pair<TT, TT>> boundary {
+	{TT{-3.}, TT{3.}},
+	{TT{-3.}, TT{3.}}
+};
+
+using TCrossover = easea::operators::crossover::continuous::sbx::CsbxCrossover<TT, TRandom &>;
+using TMutation = easea::operators::mutation::continuous::pm::CSelfGaussianMutation<TT, TRandom &>;
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(boundary));
+TCrossover crossover(m_generator, 1, m_problem.getBoundary(), XOVER_DIST_ID);
+TMutation m_mutation(m_generator, 1.f / m_problem.getBoundary().size(), m_problem.getBoundary(), MUT_DIST_ID);
+\end
+
+\User classes:
+GenomeClass { 
+  // need to declare the genome here
+ int x;
+}
+\end
+\GenomeClass::evaluator : // Returns the score as a real value
+	using namespace boost::multiprecision;
+	const auto& x = TI::m_variable[0];
+	const auto& y = TI::m_variable[1];
+        TI::m_objective[0] = 0.5*(x*x + y*y) + sin(x*x + y*y);
+        TI::m_objective[1] = pow(3.*x - 2.*y + 4, 2) / 8. + pow(x - y + 1., 2) / 27. + 15.;
+        TI::m_objective[2] = 1. / (x*x + y*y + 1) - 1.1 * exp(-(x*x + y*y));
+	return 1;
+\end
+
+
+\Before everything else function:
+\end
+\After everything else function:
+\end
+\At the beginning of each generation function:
+\end
+\At the end of each generation function:
+\end
+\At each generation before reduce function:
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 50    // NB_GEN
+  Time limit: 0 			           // In seconds, 0 to deactivate
+  Population size : 1000 			   //POP_SIZE
+  Offspring size : 1000           // or a xx%
+  Evaluator goal : maximize      // maximise
+  Selection operator: Tournament 2.0
+  Reduce parents operator: Tournament 2
+  Reduce offspring operator: Tournament 2
+
+  Elitism: Strong			           // Weak or Strong
+  Elite: 1
+  Print stats: true				       // Default: 1
+  Generate csv stats file:false			
+  Generate gnuplot script:false
+  Generate R script:false
+  Plot stats: false				         // Default: 0
+  Save population: false
+\end
+
