@@ -69,11 +69,12 @@ GenomeClass {
 \end
 \GenomeClass::evaluator : // Returns the score as a real value
 	using namespace boost::multiprecision;
-	const auto& x = TI::m_variable[0];
-	const auto& y = TI::m_variable[1];
-        TI::m_objective[0] = 0.5*(x*x + y*y) + sin(x*x + y*y);
-        TI::m_objective[1] = pow(3.*x - 2.*y + 4, 2) / 8. + pow(x - y + 1., 2) / 27. + 15.;
-        TI::m_objective[2] = 1. / (x*x + y*y + 1) - 1.1 * exp(-(x*x + y*y));
+	const auto x = TI::m_variable[0];
+	const auto y = TI::m_variable[1];
+	TI::m_objective.resize(3);
+        TI::m_objective[0] = std::move(0.5*(x*x + y*y) + sin(x*x + y*y));
+        TI::m_objective[1] = std::move(pow(3.*x - 2.*y + 4, 2) / 8. + pow(x - y + 1., 2) / 27. + 15.);
+        TI::m_objective[2] = std::move(1. / (x*x + y*y + 1) - 1.1 * exp(-(x*x + y*y)));
 	return 1;
 \end
 
