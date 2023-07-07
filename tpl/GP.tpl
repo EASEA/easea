@@ -543,6 +543,8 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <map>
 #include "CGPNode.h"
 
+\INSERT_USER_HEADER
+
 using namespace std;
 
 class CSelectionOperator;

@@ -78,7 +78,6 @@ int main(int argc, char** argv){
 	#include <omp.h>
 #endif
 
-
 using namespace std;
 
 #include "EASEAIndividual.hpp"
@@ -648,6 +647,8 @@ PopulationImpl::~PopulationImpl(){
 #include <CIndividual.h>
 #include <Parameters.h>
 #include <CCuda.h>
+
+\INSERT_USER_HEADER
 
 using namespace std;
 

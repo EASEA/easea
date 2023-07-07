@@ -627,6 +627,8 @@ using namespace std;
 
 #define NB_OBJECTIVE 2
 
+\INSERT_USER_HEADER
+
 \INSERT_USER_CLASSES_DEFINITIONS
 
 void EASEAInit(int argc, char* argv[], ParametersImpl& p);

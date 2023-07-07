@@ -368,6 +368,8 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <cstring>
 #include <sstream>
 
+\INSERT_USER_HEADER
+
 using namespace std;
 
 class CSelectionOperator;

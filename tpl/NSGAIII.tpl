@@ -98,7 +98,13 @@ bool INSTEAD_EVAL_STEP = false;
 extern CEvolutionaryAlgorithm* EA;
 
 typedef std::mt19937 TRandom;
-typedef double TT;
+
+#ifndef CUSTOM_PRECISION_TYPE
+	typedef double TT;
+#else
+	using TT = CUSTOM_PRECISION_TYPE;
+#endif
+
 typedef easea::problem::CProblem<TT> TP;
 typedef TP::TV TV;
 typedef TP::TO TO;
@@ -368,6 +374,8 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 #include <Parameters.h>
 #include <cstring>
 #include <sstream>
+
+\INSERT_USER_HEADER
 
 using namespace std;
 

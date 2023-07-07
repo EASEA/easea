@@ -100,9 +100,12 @@ extern CEvolutionaryAlgorithm* EA;
 extern std::ofstream easena::log_file;
 extern easena::log_stream logg;
 
+#ifndef CUSTOM_PRECISION_TYPE
+	typedef double TT;
+#else
+	using TT = CUSTOM_PRECISION_TYPE;
+#endif
 
-
-typedef double TT;
 typedef easea::problem::CProblem<TT> TP;
 typedef TP::TV TV;
 typedef TP::TV TO;
@@ -688,6 +691,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <cstring>
 #include <sstream>
 
+\INSERT_USER_HEADER
 
 using namespace std;
 

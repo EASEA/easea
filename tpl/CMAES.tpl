@@ -71,6 +71,7 @@ int main(int argc, char** argv){
 	#include <omp.h>
 #endif
 
+\INSERT_USER_HEADER
 
 using namespace std;
 bool bReevaluate = false;
