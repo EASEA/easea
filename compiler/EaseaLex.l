@@ -115,7 +115,20 @@ static inline void yyinput_function(char* buf, T* result, size_t max_size) {
 #define YY_INPUT(buf,result,max_size) (yyinput_function(buf, &result, max_size))
 
 void switch_to_genome();
-void print_else_default(const char* const from, const char* const value, const char* const def);
+void print_else_default(const char* const from, const char* const value, const char* const def, bool warning = true);
+void print_else_default(const char* const from, int value, int def, bool warning = true);
+void print_else_default(const char* const from, float value, float def, bool warning = true);
+
+template <typename T>
+void print_required_different(const char* const from, T value, T forbidden) {
+	if (value != forbidden) {
+		fputs(std::to_string(value).c_str(), fpOutputFile);
+	} else {
+		fprintf(stderr, "Error: '%s' was not defined in .ez but is required.\n");
+		exit(1);
+	}
+}
+
 static inline void print_bool(FILE* fp, bool value) { fprintf(fp, "%s", value ? "true" : "false"); }
 %}                                                     
                                          
@@ -1058,19 +1071,19 @@ return lhs.arity < rhs.arity;
   }
   else fprintf(fpOutputFile,"%s",sSELECTOR);
 }
-<TEMPLATE_ANALYSIS>"\\SELECTOR_OPERATOR" {print_else_default("", sSELECTOR_OPERATOR, "Tournament");}
-<TEMPLATE_ANALYSIS>"\\SELECT_PRM"  {fprintf(fpOutputFile,"%f",fSELECT_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_PAR_OPERATOR" {print_else_default("Reduce parents operator", sRED_PAR_OPERATOR, "Tournament");}
-<TEMPLATE_ANALYSIS>"\\RED_PAR_PRM"  {fprintf(fpOutputFile,"%f",fRED_PAR_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_OFF_OPERATOR" {print_else_default("Reduce offspring operator", sRED_OFF_OPERATOR, "Tournament");}
-<TEMPLATE_ANALYSIS>"\\RED_OFF_PRM"  {fprintf(fpOutputFile,"%f",fRED_OFF_PRM);}
-<TEMPLATE_ANALYSIS>"\\RED_FINAL_OPERATOR" {print_else_default("Final reduce operator", sRED_FINAL_OPERATOR, "Tournament");}
-<TEMPLATE_ANALYSIS>"\\RED_FINAL_PRM"  {fprintf(fpOutputFile,"%f",fRED_FINAL_PRM);}
-<TEMPLATE_ANALYSIS>"\\POP_SIZE"  {fprintf(fpOutputFile,"%d",nPOP_SIZE);}
-<TEMPLATE_ANALYSIS>"\\OFF_SIZE"  {fprintf(fpOutputFile,"%d",nOFF_SIZE);}
-<TEMPLATE_ANALYSIS>"\\ELITE_SIZE"  { fprintf(fpOutputFile,"%d",nELITE); }
-<TEMPLATE_ANALYSIS>"\\FC_SIZE"  { fprintf(fpOutputFile,"%d",iNO_FITNESS_CASES); }
-<TEMPLATE_ANALYSIS>"\\ARCH_SIZE"  {fprintf(fpOutputFile,"%d",nARCH_SIZE);}
+<TEMPLATE_ANALYSIS>"\\SELECTOR_OPERATOR" { print_else_default("Selection operator", sSELECTOR_OPERATOR, "Tournament");}
+<TEMPLATE_ANALYSIS>"\\SELECT_PRM"  { print_required_different("Selection pressure", fSELECT_PRM, 0.f);}
+<TEMPLATE_ANALYSIS>"\\RED_PAR_OPERATOR" { print_else_default("Reduce parents operator", sRED_PAR_OPERATOR, sSELECTOR_OPERATOR[0] ? sSELECTOR_OPERATOR : "Tournament", false);}
+<TEMPLATE_ANALYSIS>"\\RED_PAR_PRM"  { print_else_default("Reduce parents pressure", fRED_PAR_PRM, fSELECT_PRM, false);}
+<TEMPLATE_ANALYSIS>"\\RED_OFF_OPERATOR" { print_else_default("Reduce offspring operator", sRED_OFF_OPERATOR, sSELECTOR_OPERATOR[0] ? sSELECTOR_OPERATOR : "Tournament", false);}
+<TEMPLATE_ANALYSIS>"\\RED_OFF_PRM"  { print_else_default("Reduce offspring pressure", fRED_OFF_PRM, fSELECT_PRM, false);}
+<TEMPLATE_ANALYSIS>"\\RED_FINAL_OPERATOR" { print_else_default("Final reduce operator", sRED_FINAL_OPERATOR, sSELECTOR_OPERATOR[0] ? sSELECTOR_OPERATOR : "Tournament", false);}
+<TEMPLATE_ANALYSIS>"\\RED_FINAL_PRM"  { print_else_default("Final reduce pressure", fRED_FINAL_PRM, fSELECT_PRM, false);}
+<TEMPLATE_ANALYSIS>"\\POP_SIZE"  { print_required_different("Population size", nPOP_SIZE, 0);}
+<TEMPLATE_ANALYSIS>"\\OFF_SIZE"  { print_else_default("Offspring size", nOFF_SIZE, nPOP_SIZE, false);}
+<TEMPLATE_ANALYSIS>"\\ELITE_SIZE"  { print_else_default("Elite size", nELITE, 1, false); }
+<TEMPLATE_ANALYSIS>"\\FC_SIZE"  { print_required_different("NO_FITNESS_CASES", iNO_FITNESS_CASES, 0u); }
+<TEMPLATE_ANALYSIS>"\\ARCH_SIZE"  { print_required_different("ARCH_SIZE", nARCH_SIZE, 0);}
 
 <TEMPLATE_ANALYSIS>"\\RED_PAR"  {
   if( TARGET==CUDA || TARGET==STD){
@@ -1115,33 +1128,37 @@ return lhs.arity < rhs.arity;
 if(OPERATING_SYSTEM=WINDOWS)
 	fprintf(fpOutputFile,"%s\\",getenv("NVSDKCUDA_ROOT"));
 }
-<TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  {if(fSURV_PAR_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_PAR_SIZE); else fprintf(fpOutputFile,"1.0");}
-<TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  {if(fSURV_OFF_SIZE>=0.0)fprintf(fpOutputFile,"%f",fSURV_OFF_SIZE); else fprintf(fpOutputFile,"1.0");}
-<TEMPLATE_ANALYSIS>"\\GENOME_NAME"  {fprintf(fpOutputFile,"%s",nGENOME_NAME);}
-<TEMPLATE_ANALYSIS>"\\PROBLEM_DIM"  {fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
-<TEMPLATE_ANALYSIS>"\\NB_GEN"  {fprintf(fpOutputFile,"%d",nNB_GEN);}
-<TEMPLATE_ANALYSIS>"\\TIME_LIMIT" {fprintf(fpOutputFile,"%d",nTIME_LIMIT);}
-<TEMPLATE_ANALYSIS>"\\MUT_PROB"  {fprintf(fpOutputFile,"%f",fMUT_PROB);}
-<TEMPLATE_ANALYSIS>"\\XOVER_PROB"  {fprintf(fpOutputFile,"%f",fXOVER_PROB);}
-<TEMPLATE_ANALYSIS>"\\MINIMAXI"  {fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); }
-<TEMPLATE_ANALYSIS>"\\ELITISM"  {fprintf(fpOutputFile, "%d", bELITISM);}
+<TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  { print_else_default("Surviving parents", fSURV_PAR_SIZE, 1.0f, false); }
+<TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  { print_else_default("Surviving offsprings", fSURV_OFF_SIZE, 1.0f, false); }
+<TEMPLATE_ANALYSIS>"\\GENOME_NAME"  { fprintf(fpOutputFile,"%s",nGENOME_NAME);}
+<TEMPLATE_ANALYSIS>"\\PROBLEM_DIM"  { fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
+<TEMPLATE_ANALYSIS>"\\NB_GEN"  { print_required_different("Number of generations", nNB_GEN, 0); }
+<TEMPLATE_ANALYSIS>"\\TIME_LIMIT" { print_else_default("Time limit", nTIME_LIMIT, 0, false); }
+<TEMPLATE_ANALYSIS>"\\MUT_PROB"  { print_required_different("Mutation probability", fMUT_PROB, 0.f); }
+<TEMPLATE_ANALYSIS>"\\XOVER_PROB"  { print_required_different("Crossover probability", fXOVER_PROB, 0.f); }
+<TEMPLATE_ANALYSIS>"\\MINIMAXI"  {
+	if (nMINIMISE == 2)
+		print_required_different("Evaluator goal", nMINIMISE, 2);
+	fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); 
+}
+<TEMPLATE_ANALYSIS>"\\ELITISM"  { fprintf(fpOutputFile, "%d", bELITISM);}
 
-<TEMPLATE_ANALYSIS>"\\NB_OPT_IT"  {fprintf(fpOutputFile,"%d",nNB_OPT_IT);}
-<TEMPLATE_ANALYSIS>"\\BALDWINISM" {print_bool(fpOutputFile, bBALDWINISM);}
+<TEMPLATE_ANALYSIS>"\\NB_OPT_IT"  { fprintf(fpOutputFile,"%d",nNB_OPT_IT);}
+<TEMPLATE_ANALYSIS>"\\BALDWINISM" { print_bool(fpOutputFile, bBALDWINISM);}
 
-<TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" {print_bool(fpOutputFile, bREMOTE_ISLAND_MODEL);}
-<TEMPLATE_ANALYSIS>"\\IP_FILE" {if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
-<TEMPLATE_ANALYSIS>"\\MIGRATION_PROBABILITY" {fprintf(fpOutputFile,"%f",fMIGRATION_PROBABILITY);}
-<TEMPLATE_ANALYSIS>"\\SERVER_PORT" {fprintf(fpOutputFile,"%d",nSERVER_PORT);}
+<TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" { print_bool(fpOutputFile, bREMOTE_ISLAND_MODEL);}
+<TEMPLATE_ANALYSIS>"\\IP_FILE" { if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
+<TEMPLATE_ANALYSIS>"\\MIGRATION_PROBABILITY" { print_else_default("Migration probability", fMIGRATION_PROBABILITY, 0.1f, false); }
+<TEMPLATE_ANALYSIS>"\\SERVER_PORT" { print_else_default("Server port", nSERVER_PORT, 2929);}
 
-<TEMPLATE_ANALYSIS>"\\PRINT_STATS" {print_bool(fpOutputFile, bPRINT_STATS);}
-<TEMPLATE_ANALYSIS>"\\PLOT_STATS" {print_bool(fpOutputFile, bPLOT_STATS);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" {print_bool(fpOutputFile, bGENERATE_CSV_FILE);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" {print_bool(fpOutputFile, bGENERATE_GNUPLOT_SCRIPT);}
-<TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" {print_bool(fpOutputFile, bGENERATE_R_SCRIPT);}
+<TEMPLATE_ANALYSIS>"\\PRINT_STATS" { print_bool(fpOutputFile, bPRINT_STATS);}
+<TEMPLATE_ANALYSIS>"\\PLOT_STATS" { print_bool(fpOutputFile, bPLOT_STATS);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_CSV_FILE" { print_bool(fpOutputFile, bGENERATE_CSV_FILE);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_GNUPLOT_SCRIPT" { print_bool(fpOutputFile, bGENERATE_GNUPLOT_SCRIPT);}
+<TEMPLATE_ANALYSIS>"\\GENERATE_R_SCRIPT" { print_bool(fpOutputFile, bGENERATE_R_SCRIPT);}
 
-<TEMPLATE_ANALYSIS>"\\SAVE_POPULATION" {print_bool(fpOutputFile, bSAVE_POPULATION);}
-<TEMPLATE_ANALYSIS>"\\START_FROM_FILE" {print_bool(fpOutputFile, bSTART_FROM_FILE);}
+<TEMPLATE_ANALYSIS>"\\SAVE_POPULATION" { print_bool(fpOutputFile, bSAVE_POPULATION);}
+<TEMPLATE_ANALYSIS>"\\START_FROM_FILE" { print_bool(fpOutputFile, bSTART_FROM_FILE);}
 
 <TEMPLATE_ANALYSIS>"\\START_CUDA_GENOME_H_TPL"  {
   char sFileName[1000];
@@ -1333,7 +1350,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   lineCounter++;
  }                
 
-<COPY_USER_CMAKE>"\\User"[ \t\n]+[Cc][Mm][Aa][Kk][Ee][^ \t\n]*[ \t\n]*":" {
+<COPY_USER_CMAKE>"\\"("User"[ \t\n]+)?[Cc][Mm][Aa][Kk][Ee][^ \t\n]*[ \t\n]*":" {
   fprintf (fpOutputFile,"# User CMAKE\n");
   bFunction = 0;
   BEGIN COPY;
@@ -1351,7 +1368,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   lineCounter++;
  }
 
-<COPY_USER_HEADER>"\\User"[ \t\n]+[Hh]"eader"[^ \t\n]*":" {
+<COPY_USER_HEADER>"\\"("User"[ \t\n]+)?[Hh]"eader"[^ \t\n]*":" {
   fprintf (fpOutputFile,"// User HEADER\n");
   print_line_indicator();
   bFunction = 0;
@@ -1370,7 +1387,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   lineCounter++;
  }
 
-<COPY_USER_FUNCTIONS>"\\User"[ \t\n]+"functions"[ \t\n]*":" {
+<COPY_USER_FUNCTIONS>"\\"("User"[ \t\n]+)?"[Ff]unction"s?[ \t\n]*":" {
   fprintf (fpOutputFile,"// User functions\n\n"); 
   print_line_indicator();
   BEGIN COPY;
@@ -1389,7 +1406,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   lineCounter++;
  }
 
-<COPY_INITIALISATION_FUNCTION>"\\Before"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
+<COPY_INITIALISATION_FUNCTION>"\\[Bb]efore"([ \t\n]+"everything"([ \t\n]+"else"([ \t\n]+"function")?)?)?[ \t\n]*":" {
     //fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){\n");
   //bFunction=1; bInitFunction=1;
   print_line_indicator();
@@ -1412,7 +1429,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  *  Easea GPGPU & EO Finalization function
  *****************************************/
 
-<COPY_FINALIZATION_FUNCTION>"\\After"[ \t\n]+"everything"[ \t\n]+"else"[ \t\n]+"function"[ \t\n]*":" {
+<COPY_FINALIZATION_FUNCTION>"\\"(([Aa]"fter"([ \t\n]+"everything"([ \t\n]+"else"([ \t\n]+"function")?)?)?)|(([Aa]t[ \t\n]+(the[ \t\n]+)?)?[Ee]nd)|([Ff]inally))[ \t\n]*":" {
   fprintf (fpOutputFile,"// Finalization function\nvoid EASEAFinalization(CPopulation* population){\n(void)population; // avoid warning\n");
   print_line_indicator();
   bFunction=1; bFinalizationFunction=1;
@@ -1432,7 +1449,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_FINALIZATION_FUNCTION>\n {lineCounter++;}                                      
 
 
-<COPY_END_GENERATION_FUNCTION>"\\At"[ \t\n]+"the"[ \t\n]+"end"[ \t\n]+"of"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"function"[ \t\n]*":" {
+<COPY_END_GENERATION_FUNCTION>"\\"([Aa]"t"[ \t\n]+"the"[ \t\n]+)?[Ee]"nd"([ \t\n]+"of"([ \t\n]+"each")?)?[ \t\n]+"generation"s?([ \t\n]+"function")?[ \t\n]*":" {
   //DEBUG_PRT_PRT("at each end");
   if( (TARGET==CUDA || TARGET==STD)  ){
     fprintf (fpOutputFile,"{\n");
@@ -1457,8 +1474,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_END_GENERATION_FUNCTION>.|\n {}                                      
 
 
-<COPY_BEG_GENERATION_FUNCTION>"\\At"[ \t\n]+"the"[ \t\n]+"beginning"[ \t\n]+"of"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"function"[ \t\n]*":" {
-  //DEBUG_PRT_PRT("at each beg");
+<COPY_BEG_GENERATION_FUNCTION>"\\"([Aa]"t"[ \t\n]+"the"[ \t\n]+)?[Bb]"eginning"([ \t\n]+"of"([ \t\n]+"each")?)?[ \t\n]+"generation"s?([ \t\n]+"function")?[ \t\n]*":" {
   if( (TARGET==CUDA || TARGET==STD)){
     fprintf (fpOutputFile,"{\n");
     bFunction=1;
@@ -1511,7 +1527,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_BEG_GENERATION_FUNCTION>. {}
 
 
-<COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>"\\At"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+"before"[ \t\n]+"reduce"[ \t\n]+"function"[ \t\n]*":" {
+<COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>"\\"([Aa]"t"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+)[Bb]"efore"[ \t\n]+"reduc"(e|"tion")([ \t\n]+"function")?[ \t\n]*":" {
 //DEBUG_PRT_PRT("at each");
   if((TARGET==CUDA || TARGET==STD) /* && !bBeginGeneration && !bEndGeneration ) */)
   {
@@ -1561,7 +1577,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 
 
-<ANALYSE_USER_CLASSES>"\\User"[ \t\n]+"classes"[ \t\n]*":" {
+<ANALYSE_USER_CLASSES>"\\"([Uu]"ser"[ \t\n]+)?[Cc]"lass"("es")?[ \t\n]*":" {
   BEGIN GENOME_ANALYSIS; return CLASSES;}
 <ANALYSE_USER_CLASSES>.|\n {}                                      
 
@@ -1860,14 +1876,14 @@ if(OPERATING_SYSTEM=WINDOWS)
  /****************************************
   *  Looks for standard and user functions in the .ez file
   ****************************************/
-<COPY_INITIALISER>"\\GenomeClass::initiali"[sz]"er"[ \t\n]*":" {
+<COPY_INITIALISER>"\\"([Gg]"enomeClass::")?[Ii]nitiali[sz]("er"|"ation")[ \t\n]*":" {
   bWithinInitialiser=1;
   BEGIN COPY_USER_FUNCTION;
   BEGIN TEMPLATE_ANALYSIS;
   return USER_CTOR;
  }
 <COPY_INITIALISER>.|\n {/*putc(yytext[0],fpOutputFile);*/}                                      
-<COPY_CROSSOVER>"\\GenomeClass::crossover"[ \t\n]*":" {
+<COPY_CROSSOVER>"\\"([Gg]"enomeClass::")?([Cc]ross|[Xx])over[ \t\n]*":" {
   bWithinXover=1;
   print_line_indicator();
   BEGIN COPY_USER_FUNCTION;
@@ -1875,7 +1891,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 <COPY_CROSSOVER>. {}
 <COPY_CROSSOVER>\n {lineCounter++;}
-<COPY_MUTATOR>"\\GenomeClass::mutator"[ \t\n]*":" {
+<COPY_MUTATOR>"\\"([Gg]"enomeClass::")?[Mm]utator[ \t\n]*":" {
   bWithinMutator=1;
   print_line_indicator();
   BEGIN COPY_USER_FUNCTION;
@@ -1884,7 +1900,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_MUTATOR>. {}
 <COPY_MUTATOR>\n {lineCounter++;}
 
-<COPY_EVALUATOR>"\\GenomeClass::evaluator"[ \t\n]*":" {
+<COPY_EVALUATOR>"\\"([Gg]"enomeClass::")?[Ee]"valuator"[ \t\n]*":" {
   BEGIN COPY_USER_FUNCTION;            
   bWithinEvaluator=1;
   print_line_indicator();
@@ -1894,7 +1910,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_EVALUATOR>\n {lineCounter++;}
 
 
-<COPY_OPTIMISER>"\\GenomeClass::optimiser"[ \t\n]*":" {
+<COPY_OPTIMISER>"\\"([Gg]"enomeClass::")?[Oo]ptimi[zs](er|ation)[ \t\n]*":" {
   BEGIN COPY_USER_FUNCTION;
   bWithinOptimiser=1;
   print_line_indicator();
@@ -2216,7 +2232,7 @@ if(OPERATING_SYSTEM=WINDOWS)
    Looks for run parameters in the .ez file
   ****************************************/
 
-<PARAMETERS_ANALYSIS>"\\Default run"[ \t\n]+"parameters"[ \t\n]*":" {
+<PARAMETERS_ANALYSIS>"\\"("Default run"[ \t\n]+"parameters"|[Pp]"arameter"s?)[ \t\n]*":" {
   if (bVERBOSE) printf ("Analysing parameters...\n");
   BEGIN GET_PARAMETERS;
  }
@@ -2738,11 +2754,32 @@ Searches_t get_lexer_state() {
 	}
 }
 
-void print_else_default(const char* const from, const char* const value, const char* const def) {
+void print_else_default(const char* const from, const char* const value, const char* const def, bool warning) {
 	if (strlen(value) == 0) {
-		fprintf(stderr, "Warning: '%s' was not defined in .ez, using default value '%s'.\n", from, def);
+		if (warning || debug)
+			fprintf(stderr, "Warning: '%s' was not defined in .ez, using default value '%s'.\n", from, def);
 		fputs(def, fpOutputFile);
 	} else {
 		fputs(value, fpOutputFile);
+	}
+}
+
+void print_else_default(const char* const from, int value, int def, bool warning) {
+	if (value == 0) {
+		if (warning || debug)
+			fprintf(stderr, "Warning: '%s' was not defined in .ez, using default value '%d'.\n", from, def);
+		fprintf(fpOutputFile, "%d", def);
+	} else {
+		fprintf(fpOutputFile, "%d", value);
+	}
+}
+
+void print_else_default(const char* const from, float value, float def, bool warning) {
+	if (abs(value) < 1e-6f) {
+		if (warning || debug)
+			fprintf(stderr, "Warning: '%s' was not defined in .ez, using default value '%f'.\n", from, def);
+		fprintf(fpOutputFile, "%f", def);
+	} else {
+		fprintf(fpOutputFile, "%f", value);
 	}
 }

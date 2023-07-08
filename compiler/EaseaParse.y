@@ -59,7 +59,7 @@ bool bREMOTE_ISLAND_MODEL=0; //remote island model
 float fMIGRATION_PROBABILITY=0.0;
 char sIP_FILE[128]; //remote island model
 int nPOP_SIZE, nOFF_SIZE, nARCH_SIZE;
-float fSURV_PAR_SIZE=-1.0, fSURV_OFF_SIZE=-1.0;
+float fSURV_PAR_SIZE=0.f, fSURV_OFF_SIZE=0.f;
 const char *nGENOME_NAME;
 int nPROBLEM_DIM;
 int nNB_GEN=0;
