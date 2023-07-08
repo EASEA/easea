@@ -1138,7 +1138,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\XOVER_PROB"  { print_else_default("Crossover probability", fXOVER_PROB, 0.5f, false); }
 <TEMPLATE_ANALYSIS>"\\MINIMAXI"  {
 	if (nMINIMISE == 2)
-		print_required_different("Evaluator goal", nMINIMISE, 2);
+		fprintf(stderr, "Warning: 'Evaluator goal' was not defined. Using 'minimize' as default\n");
 	fprintf(fpOutputFile,"%s",(nMINIMISE? "true" : "false")); 
 }
 <TEMPLATE_ANALYSIS>"\\ELITISM"  { fprintf(fpOutputFile, "%d", bELITISM);}
@@ -2248,7 +2248,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"generations"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Gen...\n");return NB_GEN;}
 <GET_PARAMETERS>"Time"[ \t\n]+"limit"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tTime Limit...\n");return TIME_LIMIT;}
-<GET_PARAMETERS>"Population"[ \t\n]+"size"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tPop Size...\n");return POP_SIZE;}
+<GET_PARAMETERS>"Population"([ \t\n]+"size")?[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tPop Size...\n");return POP_SIZE;}
 <GET_PARAMETERS>"Archive"[ \t\n]+"size"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tArch Size...\n");return ARCH_SIZE;}
 <GET_PARAMETERS>"Elite"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tElite Size...\n");return ELITE;}
 <GET_PARAMETERS>"Selection"[ \t\n]+"operator"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tSelection Operator...\n");return SELECTOR;}
@@ -2285,7 +2285,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 
 <GET_PARAMETERS>"Elitism"[ \t\n]*":" {if (bVERBOSE) printf ("\tElitism...\n");return ELITISM;}
-<GET_PARAMETERS>"Evaluator"[ \t\n]+"goal"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;}
+<GET_PARAMETERS>("Evaluator"[ \t\n]+)?[Gg]"oal"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tMinMax...\n");return MINIMAXI;}
 <GET_PARAMETERS>"Number"[ \t\n]+"of"[ \t\n]+"optimisation"[ \t\n]+"iterations"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tNb of Optimisation It...\n");return NB_OPT_IT;}
 <GET_PARAMETERS>"Baldwinism"[ \t\n]*":"[ \t\n]* {if (bVERBOSE) printf ("\tBaldwinism...\n");return BALDWINISM;}
 
