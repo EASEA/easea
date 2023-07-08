@@ -310,7 +310,7 @@ exponent  ([Ee][+-]?[0-9]+)
  }
 
 
-<COPY_GP_OPCODE>"\\"[Bb]"egin operator description :" {
+<COPY_GP_OPCODE>"\\"([Bb]"egin"[ \t\n]+)?[Oo]"perator"s?([ \t\n]+"description"s?)?[ \t\n]*":" {
   if (bVERBOSE) printf ("found begin section\n");
   bGPOPCODE_ANALYSIS = true;
   BEGIN GP_RULE_ANALYSIS;
@@ -331,7 +331,7 @@ return lhs.arity < rhs.arity;
  }
 
 <COPY_GP_OPCODE><<EOF>> {
-  if (bVERBOSE) printf("*** No GP OP codes were found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'GP OP codes' found. You may provide some using '\\Operators:'\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   yypop_buffer_state();
@@ -525,13 +525,13 @@ return lhs.arity < rhs.arity;
  }
 
 
-<COPY_GP_EVAL>"\\GenomeClass::evaluator"[ \t]*"header"[ \t]*":" {
+<COPY_GP_EVAL>"\\"([Gg]"enomeClass::")?[Ee]"valuator"[ \t]*"header"[ \t]*":" {
   if( iCOPY_GP_EVAL_STATUS==EVAL_HDR){
     bIsCopyingGPEval = true;
   }
  }
 
-<COPY_GP_EVAL>"\\GenomeClass::evaluator"[ \t]*"for"[ \t]*"each"[ \t]*"fc"[ \t]*":" {
+<COPY_GP_EVAL>"\\"([Gg]"enomeClass::")?[Ee]"valuator"[ \t]*"for"[ \t]*"each"[ \t]*"fc"[ \t]*":" {
   if( iCOPY_GP_EVAL_STATUS==EVAL_BDY){
     bIsCopyingGPEval = true;
   }
@@ -539,7 +539,7 @@ return lhs.arity < rhs.arity;
 
 
 
-<COPY_GP_EVAL>"\\GenomeClass::evaluator"[ \t]*"accumulator"[ \t]*":" {
+<COPY_GP_EVAL>"\\"([Gg]"enomeClass::")?[Ee]"valuator"[ \t]*"accumulator"[ \t]*":" {
   if( iCOPY_GP_EVAL_STATUS==EVAL_FTR){
     bIsCopyingGPEval = true;
   }
@@ -1134,8 +1134,8 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\PROBLEM_DIM"  { fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
 <TEMPLATE_ANALYSIS>"\\NB_GEN"  { print_required_different("Number of generations", nNB_GEN, 0); }
 <TEMPLATE_ANALYSIS>"\\TIME_LIMIT" { print_else_default("Time limit", nTIME_LIMIT, 0, false); }
-<TEMPLATE_ANALYSIS>"\\MUT_PROB"  { print_required_different("Mutation probability", fMUT_PROB, 0.f); }
-<TEMPLATE_ANALYSIS>"\\XOVER_PROB"  { print_required_different("Crossover probability", fXOVER_PROB, 0.f); }
+<TEMPLATE_ANALYSIS>"\\MUT_PROB"  { print_else_default("Mutation probability", fMUT_PROB, 0.5f, false); }
+<TEMPLATE_ANALYSIS>"\\XOVER_PROB"  { print_else_default("Crossover probability", fXOVER_PROB, 0.5f, false); }
 <TEMPLATE_ANALYSIS>"\\MINIMAXI"  {
 	if (nMINIMISE == 2)
 		print_required_different("Evaluator goal", nMINIMISE, 2);
@@ -1149,7 +1149,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <TEMPLATE_ANALYSIS>"\\REMOTE_ISLAND_MODEL" { print_bool(fpOutputFile, bREMOTE_ISLAND_MODEL);}
 <TEMPLATE_ANALYSIS>"\\IP_FILE" { if(strlen(sIP_FILE)>0)fprintf(fpOutputFile,"%s",sIP_FILE); else fprintf(fpOutputFile,"NULL");}
 <TEMPLATE_ANALYSIS>"\\MIGRATION_PROBABILITY" { print_else_default("Migration probability", fMIGRATION_PROBABILITY, 0.1f, false); }
-<TEMPLATE_ANALYSIS>"\\SERVER_PORT" { print_else_default("Server port", nSERVER_PORT, 2929);}
+<TEMPLATE_ANALYSIS>"\\SERVER_PORT" { print_else_default("Server port", nSERVER_PORT, 2929, false);}
 
 <TEMPLATE_ANALYSIS>"\\PRINT_STATS" { print_bool(fpOutputFile, bPRINT_STATS);}
 <TEMPLATE_ANALYSIS>"\\PLOT_STATS" { print_bool(fpOutputFile, bPLOT_STATS);}
@@ -1296,13 +1296,13 @@ if(OPERATING_SYSTEM=WINDOWS)
  *  use information found in .ez file
  *****************************************/
 
-<COPY_EO_INITIALISER>"\\GenomeClass::initiali"[sz]"er"[ \t\n]*":" {
+<COPY_EO_INITIALISER>"\\"([Gg]"enomeClass::")?[Ii]"nitiali"[sz]"er"[ \t\n]*":" {
   fprintf (fpOutputFile,"// Genome Initialiser\n");
   print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_EO_INITIALISER><<EOF>> {
-  if (bVERBOSE) printf("*** No genome initialiser was found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'genome initialiser' found. You may provide one using '\\Initialiser:'\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   yypop_buffer_state();
@@ -1312,13 +1312,13 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_EO_INITIALISER>. {}                                      
 <COPY_EO_INITIALISER>\n {lineCounter++;}
 
-<COPY_USER_DECLARATIONS>"\\"("User"[ \t\n]+)?[Dd]"eclarations"[ \t\n]*":" {
+<COPY_USER_DECLARATIONS>"\\"("User"[ \t\n]+)?[Dd]"eclaration"s*[ \t\n]*":" {
   fprintf (fpOutputFile,"// User declarations\n"); 
   print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_USER_DECLARATIONS><<EOF>> {
-  if (bVERBOSE) printf("*** No user declarations were found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'user declarations' found. You may provide some using '\\User declarations:'\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   yypop_buffer_state();
@@ -1331,13 +1331,13 @@ if(OPERATING_SYSTEM=WINDOWS)
   lineCounter++;
  } 
                
-<COPY_USER_CUDA>"\\User"[ \t\n]+"CUDA"[ \t\n]*":" {
+<COPY_USER_CUDA>"\\"([Uu]"ser"[ \t\n]+)?[Cc][Uu][Dd][Aa][ \t\n]*":" {
   fprintf (fpOutputFile,"// User CUDA\n"); 
   print_line_indicator();
   BEGIN COPY;
  }                                                               
 <COPY_USER_CUDA><<EOF>> {
-  if (bVERBOSE) printf("*** No user CUDA were found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'user CUDA' found. You may provide some using '\\User CUDA:'\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   yypop_buffer_state();
@@ -1350,13 +1350,13 @@ if(OPERATING_SYSTEM=WINDOWS)
   lineCounter++;
  }                
 
-<COPY_USER_CMAKE>"\\"("User"[ \t\n]+)?[Cc][Mm][Aa][Kk][Ee][^ \t\n]*[ \t\n]*":" {
+<COPY_USER_CMAKE>"\\"("User"[ \t\n]+)?[Cc][Mm][Aa][Kk][Ee][ \t\n]*":" {
   fprintf (fpOutputFile,"# User CMAKE\n");
   bFunction = 0;
   BEGIN COPY;
  }
 <COPY_USER_CMAKE><<EOF>> {
-  if (bVERBOSE) printf("*** No user CMAKE were found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'user CMAKE' found. You may provide some using '\\Cmake:'\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   yypop_buffer_state();
@@ -1368,14 +1368,14 @@ if(OPERATING_SYSTEM=WINDOWS)
   lineCounter++;
  }
 
-<COPY_USER_HEADER>"\\"("User"[ \t\n]+)?[Hh]"eader"[^ \t\n]*":" {
+<COPY_USER_HEADER>"\\"("User"[ \t\n]+)?[Hh]"eader"s*[^ \t\n]*":" {
   fprintf (fpOutputFile,"// User HEADER\n");
   print_line_indicator();
   bFunction = 0;
   BEGIN COPY;
  }
 <COPY_USER_HEADER><<EOF>> {
-  if (bVERBOSE) printf("*** No user HEADER were found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'user HEADER' found. You may provide some using '\\Header:'\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   yypop_buffer_state();
@@ -1393,7 +1393,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   BEGIN COPY;
  }                                                               
 <COPY_USER_FUNCTIONS><<EOF>> {
-  if (bVERBOSE) printf("*** No user functions were found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'user functions' found. You may provide some using '\\Functions:'\n");
   fprintf(fpOutputFile,"\n// No user functions.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
@@ -1413,7 +1413,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   BEGIN COPY;
  }
 <COPY_INITIALISATION_FUNCTION><<EOF>> {bInitFunction=0; // No before everything else function was found in the .ez file
-  if (bVERBOSE) printf("*** No before everything else function was found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'before everything else function' found. You may provide one using '\\Before everything:'\n");
   fprintf(fpOutputFile,"\n// No before everything else function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
@@ -1437,7 +1437,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 
 <COPY_FINALIZATION_FUNCTION><<EOF>> {bFinalizationFunction=0; // No after everything else function was found in the .ez file
-  if (bVERBOSE) printf("*** No after everything else function was found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'after everything else function' found. You may provide one using '\\Finally:'\n");
   fprintf(fpOutputFile,"\n// No after eveything else function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
@@ -1462,7 +1462,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_END_GENERATION_FUNCTION><<EOF>> {
   bEndGenerationFunction=0; // No Generation function was found in the .ez file
-  if( bVERBOSE) printf("*** No end generation function was found. ***\n");
+  if( bVERBOSE) printf("Warning: no 'end generation function' found. You may provide one using '\\End of generation:'\n");
   fprintf(fpOutputFile,"\n// No at end of generation function.\n");
 
   rewind(fpGenomeFile);
@@ -1484,6 +1484,21 @@ if(OPERATING_SYSTEM=WINDOWS)
     BEGIN COPY_USER_GENERATION;
   }
  }
+
+<COPY_BEG_GENERATION_FUNCTION><<EOF>> {
+  bBeginGenerationFunction=0; // No Generation function was found in the .ez file
+  if (bVERBOSE) printf("Warning: no 'beginning generation function' found. You may provide one using '\\Beginning of generation:'\n");
+  fprintf(fpOutputFile,"\n// No at beginning of generation function.\n");
+
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  yypop_buffer_state();
+  BEGIN TEMPLATE_ANALYSIS;
+  bNotFinishedYet=1;
+}
+
+<COPY_BEG_GENERATION_FUNCTION>\n {lineCounter++;}
+<COPY_BEG_GENERATION_FUNCTION>. {}
 
 <COPY_INSTEAD_EVAL>"\\Instead"[ \t\n]+"evaluation"([ \t\n]+"function")?[ \t\n]*":" {
   //DEBUG_PRT_PRT("at each beg");
@@ -1510,23 +1525,6 @@ if(OPERATING_SYSTEM=WINDOWS)
   bNotFinishedYet=1;
  }
 
-
-<COPY_BEG_GENERATION_FUNCTION><<EOF>> {
-  bBeginGenerationFunction=0; // No Generation function was found in the .ez file
-  if (bVERBOSE) printf("*** No beginning generation function was found. ***\n");
-  fprintf(fpOutputFile,"\n// No at beginning of generation function.\n");
-
-  rewind(fpGenomeFile);
-  yyin = fpTemplateFile;
-  yypop_buffer_state();
-  BEGIN TEMPLATE_ANALYSIS;
-  bNotFinishedYet=1;
-}
-
-<COPY_BEG_GENERATION_FUNCTION>\n {lineCounter++;}
-<COPY_BEG_GENERATION_FUNCTION>. {}
-
-
 <COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT>"\\"([Aa]"t"[ \t\n]+"each"[ \t\n]+"generation"[ \t\n]+)[Bb]"efore"[ \t\n]+"reduc"(e|"tion")([ \t\n]+"function")?[ \t\n]*":" {
 //DEBUG_PRT_PRT("at each");
   if((TARGET==CUDA || TARGET==STD) /* && !bBeginGeneration && !bEndGeneration ) */)
@@ -1540,7 +1538,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 
 <COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT><<EOF>> {
   bGenerationFunctionBeforeReplacement=0; // No Generation function was found in the .ez file
-  if (bVERBOSE) printf("*** No generation function was found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'generation function' found. You may provide one using '\\Before reduction:'\n");
   fprintf(fpOutputFile,"\n// No generation function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
@@ -1563,7 +1561,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  }
 
 <COPY_BOUND_CHECKING_FUNCTION><<EOF>> {bBoundCheckingFunction=0; // No Generation function was found in the .ez file
-  if (bVERBOSE) printf("*** No bound checking function was found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'bound checking function' found. You may provide one using '\\Bound checking:'\n");
   fprintf(fpOutputFile,"\n// No Bound checking function.\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
@@ -1809,7 +1807,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  *  Looking for a user-supplied display function.
  *****************************************/
 
-<COPY_DISPLAY>"\\GenomeClass::display"[ \t\n]*":" { 
+<COPY_DISPLAY>"\\"([Gg]"enomeClass::")?[Dd]"isplay"[ \t\n]*":" { 
  /*   //DEBUG_PRT_PRT("Display function is at %d line in %s.ez",yylineno,sRAW_PROJECT_NAME); */
   print_line_indicator();
   bDisplayFunction=bWithinDisplayFunction=1;
@@ -1818,7 +1816,7 @@ if(OPERATING_SYSTEM=WINDOWS)
  /*No display function was found in the .ez file*/
 <COPY_DISPLAY><<EOF>> {
   bDisplayFunction=0;
-  if (bVERBOSE) printf("*** No display function was found. ***\n");
+  if (bVERBOSE) printf("Warning: no 'display function' found. You may provide one using '\\Display'\n");
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;
   yypop_buffer_state();
@@ -2756,7 +2754,7 @@ Searches_t get_lexer_state() {
 
 void print_else_default(const char* const from, const char* const value, const char* const def, bool warning) {
 	if (strlen(value) == 0) {
-		if (warning || debug)
+		if (warning || bVERBOSE)
 			fprintf(stderr, "Warning: '%s' was not defined in .ez, using default value '%s'.\n", from, def);
 		fputs(def, fpOutputFile);
 	} else {
@@ -2766,7 +2764,7 @@ void print_else_default(const char* const from, const char* const value, const c
 
 void print_else_default(const char* const from, int value, int def, bool warning) {
 	if (value == 0) {
-		if (warning || debug)
+		if (warning || bVERBOSE)
 			fprintf(stderr, "Warning: '%s' was not defined in .ez, using default value '%d'.\n", from, def);
 		fprintf(fpOutputFile, "%d", def);
 	} else {
@@ -2776,7 +2774,7 @@ void print_else_default(const char* const from, int value, int def, bool warning
 
 void print_else_default(const char* const from, float value, float def, bool warning) {
 	if (abs(value) < 1e-6f) {
-		if (warning || debug)
+		if (warning || bVERBOSE)
 			fprintf(stderr, "Warning: '%s' was not defined in .ez, using default value '%f'.\n", from, def);
 		fprintf(fpOutputFile, "%f", def);
 	} else {
