@@ -40,7 +40,7 @@ return lhs*lhs + rhs*rhs;
 \end
 
 \Finally:
-std::cout << "Best (x, y): (" << bBest->x << ", " << bBest->y << ")\nNOTE: (3, 1) is the best value.\n";
+std::cout << "Best (x, y): (" << bBest->x << ", " << bBest->y << ")\nNOTE: (1, 3) is the best value.\n";
 \end
 
 \Parameters:
