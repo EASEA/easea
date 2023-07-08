@@ -183,7 +183,7 @@ jobs:
         shell: bash
 
       - name: Installing Boost
-        run: choco install boost-msvc-14.3
+        run: choco install boost-msvc-14.3 --version 1.81.0
 
           #- name: Installing CUDA
           #  uses: Jimver/cuda-toolkit@v0.2.10
