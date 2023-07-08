@@ -10,6 +10,7 @@
 #include <initializer_list>
 #include <limits>
 #include <cmath>
+#include <cassert>
 #ifndef Abs
 #define Abs(x) ((x)>=0?(x):-(x))
 #endif
@@ -51,12 +52,9 @@ public:
 
     }
 
-    CMatrix<T>(const CMatrix &m)
-    {
-        mat=m.mat;
-        N=m.N;
-        M=m.M;
-    }
+    CMatrix(const CMatrix &m)=default;
+    CMatrix& operator=(const CMatrix &m)=default;
+
     CMatrix<T>(const std::vector<std::vector<T>> &m)
     {
         unsigned c=0;
@@ -146,7 +144,7 @@ public:
     T Det() const;
     CMatrix<T> Inverse() const;
     static T Det(const CMatrix<T>& x);
-    static CMatrix<T> LinSolve(const CMatrix &A, const CMatrix &b) { return A.Inv()*b; }
+    static CMatrix<T> LinSolve(const CMatrix &A, const CMatrix &b) { return A.Inverse()*b; }
 
 
 };
@@ -314,7 +312,7 @@ CMatrix<T>& CMatrix<T>::operator=(const std::vector<std::vector<T>> &m)
             if(m[i].size()!=c)
                 throw std::logic_error("Not a CMatrix");
     }
-    mat=m.mat;
+    mat=m;
     N=m.size();
     M=c;
 
@@ -348,7 +346,7 @@ CMatrix<T>& CMatrix<T>::operator-=(const CMatrix<T> &m)
 template <class T>
 CMatrix<T>& CMatrix<T>::operator*=(const CMatrix<T> &m)
 {
-    *this=*this*m;
+    *this = (*this) * m;
     return *this;
 }
 template <class T>
