@@ -121,9 +121,9 @@ class CStatsPrinter
 		for (int i = 0; i < static_cast<int>(nb_individuals); ++i) {
 			auto const& ind = population[i];
 			for (std::size_t j = 0; j < nb_vars; ++j)
-				pvv[j] += static_cast<openmp_comp_var_t>(ind.m_variable[j] - mean_vars[j]) * (ind.m_variable[j] - mean_vars[j]);
+				pvv[j] += static_cast<openmp_comp_var_t>((ind.m_variable[j] - mean_vars[j]) * (ind.m_variable[j] - mean_vars[j]));
 			for (std::size_t j = 0; j < nb_objs; ++j)
-				pvo[j] += static_cast<openmp_comp_var_t>(ind.m_objective[j] - mean_objs[j]) * (ind.m_objective[j] - mean_objs[j]);
+				pvo[j] += static_cast<openmp_comp_var_t>((ind.m_objective[j] - mean_objs[j]) * (ind.m_objective[j] - mean_objs[j]));
 		}
 
 		for (auto& v : var_vars)
