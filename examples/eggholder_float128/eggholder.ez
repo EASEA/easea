@@ -4,7 +4,7 @@
 
 // required to use boost improved precision types
 \User CMake:
-find_package(Boost REQUIRED COMPONENTS headers)
+find_package(Boost REQUIRED)
 target_include_directories(CMAKE_TARGET PUBLIC ${Boost_INCLUDE_DIRS})
 
 # test for compatibility with native float128
