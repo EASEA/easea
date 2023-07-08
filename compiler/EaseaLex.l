@@ -1312,7 +1312,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_EO_INITIALISER>. {}                                      
 <COPY_EO_INITIALISER>\n {lineCounter++;}
 
-<COPY_USER_DECLARATIONS>"\\User"[ \t\n]+"declarations"[ \t\n]*":" {
+<COPY_USER_DECLARATIONS>"\\"("User"[ \t\n]+)?[Dd]"eclarations"[ \t\n]*":" {
   fprintf (fpOutputFile,"// User declarations\n"); 
   print_line_indicator();
   BEGIN COPY;
@@ -1387,7 +1387,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   lineCounter++;
  }
 
-<COPY_USER_FUNCTIONS>"\\"("User"[ \t\n]+)?"[Ff]unction"s?[ \t\n]*":" {
+<COPY_USER_FUNCTIONS>"\\"("User"[ \t\n]+)?[Ff]"unction"s?[ \t\n]*":" {
   fprintf (fpOutputFile,"// User functions\n\n"); 
   print_line_indicator();
   BEGIN COPY;
@@ -1406,7 +1406,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   lineCounter++;
  }
 
-<COPY_INITIALISATION_FUNCTION>"\\[Bb]efore"([ \t\n]+"everything"([ \t\n]+"else"([ \t\n]+"function")?)?)?[ \t\n]*":" {
+<COPY_INITIALISATION_FUNCTION>"\\"[Bb]"efore"([ \t\n]+"everything"([ \t\n]+"else"([ \t\n]+"function")?)?)?[ \t\n]*":" {
     //fprintf (fpOutputFile,"// Initialisation function\nvoid EASEAInitFunction(int argc, char *argv[]){\n");
   //bFunction=1; bInitFunction=1;
   print_line_indicator();
@@ -1485,7 +1485,7 @@ if(OPERATING_SYSTEM=WINDOWS)
   }
  }
 
-<COPY_INSTEAD_EVAL>"\\Instead"[ \t\n]+"evaluation"[ \t\n]+"function:" {
+<COPY_INSTEAD_EVAL>"\\Instead"[ \t\n]+"evaluation"([ \t\n]+"function")?[ \t\n]*":" {
   //DEBUG_PRT_PRT("at each beg");
   if( (TARGET==CUDA || TARGET==STD)){
     fprintf (fpOutputFile,"{\n");
