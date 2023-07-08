@@ -110,11 +110,11 @@ class CStatsPrinter
 			v /= static_cast<float>(nb_individuals);
 
 		// variance
-		std::vector<var_t> var_vars(nb_vars, 0.f);
-		std::vector<obj_t> var_objs(nb_objs, 0.f);
+		std::vector<openmp_comp_var_t> var_vars(nb_vars, 0.f);
+		std::vector<openmp_comp_obj_t> var_objs(nb_objs, 0.f);
 
-		var_t* const pvv = var_vars.data();
-		obj_t* const pvo = var_objs.data();
+		openmp_comp_var_t* const pvv = var_vars.data();
+		openmp_comp_obj_t* const pvo = var_objs.data();
 #if defined(_OPENMP) && (_OPENMP >= 201511)
 #pragma omp parallel for reduction(+ : pvv[:nb_vars]) reduction(+ : pvo[:nb_objs])
 #endif
