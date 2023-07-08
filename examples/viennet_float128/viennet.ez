@@ -10,13 +10,17 @@ target_include_directories(CMAKE_TARGET PUBLIC ${Boost_INCLUDE_DIRS})
 # test for compatibility with native float128
 include(CheckCXXSourceCompiles)
 set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LINK_OPTIONS "lquadmath")
 CHECK_CXX_SOURCE_COMPILES("
 	#include <boost/multiprecision/float128.hpp>
+	#include <iostream>
         int main(void){
 		boost::multiprecision::float128 v = 2;
+		std::cout << boost::multiprecision::sin(v);
 	}" FLOAT128_WORKS)
 if (FLOAT128_WORKS)
 	message(STATUS "using float128")
+	target_link_options(CMAKE_TARGET PUBLIC "-lquadmath")
 else()
 	message(STATUS "float128 doesn't work. Falling back to boost cpp_bin_float<34>")
 endif()
