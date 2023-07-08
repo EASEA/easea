@@ -124,7 +124,7 @@ void print_required_different(const char* const from, T value, T forbidden) {
 	if (value != forbidden) {
 		fputs(std::to_string(value).c_str(), fpOutputFile);
 	} else {
-		fprintf(stderr, "Error: '%s' was not defined in .ez but is required.\n");
+		fprintf(stderr, "Error: '%s' was not defined in .ez but is required.\n", from);
 		exit(1);
 	}
 }
