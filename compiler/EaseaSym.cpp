@@ -861,7 +861,7 @@ void CSymbol::printAllSymbols(FILE* fp, char* sCompleteName, EObjectType FatherT
 
 CSymbol* CSymbolTable::insert(std::unique_ptr<CSymbol>&& symbol)
 {
-	if (hashmap.find(symbol->sName) != hashmap.end() && symbol->sName.contains("CUSTOM_PRECISION_TYPE")) {
+	if (hashmap.find(symbol->sName) != hashmap.end() && symbol->sName.compare("CUSTOM_PRECISION_TYPE") != 0) {
 		std::cerr << "\n" << sEZ_FILE_NAME << " - Warning line " << yylineno << ": Multiple definitions of symbol '" << symbol->sName << "', this may lead to compile errors!\n";
 	}
 	auto h = symbol->sName;
