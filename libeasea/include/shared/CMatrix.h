@@ -411,8 +411,9 @@ T CMatrix<T>::Det() const
 template <class T>
 CMatrix<T> CMatrix<T>::Inverse() const
 {
-    double det_x=Det();
-    if(std::abs(det_x)<std::numeric_limits<double>::epsilon())
+    auto det_x=Det();
+    using std::abs;
+    if(abs(det_x)<std::numeric_limits<double>::epsilon())
         throw std::logic_error("Can't invert CMatrix  (determinant=0)");
 
     CMatrix<T> y(N,M);

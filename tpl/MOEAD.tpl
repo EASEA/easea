@@ -348,7 +348,7 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
         std::vector<std::vector<TO>> tmp_weight(weight.begin(), weight.end());
         
         for (size_t i = 0; i < tmp_weight.size(); ++i)
-                easea::shared::function::adjustWeight(tmp_weight[i], 0.00001);
+                easea::shared::function::adjustWeight(tmp_weight[i], TO{0.00001});
 	
         const std::vector<TV> initPop = easea::variables::continuous::uniform(m_generator, m_problem.getBoundary(), tmp_weight.size());
         // Pop size should be set as a number of weights, but around the wanted value of pop size

@@ -111,7 +111,7 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	\INSERT_INITIALISATION_FUNCTION
 }
 
-void EASEAFinal(CPopulation* pop){
+void EASEAFinal([[maybe_unused]] CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
 }
 

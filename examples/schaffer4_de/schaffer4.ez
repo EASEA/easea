@@ -1,0 +1,40 @@
+/*
+ * Schaffer function 4 benchmark
+ */
+\User declarations:
+
+#define NB_VARIABLES 2
+constexpr float scaling_factor = 0.5f;
+constexpr float xover_rate = 0.5f;
+
+std::vector<std::pair<TT, TT>> boundary {
+	{TT{-100.}, TT{100.}},
+	{TT{-100.}, TT{100.}}
+};
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(boundary));
+TCrossover m_crossover(m_generator, scaling_factor, m_problem.getBoundary(), xover_rate);
+\end
+
+\User classes:
+GenomeClass {
+  // need to declare the genome here
+ int x;
+}
+\end
+
+\GenomeClass::evaluator : // Returns the score as a real value
+	const auto x = TI::m_variable[0];
+	const auto y = TI::m_variable[1];
+	TI::m_objective.resize(NB_OBJECTIVES);
+	auto tmp_cos = cos(sin(abs(x*x - y*y)));
+	auto tmp_bottom = 1. + 0.001 * (x*x + y*y);
+        TI::m_objective[0] = std::move(0.5*((tmp_cos*tmp_cos - 0.5) / (tmp_bottom*tmp_bottom)));
+	return 1;
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 50    // NB_GEN
+  Population size : 1000 			   //POP_SIZE
+  Evaluator goal : minimize      // maximise
+\end
+

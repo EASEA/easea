@@ -1,0 +1,79 @@
+/*
+ * Viennet function benchmark using custom precision type
+ */
+
+// required to use boost improved precision types
+\User CMake:
+find_package(Boost REQUIRED)
+target_include_directories(CMAKE_TARGET PUBLIC ${Boost_INCLUDE_DIRS})
+
+# test for compatibility with native float128
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LINK_OPTIONS "lquadmath")
+CHECK_CXX_SOURCE_COMPILES("
+	#include <boost/multiprecision/float128.hpp>
+	#include <iostream>
+        int main(void){
+		boost::multiprecision::float128 v = 2;
+		std::cout << boost::multiprecision::sin(v);
+	}" FLOAT128_WORKS)
+if (FLOAT128_WORKS)
+	message(STATUS "using float128")
+	target_link_options(CMAKE_TARGET PUBLIC "-lquadmath")
+else()
+	message(STATUS "float128 doesn't work. Falling back to boost cpp_bin_float<34>")
+endif()
+
+configure_file(config.h.in config.h)
+\end
+
+\User header:
+
+#ifdef FLOAT128_WORKS
+#include <boost/multiprecision/float128.hpp>
+using real_t = boost::multiprecision::float128;
+#define CUSTOM_PRECISION_TYPE real_t;
+#else
+#include <boost/multiprecision/cpp_bin_float.hpp>
+using real_t = boost::multiprecision::cpp_bin_float_quad; // equivalent to float128
+#define CUSTOM_PRECISION_TYPE real_t;
+#endif
+\end
+
+\User declarations:
+#define NB_VARIABLES 2
+
+std::vector<std::pair<TT, TT>> boundary {
+	{TT{-100.}, TT{100.}},
+	{TT{-100.}, TT{100.}}
+};
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(boundary));
+TCrossover m_crossover(m_generator, 0.5f, m_problem.getBoundary(), 0.5f);
+\end
+
+\User classes:
+GenomeClass {
+  // need to declare the genome here
+ int x;
+}
+\end
+
+\GenomeClass::evaluator : // Returns the score as a real value
+	using namespace boost::multiprecision;
+	const auto x = TI::m_variable[0];
+	const auto y = TI::m_variable[1];
+	TI::m_objective.resize(NB_OBJECTIVES);
+	auto tmp_cos = cos(sin(abs(x*x - y*y)));
+	auto tmp_bottom = 1. + 0.001 * (x*x + y*y);
+        TI::m_objective[0] = std::move(0.5*((tmp_cos*tmp_cos - 0.5) / (tmp_bottom*tmp_bottom)));
+	return 1;
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 50    // NB_GEN
+  Population size : 1000 			   //POP_SIZE
+  Evaluator goal : minimize      // maximise
+  Selection operator: Tournament 2.0
+\end
+
