@@ -1,0 +1,39 @@
+/*
+ * Viennet benchmark using custom precision type
+ */
+\User declarations:
+
+#define NB_VARIABLES 2
+#define NB_OBJECTIVES 3
+
+std::vector<std::pair<TT, TT>> boundary {
+	{TT{-3.}, TT{3.}},
+	{TT{-3.}, TT{3.}}
+};
+
+TP m_problem(NB_OBJECTIVES, NB_VARIABLES, TBoundary(boundary));
+TCrossover m_crossover(m_generator, 0.5f, m_problem.getBoundary(), 0.5f);
+\end
+
+\User classes:
+GenomeClass { 
+  // need to declare the genome here
+ int x;
+}
+\end
+\GenomeClass::evaluator : // Returns the score as a real value
+	const auto x = TI::m_variable[0];
+	const auto y = TI::m_variable[1];
+	TI::m_objective.resize(3);
+        TI::m_objective[0] = std::move(0.5*(x*x + y*y) + sin(x*x + y*y));
+        TI::m_objective[1] = std::move(pow(3.*x - 2.*y + 4, 2) / 8. + pow(x - y + 1., 2) / 27. + 15.);
+        TI::m_objective[2] = std::move(1. / (x*x + y*y + 1) - 1.1 * exp(-(x*x + y*y)));
+	return 1;
+\end
+
+
+\Default run parameters :
+  Number of generations : 50
+  Population size : 1000
+\end
+

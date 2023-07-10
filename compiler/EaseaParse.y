@@ -60,7 +60,7 @@ float fMIGRATION_PROBABILITY=0.0;
 char sIP_FILE[128]; //remote island model
 int nPOP_SIZE, nOFF_SIZE, nARCH_SIZE;
 float fSURV_PAR_SIZE=0.f, fSURV_OFF_SIZE=0.f;
-const char *nGENOME_NAME;
+std::string sGENOME_NAME;
 int nPROBLEM_DIM;
 int nNB_GEN=0;
 int nNB_OPT_IT=0;
@@ -393,10 +393,10 @@ Object
     }
 
   | Symbol  '[' Expr ']' {
-      if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { nGENOME_NAME=$1->sName.c_str(); nPROBLEM_DIM=(int)$3;}
-if((TARGET_FLAVOR==QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { nGENOME_NAME=$1->sName.c_str(); nPROBLEM_DIM=(int)$3;}
-if((TARGET_FLAVOR==CUDA_QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { nGENOME_NAME=$1->sName.c_str(); nPROBLEM_DIM=(int)$3;}
-if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { nGENOME_NAME=$1->sName.c_str(); nPROBLEM_DIM=(int)$3;}
+      if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { sGENOME_NAME = $1->sName; nPROBLEM_DIM=(int)$3;}
+if((TARGET_FLAVOR==QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { sGENOME_NAME = $1->sName; nPROBLEM_DIM=(int)$3;}
+if((TARGET_FLAVOR==CUDA_QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { sGENOME_NAME = $1->sName; nPROBLEM_DIM=(int)$3;}
+if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { sGENOME_NAME = $1->sName; nPROBLEM_DIM=(int)$3;}
 
       //printf("DEBUG : size of $3 %d nSize %d\n",(int)$3,pCURRENT_TYPE->nSize);
 
@@ -414,14 +414,14 @@ if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_st
 
     // this is for support of pointer array. This should be done in a more generic way in a later version
       if((TARGET_FLAVOR==CMAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) { 
-	nGENOME_NAME=$2->sName.c_str(); nPROBLEM_DIM=(int)$4;
+	sGENOME_NAME = $2->sName; nPROBLEM_DIM=(int)$4;
       }
 if((TARGET_FLAVOR==QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) {
-    nGENOME_NAME=$2->sName.c_str(); nPROBLEM_DIM=(int)$4;}
+    sGENOME_NAME = $2->sName; nPROBLEM_DIM=(int)$4;}
 if((TARGET_FLAVOR==CUDA_QAES) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) {
-        nGENOME_NAME=$2->sName.c_str(); nPROBLEM_DIM=(int)$4;}
+        sGENOME_NAME = $2->sName; nPROBLEM_DIM=(int)$4;}
 if((TARGET_FLAVOR==QIEA) && nPROBLEM_DIM==0 && strcmp(pCURRENT_CLASS->sName.c_str(),"Genome")==0) {
-      nGENOME_NAME=$2->sName.c_str(); nPROBLEM_DIM=(int)$4;
+      sGENOME_NAME = $2->sName; nPROBLEM_DIM=(int)$4;
 
 }
 

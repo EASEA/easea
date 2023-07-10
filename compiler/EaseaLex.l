@@ -1072,7 +1072,7 @@ return lhs.arity < rhs.arity;
   else fprintf(fpOutputFile,"%s",sSELECTOR);
 }
 <TEMPLATE_ANALYSIS>"\\SELECTOR_OPERATOR" { print_else_default("Selection operator", sSELECTOR_OPERATOR, "Tournament");}
-<TEMPLATE_ANALYSIS>"\\SELECT_PRM"  { print_required_different("Selection pressure", fSELECT_PRM, 0.f);}
+<TEMPLATE_ANALYSIS>"\\SELECT_PRM"  { print_else_default("Selection pressure", fSELECT_PRM, 2.f);}
 <TEMPLATE_ANALYSIS>"\\RED_PAR_OPERATOR" { print_else_default("Reduce parents operator", sRED_PAR_OPERATOR, sSELECTOR_OPERATOR[0] ? sSELECTOR_OPERATOR : "Tournament", false);}
 <TEMPLATE_ANALYSIS>"\\RED_PAR_PRM"  { print_else_default("Reduce parents pressure", fRED_PAR_PRM, fSELECT_PRM, false);}
 <TEMPLATE_ANALYSIS>"\\RED_OFF_OPERATOR" { print_else_default("Reduce offspring operator", sRED_OFF_OPERATOR, sSELECTOR_OPERATOR[0] ? sSELECTOR_OPERATOR : "Tournament", false);}
@@ -1130,7 +1130,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 }
 <TEMPLATE_ANALYSIS>"\\SURV_PAR_SIZE"  { print_else_default("Surviving parents", fSURV_PAR_SIZE, 1.0f, false); }
 <TEMPLATE_ANALYSIS>"\\SURV_OFF_SIZE"  { print_else_default("Surviving offsprings", fSURV_OFF_SIZE, 1.0f, false); }
-<TEMPLATE_ANALYSIS>"\\GENOME_NAME"  { fprintf(fpOutputFile,"%s",nGENOME_NAME);}
+<TEMPLATE_ANALYSIS>"\\GENOME_NAME"  { fprintf(fpOutputFile,"%s",sGENOME_NAME.c_str());}
 <TEMPLATE_ANALYSIS>"\\PROBLEM_DIM"  { fprintf(fpOutputFile,"%d",nPROBLEM_DIM);}
 <TEMPLATE_ANALYSIS>"\\NB_GEN"  { print_required_different("Number of generations", nNB_GEN, 0); }
 <TEMPLATE_ANALYSIS>"\\TIME_LIMIT" { print_else_default("Time limit", nTIME_LIMIT, 0, false); }
