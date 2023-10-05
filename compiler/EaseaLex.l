@@ -2046,7 +2046,7 @@ if(OPERATING_SYSTEM=WINDOWS)
 <COPY_USER_GENERATION>"identicalGenome"  {fprintf(fpOutputFile,"genome._evaluated");} // local name
 <COPY_USER_GENERATION>"pPopulation" {
   if(bBeginGenerationFunction || bEndGenerationFunction || bGenerationFunctionBeforeReplacement){
-    fprintf(fpOutputFile,"pPopulation)");
+    fprintf(fpOutputFile,"pPopulation");
   }
   else fprintf(fpOutputFile,"pPopulation");
  }
