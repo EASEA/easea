@@ -286,6 +286,8 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	controlCStopingCriterion = new CControlCStopingCriterion();
 	timeCriterion = new CTimeCriterion(setVariable("timeLimit", \TIME_LIMIT));
 
+	this->nbGen = setVariable("nbGen", (int)\NB_GEN);
+
 
 	this->printStats = setVariable("printStats", \PRINT_STATS);
 	this->generateCSVFile = setVariable("generateCSVFile", \GENERATE_CSV_FILE);
