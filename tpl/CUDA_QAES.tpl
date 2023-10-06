@@ -1129,6 +1129,8 @@ PopulationImpl::~PopulationImpl(){
 #include <problems/CProblem.h>
 #include <sstream>
 
+\INSERT_USER_HEADER
+
 using namespace std;
 
 class CSelectionOperator;

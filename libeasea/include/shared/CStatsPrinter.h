@@ -72,18 +72,20 @@ class CStatsPrinter
 		auto nb_evaluations = derived->getProblem().getNumberOfEvaluations();
 
 		using var_t = std::remove_cv_t<std::remove_reference_t<decltype(population[0].m_variable[0])>>;
+		using openmp_comp_var_t = std::conditional_t<std::is_floating_point_v<var_t>, var_t, double>;
 		using obj_t = std::remove_cv_t<std::remove_reference_t<decltype(population[0].m_objective[0])>>;
+		using openmp_comp_obj_t = std::conditional_t<std::is_floating_point_v<obj_t>, obj_t, double>;
 
 		// mean + min + max
-		std::vector<var_t> mean_vars(nb_vars, 0.f);
-		std::vector<obj_t> mean_objs(nb_objs, 0.f);
-		std::vector<obj_t> min_objs(nb_objs, std::numeric_limits<obj_t>::max());
-		std::vector<obj_t> max_objs(nb_objs, std::numeric_limits<obj_t>::min());
+		std::vector<openmp_comp_var_t> mean_vars(nb_vars, 0.f);
+		std::vector<openmp_comp_obj_t> mean_objs(nb_objs, 0.f);
+		std::vector<openmp_comp_obj_t> min_objs(nb_objs, std::numeric_limits<openmp_comp_obj_t>::max());
+		std::vector<openmp_comp_obj_t> max_objs(nb_objs, std::numeric_limits<openmp_comp_obj_t>::min());
 
-		var_t* const pmv = mean_vars.data();
-		obj_t* const pmo = mean_objs.data();
-		obj_t* const pmio = min_objs.data();
-		obj_t* const pmao = max_objs.data();
+		openmp_comp_var_t* const pmv = mean_vars.data();
+		openmp_comp_obj_t* const pmo = mean_objs.data();
+		openmp_comp_obj_t* const pmio = min_objs.data();
+		openmp_comp_obj_t* const pmao = max_objs.data();
 		// NOTE: not supported on MSVC
 #if defined(_OPENMP) && (_OPENMP >= 201511)
 #pragma omp parallel for reduction(+:pmv[:nb_vars]) reduction(+:pmo[:nb_objs]) reduction(min:pmio[:nb_objs]) reduction(max:pmao[:nb_objs])
@@ -91,9 +93,9 @@ class CStatsPrinter
 		for (int i = 0; i < static_cast<int>(nb_individuals); ++i) {
 			auto const& ind = population[i];
 			for (std::size_t j = 0; j < nb_vars; ++j)
-				pmv[j] += ind.m_variable[j];
+				pmv[j] += static_cast<openmp_comp_var_t>(ind.m_variable[j]);
 			for (std::size_t j = 0; j < nb_objs; ++j) {
-				const auto oi = ind.m_objective[j];
+				const auto oi = static_cast<openmp_comp_var_t>(ind.m_objective[j]);
 				pmo[j] += oi;
 				if (oi < min_objs[j])
 					pmio[j] = oi;
@@ -108,20 +110,20 @@ class CStatsPrinter
 			v /= static_cast<float>(nb_individuals);
 
 		// variance
-		std::vector<var_t> var_vars(nb_vars, 0.f);
-		std::vector<obj_t> var_objs(nb_objs, 0.f);
+		std::vector<openmp_comp_var_t> var_vars(nb_vars, 0.f);
+		std::vector<openmp_comp_obj_t> var_objs(nb_objs, 0.f);
 
-		var_t* const pvv = var_vars.data();
-		obj_t* const pvo = var_objs.data();
+		openmp_comp_var_t* const pvv = var_vars.data();
+		openmp_comp_obj_t* const pvo = var_objs.data();
 #if defined(_OPENMP) && (_OPENMP >= 201511)
 #pragma omp parallel for reduction(+ : pvv[:nb_vars]) reduction(+ : pvo[:nb_objs])
 #endif
 		for (int i = 0; i < static_cast<int>(nb_individuals); ++i) {
 			auto const& ind = population[i];
 			for (std::size_t j = 0; j < nb_vars; ++j)
-				pvv[j] += (ind.m_variable[j] - mean_vars[j]) * (ind.m_variable[j] - mean_vars[j]);
+				pvv[j] += static_cast<openmp_comp_var_t>((ind.m_variable[j] - mean_vars[j]) * (ind.m_variable[j] - mean_vars[j]));
 			for (std::size_t j = 0; j < nb_objs; ++j)
-				pvo[j] += (ind.m_objective[j] - mean_objs[j]) * (ind.m_objective[j] - mean_objs[j]);
+				pvo[j] += static_cast<openmp_comp_var_t>((ind.m_objective[j] - mean_objs[j]) * (ind.m_objective[j] - mean_objs[j]));
 		}
 
 		for (auto& v : var_vars)

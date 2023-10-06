@@ -81,6 +81,10 @@ void C2x2Crossover<TObjective, TVariable>::operator ()(const TI &parent1, const 
 {	
         runCrossover(parent1, parent2, offspring1, offspring2);
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class C2x2Crossover<float, std::vector<float>>;
+extern template class C2x2Crossover<double, std::vector<double>>;
 }
 }
 }

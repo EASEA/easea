@@ -100,9 +100,15 @@ bool bReevaluate = false;
 bool INSTEAD_EVAL_STEP = false;
 
 extern CEvolutionaryAlgorithm* EA;
-#define STD_TPL
+
 typedef std::mt19937 TRandom;
-typedef double TT;
+
+#ifndef CUSTOM_PRECISION_TYPE
+	typedef double TT;
+#else
+	using TT = CUSTOM_PRECISION_TYPE;
+#endif
+
 typedef easea::problem::CProblem<TT> TP;
 typedef TP::TV TV;
 typedef TP::TO TO;
@@ -143,7 +149,7 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	\INSERT_INITIALISATION_FUNCTION
 }
 
-void EASEAFinal(CPopulation* pop){
+void EASEAFinal([[maybe_unused]] CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
 
         delete(m_algorithm);
@@ -285,6 +291,8 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 #include <cstring>
 #include <sstream>
 
+\INSERT_USER_HEADER
+
 using namespace std;
 
 class CSelectionOperator;
@@ -395,33 +403,15 @@ endif()
 # --seed=0   # -S : Random number seed. It is possible to give a specific seed.
 
 ######    Evolution Engine    ######
---popSize=30 # -P : Population Size
---nbOffspring=30 # -O : Nb of offspring (percentage or absolute)
+--popSize=\POP_SIZE # -P : Population Size
+--nbOffspring=\OFF_SIZE # -O : Nb of offspring (percentage or absolute)
 
 ######	  Stopping Criterions    #####
---nbGen=2000 #Nb of generations
+--nbGen=\NB_GEN #Nb of generations
 --timeLimit=\TIME_LIMIT # Time Limit: desactivate with (0) (in Seconds)
-
-######    Evolution Engine / Replacement    ######
---elite=\ELITE_SIZE  # Nb of elite parents (absolute)
---eliteType=\ELITISM # Strong (1) or weak (0) elitism (set elite to 0 for none)
---survivingParents=\SURV_PAR_SIZE # Nb of surviving parents (percentage or absolute)
---survivingOffspring=\SURV_OFF_SIZE  # Nb of surviving offspring (percentage or absolute)
---selectionOperator=\SELECTOR_OPERATOR # Selector: Deterministic, Tournament, Random, Roulette 
---selectionPressure=\SELECT_PRM
---reduceParentsOperator=\RED_PAR_OPERATOR 
---reduceParentsPressure=\RED_PAR_PRM
---reduceOffspringOperator=\RED_OFF_OPERATOR 
---reduceOffspringPressure=\RED_OFF_PRM
---reduceFinalOperator=\RED_FINAL_OPERATOR
---reduceFinalPressure=\RED_FINAL_PRM
 
 #####	Stats Ouput 	#####
 --printStats=\PRINT_STATS #print Stats to screen
---plotStats=\PLOT_STATS #plot Stats
---generateCSVFile=\GENERATE_CSV_FILE
---generatePlotScript=\GENERATE_GNUPLOT_SCRIPT
---generateRScript=\GENERATE_R_SCRIPT
 
 #### Population save	####
 --savePopulation=\SAVE_POPULATION #save population to EASEA.pop file

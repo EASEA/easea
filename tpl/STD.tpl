@@ -111,7 +111,7 @@ void EASEAInit(int argc, char* argv[], ParametersImpl& p){
 	\INSERT_INITIALISATION_FUNCTION
 }
 
-void EASEAFinal(CPopulation* pop){
+void EASEAFinal([[maybe_unused]] CPopulation* pop){
 	\INSERT_FINALIZATION_FCT_CALL;
 }
 
@@ -286,6 +286,8 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
 	controlCStopingCriterion = new CControlCStopingCriterion();
 	timeCriterion = new CTimeCriterion(setVariable("timeLimit", \TIME_LIMIT));
 
+	this->nbGen = setVariable("nbGen", (int)\NB_GEN);
+
 
 	this->printStats = setVariable("printStats", \PRINT_STATS);
 	this->generateCSVFile = setVariable("generateCSVFile", \GENERATE_CSV_FILE);
@@ -367,6 +369,8 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <Parameters.h>
 #include <cstring>
 #include <sstream>
+
+\INSERT_USER_HEADER
 
 using namespace std;
 

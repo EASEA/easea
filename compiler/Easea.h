@@ -19,6 +19,7 @@ Reformated on june 2022 by Léo Chéneau to improved portability with Windows
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
+#include <string>
 
 #define CUDA 4
 #define STD 5
@@ -69,7 +70,7 @@ extern bool bPRINT_STATS, bPLOT_STATS, bGENERATE_CSV_FILE, bGENERATE_GNUPLOT_SCR
 extern bool bSAVE_POPULATION, bSTART_FROM_FILE;
 extern bool bREMOTE_ISLAND_MODEL;
 extern bool bLINE_NUM_EZ_FILE;
-extern const char* nGENOME_NAME;
+extern std::string sGENOME_NAME;
 extern int nPOP_SIZE, nNB_GEN, nARCH_SIZE, nNB_OPT_IT, nOFF_SIZE, nPROBLEM_DIM, nTIME_LIMIT;
 extern int nSERVER_PORT;
 extern int nWARNINGS, nERRORS;

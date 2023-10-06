@@ -71,6 +71,7 @@ int main(int argc, char** argv){
 	#include <omp.h>
 #endif
 
+\INSERT_USER_HEADER
 
 using namespace std;
 bool bReevaluate = false;
@@ -79,7 +80,7 @@ bool bReevaluate = false;
 bool INSTEAD_EVAL_STEP = false;
 
 extern CEvolutionaryAlgorithm* EA;
-#define STD_TPL
+
 
 \INSERT_USER_DECLARATIONS
 \ANALYSE_USER_CLASSES

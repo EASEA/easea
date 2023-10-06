@@ -92,7 +92,6 @@ int main(int argc, char** argv){
 	#include <omp.h>
 #endif
 
-
 bool bReevaluate = false;
 
 using namespace std;
@@ -744,6 +743,8 @@ PopulationImpl::~PopulationImpl(){
 #include <CStats.h>
 #include "CCuda.h"
 #include <sstream>
+
+\INSERT_USER_HEADER
 
 using namespace std;
 

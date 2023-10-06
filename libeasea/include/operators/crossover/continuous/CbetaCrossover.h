@@ -40,6 +40,7 @@ class CbetaCrossover : public C2x2Crossover<TType, std::vector<TType> >, public 
 {
 public:
         typedef TType TT;
+	using TProba = std::conditional_t<sizeof(TT) <= 4, float, double>;
         typedef TRandom TR;
         typedef std::vector<TT> TVariable;
         typedef CCrossover<TT, TVariable> TBase;
@@ -62,7 +63,7 @@ TT getGaussian(TRandom &random);
         void launch(const TVariable &parent1, const TVariable &parent2, const TVariable step1, const TVariable step2, TVariable &offspring1, TVariable &offspring2);
 
 private:
-        std::uniform_real_distribution<TT> m_distribution;
+        std::uniform_real_distribution<TProba> m_distribution;
         TT m_probability;
         
 	TT m_adapt;
@@ -96,11 +97,11 @@ void CbetaCrossover<TType, TRandom>::boundedCrossover(TRandom &random, const TT 
  const TT lower, const TT upper)
 {
 
-static std::uniform_real_distribution<TT> dist(0, 1);
+static std::uniform_real_distribution<TProba> dist(0, 1);
 	k = upper*(1-m_local);
 	if (k < 1) k = 1;
-double p1 = parent1;
-double p2 = parent2;
+auto p1 = parent1;
+auto p2 = parent2;
 
 
 	TT range = k*fabs(p1 - p2);
@@ -144,7 +145,7 @@ template <typename TType, typename TRandom>
 void CbetaCrossover<TType, TRandom>::runCrossover(const TI &parent1, const TI &parent2, TI &offspring1, TI &offspring2)
 {
 
-	m_adapt = 0.99* powf(1.088, powf(this->getCurrentGen()/(TT)this->getLimitGen(),2));
+	m_adapt = 0.99* pow(1.088, pow(this->getCurrentGen()/(TT)this->getLimitGen(),2));
 
 	k1 = 0.99*(this->getLimitGen()-this->getCurrentGen());
 
@@ -188,6 +189,10 @@ void CbetaCrossover<TType, TRandom>::launch(const TVariable &parent1, const TVar
         }
 
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CbetaCrossover<float, DefaultGenerator_t>;
+extern template class CbetaCrossover<double, DefaultGenerator_t>;
 }
 }
 }

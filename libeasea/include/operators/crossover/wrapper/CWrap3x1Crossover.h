@@ -52,6 +52,10 @@ typename CWrap3x1Crossover<TObjective, TVariable>::TC &CWrap3x1Crossover<TObject
 {
         return m_crossover;
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CWrap3x1Crossover<float, std::vector<float>>;
+extern template class CWrap3x1Crossover<double, std::vector<double>>;
 }
 }
 }

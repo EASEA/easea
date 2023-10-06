@@ -388,6 +388,8 @@ PopulationImpl::~PopulationImpl(){
 #include <CIndividual.h>
 #include <Parameters.h>
 
+\INSERT_USER_HEADER
+
 using namespace std;
 
 class CSelectionOperator;

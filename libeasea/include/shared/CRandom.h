@@ -15,6 +15,7 @@
 
 #include <type_traits>
 #include <functional>
+#include <random>
 
 namespace easea
 {
@@ -50,5 +51,10 @@ typename CRandom<TRandom>::TR& CRandom<TRandom>::getRandom(void)
         return m_random;
 }
 }
+
+using DefaultGenerator_t = std::mt19937;
+// reduce compilation time and check for errors while compiling lib
+extern template class shared::CRandom<DefaultGenerator_t>;
+
 }
 

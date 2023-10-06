@@ -162,6 +162,12 @@ T random(T min, T max)
 }
 
 template <typename T>
+T random()
+{
+	return globGen.random<T>();
+}
+
+template <typename T>
 static inline bool tossCoin(T bias)
 {
 	return globGen.tossCoin(bias);

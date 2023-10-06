@@ -132,5 +132,9 @@ void CProblem<TType>::operator ()(TI &individual)
 
         m_nEvaluations += i_nEvaluation;
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CProblem<double>;
+extern template class CProblem<float>;
 }
 }

@@ -92,6 +92,11 @@ void C2x2CrossoverLauncher<TObjective, TVariable, TRandom>::runCrossover(std::ve
         }*/
 
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class C2x2CrossoverLauncher<float, std::vector<float>, DefaultGenerator_t>;
+extern template class C2x2CrossoverLauncher<double, std::vector<double>, DefaultGenerator_t>;
+
 }
 }
 }

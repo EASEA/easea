@@ -90,7 +90,6 @@ int main(int argc, char** argv){
 	#include <omp.h>
 #endif
 
-
 using namespace std;
 bool bReevaluate = false;
 extern "C"
@@ -1003,6 +1002,8 @@ PopulationImpl::~PopulationImpl(){
 #include <list>
 #include <map>
 #include "CGPNode.h"
+
+\INSERT_USER_HEADER
 
 using namespace std;
 

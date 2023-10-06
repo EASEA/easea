@@ -40,6 +40,7 @@ class CsbxCrossover : public C2x2Crossover<TType, std::vector<TType> >, public e
 {
 public:
         typedef TType TT;
+	using TProba = std::conditional_t<sizeof(TT) <= 4, float, double>;
         typedef TRandom TR;
         typedef std::vector<TT> TVariable;
         typedef C2x2Crossover<TT, TVariable> TBase;
@@ -62,7 +63,7 @@ protected:
         void launch(const TVariable &parent1, const TVariable &parent2, TVariable &offspring1, TVariable &offspring2);
 
 private:
-        std::uniform_real_distribution<TT> m_distribution;
+        std::uniform_real_distribution<TProba> m_distribution;
         TT m_distributionributionIndex;
         TT m_probability;
 };
@@ -102,9 +103,9 @@ typename CsbxCrossover<TType, TRandom>::TT CsbxCrossover<TType, TRandom>::calcul
 template <typename TType, typename TRandom> 
 void CsbxCrossover<TType, TRandom>::boundedCrossover(TRandom &random, const TT distributionIndex, const TT parent1, const TT parent2, TT &offspring1, TT &offspring2, const TT lower, const TT upper)
 {
-        static std::uniform_real_distribution<TT> dist(0, 1);
+        static std::uniform_real_distribution<TProba> dist(0, 1);
         assert(lower < upper);
-        const TT distance = std::fabs(parent1 - parent2);
+        const TT distance = fabs(parent1 - parent2);
         if (distance == 0)
         {
                 offspring1 = parent1;
@@ -184,6 +185,10 @@ void CsbxCrossover<TType, TRandom>::launch(const TVariable &parent1, const TVari
                 offspring2 = parent2;
         }
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CsbxCrossover<float, DefaultGenerator_t>;
+extern template class CsbxCrossover<double, DefaultGenerator_t>;
 }
 }
 }

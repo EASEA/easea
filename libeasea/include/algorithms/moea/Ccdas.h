@@ -48,7 +48,7 @@ public:
 
         Ccdas(TRandom random, TP &problem, const std::vector<TV> &initPop, TC &crossover, TM &mutation, const std::vector<TO> &angle);
         ~Ccdas(void);
-        const std::vector<double> &getAngle(void) const;
+        const std::vector<TO> &getAngle(void) const;
         TPopulation runBreeding(const TPopulation &parent);
         static bool isDominated(const TI &individual1, const TI &individual2);
         void convertObjective(const std::vector<TO> &angle, const std::vector<TO> &objective, std::vector<TO> &convertedObjective);
@@ -64,7 +64,7 @@ protected:
         static const TIndividual *comparer(const std::vector<const TIndividual *> &comparator);
 
 private:
-        std::vector<double> m_angle;
+        std::vector<TO> m_angle;
 };
 
 template <typename TIndividual, typename TRandom>
@@ -120,7 +120,7 @@ Ccdas<TIndividual, TRandom>::~Ccdas(void)
 }
 
 template <typename TIndividual, typename TRandom>
-const std::vector<double> &Ccdas<TIndividual, TRandom>::getAngle(void) const
+const std::vector<typename Ccdas<TIndividual, TRandom>::TO> &Ccdas<TIndividual, TRandom>::getAngle(void) const
 {
         return m_angle;
 }

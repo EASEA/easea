@@ -27,6 +27,7 @@ class CPolynomialMutation : public CMutation<TObjective, std::vector<TObjective>
 {
 public:
 	typedef TObjective TO;
+	using TProba = std::conditional_t<sizeof(TO) <= 4, float, double>;
 	typedef TRandom TR;
 	typedef std::vector<TO> TV;
 	typedef CMutation<TO, TV> TBase;
@@ -49,7 +50,7 @@ protected:
 	TO calcAmplifL(const TObjective distributionIndex, const TObjective mutFactor);
 
 private:
-	std::uniform_real_distribution<TO> m_distribution;	// uniform distribution
+	std::uniform_real_distribution<TProba> m_distribution;	// uniform distribution
 	TO m_distributionIndex;					// distribution index
 };
 
@@ -116,7 +117,7 @@ typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjec
 template <typename TObjective, typename TRandom>
 typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjective, TRandom> ::boundedMutate(TRandom &random, const TObjective distributionIndex, const TObjective coding, const TObjective lower, const TObjective upper)
 {
-	static std::uniform_real_distribution<TObjective> dist(0, 1);
+	static std::uniform_real_distribution<TProba> dist(0, 1);
 	if (lower >= upper)
 		LOG_ERROR(errorCode::value, "Wrong boundary mutation values");
 	const TObjective maxDistance = upper - lower;
@@ -134,7 +135,7 @@ typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjec
 template <typename TObjective, typename TRandom>
 typename CPolynomialMutation<TObjective, TRandom>::TO CPolynomialMutation<TObjective, TRandom>::calcMutFactorProbability(const TObjective distributionIndex, const TObjective mutFactor)
 {
-    return (distributionIndex + 1) * pow(1 - std::fabs(mutFactor), distributionIndex) / 2;
+    return (distributionIndex + 1) * pow(1 - fabs(mutFactor), distributionIndex) / 2;
 }
 
 
@@ -163,6 +164,10 @@ void CPolynomialMutation<TObjective, TRandom>::launch(TV &decision)
       decision[i] = boundedMutate(this->getRandom(), getDistributionIndex(), decision[i], range.first, range.second);
   }
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CPolynomialMutation<float, DefaultGenerator_t>;
+extern template class CPolynomialMutation<double, DefaultGenerator_t>;
 }
 }
 }

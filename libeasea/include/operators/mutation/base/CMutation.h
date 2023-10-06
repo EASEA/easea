@@ -93,6 +93,10 @@ void CMutation<TObjective, TV>::operator ()(TI &individual)
 {
         runMutation(individual);
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CMutation<float, std::vector<float>>;
+extern template class CMutation<double, std::vector<double>>;
 }
 }
 }

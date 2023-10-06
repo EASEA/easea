@@ -44,6 +44,7 @@ class Casrea : public CmoeaAlgorithm<std::vector< TIndividual >, TRandom>, publi
 public:
         typedef TIndividual TI  ;
         typedef typename TI::TO TO;
+	using TProba = std::conditional_t<sizeof(TO) <= 4, float, double>;
         typedef typename TI::TV TV;
 
         typedef std::vector<TI> TPopulation;
@@ -68,7 +69,7 @@ protected:
         template <typename TPtr, typename TIter> static TIter selectCrit(const std::list<TPtr> &front, TIter begin, TIter end);
         static const TI *comparer(const std::vector<const TI *> &comparator);
 private:
-	std::uniform_real_distribution<TO> m_distribution;
+	std::uniform_real_distribution<TProba> m_distribution;
 };
 
 template <typename TIndividual, typename TRandom>

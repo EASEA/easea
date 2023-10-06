@@ -349,6 +349,9 @@ bool EvolutionaryAlgorithm::allCriteria(){
 #include <iostream>
 #include <ostream>
 #include <sstream>
+
+\INSERT_USER_HEADER
+
 using namespace std;
 
 extern int EZ_POP_SIZE;

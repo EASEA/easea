@@ -50,5 +50,9 @@ TType CProbability<TType>::getProbability(void) const
 {
 	return m_probability;
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CProbability<float>;
+extern template class CProbability<double>;
 }
 }

@@ -57,4 +57,8 @@ bool CConstraint<TObjective>::operator ()(void) const
         }
         return true;
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CConstraint<float>;
+extern template class CConstraint<double>;
 }

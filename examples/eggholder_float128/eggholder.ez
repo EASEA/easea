@@ -1,0 +1,104 @@
+/*
+ * Eggholder function benchmark using custom precision type
+ */
+
+// required to use boost improved precision types
+\User CMake:
+find_package(Boost REQUIRED)
+target_include_directories(CMAKE_TARGET PUBLIC ${Boost_INCLUDE_DIRS})
+
+# test for compatibility with native float128
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LINK_OPTIONS "lquadmath")
+CHECK_CXX_SOURCE_COMPILES("
+	#include <boost/multiprecision/float128.hpp>
+	#include <iostream>
+        int main(void){
+		boost::multiprecision::float128 v = 2;
+		std::cout << boost::multiprecision::sin(v);
+	}" FLOAT128_WORKS)
+if (FLOAT128_WORKS)
+	message(STATUS "using float128")
+	target_link_options(CMAKE_TARGET PUBLIC "-lquadmath")
+else()
+	message(STATUS "float128 doesn't work. Falling back to boost cpp_bin_float<34>")
+endif()
+
+configure_file(config.h.in config.h)
+\end
+
+\User header:
+#ifdef FLOAT128_WORKS
+#include <boost/multiprecision/float128.hpp>
+using real_t = boost::multiprecision::float128;
+#define CUSTOM_PRECISION_TYPE real_t;
+#else
+#include <boost/multiprecision/cpp_bin_float.hpp>
+using real_t = boost::multiprecision::cpp_bin_float_quad; // equivalent to float128
+#define CUSTOM_PRECISION_TYPE real_t;
+#endif
+
+using namespace boost::multiprecision;
+\end
+
+\User declarations:
+#include <algorithm>
+\end
+
+\User classes:
+GenomeClass {
+  real_t x, y;
+}
+\end
+
+\User functions:
+\end
+
+\GenomeClass::initialiser:
+Genome.x = random(-512., 512.);
+Genome.y = random(-512., 512.);
+\end
+
+\GenomeClass::crossover:
+child.x = parent1.x;
+child.y = parent2.y;
+\end
+
+\GenomeClass::mutator:
+if (tossCoin(0.5f)) {
+	Genome.x = std::clamp(Genome.x + (random(-1.f, 1.f)/(NB_GEN)) * Genome.x, real_t{-512.f}, real_t{512.f});
+} else {
+	Genome.y = std::clamp(Genome.y + (random(-1.f, 1.f)/(NB_GEN)) * Genome.y, real_t{-512.f}, real_t{512.f});
+}
+\end
+
+\GenomeClass::evaluator:
+const auto x = Genome.x;
+const auto y = Genome.y;
+
+return static_cast<float>(-(y + 47.) * sin(sqrt(abs(x/2. + (y + 47.)))) - x * sin(sqrt(abs(x - (y + 47.)))));
+\end
+
+\At the end of each generation function:
+//std::cout << *bBest << std::endl;
+\end
+
+\GenomeClass::display:
+os << "(x: " << Genome.x << "; y: " << Genome.y << ")\n";
+\end
+
+\After everything else function:
+std::cout << "best (x,y): " << *bBest << "\n";
+\end
+
+\Default run parameters :        // Please let the parameters appear in this order
+  Number of generations : 30   	// NB_GEN
+  Population size : 10000			//POP_SIZE
+  Mutation probability : 0.3       // MUT_PROB
+  Crossover probability : 0.7      // XOVER_PROB
+  Evaluator goal : minimise      // Maximise
+  Selection operator: Tournament 4
+  Elitism: Strong			//Weak or Strong
+  Elite: 5
+\end

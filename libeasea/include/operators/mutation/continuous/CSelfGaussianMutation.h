@@ -39,6 +39,7 @@ class CSelfGaussianMutation : public CMutation<TObjective, std::vector<TObjectiv
 {
 public:
 	typedef TObjective TO;
+	using TProba = std::conditional_t<sizeof(TO) <= 4, float, double>;
 	typedef TRandom TR;
 	typedef std::vector<TO> TV;
 	typedef CMutation<TO, TV> TBase;
@@ -65,7 +66,7 @@ size_t getLimitGen(){ return TBase::getLimitGen();};
 	TO boundedMutate(TRandom &random, const TObjective distributionIndex, const TObjective idecision, const TObjective u, TObjective &istep, const TObjective lower, const TObjective upper);
 
 private:
-	std::uniform_real_distribution<TO> m_distribution;	// uniform distribution
+	std::uniform_real_distribution<TProba> m_distribution;	// uniform distribution
 	TO m_distributionIndex;					// distribution index
 	TO m_tau;
 	TO m_tau_1;
@@ -90,7 +91,7 @@ template <typename TObjective, typename TRandom>
 typename CSelfGaussianMutation<TObjective, TRandom>::TO CSelfGaussianMutation<TObjective,TRandom>::getGaussian(TRandom &random)
 {
 	TO v1, v2, s;
-	static std::uniform_real_distribution<TObjective> dist(0, 1);
+	static std::uniform_real_distribution<TProba> dist(0, 1);
 
 	do
 	{
@@ -99,7 +100,7 @@ typename CSelfGaussianMutation<TObjective, TRandom>::TO CSelfGaussianMutation<TO
 
 		s = v1 * v1 + v2 * v2;
 	}while( s >= 1.0 || s == 0 );
-	s = std::sqrt((-2.0 * std::log(s))/s);
+	s = sqrt((-2.0 * log(s))/s);
 	
 	return v1 * s; 
     
@@ -124,7 +125,7 @@ template <typename TObjective, typename TRandom>
 typename CSelfGaussianMutation<TObjective, TRandom>::TO CSelfGaussianMutation<TObjective, TRandom> ::boundedMutate(TRandom &random, const TObjective distributionIndex, const TObjective idecision, const TObjective u, TObjective &istep, const TObjective lower, const TObjective upper)
 {
 	(void)distributionIndex; // unused
-	static std::uniform_real_distribution<TObjective> dist(0, 1);
+	static std::uniform_real_distribution<TProba> dist(0, 1);
 //	TO sigma = m_tau * 2.1;
 	if (lower >= upper)
 		LOG_ERROR(errorCode::value, "Wrong boundary mutation values");
@@ -156,7 +157,7 @@ void CSelfGaussianMutation<TObjective, TRandom>::launch(TV &variables, TV &step)
 
 	m_tau_1 = (log((TO)variables.size())/((TO)variables.size())); /* 1./sqrt(2*(TO)variables.size());*/
 	const TO u = getGaussian(this->getRandom());
-	double k =1.;
+	TO k =1.;
 	for (size_t i = 0; i < this->getBoundary().size(); ++i)
 	{
 		const TRange &range = this->getBoundary()[i];
@@ -173,6 +174,10 @@ m_tau = k*log((TO)variables.size())/((TO)variables.size());
 		}
 	}
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CSelfGaussianMutation<float, DefaultGenerator_t>;
+extern template class CSelfGaussianMutation<double, DefaultGenerator_t>;
 }
 }
 }

@@ -44,6 +44,7 @@ class Csigma : public CmoeaAlgorithm<std::vector< TIndividual >, TRandom>, publi
 public:
         typedef TIndividual TI  ;
         typedef typename TI::TO TO;
+	using TProba = std::conditional_t<sizeof(TO) <= 4, float, double>;
         typedef typename TI::TV TV;
 //        typedef TRandom TR;
 
@@ -73,7 +74,7 @@ protected:
         static TO calcIndicator(const std::vector<TO> &objective1, const std::vector<TO> &objective2);
 
 private:
-	std::uniform_real_distribution<TO> m_distribution;
+	std::uniform_real_distribution<TProba> m_distribution;
 	size_t m_size;
 	TO m_scale;
 };

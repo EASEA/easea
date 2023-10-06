@@ -266,9 +266,9 @@ params->parentReduction = 1;
     TIME_ACC(reduction);
 
     population->sortParentPopulation();
+    bBest = population->Best;
     //if( this->params->printStats  || this->params->generateCSVFile )
     showPopulationStats(start); // (always calculate stats)
-    bBest = population->Best;
     EASEAEndGenerationFunction(this);
 
     //Receiving individuals if cluster island model
@@ -411,6 +411,7 @@ void CEvolutionaryAlgorithm::showPopulationStats(std::chrono::time_point<std::ch
        this->cstats->currentNumberOfImmigrants++; 
     }
   }
+  bBest = population->Best;
 
   this->cstats->currentAverageFitness/=population->parentPopulationSize;
 

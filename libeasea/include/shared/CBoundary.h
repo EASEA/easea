@@ -85,5 +85,10 @@ bool CBoundary<TType>::validate(const TBoundary &boundary)
         }
         return true;
 }
+
+// reduce compilation time and check for errors while compiling lib
+extern template class CBoundary<double>;
+extern template class CBoundary<float>;
+
 }
 }

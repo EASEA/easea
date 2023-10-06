@@ -30,6 +30,7 @@ public:
         typedef TPopulation TPop;
         typedef typename TPop::value_type TI;
         typedef typename TI::TO TO;
+	using TProba = std::conditional_t<sizeof(TO) <= 4, float, double>;
         typedef typename TI::TV TV;
         typedef CAlgorithm<TO, TV> TA;
         typedef typename TA::TP TP;
@@ -51,7 +52,7 @@ CmoeaAlgorithm<TPopulation, TRandom>::CmoeaAlgorithm(TR random, TP &problem, con
 											 , easea::shared::CRandom<TR>(random)    
 {
         m_population.resize(initial.size());
-        static std::uniform_real_distribution<TO> dist(0, 0.99);
+        static std::uniform_real_distribution<TProba> dist(0, 0.99);
 	const size_t nb_objs = this->getProblem().getNumberOfObjectives();
 
 #ifdef USE_OPENMP
