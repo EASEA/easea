@@ -535,49 +535,46 @@ void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 				fprintf(fp, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",
 					(int)(sym->nSize / sizeof(char*)));
 				fprintf(fpOutputFile, "\t\tif(this->%s[EASEA_Ndx] != NULL){\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\t\t\tEASEA_Line << \"\\a \";\n");
+				fprintf(fpOutputFile, "\t\t\tar & \"\\a \";\n");
 				fprintf(fpOutputFile,
-					"\t\t\tEASEA_Line << this->%s[EASEA_Ndx]->serializer() << \" \";\n",
+					"\t\t\tar & this->%s[EASEA_Ndx]->serializer() & \" \";\n",
 					sym->sName.c_str());
 				fprintf(fpOutputFile, "\t}\n");
 				fprintf(fpOutputFile, "\t\telse\n");
-				fprintf(fpOutputFile, "\t\t\tEASEA_Line << \"NULL\" << \" \";\n");
+				fprintf(fpOutputFile, "\t\t\tar & \"NULL\" & \" \";\n");
 				fprintf(fpOutputFile, "}\n");
 
 			}
 			// it's a classical array
 			else if (sym->ObjectType == oArray) {
-				/*TODO: not clean at all*/
+				//TODO: not clean at all
 				fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
 					sym->nSize / sym->pType->nSize);
-				fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s[EASEA_Ndx].serializer() <<\" \";\n",
+				fprintf(fpOutputFile, "\t\tar & this->%s[EASEA_Ndx].serializer() &\" \";\n",
 					sym->sName.c_str());
 			}
 			// it's a simple struct/class
 			else if (sym->ObjectType == oObject) {
-				fprintf(fpOutputFile, "\tEASEA_Line << \"\\a \";\n");
-				fprintf(fpOutputFile, "\tEASEA_Line << this->%s.serializer() << \" \";\n",
+				fprintf(fpOutputFile, "\tar & \"\\a \";\n");
+				fprintf(fpOutputFile, "\tar & this->%s.serializer() & \" \";\n",
 					sym->sName.c_str());
 			} else {
 				// if it's not an array of pointers
 				fprintf(fpOutputFile, "\tif(this->%s != NULL){\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\t\tEASEA_Line << \"\\a \";\n");
-				fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s->serializer() << \" \";\n",
+				fprintf(fpOutputFile, "\t\tar & \"\\a \";\n");
+				fprintf(fpOutputFile, "\t\tar & this->%s->serializer() & \" \";\n",
 					sym->sName.c_str());
 				fprintf(fpOutputFile, "\t}\n");
 				fprintf(fpOutputFile, "\telse\n");
-				fprintf(fpOutputFile, "\t\tEASEA_Line << \"NULL\" << \" \";\n");
+				fprintf(fpOutputFile, "\t\tar & \"NULL\" & \" \";\n");
 			}
 		} else {
 			// if it's not a user-defined class
 			if (sym->ObjectType == oObject) {
-				fprintf(fpOutputFile, "\tEASEA_Line << this->%s << \" \";\n", sym->sName.c_str());
+				fprintf(fpOutputFile, "\tar & this->%s & \" \";\n", sym->sName.c_str());
 			} else if (sym->ObjectType == oArray) {
 				// if it's an array of floats
-				fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-					sym->nSize / sym->pType->nSize);
-				fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s[EASEA_Ndx] <<\" \";\n",
-					sym->sName.c_str());
+				fprintf(fpOutputFile, "\t\tar & %s;\n", sym->sName.c_str());
 			} else if (sym->ObjectType == oPointer && strcmp(sym->pType->sName.c_str(), "GPNode") == 0) {
 				// it's a pointer to a GPNode!
 				fprintf(fpOutputFile, "\t// Serialize function for \"%s\"\n", sym->pType->sName.c_str());
@@ -585,7 +582,7 @@ void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 				// serialize function: it needs the <map> and <vector> includes, but those are added
 				// at the top of the class if it's a GPNode individual
 				fprintf(fpOutputFile,
-					"\tcout << \"Now serializing individual \" << toString(this->root) << endl;\n");
+					"\tcout & \"Now serializing individual \" & toString(this->root) & endl;\n");
 				fprintf(fpOutputFile, "\t// build map used to associate GPNode pointers to indexes\n");
 				fprintf(fpOutputFile, "\tmap<GPNode*,int> indexes;\n");
 				fprintf(fpOutputFile, "\n");
@@ -612,7 +609,7 @@ void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 				fprintf(fpOutputFile, "\t}\n");
 				fprintf(fpOutputFile,
 					"\t// the very first item in the line is the number of nodes in the tree \n");
-				fprintf(fpOutputFile, "\tEASEA_Line << currentIndex << \" \";\n");
+				fprintf(fpOutputFile, "\tar & currentIndex & \" \";\n");
 				fprintf(fpOutputFile, "\t// another visit to finally serialize the nodes \n");
 				fprintf(fpOutputFile, "\tvector<double> ercValues;          \n");
 				fprintf(fpOutputFile, "\tnodesToVisit.push_back(this->root);\n");
@@ -632,26 +629,26 @@ void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 				fprintf(fpOutputFile,
 					"\t // node to string: format is <index> <var_id> <opCode> <indexOfChild1> <indexOfChild2>                     \n");
 				fprintf(fpOutputFile,
-					"\t EASEA_Line << indexes[currentNode] << \" \" << currentNode->var_id << \" \" << (int)currentNode->opCode << \" \";\n");
+					"\t ar & indexes[currentNode] & \" \" & currentNode->var_id & \" \" & (int)currentNode->opCode & \" \";\n");
 				fprintf(fpOutputFile,
 					"\t // if the children are not NULL, put their index; otherwise, put \"0\"              \n");
 				fprintf(fpOutputFile,
 					"\t if( currentNode->children[0] != NULL )                                            \n");
 				fprintf(fpOutputFile,
-					"\t  EASEA_Line << indexes[ currentNode->children[0] ] << \" \";                 \n");
+					"\t  ar & indexes[ currentNode->children[0] ] & \" \";                 \n");
 				fprintf(fpOutputFile,
 					"\t else                                                                              \n");
 				fprintf(fpOutputFile,
-					"\t  EASEA_Line << \"0 \";                                                       \n");
+					"\t  ar & \"0 \";                                                       \n");
 				fprintf(fpOutputFile,
 					"\t                                                                                  \n");
 				fprintf(fpOutputFile,
 					"\t if( currentNode->children[1] != NULL )                                            \n");
 				fprintf(fpOutputFile,
-					"\t  EASEA_Line << indexes[ currentNode->children[1] ] << \" \";                 \n");
+					"\t  ar & indexes[ currentNode->children[1] ] & \" \";                 \n");
 				fprintf(fpOutputFile, "\t else             \n");
 				fprintf(fpOutputFile,
-					"\t  EASEA_Line << \"0 \";                                                       \n");
+					"\t  ar & \"0 \";                                                       \n");
 				fprintf(fpOutputFile, "\t                 \n");
 				fprintf(fpOutputFile,
 					"\t // if the node is an ERC, the floating point value is stored for later            \n");
@@ -662,12 +659,12 @@ void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 					"\t// finally, put all the floating point ERC values             \n");
 				fprintf(fpOutputFile,
 					"\tfor(unsigned int i = 0; i < ercValues.size(); i++)            \n");
-				fprintf(fpOutputFile, "\t EASEA_Line << ercValues[i] << \" \";                    \n");
+				fprintf(fpOutputFile, "\t ar & ercValues[i] & \" \";                    \n");
 				fprintf(fpOutputFile,
 					"\t                                                              \n");
 				fprintf(fpOutputFile,
 					"\t// debug                                                      \n");
-				fprintf(fpOutputFile, "\t//cout << \"EASEA_Line: \" << EASEA_Line.str() << endl; \n");
+				fprintf(fpOutputFile, "\t//cout & \"ar: \" & ar.str() & endl; \n");
 			}
 
 		} // end if it's a user-defined class

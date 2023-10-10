@@ -83,7 +83,7 @@ public:
     virtual CIndividual* clone() = 0;
 
     virtual std::string serialize() = 0;
-    virtual void deserialize(std::string EASEA_Line) = 0;
+    virtual void deserialize(std::string const& EASEA_Line) = 0;
 
     virtual void boundChecking() = 0;
 

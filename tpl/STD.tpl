@@ -66,6 +66,8 @@ int main(int argc, char** argv){
 #include <time.h>
 #include <cstring>
 #include <sstream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
@@ -152,20 +154,17 @@ void IndividualImpl::boundChecking(){
 	\INSERT_BOUND_CHECKING
 }
 
-string IndividualImpl::serialize(){
-    ostringstream AESAE_Line(ios_base::app);
-    \GENOME_SERIAL
-    AESAE_Line  << this->fitness;
-    return AESAE_Line.str();
+std::string IndividualImpl::serialize() {
+	std::stringstream ss;
+	boost::archive::text_oarchive oa{ss};
+	serialize_impl(oa, 0);
+	return ss.str();
 }
 
-void IndividualImpl::deserialize(string Line){
-    istringstream AESAE_Line(Line);
-    string line;
-    \GENOME_DESERIAL
-    AESAE_Line >> this->fitness;
-    this->valid=true;
-    this->isImmigrant = false;
+void IndividualImpl::deserialize(std::string const& str) {
+	std::stringstream ss{str};
+	boost::archive::text_iarchive ia{ss};
+	serialize_impl(ia, 0);
 }
 
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
@@ -404,8 +403,13 @@ public:
 
 	void boundChecking() override;
 
-	string serialize() override;
-	void deserialize(string AESAE_Line) override;
+	template <typename Archive>
+	void serialize_impl(Archive& ar, [[maybe_unused]] const unsigned version) {
+	    \GENOME_SERIAL
+	}
+
+	std::string serialize() override;
+	void deserialize(std::string const&) override;
 };
 
 
@@ -472,7 +476,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
 	set(Boost_USE_MULTITHREADED ON)
 	set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
-find_package(Boost REQUIRED program_options)
+find_package(Boost REQUIRED program_options serialization)
 
 find_package(OpenMP)
 

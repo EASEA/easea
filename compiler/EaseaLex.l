@@ -137,7 +137,7 @@ static inline void print_bool(FILE* fp, bool value) { fprintf(fp, "%s", value ? 
 %start COPY_EO_INITIALISER COPY_GP_OPCODE
 %start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_OPTIMISER COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
-%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL GP_RULE_ANALYSIS GP_COPY_OPCODE_CODE COPY_GP_EVAL COPY_USER_HEADER
+%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL GP_RULE_ANALYSIS GP_COPY_OPCODE_CODE COPY_GP_EVAL COPY_USER_HEADER COPY_USER_SERIALIZATION
 
 %option yylineno noyywrap noinput nounput
 
@@ -824,17 +824,36 @@ return lhs.arity < rhs.arity;
  }
 
 <TEMPLATE_ANALYSIS>"\\GENOME_SERIAL"  {
-  if (bVERBOSE) printf ("Inserting default genome serializer.\n");
-  fprintf (fpOutputFile,"// Memberwise serialization\n");
-  pGENOME->serializeIndividual(fpOutputFile, "this");
-  //fprintf(fpOutputFile,"\tEASEA_Line << endl;\n");
+  if (bVERBOSE) printf("Inserting serialization code.\n");
+  switch_to_genome();
+  BEGIN COPY_USER_SERIALIZATION;
+}
+
+<COPY_USER_SERIALIZATION>"\\"("User"[ \t\n]+)?([Dd]e)?[Ss]"erialization"[ \t\n]*":" {
+  fprintf (fpOutputFile,"// User serialization\n"); 
+  print_line_indicator();
+  BEGIN COPY;
  }
 
-<TEMPLATE_ANALYSIS>"\\GENOME_DESERIAL"  {
-  if (bVERBOSE) printf ("Inserting default genome deserializer.\n");
-  fprintf (fpOutputFile,"// Memberwise deserialization\n");
-  pGENOME->deserializeIndividual(fpOutputFile, "this");
+<COPY_USER_SERIALIZATION><<EOF>> {
+  if (bVERBOSE) printf ("Inserting default genome serializer. You may provide your own using '\\Serialization:'\n");
+  fprintf (fpOutputFile,"// Automatic serialization\n"); 
+  print_line_indicator();
+  pGENOME->serializeIndividual(fpOutputFile, "this");
+  print_line_end();
+
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  yypop_buffer_state();
+  BEGIN TEMPLATE_ANALYSIS;
+  bNotFinishedYet=1;
  }
+
+<COPY_USER_SERIALIZATION>. {}
+<COPY_USER_SERIALIZATION>\n {
+  lineCounter++;
+ } 
+
 
 <TEMPLATE_ANALYSIS>"\\COPY_CUDA_CTOR"  {
   if (bVERBOSE) printf ("Creating default copy constructor.\n");
