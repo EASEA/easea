@@ -406,6 +406,7 @@ public:
 	template <typename Archive>
 	void serialize_impl(Archive& ar, [[maybe_unused]] const unsigned version) {
 	    \GENOME_SERIAL
+	    ar & this->fitness;
 	}
 
 	std::string serialize() override;
