@@ -403,14 +403,14 @@ public:
 
 	void boundChecking() override;
 
+	std::string serialize() override;
+	void deserialize(std::string const&) override;
+
 	template <typename Archive>
 	void serialize_impl(Archive& ar, [[maybe_unused]] const unsigned version) {
 	    \GENOME_SERIAL
 	    ar & this->fitness;
 	}
-
-	std::string serialize() override;
-	void deserialize(std::string const&) override;
 };
 
 
