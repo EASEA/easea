@@ -164,7 +164,7 @@ void simple_mutator(IndividualImpl* Genome){
   // select a node
   int mutationPointChildId = 0;
   int mutationPointDepth = 0;
-  GPNode* mutationPointParent = selectNode(Genome->root, &mutationPointChildId, &mutationPointDepth);
+  GPNode* mutationPointParent = selectNode(Genome->root, &mutationPointChildId, &mutationPointDepth, opArity);
   
   
   if( !mutationPointParent ){
@@ -178,11 +178,11 @@ void simple_mutator(IndividualImpl* Genome){
 
 
 void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
-  int depthP1 = depthOfTree(p1.root);
-  int depthP2 = depthOfTree(p2.root);
+  int depthP1 = depthOfTree(p1.root, opArity);
+  int depthP2 = depthOfTree(p2.root, opArity);
 
-  int nbNodeP1 = enumTreeNodes(p1.root);
-   int nbNodeP2 = enumTreeNodes(p2.root);
+  int nbNodeP1 = enumTreeNodes(p1.root, opArity);
+   int nbNodeP2 = enumTreeNodes(p2.root, opArity);
 
   int stockPointChildId=0;
   int graftPointChildId=0;
@@ -221,9 +221,9 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
     if( Np2 && !graftCouldBeTerminal && opArity[(int)graftParentNode->children[graftPointChildId]->opCode]==0 ) goto choose_node;
     
     if( Np2 && Np1)
-      childrenDepth = depthOfNode(c.root,stockParentNode)+depthOfTree(graftParentNode->children[graftPointChildId]);
-    else if( Np1 ) childrenDepth = depthOfNode(c.root,stockParentNode)+depthP1;
-    else if( Np2 ) childrenDepth = depthOfTree(graftParentNode->children[graftPointChildId]);
+      childrenDepth = depthOfNode(c.root,stockParentNode, opArity)+depthOfTree(graftParentNode->children[graftPointChildId], opArity);
+    else if( Np1 ) childrenDepth = depthOfNode(c.root,stockParentNode, opArity)+depthP1;
+    else if( Np2 ) childrenDepth = depthOfTree(graftParentNode->children[graftPointChildId], opArity);
     else childrenDepth = depthP2;
     
   }while( childrenDepth>TREE_DEPTH_MAX );

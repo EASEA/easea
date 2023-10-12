@@ -8,34 +8,30 @@
 
 using namespace std;
 
-extern const unsigned opArity[];
-//extern const unsigned* opArity;
-
-
 /**
    Compute the maximum depth of a tree, rooted on root.
 
    @arg root : root of the tree
    @return : depth of current tree rooted on root
 */
-int depthOfTree(GPNode* root){
+int depthOfTree(GPNode* root, const unsigned opArity[]){
   int depth = 0;
   for( unsigned i=0 ; i<opArity[(int)root->opCode] ; i++ ){
-    int d = depthOfTree(root->children[i]);
+    int d = depthOfTree(root->children[i], opArity);
     if( d>=depth ) depth = d;
   }
   return depth+1;
 }
 
 
-int depthOfNode(GPNode* root, GPNode* node){
+int depthOfNode(GPNode* root, GPNode* node, const unsigned opArity[]){
 
   if( root==node ){
     return 1;
   }
   else{
     for( unsigned i=0 ; i<opArity[(int)root->opCode] ; i++ ){
-      int depth = depthOfNode(root->children[i],node);
+      int depth = depthOfNode(root->children[i],node, opArity);
       if( depth )
         return depth+1;
     }
@@ -44,10 +40,10 @@ int depthOfNode(GPNode* root, GPNode* node){
 }
 
 
-int enumTreeNodes(GPNode* root){
+int enumTreeNodes(GPNode* root, const unsigned opArity[]){
   int nbNode = 0;
   for( unsigned i=0 ; i<opArity[(int)root->opCode] ; i++ ){
-    nbNode+=enumTreeNodes(root->children[i]);
+    nbNode+=enumTreeNodes(root->children[i], opArity);
   }
   return nbNode+1;
 }
@@ -69,7 +65,7 @@ void flattenDatas2D( float** inputs, int length, int width, float** flat_inputs)
    @arg goalDepth: level from which GPNode are collected
    @arg collection: an empty, allocated array
 */
-int collectNodesDepth(const int goalDepth, GPNode** collection, int collected, int currentDepth, GPNode* root)\
+int collectNodesDepth(const int goalDepth, GPNode** collection, int collected, int currentDepth, GPNode* root, const unsigned opArity[])
 {
 
   if( currentDepth>=goalDepth ){
@@ -78,7 +74,7 @@ int collectNodesDepth(const int goalDepth, GPNode** collection, int collected, i
   }
   else{
     for( unsigned i=0 ; i<opArity[(int)root->opCode] ; i++ ){
-      collected=collectNodesDepth(goalDepth, collection, collected, currentDepth+1, root->children[i]);
+      collected=collectNodesDepth(goalDepth, collection, collected, currentDepth+1, root->children[i], opArity);
     }
     return collected;
   }
@@ -96,9 +92,9 @@ int collectNodesDepth(const int goalDepth, GPNode** collection, int collected, i
    @return : return the address of the parent of the choosen node. Return null if the root node has been choos\
 en
 */
-GPNode* selectNode( GPNode* root, int* childId, int* depth){
+GPNode* selectNode( GPNode* root, int* childId, int* depth, const unsigned opArity[]){
   
-  int xoverDepth = random(0,depthOfTree(root));
+  int xoverDepth = random(0,depthOfTree(root, opArity));
   (*depth) = xoverDepth;
   
   GPNode** dNodes;
@@ -106,7 +102,7 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
 
   if(xoverDepth!=0){
     dNodes = new GPNode*[1<<(xoverDepth-1)];
-    collected = collectNodesDepth(xoverDepth-1,dNodes,0,0,root);
+    collected = collectNodesDepth(xoverDepth-1,dNodes,0,0,root, opArity);
   }
   else{
     return NULL;
@@ -152,7 +148,7 @@ GPNode* selectNode( GPNode* root, int* childId, int* depth){
 */
 GPNode* construction_method( const int constLen, const int totalLen , const int currentDepth,
            const int maxDepth, const bool full,
-           const unsigned* opArity, const int OP_ERC){
+           const unsigned opArity[], const int OP_ERC){
   GPNode* node = new GPNode();
   // first select the opCode for the current Node.
   if( full ){
@@ -185,7 +181,7 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
 }
 
 GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, unsigned actualParentPopulationSize, unsigned parentPopulationSize, 
-       float GROW_FULL_RATIO, unsigned VAR_LEN, unsigned OPCODE_SIZE, const unsigned* opArity, const int OP_ERC){
+       float GROW_FULL_RATIO, unsigned VAR_LEN, unsigned OPCODE_SIZE, const unsigned opArity[], const int OP_ERC){
   /**
      This is the standard ramped half-and-half method
      for creation of trees.
@@ -202,7 +198,7 @@ GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, u
   return construction_method( static_cast<int>(VAR_LEN+1), static_cast<int>(OPCODE_SIZE) , 1, currentDepth ,full, opArity, OP_ERC);
 }
 
-void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char* const* opCodeName, int OP_ERC) {
+void toString_r(std::ostringstream* oss, GPNode* root, const unsigned opArity[] , const char* const* opCodeName, int OP_ERC) {
 
   (*oss) << '(';
   if (opArity[(int)root->opCode] == 2) {
@@ -231,7 +227,7 @@ void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity ,
   return;
 }
 
-std::string toString(GPNode* root, const unsigned* opArity , const char* const* opCodeName, int OP_ERC) {
+std::string toString(GPNode* root, const unsigned opArity[] , const char* const* opCodeName, int OP_ERC) {
   std::ostringstream oss;
 
   toString_r(&oss,root,opArity,opCodeName,OP_ERC);
