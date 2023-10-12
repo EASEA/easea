@@ -258,7 +258,7 @@ exponent  ([Ee][+-]?[0-9]+)
   fprintf(fpOutputFile,"OPCODE_SIZE, OP_RETURN};\n");
 
 
-  fprintf(fpOutputFile,"const char* opCodeName[]={"); 
+  fprintf(fpOutputFile,"static constexpr const char* opCodeName[]={"); 
   bool first = true;
   for (auto const& op : opDesc) {
     if( !first )fprintf(fpOutputFile,",");
@@ -266,7 +266,7 @@ exponent  ([Ee][+-]?[0-9]+)
     fprintf(fpOutputFile,"%s",op.realName.c_str());
   }
   fprintf(fpOutputFile,"};\n"); 
-  fprintf(fpOutputFile,"unsigned opArity[]=     {"); 
+  fprintf(fpOutputFile,"static const unsigned opArity[]=     {"); 
   first = true;
   for (auto const& op : opDesc) {
     if( !first )fprintf(fpOutputFile,",");
@@ -838,9 +838,7 @@ return lhs.arity < rhs.arity;
 <COPY_USER_SERIALIZATION><<EOF>> {
   if (bVERBOSE) printf ("Inserting default genome serializer. You may provide your own using '\\Serialization:'\n");
   fprintf (fpOutputFile,"// Automatic serialization\n"); 
-  print_line_indicator();
   pGENOME->serializeIndividual(fpOutputFile, "this");
-  print_line_end();
 
   rewind(fpGenomeFile);
   yyin = fpTemplateFile;

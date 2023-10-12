@@ -62,6 +62,8 @@ int main(int argc, char** argv){
 #include <time.h>
 #include <string>
 #include <sstream>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
@@ -96,10 +98,6 @@ float* outputs;
 \ANALYSE_USER_CLASSES
 
 \INSERT_GP_PARAMETERS
-\ANALYSE_GP_OPCODE
-/* Insert declarations about opcodes*/
-\INSERT_GP_OPCODE_DECL
-
 
 GPNode* ramped_hh(){
   return RAMPED_H_H(INIT_TREE_DEPTH_MIN,INIT_TREE_DEPTH_MAX,EA->population->actualParentPopulationSize,EA->population->parentPopulationSize,0, VAR_LEN, OPCODE_SIZE,opArity, OP_ERC);
@@ -552,6 +550,10 @@ class Parameters;
 extern int EZ_POP_SIZE;
 extern int OFFSPRING_SIZE;
 
+\ANALYSE_GP_OPCODE
+/* Insert declarations about opcodes*/
+\INSERT_GP_OPCODE_DECL
+
 \INSERT_USER_CLASSES_DEFINITIONS
 
 class IndividualImpl : public CIndividual {
@@ -648,7 +650,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
 	set(Boost_USE_MULTITHREADED ON)
 	set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
-find_package(Boost REQUIRED COMPONENTS program_options)
+find_package(Boost REQUIRED COMPONENTS program_options serialization)
 
 find_package(OpenMP)
 

@@ -8,7 +8,7 @@
 
 using namespace std;
 
-extern unsigned opArity[];
+extern const unsigned opArity[];
 //extern const unsigned* opArity;
 
 
@@ -202,7 +202,7 @@ GPNode* RAMPED_H_H(unsigned INIT_TREE_DEPTH_MIN, unsigned INIT_TREE_DEPTH_MAX, u
   return construction_method( static_cast<int>(VAR_LEN+1), static_cast<int>(OPCODE_SIZE) , 1, currentDepth ,full, opArity, OP_ERC);
 }
 
-void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char* const* opCodeName, int OP_ERC) {
 
   (*oss) << '(';
   if (opArity[(int)root->opCode] == 2) {
@@ -231,7 +231,7 @@ void toString_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity ,
   return;
 }
 
-std::string toString(GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+std::string toString(GPNode* root, const unsigned* opArity , const char* const* opCodeName, int OP_ERC) {
   std::ostringstream oss;
 
   toString_r(&oss,root,opArity,opCodeName,OP_ERC);

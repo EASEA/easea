@@ -98,6 +98,14 @@ class GPNode {
       return os;
     }
 
+    template <class Archive>
+    void serialize(Archive & ar, [[maybe_unused]] const unsigned int version) {
+	    ar & var_id;
+	    ar & erc_value;
+	    ar & opCode;
+	    ar & children;
+    }
+
 
     // Class members 
     int var_id;
@@ -121,6 +129,6 @@ GPNode* construction_method( const int constLen, const int totalLen , const int 
 
 // display methods
 void toDotFile(GPNode* root, const char* baseFileName, int treeId, const unsigned* opArity , const char** opCodeName, int OP_ERC);
-std::string toString(GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC);
+std::string toString(GPNode* root, const unsigned* opArity , const char* const* opCodeName, int OP_ERC);
 
 #endif // __C_GPNODE__
