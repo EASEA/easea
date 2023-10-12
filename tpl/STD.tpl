@@ -15,6 +15,8 @@
 #include "global.h"
 #include "EASEAIndividual.hpp"
 
+BOOST_CLASS_EXPORT_GUID(IndividualImpl, "IndividualImpl")
+
 using namespace std;
 
 /** Global variables for the whole algorithm */
@@ -66,8 +68,7 @@ int main(int argc, char** argv){
 #include <time.h>
 #include <cstring>
 #include <sstream>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/export.hpp>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
@@ -152,19 +153,6 @@ float IndividualImpl::evaluate(){
 
 void IndividualImpl::boundChecking(){
 	\INSERT_BOUND_CHECKING
-}
-
-std::string IndividualImpl::serialize() {
-	std::stringstream ss;
-	boost::archive::text_oarchive oa{ss};
-	serialize_impl(oa, 0);
-	return ss.str();
-}
-
-void IndividualImpl::deserialize(std::string const& str) {
-	std::stringstream ss{str};
-	boost::archive::text_iarchive ia{ss};
-	serialize_impl(ia, 0);
 }
 
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
@@ -330,13 +318,10 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	if(this->params->startFromFile){
 	  ifstream AESAE_File(this->params->inputFilename);
-	  string AESAE_Line;
-  	  for( unsigned int i=0 ; i< this->params->parentPopulationSize ; i++){
-	  	  getline(AESAE_File, AESAE_Line);
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-		  ((IndividualImpl*)this->population->parents[i])->deserialize(AESAE_Line);
+	  boost::archive::text_iarchive ia{AESAE_File};
+  	  for( unsigned i=0 ; i< this->params->parentPopulationSize ; i++) {
+	  	  ia >> this->population->parents[i];
 	  }
-	  
 	}
 	else{
   	  #ifdef USE_OPENMP
@@ -368,6 +353,8 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <Parameters.h>
 #include <cstring>
 #include <sstream>
+
+#include <boost/serialization/base_object.hpp>
 
 \INSERT_USER_HEADER
 
@@ -403,13 +390,12 @@ public:
 
 	void boundChecking() override;
 
-	std::string serialize() override;
-	void deserialize(std::string const&) override;
-
+private:
+	friend class boost::serialization::access;
 	template <typename Archive>
 	void serialize_impl(Archive& ar, [[maybe_unused]] const unsigned version) {
+	    ar & boost::serialization::base_object<CIndividual>(*this);
 	    \GENOME_SERIAL
-	    ar & this->fitness;
 	}
 };
 

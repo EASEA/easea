@@ -98,16 +98,6 @@ void free_data(){
 
 \At each generation before reduce function:
  //cout << "At each generation before replacement function called" << endl;	
-{ 	
-std::ofstream t{"derived.pop"};
-	boost::archive::text_oarchive oa{t};
-	oa << (IndividualImpl*)bBest;
-}
-{
-	std::ofstream t{"base.pop"};
-	boost::archive::text_oarchive oa{t};
-	oa << (CIndividual*)bBest;
-}
 \end
 
 

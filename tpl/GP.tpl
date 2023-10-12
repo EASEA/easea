@@ -15,8 +15,6 @@
 #include "global.h"
 #include "EASEAIndividual.hpp"
 
-BOOST_CLASS_EXPORT_GUID(IndividualImpl, "IndividualImpl")
-
 using namespace std;
 
 /** Global variables for the whole algorithm */
@@ -84,6 +82,7 @@ using namespace std;
 bool bReevaluate = false;
 
 #include "EASEAIndividual.hpp"
+BOOST_CLASS_EXPORT_IMPLEMENT(IndividualImpl)
 bool INSTEAD_EVAL_STEP = false;
 
 extern CEvolutionaryAlgorithm* EA;
@@ -486,10 +485,9 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	if(this->params->startFromFile){
 	  ifstream AESAE_File(this->params->inputFilename);
 	  boost::archive::text_iarchive ia{AESAE_File};
-  	  for( unsigned i=0 ; i< this->params->parentPopulationSize ; i++){
+  	  for( unsigned i=0 ; i< this->params->parentPopulationSize ; i++) {
 	  	  ia >> this->population->parents[i];
 	  }
-	  
 	}
 	else{
   	  #ifdef USE_OPENMP
@@ -572,6 +570,8 @@ private:
 		\GENOME_SERIAL
 	}
 };
+
+BOOST_CLASS_EXPORT_KEY(IndividualImpl)
 
 class ParametersImpl : public Parameters {
 public:
