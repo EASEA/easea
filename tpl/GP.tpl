@@ -15,6 +15,8 @@
 #include "global.h"
 #include "EASEAIndividual.hpp"
 
+BOOST_CLASS_EXPORT_GUID(IndividualImpl, "IndividualImpl")
+
 using namespace std;
 
 /** Global variables for the whole algorithm */
@@ -63,8 +65,7 @@ int main(int argc, char** argv){
 #include <time.h>
 #include <string>
 #include <sstream>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/export.hpp>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
@@ -320,14 +321,6 @@ void IndividualImpl::boundChecking(){
 	\INSERT_BOUND_CHECKING
 }
 
-void IndividualImpl::serialize_impl(boost::archive::text_iarchive& ar, const unsigned version) {
-	serialize_(ar, version);
-}
-
-void IndividualImpl::serialize_impl(boost::archive::text_oarchive& ar, const unsigned version) {
-	serialize_(ar, version);
-}
-
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 
   // ********************
@@ -494,8 +487,7 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	  ifstream AESAE_File(this->params->inputFilename);
 	  boost::archive::text_iarchive ia{AESAE_File};
   	  for( unsigned i=0 ; i< this->params->parentPopulationSize ; i++){
-		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-	  	  ia >> *((IndividualImpl*)this->population->parents[i]);
+	  	  ia >> this->population->parents[i];
 	  }
 	  
 	}
@@ -531,6 +523,8 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <list>
 #include <map>
 #include "CGPNode.h"
+
+#include <boost/serialization/base_object.hpp>
 
 \INSERT_USER_HEADER
 
@@ -570,16 +564,14 @@ public:
 
 	void boundChecking() override;
 
-	void serialize_impl(boost::archive::text_iarchive& ar, const unsigned version) override;
-	void serialize_impl(boost::archive::text_oarchive& ar, const unsigned version) override;
-
+private:
+	friend class boost::serialization::access;
 	template <typename Archive>
-	void serialize_(Archive& ar, [[maybe_unused]] const unsigned version) {
-	    \GENOME_SERIAL
-	    ar & this->fitness;
+	void serialize(Archive& ar, [[maybe_unused]] const unsigned version) {
+		ar & boost::serialization::base_object<CIndividual>(*this);
+		\GENOME_SERIAL
 	}
 };
-
 
 class ParametersImpl : public Parameters {
 public:

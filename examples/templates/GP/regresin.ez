@@ -16,6 +16,8 @@ __________________________________________________________*/
 
 \User declarations :
 
+#include <boost/archive/text_oarchive.hpp>
+
 // these 3 defines are mandatory here. Adjust as you like.
 #define NO_FITNESS_CASES 1024
 #define VAR_LEN 1
@@ -95,7 +97,17 @@ void free_data(){
 \end
 
 \At each generation before reduce function:
- //cout << "At each generation before replacement function called" << endl;
+ //cout << "At each generation before replacement function called" << endl;	
+{ 	
+std::ofstream t{"derived.pop"};
+	boost::archive::text_oarchive oa{t};
+	oa << (IndividualImpl*)bBest;
+}
+{
+	std::ofstream t{"base.pop"};
+	boost::archive::text_oarchive oa{t};
+	oa << (CIndividual*)bBest;
+}
 \end
 
 

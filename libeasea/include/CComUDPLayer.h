@@ -14,6 +14,7 @@
 #define CCOMUDPLAYER_H_
 
 #include <boost/asio/ip/udp.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 #include <vector>
 #include <queue>
@@ -104,7 +105,8 @@ class CComUDPServer
 		auto raw = consume();
 		std::string str{raw.cbegin(), raw.cend()};
 		std::istringstream sbuf{std::move(str)};
-		sbuf >> individual;
+		boost::archive::text_iarchive ia{sbuf};
+		ia >> individual;
 	}
 
     private:

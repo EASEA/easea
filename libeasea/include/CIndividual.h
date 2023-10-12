@@ -12,15 +12,14 @@
 #include <iostream>
 
 #include "CVariable.h"
-#include <shared/CSerializable.h>
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/export.hpp>
 
 /* Class of individual's (solution) implementation */
 
 
-class CIndividual : public CSerializable<CIndividual>
+class CIndividual
 {
 
 public:
@@ -86,15 +85,21 @@ public:
     virtual CIndividual* crossover(CIndividual** p2)  = 0;
     virtual CIndividual* clone() = 0;
 
-    virtual void serialize_impl(boost::archive::text_iarchive& ar, const unsigned version)=0;
-    virtual void serialize_impl(boost::archive::text_oarchive& ar, const unsigned version)=0;
-
     virtual void boundChecking() = 0;
 
     static unsigned getCrossoverArity(){ return 2; }
     float getFitness() const { return this->fitness; }
+
+private:
+    friend class boost::serialization::access;
+    template <typename Archive>
+    void serialize(Archive& ar, [[maybe_unused]] const unsigned int version) {
+	    ar & fitness;
+    }
 };
 
 std::ostream& operator<<(std::ostream& os, CIndividual const& ind);
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(CIndividual)
 
 #endif /* CINDIVIDUAL_H_ */

@@ -254,7 +254,7 @@ void CPopulation::sortRPopulation(CIndividual** population, unsigned populationS
 
 /* Fonction qui va serializer la population */
 void CPopulation::serializePopulation(std::string const& file){
-  ofstream EASEA_File { file, ios::trunc };
+  ofstream EASEA_File { file };
   boost::archive::text_oarchive oa{EASEA_File};
   for(unsigned i=0; (unsigned)i<parentPopulationSize; i++){
 	oa << parents[i];
