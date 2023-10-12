@@ -103,7 +103,8 @@ class CComUDPServer
 	void consume_into(Deserializable& individual) {
 		auto raw = consume();
 		std::string str{raw.cbegin(), raw.cend()};
-		individual->deserialize(str);
+		std::istringstream sbuf{std::move(str)};
+		sbuf >> individual;
 	}
 
     private:

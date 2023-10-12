@@ -12,11 +12,15 @@
 #include <iostream>
 
 #include "CVariable.h"
+#include <shared/CSerializable.h>
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 /* Class of individual's (solution) implementation */
 
 
-class CIndividual 
+class CIndividual : public CSerializable<CIndividual>
 {
 
 public:
@@ -82,8 +86,8 @@ public:
     virtual CIndividual* crossover(CIndividual** p2)  = 0;
     virtual CIndividual* clone() = 0;
 
-    virtual std::string serialize() = 0;
-    virtual void deserialize(std::string const& EASEA_Line) = 0;
+    virtual void serialize_impl(boost::archive::text_iarchive& ar, const unsigned version)=0;
+    virtual void serialize_impl(boost::archive::text_oarchive& ar, const unsigned version)=0;
 
     virtual void boundChecking() = 0;
 

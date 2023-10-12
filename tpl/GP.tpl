@@ -320,17 +320,12 @@ void IndividualImpl::boundChecking(){
 	\INSERT_BOUND_CHECKING
 }
 
-std::string IndividualImpl::serialize() {
-	std::stringstream ss;
-	boost::archive::text_oarchive oa{ss};
-	serialize_impl(oa, 0);
-	return ss.str();
+void IndividualImpl::serialize_impl(boost::archive::text_iarchive& ar, const unsigned version) {
+	serialize_(ar, version);
 }
 
-void IndividualImpl::deserialize(std::string const& str) {
-	std::stringstream ss{str};
-	boost::archive::text_iarchive ia{ss};
-	serialize_impl(ia, 0);
+void IndividualImpl::serialize_impl(boost::archive::text_oarchive& ar, const unsigned version) {
+	serialize_(ar, version);
 }
 
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
@@ -497,11 +492,10 @@ CEvolutionaryAlgorithm* ParametersImpl::newEvolutionaryAlgorithm(){
 void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
 	if(this->params->startFromFile){
 	  ifstream AESAE_File(this->params->inputFilename);
-	  string AESAE_Line;
+	  boost::archive::text_iarchive ia{AESAE_File};
   	  for( unsigned i=0 ; i< this->params->parentPopulationSize ; i++){
-	  	  getline(AESAE_File, AESAE_Line);
 		  this->population->addIndividualParentPopulation(new IndividualImpl(),i);
-		  ((IndividualImpl*)this->population->parents[i])->deserialize(AESAE_Line);
+	  	  ia >> *((IndividualImpl*)this->population->parents[i]);
 	  }
 	  
 	}
@@ -576,11 +570,11 @@ public:
 
 	void boundChecking() override;
 
-	std::string serialize() override;
-	void deserialize(std::string const&) override;
+	void serialize_impl(boost::archive::text_iarchive& ar, const unsigned version) override;
+	void serialize_impl(boost::archive::text_oarchive& ar, const unsigned version) override;
 
 	template <typename Archive>
-	void serialize_impl(Archive& ar, [[maybe_unused]] const unsigned version) {
+	void serialize_(Archive& ar, [[maybe_unused]] const unsigned version) {
 	    \GENOME_SERIAL
 	    ar & this->fitness;
 	}
