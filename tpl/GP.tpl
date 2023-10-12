@@ -5,6 +5,7 @@
 */
 
 \ANALYSE_PARAMETERS
+\ANALYSE_GP_OPCODE
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
@@ -550,7 +551,6 @@ class Parameters;
 extern int EZ_POP_SIZE;
 extern int OFFSPRING_SIZE;
 
-\ANALYSE_GP_OPCODE
 /* Insert declarations about opcodes*/
 \INSERT_GP_OPCODE_DECL
 
