@@ -422,3 +422,11 @@ max tree depth : 8
 
 size of prog buffer : 35000000
 \end
+
+\User CMake:
+# Used to work around new ABI
+target_compile_options(CMAKE_TARGET PUBLIC
+	$<$<CXX_COMPILER_ID:MSVC>:/permissive>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fpermissive>
+	)
+\end
