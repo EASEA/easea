@@ -74,6 +74,9 @@ int main(int argc, char** argv){
 #endif
 #include <string>
 #include <sstream>
+#include <boost/serialization/export.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
@@ -98,6 +101,7 @@ EvaluatePostFixIndividuals( const float * k_progs, const int maxprogssize,  cons
 
 
 #include "EASEAIndividual.hpp"
+BOOST_CLASS_EXPORT_IMPLEMENT(IndividualImpl)
 bool INSTEAD_EVAL_STEP = false;
 
 extern CEvolutionaryAlgorithm *EA;
@@ -544,7 +548,7 @@ void simple_mutator(IndividualImpl* Genome){
   // select a node
   int mutationPointChildId = 0;
   int mutationPointDepth = 0;
-  GPNode* mutationPointParent = selectNode(Genome->root, &mutationPointChildId, &mutationPointDepth);
+  GPNode* mutationPointParent = selectNode(Genome->root, &mutationPointChildId, &mutationPointDepth, opArity);
   
   
   if( !mutationPointParent ){
@@ -557,11 +561,11 @@ void simple_mutator(IndividualImpl* Genome){
 }
 
 void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
-  int depthP1 = depthOfTree(p1.root);
-  int depthP2 = depthOfTree(p2.root);
+  int depthP1 = depthOfTree(p1.root, opArity);
+  int depthP2 = depthOfTree(p2.root, opArity);
 
-  int nbNodeP1 = enumTreeNodes(p1.root);
-   int nbNodeP2 = enumTreeNodes(p2.root);
+  int nbNodeP1 = enumTreeNodes(p1.root, opArity);
+  int nbNodeP2 = enumTreeNodes(p2.root, opArity);
 
   int stockPointChildId=0;
   int graftPointChildId=0;
@@ -600,9 +604,9 @@ void simpleCrossOver(IndividualImpl& p1, IndividualImpl& p2, IndividualImpl& c){
     if( Np2 && !graftCouldBeTerminal && opArity[(int)graftParentNode->children[graftPointChildId]->opCode]==0 ) goto choose_node;
     
     if( Np2 && Np1)
-      childrenDepth = depthOfNode(c.root,stockParentNode)+depthOfTree(graftParentNode->children[graftPointChildId]);
-    else if( Np1 ) childrenDepth = depthOfNode(c.root,stockParentNode)+depthP1;
-    else if( Np2 ) childrenDepth = depthOfTree(graftParentNode->children[graftPointChildId]);
+      childrenDepth = depthOfNode(c.root,stockParentNode, opArity)+depthOfTree(graftParentNode->children[graftPointChildId], opArity);
+    else if( Np1 ) childrenDepth = depthOfNode(c.root,stockParentNode, opArity)+depthP1;
+    else if( Np2 ) childrenDepth = depthOfTree(graftParentNode->children[graftPointChildId], opArity);
     else childrenDepth = depthP2;
     
   }while( childrenDepth>TREE_DEPTH_MAX );
@@ -732,23 +736,6 @@ void IndividualImpl::boundChecking(){
         \INSERT_BOUND_CHECKING
 }
 
-
-string IndividualImpl::serialize(){
-    ostringstream AESAE_Line(ios_base::app);
-    \GENOME_SERIAL
-    AESAE_Line << this->fitness;
-    return AESAE_Line.str();
-}
-
-void IndividualImpl::deserialize(string Line){
-    istringstream AESAE_Line(Line);
-    string line;
-    \GENOME_DESERIAL
-    AESAE_Line >> this->fitness;
-    this->valid=true;
-    this->isImmigrant=false;
-}
-
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 
   // ********************
@@ -856,9 +843,12 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         pMutation = \MUT_PROB;
         pMutationPerGene = 0.05;
 
-        parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
-        offspringPopulationSize = getOffspringSize((int)\OFF_SIZE, \POP_SIZE);
+	parentPopulationSize = setVariable("popSize", (int)\POP_SIZE);
+	offspringPopulationSize = getOffspringSize((int)\OFF_SIZE, \POP_SIZE);
 
+	if (parentPopulationSize != offspringPopulationSize) {
+		std::cerr << "WARNING: Detected nbOffspring != nbParents, this may cause undefined behavior\n";
+	}
 
         parentReductionSize = setReductionSizes(parentPopulationSize, setVariable("survivingParents", (float)\SURV_PAR_SIZE));
         offspringReductionSize = setReductionSizes(offspringPopulationSize, setVariable("survivingOffspring", (float)\SURV_OFF_SIZE));
@@ -941,18 +931,16 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
     //DEBUG_PRT("Creation of %lu/%lu parents (other could have been loaded from input file)",this->params->parentPopulationSize-this->params->actualParentPopulationSize,this->params->parentPopulationSize);
     int index,Size = this->params->parentPopulationSize;
     
-    if(this->params->startFromFile){
-          ifstream AESAE_File(this->params->inputFilename);
-          string AESAE_Line;
-          for( index=(Size-1); index>=0; index--) {
-             getline(AESAE_File, AESAE_Line);
-            this->population->addIndividualParentPopulation(new IndividualImpl(),index);
-            ((IndividualImpl*)this->population->parents[index])->deserialize(AESAE_Line);
-            ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
-         }
-
-        }
-        else{
+    if(this->params->startFromFile) {
+    	ifstream AESAE_File(this->params->inputFilename);
+	boost::archive::text_iarchive ia{AESAE_File};
+  	for( unsigned i=0 ; i< this->params->parentPopulationSize ; i++) {
+		ia >> this->population->parents[i];
+	}
+        for( index=(Size-1); index>=0; index--) {
+		((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
+	}
+    } else{
                 for( index=(Size-1); index>=0; index--) {
                          this->population->addIndividualParentPopulation(new IndividualImpl(),index);
                         ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
@@ -1003,6 +991,8 @@ PopulationImpl::~PopulationImpl(){
 #include <map>
 #include "CGPNode.h"
 
+#include <boost/serialization/base_object.hpp>
+
 \INSERT_USER_HEADER
 
 using namespace std;
@@ -1037,10 +1027,18 @@ public:
 
 	void boundChecking() override;
 
-	string serialize() override;
-	void deserialize(string AESAE_Line) override;
-	void copyToCudaBuffer(void* buffer, unsigned id);};
+	void copyToCudaBuffer(void* buffer, unsigned id);
 
+private:
+	friend class boost::serialization::access;
+	template <typename Archive>
+	void serialize(Archive& ar, [[maybe_unused]] const unsigned version) {
+	    ar & boost::serialization::base_object<CIndividual>(*this);
+	    \GENOME_SERIAL
+	}
+};
+
+BOOST_CLASS_EXPORT_KEY(IndividualImpl)
 
 class ParametersImpl : public Parameters {
 public:
@@ -1119,7 +1117,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
 	set(Boost_USE_MULTITHREADED ON)
 	set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
-find_package(Boost REQUIRED program_options)
+find_package(Boost REQUIRED program_options serialization)
 
 find_package(OpenMP REQUIRED)
 find_package(CUDAToolkit REQUIRED)
