@@ -299,10 +299,6 @@ CIndividual* IndividualImpl::clone(){
 	return new IndividualImpl(*this);
 }
 
-IndividualImpl::~IndividualImpl(){
-  \GENOME_DTOR
-}
-
 float IndividualImpl::evaluate(){
   float error; 
  float sum = 0;
@@ -556,7 +552,7 @@ public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl() {
-		\\GENOME_DTOR
+		\GENOME_DTOR
 	}
 	float evaluate() override;
 	CIndividual* crossover(CIndividual** p2) override;
@@ -572,7 +568,7 @@ private:
 	template <typename Archive>
 	void serialize(Archive& ar, [[maybe_unused]] const unsigned version) {
 		ar & boost::serialization::base_object<CIndividual>(*this);
-		if constexpr (Archive::is_loading::value) this->~IndividualImpl;
+		if constexpr (Archive::is_loading::value) this->~IndividualImpl();
 		\GENOME_SERIAL
 	}
 };

@@ -1159,7 +1159,7 @@ public:
 	IndividualImpl(const IndividualImpl& indiv);
 	IndividualImpl(std::vector<TV> ind);
 	virtual ~IndividualImpl() {
-		\\GENOME_DTOR
+		\GENOME_DTOR
 	}
 	float evaluate() override;
 	CIndividual* crossover(CIndividual** p2) override;

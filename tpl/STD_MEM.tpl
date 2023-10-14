@@ -408,7 +408,7 @@ public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl() {
-		\\GENOME_DTOR
+		\GENOME_DTOR
 	}
 	float evaluate() override;
 	CIndividual* crossover(CIndividual** p2) override;

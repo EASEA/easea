@@ -670,7 +670,7 @@ public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl() {
-		\\GENOME_DTOR
+		\GENOME_DTOR
 	}
 	float evaluate() override;
 	void optimise(int currentIteration);
