@@ -541,7 +541,7 @@ void CEvolutionaryAlgorithm::receiveIndividuals(){
       unsigned index = antiTournament->selectNext(this->population->actualParentPopulationSize);
       
       //We're selecting the worst element to replace
-      server->consume_into(*this->population->parents[index]);
+      server->consume_into(this->population->parents[index]);
       int reeval = params->reevaluateImmigrants;
       // Reevaluate individaul if the flag reevaluateImmigrants == 1	
       if (bReevaluate == true){ params->reevaluateImmigrants = 1;}

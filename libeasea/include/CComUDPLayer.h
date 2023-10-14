@@ -15,6 +15,7 @@
 
 #include <boost/asio/ip/udp.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 #include <vector>
 #include <queue>
@@ -170,7 +171,8 @@ class CComUDPClient
 	template<typename Serializable>
 	void send(Serializable const& ind) {
 		std::ostringstream os;
-		os << ind;
+		boost::archive::text_oarchive oa{os};
+		oa << ind;
 		send(os.str());
 	}
 
