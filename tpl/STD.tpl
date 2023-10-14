@@ -143,11 +143,6 @@ CIndividual* IndividualImpl::clone(){
 	return new IndividualImpl(*this);
 }
 
-IndividualImpl::~IndividualImpl(){
-  \GENOME_DTOR
-}
-
-
 float IndividualImpl::evaluate(){
   \INSERT_EVALUATOR
 }
@@ -382,7 +377,9 @@ public: // in EASEA the genome is public (for user functions,...)
 public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
-	virtual ~IndividualImpl();
+	virtual ~IndividualImpl() {
+		\GENOME_DTOR
+	}
 	float evaluate() override;
 	CIndividual* crossover(CIndividual** p2) override;
 	void printOn(std::ostream& O) const override;
@@ -392,11 +389,12 @@ public:
 
 	void boundChecking() override;
 
-private:
 	friend class boost::serialization::access;
+private:
 	template <typename Archive>
 	void serialize(Archive& ar, [[maybe_unused]] const unsigned version) {
 	    ar & boost::serialization::base_object<CIndividual>(*this);
+	    if constexpr (Archive::is_loading::value) this->~IndividualImpl;
 	    \GENOME_SERIAL
 	}
 };

@@ -520,8 +520,6 @@ void CSymbol::printUserClasses(FILE* fp)
 void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 {
 	std::string sNewCompleteName(sCompleteName);
-
-	
 	for (auto const& sym : pSymbolList) {
 		// check the type of object
 			fprintf(fp, "\t\tar & %s;\n", sym->sName.c_str());
@@ -584,6 +582,19 @@ void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 
 	return;
 }
+
+void CSymbol::dtor(FILE *fp) {
+	for (auto const& sym : pSymbolList) {
+		if (sym->ObjectType==oPointer) {
+			fprintf(fp,"  if (%s) delete %s;\n  %s=NULL;\n",sym->sName.c_str(),sym->sName.c_str(),sym->sName.c_str());
+		} else if( sym->ObjectType==oArrayPointer ) {
+			// here we handle array of pointer (developped for Tree GP)
+			fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%ld; EASEA_Ndx++)\n",sym->nSize/sizeof(char*));
+			fprintf(fp,"      if(%s[EASEA_Ndx]) delete %s[EASEA_Ndx];\n",sym->sName.c_str(),sym->sName.c_str());
+		}
+	}
+}
+
 
 template <typename Iterator>
 void CSymbol::printAllSymbols(FILE* fp, char* sCompleteName, EObjectType FatherType, Iterator iSym,

@@ -279,11 +279,6 @@ CIndividual* IndividualImpl::clone(){
 	return new IndividualImpl(*this);
 }
 
-IndividualImpl::~IndividualImpl(){
-  \GENOME_DTOR
-}
-
-
 float IndividualImpl::evaluate(){
 	\INSERT_EVALUATOR
 }
@@ -632,7 +627,9 @@ public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
         IndividualImpl(std::vector<double> ind);
-	virtual ~IndividualImpl();
+	virtual ~IndividualImpl() {
+		\\GENOME_DTOR
+	}
 	float evaluate() override;
 	CIndividual* crossover(CIndividual** p2) override;
 	void printOn(std::ostream& O) const override;

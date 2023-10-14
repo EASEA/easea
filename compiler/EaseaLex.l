@@ -869,18 +869,8 @@ return lhs.arity < rhs.arity;
 
 <TEMPLATE_ANALYSIS>"\\GENOME_DTOR"  {
   if (bVERBOSE) printf ("Creating default destructor.\n");
-  fprintf (fpOutputFile,"// Destructing pointers\n");             
-  for (auto const& sym : pGENOME->pSymbolList){
-    if (sym->ObjectType==oPointer){
-      fprintf(fpOutputFile,"  if (%s) delete %s;\n  %s=NULL;\n",sym->sName.c_str(),sym->sName.c_str(),sym->sName.c_str());
-    }
-    else if( sym->ObjectType==oArrayPointer ){ 
-      // here we handle array of pointer (developped for Tree GP)
-      fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sizeof(char*));
-      fprintf(fpOutputFile,"      if(%s[EASEA_Ndx]) delete %s[EASEA_Ndx];\n",sym->sName.c_str(),sym->sName.c_str(),sym->pType->sName.c_str(),sym->sName.c_str());
-    }
-  }
- }
+  pGENOME->dtor(fpOutputFile);
+}
 
 <TEMPLATE_ANALYSIS>"\\EQUAL"  {       
   if (bVERBOSE) printf ("Creating default diversity test.\n");

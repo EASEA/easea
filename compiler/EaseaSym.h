@@ -63,7 +63,7 @@ class CSymbol
 	void printUserClasses(FILE* fp);
 	void printUC(FILE* fp);
 	void serializeIndividual(FILE* fp, char* sCompleteName);
-	void deserializeIndividual(FILE* fp, char* sCompleteName);
+	void dtor(FILE* fp);
 };
 
 /////////////////////////////////////////////////////////////////////////////

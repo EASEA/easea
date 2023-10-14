@@ -35,15 +35,17 @@ class GPNode {
   }  
 
 
-    GPNode(const GPNode &EASEA_Var) {  // Copy constructor
+    GPNode(const GPNode &EASEA_Var) : GPNode() {  // Copy constructor
       var_id=EASEA_Var.var_id;
       erc_value=EASEA_Var.erc_value;
       //arity=EASEA_Var.arity;
       opCode=EASEA_Var.opCode;
       
       for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
-        if( EASEA_Var.children[EASEA_Ndx] ) children[EASEA_Ndx] = new GPNode(*(EASEA_Var.children[EASEA_Ndx]));
-        else  children[EASEA_Ndx] = NULL;
+        if( EASEA_Var.children[EASEA_Ndx] ) {
+		delete children[EASEA_Ndx];
+		children[EASEA_Ndx] = new GPNode(*(EASEA_Var.children[EASEA_Ndx]));
+	}
     }
 
 
@@ -61,7 +63,10 @@ class GPNode {
       opCode = EASEA_Var.opCode;
       
       for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
-        if(EASEA_Var.children[EASEA_Ndx]) children[EASEA_Ndx] = new GPNode(*(EASEA_Var.children[EASEA_Ndx]));
+        if(EASEA_Var.children[EASEA_Ndx]) {
+		delete children[EASEA_Ndx];
+		children[EASEA_Ndx] = new GPNode(*(EASEA_Var.children[EASEA_Ndx]));
+	}
       
       return *this;
     }
