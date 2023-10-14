@@ -65,6 +65,7 @@ int main(int argc, char** argv){
 #include <sstream>
 #include <boost/serialization/export.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"

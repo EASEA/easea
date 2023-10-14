@@ -19,8 +19,6 @@
 #include "global.h"
 #include "EASEAIndividual.hpp"
 
-
-
 using namespace std;
 
 /** Global variables for the whole algorithm */
@@ -34,7 +32,6 @@ CEvolutionaryAlgorithm* EA;
 std::vector<char *> vArgv;
 int EZ_POP_SIZE;
 int OFFSPRING_SIZE;
-
 
 int main(int argc, char** argv){
 	if (argc > 1){
@@ -77,6 +74,7 @@ int main(int argc, char** argv){
 #endif
 #include <string>
 #include <sstream>
+#include <boost/serialization/export.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include "CRandomGenerator.h"
@@ -99,6 +97,7 @@ bool bReevaluate = false;
 using namespace std;
 extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, float* d_fitnesses, int offset);
 #include "EASEAIndividual.hpp"
+BOOST_CLASS_EXPORT_IMPLEMENT(IndividualImpl)
 bool INSTEAD_EVAL_STEP = false;
 
 extern CEvolutionaryAlgorithm *EA;
@@ -449,20 +448,6 @@ void IndividualImpl::boundChecking(){
         \INSERT_BOUND_CHECKING
 }
 
-
-std::string IndividualImpl::serialize() {
-	std::stringstream ss;
-	boost::archive::text_oarchive oa{ss};
-	serialize_impl(oa, 0);
-	return ss.str();
-}
-
-void IndividualImpl::deserialize(std::string const& str) {
-	std::stringstream ss{str};
-	boost::archive::text_iarchive ia{ss};
-	serialize_impl(ia, 0);
-}
-
 IndividualImpl::IndividualImpl(const IndividualImpl& genome){
 
   // ********************
@@ -679,18 +664,16 @@ void EvolutionaryAlgorithmImpl::initializeParentPopulation(){
     //DEBUG_PRT("Creation of %lu/%lu parents (other could have been loaded from input file)",this->params->parentPopulationSize-this->params->actualParentPopulationSize,this->params->parentPopulationSize);
     int index,Size = this->params->parentPopulationSize;
     
-    if(this->params->startFromFile){
-          ifstream AESAE_File(this->params->inputFilename);
-          string AESAE_Line;
-          for( index=(Size-1); index>=0; index--) {
-             getline(AESAE_File, AESAE_Line);
-            this->population->addIndividualParentPopulation(new IndividualImpl(),index);
-            ((IndividualImpl*)this->population->parents[index])->deserialize(AESAE_Line);
-            ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
-         }
-
-        }
-        else{
+    if(this->params->startFromFile) {
+    	ifstream AESAE_File(this->params->inputFilename);
+	boost::archive::text_iarchive ia{AESAE_File};
+  	for( unsigned i=0 ; i< this->params->parentPopulationSize ; i++) {
+		ia >> this->population->parents[i];
+	}
+        for( index=(Size-1); index>=0; index--) {
+		((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
+	}
+    } else{
                 for( index=(Size-1); index>=0; index--) {
                          this->population->addIndividualParentPopulation(new IndividualImpl(),index);
                         ((IndividualImpl*)this->population->parents[index])->copyToCudaBuffer(((PopulationImpl*)this->population)->cudaBuffer,index);
@@ -743,6 +726,8 @@ PopulationImpl::~PopulationImpl(){
 #include "CCuda.h"
 #include <sstream>
 
+#include <boost/serialization/base_object.hpp>
+
 \INSERT_USER_HEADER
 
 using namespace std;
@@ -777,18 +762,18 @@ public:
 
 	void boundChecking() override;
 
-	std::string serialize() override;
-	void deserialize(std::string const&) override;
-
-	template <typename Archive>
-	void serialize_impl(Archive& ar, [[maybe_unused]] const unsigned version) {
-	    \GENOME_SERIAL
-	    ar & this->fitness;
-	}
-
 	void copyToCudaBuffer(void* buffer, unsigned id);
+
+private:
+	friend class boost::serialization::access;
+	template <typename Archive>
+	void serialize(Archive& ar, [[maybe_unused]] const unsigned version) {
+	    ar & boost::serialization::base_object<CIndividual>(*this);
+	    \GENOME_SERIAL
+	}
 };
 
+BOOST_CLASS_EXPORT_KEY(IndividualImpl)
 
 class ParametersImpl : public Parameters {
 public:
