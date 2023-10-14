@@ -39,13 +39,6 @@ class CSerializable
 		serialize_impl(ar, version);
 	}
 
-	template <typename Archive>
-	auto serialize(Archive& ar, const unsigned version)
-	{
-		auto* impl = static_cast<Base*>(this);
-		impl->serialize_impl(ar, version);
-	}
-
 	friend std::ostream& operator<<(std::ostream& os, CSerializable const& serializable) {
 		boost::archive::text_oarchive oa{os};
 		oa << serializable;
