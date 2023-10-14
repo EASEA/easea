@@ -202,8 +202,9 @@ void CSymbol::print(FILE* fp)
 
 		// creation of serializer
 		fprintf(fp, "\ttemplate <typename Archive>\n"
-			"\tvoid serialize(Archive& ar, [[maybe_unused]] const unsigned version) {  // serialize\n");
-		
+			"\tvoid serialize(Archive& ar, [[maybe_unused]] const unsigned version) {  // serialize\n"
+			"if constexpr (Archive::is_loading::value) this->~IndividualImpl;\n");
+
 		for (auto const& sym : pSymbolList) {
 			// check: is it a user-defined class?
 			fprintf(fpOutputFile, "\t\tar & %s;\n", sym->sName.c_str());
