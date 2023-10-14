@@ -11,16 +11,14 @@
 #include <string>
 #include <memory>
 
-#include "CEvolutionaryAlgorithm.h"
 #include "COptionParser.h"
 
 class CGenerationalCriterion;
 class CControlCStopingCriterion;
 class CSelectionOperator;
 class CRandomGenerator;
-namespace cxxopts {
-  class ParseResult;
-}
+class CEvolutionaryAlgorithm;
+class CTimeCriterion;
 
 class Parameters {
   protected:

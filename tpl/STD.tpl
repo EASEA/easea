@@ -15,8 +15,6 @@
 #include "global.h"
 #include "EASEAIndividual.hpp"
 
-BOOST_CLASS_EXPORT_GUID(IndividualImpl, "IndividualImpl")
-
 using namespace std;
 
 /** Global variables for the whole algorithm */
@@ -69,6 +67,7 @@ int main(int argc, char** argv){
 #include <cstring>
 #include <sstream>
 #include <boost/serialization/export.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
@@ -86,6 +85,7 @@ int main(int argc, char** argv){
 using namespace std;
 bool bReevaluate = false;
 #include "EASEAIndividual.hpp"
+BOOST_CLASS_EXPORT_IMPLEMENT(IndividualImpl)
 bool INSTEAD_EVAL_STEP = false;
 
 extern CEvolutionaryAlgorithm* EA;
@@ -351,6 +351,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <iostream>
 #include <CIndividual.h>
 #include <Parameters.h>
+#include <CEvolutionaryAlgorithm.h>
 #include <cstring>
 #include <sstream>
 
@@ -393,12 +394,13 @@ public:
 private:
 	friend class boost::serialization::access;
 	template <typename Archive>
-	void serialize_impl(Archive& ar, [[maybe_unused]] const unsigned version) {
+	void serialize(Archive& ar, [[maybe_unused]] const unsigned version) {
 	    ar & boost::serialization::base_object<CIndividual>(*this);
 	    \GENOME_SERIAL
 	}
 };
 
+BOOST_CLASS_EXPORT_KEY(IndividualImpl)
 
 class ParametersImpl : public Parameters {
 public:

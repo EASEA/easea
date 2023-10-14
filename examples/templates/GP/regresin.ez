@@ -16,8 +16,6 @@ __________________________________________________________*/
 
 \User declarations :
 
-#include <boost/archive/text_oarchive.hpp>
-
 // these 3 defines are mandatory here. Adjust as you like.
 #define NO_FITNESS_CASES 1024
 #define VAR_LEN 1

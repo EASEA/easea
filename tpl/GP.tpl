@@ -64,6 +64,7 @@ int main(int argc, char** argv){
 #include <string>
 #include <sstream>
 #include <boost/serialization/export.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include "CRandomGenerator.h"
 #include "CPopulation.h"
 #include "COptionParser.h"
@@ -517,6 +518,7 @@ EvolutionaryAlgorithmImpl::~EvolutionaryAlgorithmImpl(){
 #include <iostream>
 #include <CIndividual.h>
 #include <Parameters.h>
+#include <CEvolutionaryAlgorithm.h>
 #include <string>
 #include <list>
 #include <map>
