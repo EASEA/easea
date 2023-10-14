@@ -145,7 +145,7 @@ LDFLAGS+=
   Number of generations : 65   	// NB_GEN
   Time limit: 60 			// In seconds, 0 to deactivate
   Population size : 50000			//POP_SIZE
-  Offspring size : 50000 // 40%
+  Offspring size : 100% // 40%
   Mutation probability : 0.3       // MUT_PROB
   Crossover probability : 1      // XOVER_PROB
   Evaluator goal : minimise      // Maximise

@@ -201,11 +201,13 @@ void CSymbol::print(FILE* fp)
 		fprintf(fp, "  }\n"); // end of destructor
 
 		// creation of serializer
-		fprintf(fp, "  string serializer() {  // serialize\n"); // serializer
-		fprintf(fp, "  \tostringstream EASEA_Line(ios_base::app);\n");
+		fprintf(fp, "\ttemplate <typename Archive>\n"
+			"\tvoid serialize(Archive& ar, [[maybe_unused]] const unsigned version) {  // serialize\n");
 		
 		for (auto const& sym : pSymbolList) {
 			// check: is it a user-defined class?
+			fprintf(fpOutputFile, "\t\tar & %s;\n", sym->sName.c_str());
+			/*
 			if (sym->pType->ObjectType == oUserClass) {
 				if (sym->ObjectType == oArrayPointer) {
 					// it's an array of pointers
@@ -222,19 +224,11 @@ void CSymbol::print(FILE* fp)
 					fprintf(fpOutputFile, "\t\t\tEASEA_Line << \"NULL\" << \" \";\n");
 					fprintf(fpOutputFile, "}\n");
 				}
-				// it's a classical array
-				else if (sym->ObjectType == oArray) {
-					fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-						sym->nSize / sym->pType->nSize);
-					fprintf(fpOutputFile,
-						"\t\tEASEA_Line << this->%s[EASEA_Ndx].serializer() <<\" \";\n",
-						sym->sName.c_str());
+				// it's a easily serializable type
+				else {
+					fprintf(fpOutputFile, "\tar & %s;\n", sym->sName.c_str());
 				}
-				// it's a simple struct/class
-				else if (sym->ObjectType == oObject) {
-					fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s.serializer() <<\" \";\n",
-						sym->sName.c_str());
-				} else {
+				else {
 					// it's a pointer to an user-defined clas
 					fprintf(fpOutputFile, "\tif(this->%s != NULL){\n", sym->sName.c_str());
 					fprintf(fpOutputFile, "\t\tEASEA_Line << \"\\a \";\n");
@@ -258,20 +252,21 @@ void CSymbol::print(FILE* fp)
 					fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s[EASEA_Ndx] <<\" \";\n",
 						sym->sName.c_str());
 				}
-			}
+			}*/
 		} // end while
 
-		fprintf(fp, "  \treturn EASEA_Line.str();\n");
-		fprintf(fp, "  }\n"); // end of serializer
+		/*fprintf(fp, "  \treturn EASEA_Line.str();\n");*/
+		fprintf(fp, "\t}\n"); // end of serializer
 
 		// creation of deserializer
+		/*
 		fprintf(fp,
 			"  void deserializer(istringstream* EASEA_Line) {  // deserialize\n"); // deserializer
 		fprintf(fp, "  \tstring line;\n");
 		
 		for (auto const& sym : pSymbolList) {
 			if (sym->pType->ObjectType == oUserClass) {
-				/* it's an array of pointer */
+				// it's an array of pointer 
 				if (sym->ObjectType == oArrayPointer) {
 					fprintf(fp, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",
 						(int)(sym->nSize / sizeof(char*)));
@@ -286,19 +281,19 @@ void CSymbol::print(FILE* fp)
 					fprintf(fpOutputFile, "\t\t}");
 					fprintf(fpOutputFile, "\t}");
 				}
-				/* it's a classical array*/
+				// it's a classical array
 				else if (sym->ObjectType == oArray) {
 					fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
 						sym->nSize / sym->pType->nSize);
 					fprintf(fpOutputFile, "\t\tthis->%s[EASEA_Ndx].deserializer(EASEA_Line) ;\n",
 						sym->sName.c_str());
 				}
-				/* it's a simple struct/class */
+				// it's a simple struct/class
 				else if (sym->ObjectType == oObject) {
 					fprintf(fpOutputFile, "\t\tthis->%s.deserializer(EASEA_Line);\n",
 						sym->sName.c_str());
 				}
-				/*it's a pointer*/
+				// it's a pointer
 				else {
 					fprintf(fpOutputFile, "\t(*EASEA_Line) >> line;\n");
 					fprintf(fpOutputFile, "\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
@@ -324,6 +319,7 @@ void CSymbol::print(FILE* fp)
 			}
 		} // end while
 		fprintf(fp, "  }\n"); // end of deserializer
+		*/
 
 		// creation of operator to assess individual equality
 		fprintf(fp, "  %s& operator=(const %s &EASEA_Var) {  // Operator=\n", sName.c_str(),
@@ -528,10 +524,13 @@ void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 	
 	for (auto const& sym : pSymbolList) {
 		// check the type of object
+			fprintf(fp, "\t\tar & %s;\n", sym->sName.c_str());
+			/*
 		if (sym->pType->ObjectType == oUserClass) {
 			// if it's an user-defined class
 			if (sym->ObjectType == oArrayPointer) {
 				// if it's an array of pointers
+
 				fprintf(fp, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",
 					(int)(sym->nSize / sizeof(char*)));
 				fprintf(fpOutputFile, "\t\tif(this->%s[EASEA_Ndx] != NULL){\n", sym->sName.c_str());
@@ -580,61 +579,10 @@ void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 			}
 
 		} // end if it's a user-defined class
+	*/
 	} // end while
 
 	return;
-}
-
-void CSymbol::deserializeIndividual(FILE* fp, char* sCompleteName)
-{
-	
-	for (auto const& sym : pSymbolList) {
-		if (sym->pType->ObjectType == oUserClass) {
-			if (sym->ObjectType == oArrayPointer) {
-				fprintf(fpOutputFile, "\tEASEA_Line >> line;\n");
-				fprintf(fp, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",
-					(int)(sym->nSize / sizeof(char*)));
-				fprintf(fpOutputFile, "\t\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
-				fprintf(fpOutputFile, "\t\t\tthis->%s[EASEA_Ndx] = NULL;\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\t\telse{\n");
-				fprintf(fpOutputFile, "\t\t\tthis->%s[EASEA_Ndx] = new %s;\n", sym->sName.c_str(),
-					sym->pType->sName.c_str());
-				fprintf(fpOutputFile, "\t\t\tthis->%s[EASEA_Ndx]->deserializer(&EASEA_Line);\n",
-					sym->sName.c_str());
-				fprintf(fpOutputFile, "\t\t}");
-				fprintf(fpOutputFile, "\t}");
-			} else if (sym->ObjectType == oArray) {
-				fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-					sym->nSize / sym->pType->nSize);
-				fprintf(fpOutputFile, "\t\tthis->%s[EASEA_Ndx].deserializer(&EASEA_Line);\n",
-					sym->sName.c_str());
-			} else if (sym->ObjectType == oObject) {
-				fprintf(fpOutputFile, "\t this->%s.deserializer(&EASEA_Line);", sym->sName.c_str());
-			} else {
-				fprintf(fpOutputFile, "\tEASEA_Line >> line;\n");
-				fprintf(fpOutputFile, "\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
-				fprintf(fpOutputFile, "\t\tthis->%s = NULL;\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\telse{\n");
-				fprintf(fpOutputFile, "\t\tthis->%s = new %s;\n", sym->sName.c_str(), sym->pType->sName.c_str());
-				fprintf(fpOutputFile, "\t\tthis->%s->deserializer(&EASEA_Line);\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\t}");
-			}
-		} else {
-			if (sym->ObjectType == oObject) {
-				fprintf(fpOutputFile, "\tEASEA_Line >> this->%s;\n", sym->sName.c_str());
-			}
-
-			if (sym->ObjectType == oArray) {
-				fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-					sym->nSize / sym->pType->nSize);
-				fprintf(fpOutputFile, "\t\tEASEA_Line >> this->%s[EASEA_Ndx];\n", sym->sName.c_str());
-			}
-
-			if (sym->ObjectType == oPointer && strcmp(sym->pType->sName.c_str(), "GPNode") == 0) {
-				fprintf(fpOutputFile, "\t\tar & root;\n");
-			}
-		}
-	}
 }
 
 template <typename Iterator>
