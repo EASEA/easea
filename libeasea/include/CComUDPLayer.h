@@ -54,7 +54,7 @@ auto print_stats(Individual const& ind, boost::asio::ip::udp::endpoint const& ep
  * @param ep UDP endpoint that sent this individual
  */
 template <typename Individual>
-auto print_stats(Individual const& ind, boost::asio::ip::udp::endpoint const& ep) -> decltype(ind.getObjective(), void())
+auto print_stats(Individual const& ind, boost::asio::ip::udp::endpoint const& ep) -> decltype(ind.m_objective, void())
 {
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
@@ -62,7 +62,7 @@ auto print_stats(Individual const& ind, boost::asio::ip::udp::endpoint const& ep
 	std::cout << "[" << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << "]"
 		  << " Received individual (objectives = [";
 	bool first = true;
-	for (auto const& obj : ind.getObjective()) {
+	for (auto const& obj : ind.m_objective) {
 		if (!first)
 			std::cout << ", ";
 		std::cout << std::scientific << obj;
