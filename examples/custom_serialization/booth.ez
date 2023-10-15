@@ -1,0 +1,61 @@
+/*
+ * Minimal EZ example computing booth function
+ */
+\Classes:
+	GenomeClass {
+	  float x, y;
+	}
+\end
+
+\Serializer:
+	// the default one would have done exactly that, this is not required
+	ar & x;
+	ar & y;
+\end
+
+\Initialiser :
+x = random(-10.f, 10.f);
+y = random(-10.f, 10.f);
+\end
+
+\Crossover:
+child.x = parent1.x;
+child.y = parent2.y;
+\end
+
+\Mutator:
+if (tossCoin(0.05f)) {
+	if (tossCoin(0.5f)) {
+		x = random(-10.f, 10.f);
+	} else {
+		y = random(-10.f, 10.f);
+	}
+} else {
+	if (tossCoin(0.5f)) {
+		x += x * random(-.1f, .1f) * (10.f / NB_GEN);
+	} else {
+		y += y * random(-.1f, .1f) * (10.f / NB_GEN);
+	}
+}
+\end
+
+\Evaluator:
+auto lhs = x + 2.f * y - 7.f;
+auto rhs = 2.f * x + y - 5.f;
+return lhs*lhs + rhs*rhs;
+\end
+
+\Finally:
+std::cout << "Best (x, y): (" << bBest->x << ", " << bBest->y << ")\nNOTE: (1, 3) is the best value.\n";
+\end
+
+\Parameters:
+	Number of generations : 300
+	Population size: 1000
+	Mutation probability: 0.5
+	Crossover probability: 0.8
+	Evaluator goal: minimise
+	Elitism: strong
+	Selection operator: Tournament 2
+\end
+
