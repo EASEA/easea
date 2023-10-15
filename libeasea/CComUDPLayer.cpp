@@ -37,7 +37,7 @@ bool CComUDPServer::has_data() const
 	return recv_queue.size() > 0;
 }
 
-std::vector<char> CComUDPServer::consume()
+std::pair<std::vector<char>, boost::asio::ip::udp::endpoint> CComUDPServer::consume()
 {
 	if (!has_data())
 		throw std::runtime_error("No data");
@@ -60,32 +60,9 @@ void CComUDPServer::handle_receive(const boost::system::error_code& error, std::
 		std::cerr << "UDP error: " << error.message() << "\n";
 	} else if (bytes_transfered != 0) {
 		std::vector<char> tmp(recv_buffer.begin(), recv_buffer.begin() + bytes_transfered);
-		if (verbose)
-			print_stats(tmp);
-
-		recv_queue.push(std::move(tmp));
+		recv_queue.emplace(std::move(tmp), last_endpoint);
 	}
 	start_receive();
-}
-
-void CComUDPServer::print_stats(std::vector<char> const& received) const
-{
-	std::string content(received.cbegin(), received.cend());
-	std::istringstream iss(std::move(content));
-	std::string tmp, last;
-	while (std::getline(iss, tmp, ' ')) {
-		last = std::move(tmp);
-	}
-	auto it = std::remove(last.begin(), last.end(), '\n');
-	if (it != last.end())
-		last.erase(it);
-
-	auto now = std::chrono::system_clock::now();
-	auto in_time_t = std::chrono::system_clock::to_time_t(now);
-
-	std::cout << "[" << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << "]"
-		  << " Received individual (fitness = " << last << ") from " << last_endpoint.address().to_string()
-		  << ":" << last_endpoint.port() << "\n";
 }
 
 CComUDPClient::CComUDPClient(std::string const& ip, unsigned short port, std::string client_name_, bool verbose_)

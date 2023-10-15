@@ -22,6 +22,54 @@
 #include <memory>
 #include <thread>
 #include <sstream>
+#include <iostream>
+
+/**
+ * @brief Print stats of received individual
+ *
+ * @param ind CIndividual type of individual
+ * @param ep UDP endpoint that sent this individual
+ */
+template <typename Individual>
+auto print_stats(Individual const& ind, boost::asio::ip::udp::endpoint const& ep) -> decltype(ind.getFitness(), void())
+{
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+	std::cout << "[" << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << "]"
+		  << " Received individual (fitness = " << std::scientific << ind.getFitness() << ") from " << ep.address().to_string()
+		  << ":" << ep.port() << "\n";
+}
+
+template <typename Individual>
+auto print_stats(Individual const& ind, boost::asio::ip::udp::endpoint const& ep) -> decltype(ind->getFitness(), void())
+{
+	print_stats(*ind, ep);
+}
+
+/**
+ * @brief Print stats of received individual
+ *
+ * @param ind Cmoindividual type of individual
+ * @param ep UDP endpoint that sent this individual
+ */
+template <typename Individual>
+auto print_stats(Individual const& ind, boost::asio::ip::udp::endpoint const& ep) -> decltype(ind.getObjective(), void())
+{
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+	std::cout << "[" << std::put_time(std::localtime(&in_time_t), "%H:%M:%S") << "]"
+		  << " Received individual (objectives = [";
+	bool first = true;
+	for (auto const& obj : ind.getObjective()) {
+		if (!first)
+			std::cout << ", ";
+		std::cout << std::scientific << obj;
+		first = false;
+	}
+	std::cout << "]) from " << ep.address().to_string() << ":" << ep.port() << "\n";
+}
 
 /**
  * @brief Global common io_context
@@ -82,7 +130,7 @@ class CComUDPServer
 	 *
 	 * @return A buffer with the data
 	 */
-	std::vector<char> consume();
+	std::pair<std::vector<char>, boost::asio::ip::udp::endpoint> consume();
 
 	/*
 	 * @brief Consume and convert available data to Serializable type
@@ -91,28 +139,37 @@ class CComUDPServer
 	 * @return An individual
 	 */
 	template <typename Serializable>
-	auto consume() {
-		auto raw = consume();
-		std::string str{raw.cbegin(), raw.cend()};
-		std::istringstream sbuf{std::move(str)};
+	auto consume()
+	{
+		auto [raw, ep] = consume();
+		std::string str{ raw.cbegin(), raw.cend() };
+		std::istringstream sbuf{ std::move(str) };
 
 		Serializable ret{};
 		sbuf >> ret;
+
+		if (verbose)
+			print_stats(ret, ep);
+
 		return ret;
 	}
 
 	template <typename Deserializable>
-	void consume_into(Deserializable& individual) {
-		auto raw = consume();
-		std::string str{raw.cbegin(), raw.cend()};
-		std::istringstream sbuf{std::move(str)};
-		boost::archive::text_iarchive ia{sbuf};
+	void consume_into(Deserializable& individual)
+	{
+		auto [raw, ep] = consume();
+		std::string str{ raw.cbegin(), raw.cend() };
+		std::istringstream sbuf{ std::move(str) };
+		boost::archive::text_iarchive ia{ sbuf };
 		ia >> individual;
+
+		if (verbose)
+			print_stats(individual, ep);
 	}
 
     private:
 	boost::asio::ip::udp::socket socket; ///< Socket used by the server
-	std::queue<std::vector<char>> recv_queue; ///< Queue used to store data received until consumption
+	std::queue<std::pair<std::vector<char>, boost::asio::ip::udp::endpoint>> recv_queue; ///< Queue used to store data received until consumption
 	buffer_t recv_buffer; ///< Buffer used to receive
 	boost::asio::ip::udp::endpoint last_endpoint; /// Last endpoint who sent data
 	bool verbose; /// Should server print informations ?
@@ -128,13 +185,6 @@ class CComUDPServer
 	 * @param bytes_transfered Number of bytes transferred
 	 */
 	void handle_receive(const boost::system::error_code& error, std::size_t bytes_transfered);
-
-	/**
-	 * @brief Print stats of received individual
-	 *
-	 * @param received Data received.
-	 */
-	void print_stats(std::vector<char> const& received) const;
 };
 
 class CComUDPClient
@@ -168,10 +218,11 @@ class CComUDPClient
 	 *
 	 * @param Serializable to send to destination
 	 */
-	template<typename Serializable>
-	void send(Serializable const& ind) {
+	template <typename Serializable>
+	void send(Serializable const& ind)
+	{
 		std::ostringstream os;
-		boost::archive::text_oarchive oa{os};
+		boost::archive::text_oarchive oa{ os };
 		oa << ind;
 		send(os.str());
 	}
