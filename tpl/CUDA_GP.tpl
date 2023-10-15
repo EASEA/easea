@@ -1013,7 +1013,7 @@ public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
 	virtual ~IndividualImpl() {
-		\GENOME_DTOR
+		free();
 	}
 	float evaluate() override;
 	CIndividual* crossover(CIndividual** p2) override;
@@ -1028,10 +1028,14 @@ public:
 
 	friend class boost::serialization::access;
 private:
+	void free() {
+		\GENOME_DTOR
+	}
+
 	template <typename Archive>
 	void serialize(Archive& ar, [[maybe_unused]] const unsigned version) {
 	    ar & boost::serialization::base_object<CIndividual>(*this);
-	    if constexpr (Archive::is_loading::value) this->~IndividualImpl();
+	    if constexpr (Archive::is_loading::value) this->free();
 	    \GENOME_SERIAL
 	}
 };
