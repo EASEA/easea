@@ -203,7 +203,7 @@ void CSymbol::print(FILE* fp)
 		// creation of serializer
 		fprintf(fp, "\ttemplate <typename Archive>\n"
 			"\tvoid serialize(Archive& ar, [[maybe_unused]] const unsigned version) {  // serialize\n"
-			"if constexpr (Archive::is_loading::value) this->~%s;\n", sName.c_str());
+			"if constexpr (Archive::is_loading::value) this->~%s();\n", sName.c_str());
 
 		for (auto const& sym : pSymbolList) {
 			// check: is it a user-defined class?
