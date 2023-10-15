@@ -42,10 +42,7 @@ class GPNode {
       opCode=EASEA_Var.opCode;
       
       for(int EASEA_Ndx=0; EASEA_Ndx<2; EASEA_Ndx++)
-        if( EASEA_Var.children[EASEA_Ndx] ) {
-		delete children[EASEA_Ndx];
-		children[EASEA_Ndx] = new GPNode(*(EASEA_Var.children[EASEA_Ndx]));
-	}
+	if( EASEA_Var.children[EASEA_Ndx] ) children[EASEA_Ndx] = new GPNode(*(EASEA_Var.children[EASEA_Ndx]));
     }
 
 

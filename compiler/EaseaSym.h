@@ -25,11 +25,6 @@ Rocquencourt BP 105
 #include <list>
 #include <memory>
 
-//using std::string;
-//using std::ostringstream;
-
-extern void debug(char*);
-
 enum EObjectType { oUserClass, oBaseClass, oObject, oPointer, oArray, oMacro, oUndefined, oArrayPointer };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -95,7 +95,7 @@ void free_data(){
 \end
 
 \At each generation before reduce function:
- //cout << "At each generation before replacement function called" << endl;	
+ //cout << "At each generation before replacement function called" << endl;
 \end
 
 
