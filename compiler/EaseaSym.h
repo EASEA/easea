@@ -25,11 +25,6 @@ Rocquencourt BP 105
 #include <list>
 #include <memory>
 
-//using std::string;
-//using std::ostringstream;
-
-extern void debug(char*);
-
 enum EObjectType { oUserClass, oBaseClass, oObject, oPointer, oArray, oMacro, oUndefined, oArrayPointer };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -63,7 +58,7 @@ class CSymbol
 	void printUserClasses(FILE* fp);
 	void printUC(FILE* fp);
 	void serializeIndividual(FILE* fp, char* sCompleteName);
-	void deserializeIndividual(FILE* fp, char* sCompleteName);
+	void dtor(FILE* fp);
 };
 
 /////////////////////////////////////////////////////////////////////////////

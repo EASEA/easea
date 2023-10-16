@@ -340,7 +340,7 @@ if (!params->noLogFile){
     logg("Result: ");
     logg("Best fitness: ", population->Best->getFitness());
     logg("Best individual: ");
-    logg(population->Best->serialize());
+    logg(population->Best);
 //    population->Best->printOn(std::cout);
     logg("\n");
     logg("Elapsed time: ", elapsed_seconds.count(), " s");
@@ -523,7 +523,7 @@ void CEvolutionaryAlgorithm::sendIndividual(){
     //selecting a client randomly
     int client = random(0, static_cast<int>(this->numberOfClients));
 
-    this->Clients[client]->send(bBest->serialize());
+    this->Clients[client]->send(bBest);
   }
 }
 

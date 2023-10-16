@@ -127,11 +127,6 @@ CIndividual* IndividualImpl::clone(){
 	return new IndividualImpl(*this);
 }
 
-IndividualImpl::~IndividualImpl(){
-  \GENOME_DTOR
-}
-
-
 float IndividualImpl::evaluate(){
     \INSERT_EVALUATOR
 }
@@ -412,7 +407,9 @@ public: // in EASEA the genome is public (for user functions,...)
 public:
 	IndividualImpl();
 	IndividualImpl(const IndividualImpl& indiv);
-	virtual ~IndividualImpl();
+	virtual ~IndividualImpl() {
+		\GENOME_DTOR
+	}
 	float evaluate() override;
 	CIndividual* crossover(CIndividual** p2) override;
 	void optimiser(int currentIteration);

@@ -180,7 +180,7 @@ void print_prm(){
 
 ///////////////// BEGIN STRING MATLAB //////////////////////
 
-void toStringMatlab_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+void toStringMatlab_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char* const* opCodeName, int OP_ERC) {
 
 #ifdef DIVISION
     if ((int)root->opCode == OP_DIV) {
@@ -235,7 +235,7 @@ void toStringMatlab_r(std::ostringstream* oss, GPNode* root, const unsigned* opA
 }
 
 
-std::string toStringMatlab(GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+std::string toStringMatlab(GPNode* root, const unsigned* opArity , const char* const* opCodeName, int OP_ERC) {
     std::ostringstream oss;
 
     toStringMatlab_r(&oss,root,opArity,opCodeName,OP_ERC);
@@ -251,7 +251,7 @@ std::string toStringMatlab(GPNode* root){
 
 //////////////////// BEGIN STRING LATEX //////////////////////////
 
-void toStringLatex_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+void toStringLatex_r(std::ostringstream* oss, GPNode* root, const unsigned* opArity , const char* const* opCodeName, int OP_ERC) {
 
     int code = (int)root->opCode;
 
@@ -346,7 +346,7 @@ void toStringLatex_r(std::ostringstream* oss, GPNode* root, const unsigned* opAr
     
 }
 
-std::string toStringLatex(GPNode* root, const unsigned* opArity , const char** opCodeName, int OP_ERC) {
+std::string toStringLatex(GPNode* root, const unsigned* opArity , const char* const* opCodeName, int OP_ERC) {
     std::ostringstream oss;
 
     toStringLatex_r(&oss,root,opArity,opCodeName,OP_ERC);

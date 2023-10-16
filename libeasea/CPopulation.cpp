@@ -9,6 +9,7 @@
 #include "include/CPopulation.h"
 #include <iostream>
 #include <fstream>
+#include <boost/archive/text_oarchive.hpp>
 #include <string.h>
 #include <config.h>
 #ifdef USE_OPENMP
@@ -253,9 +254,10 @@ void CPopulation::sortRPopulation(CIndividual** population, unsigned populationS
 
 /* Fonction qui va serializer la population */
 void CPopulation::serializePopulation(std::string const& file){
-  ofstream EASEA_File { file, ios::trunc };
+  ofstream EASEA_File { file };
+  boost::archive::text_oarchive oa{EASEA_File};
   for(unsigned i=0; (unsigned)i<parentPopulationSize; i++){
-  	EASEA_File << parents[i]->serialize() << endl;
+	oa << parents[i];
   }
 }
 

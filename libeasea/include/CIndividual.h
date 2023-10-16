@@ -13,10 +13,13 @@
 
 #include "CVariable.h"
 
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/export.hpp>
+
 /* Class of individual's (solution) implementation */
 
 
-class CIndividual 
+class CIndividual
 {
 
 public:
@@ -82,15 +85,21 @@ public:
     virtual CIndividual* crossover(CIndividual** p2)  = 0;
     virtual CIndividual* clone() = 0;
 
-    virtual std::string serialize() = 0;
-    virtual void deserialize(std::string EASEA_Line) = 0;
-
     virtual void boundChecking() = 0;
 
     static unsigned getCrossoverArity(){ return 2; }
     float getFitness() const { return this->fitness; }
+
+private:
+    friend class boost::serialization::access;
+    template <typename Archive>
+    void serialize(Archive& ar, [[maybe_unused]] const unsigned int version) {
+	    ar & fitness;
+    }
 };
 
 std::ostream& operator<<(std::ostream& os, CIndividual const& ind);
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(CIndividual)
 
 #endif /* CINDIVIDUAL_H_ */

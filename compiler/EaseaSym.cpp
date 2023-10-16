@@ -24,26 +24,6 @@ using std::endl;
 
 extern int yylineno;
 
-void debug(char* s)
-{
-#ifdef _DEBUG
-	printf(s);
-	getchar();
-#endif
-	return;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// LinkedList commands
-
-// template <class T> void CLList<T>::addLast(const T &p){
-//   CListItem<T> *pSentinel, *pCurrent;
-//   pSentinel=pCurrent=pHead;
-//   while (pCurrent!=NULL){pSentinel=pCurrent; pCurrent=pCurrent->pNext;}
-//   if (pSentinel != NULL) pSentinel->pNext=new CListItem<T>(pCurrent,NewObject);
-//   else pHead=new CListItem<T>(pCurrent,NewObject);
-//   }
-
 /////////////////////////////////////////////////////////////////////////////
 // symbol construction/destruction
 
@@ -63,17 +43,6 @@ void CSymbol::print(FILE* fp)
 		// if we are printing a user class other than the genome
 		fprintf(fp, "\nclass %s {\npublic:\n// Default methods for class %s\n", sName.c_str(),
 			sName.c_str()); // class  header
-
-		//fprintf(fp,"// Class members \n"); // Now, we must print the class members
-		//  pSymbolList->reset();
-		//  while (pSym=pSymbolList->walkToNextItem()){
-		//  if (pSym->Object->ObjectType==oObject)
-		//  fprintf(fp,"  %s %s;\n",pSym->Object->pType->sName.c_str(),pSym->Object->sName.c_str());
-		//  if (pSym->Object->ObjectType==oPointer)
-		//  fprintf(fp,"  %s *%s;\n",pSym->Object->pType->sName.c_str(),pSym->Object->sName.c_str());
-		//  if (pSym->Object->ObjectType==oArray)
-		//  fprintf(fp,"  %s %s[%d];\n",pSym->Object->pType->sName.c_str(),pSym->Object->sName.c_str(),pSym->Object->nSize/pSym->Object->pType->nSize);
-		// }
 
 		// check on the type of target
 		if (TARGET == CUDA) {
@@ -201,129 +170,14 @@ void CSymbol::print(FILE* fp)
 		fprintf(fp, "  }\n"); // end of destructor
 
 		// creation of serializer
-		fprintf(fp, "  string serializer() {  // serialize\n"); // serializer
-		fprintf(fp, "  \tostringstream EASEA_Line(ios_base::app);\n");
-		
+		fprintf(fp, "\ttemplate <typename Archive>\n"
+			"\tvoid serialize(Archive& ar, [[maybe_unused]] const unsigned version) {  // serialize\n"
+			"if constexpr (Archive::is_loading::value) this->~%s();\n", sName.c_str());
+
 		for (auto const& sym : pSymbolList) {
-			// check: is it a user-defined class?
-			if (sym->pType->ObjectType == oUserClass) {
-				if (sym->ObjectType == oArrayPointer) {
-					// it's an array of pointers
-					fprintf(fp, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",
-						(int)(sym->nSize / sizeof(char*)));
-					fprintf(fpOutputFile, "\t\tif(this->%s[EASEA_Ndx] != NULL){\n",
-						sym->sName.c_str());
-					fprintf(fpOutputFile, "\t\t\tEASEA_Line << \"\\a \";\n");
-					fprintf(fpOutputFile,
-						"\t\t\tEASEA_Line << this->%s[EASEA_Ndx]->serializer() << \" \";\n",
-						sym->sName.c_str());
-					fprintf(fpOutputFile, "\t}\n");
-					fprintf(fpOutputFile, "\t\telse\n");
-					fprintf(fpOutputFile, "\t\t\tEASEA_Line << \"NULL\" << \" \";\n");
-					fprintf(fpOutputFile, "}\n");
-				}
-				// it's a classical array
-				else if (sym->ObjectType == oArray) {
-					fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-						sym->nSize / sym->pType->nSize);
-					fprintf(fpOutputFile,
-						"\t\tEASEA_Line << this->%s[EASEA_Ndx].serializer() <<\" \";\n",
-						sym->sName.c_str());
-				}
-				// it's a simple struct/class
-				else if (sym->ObjectType == oObject) {
-					fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s.serializer() <<\" \";\n",
-						sym->sName.c_str());
-				} else {
-					// it's a pointer to an user-defined clas
-					fprintf(fpOutputFile, "\tif(this->%s != NULL){\n", sym->sName.c_str());
-					fprintf(fpOutputFile, "\t\tEASEA_Line << \"\\a \";\n");
-					fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s->serializer() << \" \";\n",
-						sym->sName.c_str());
-					fprintf(fpOutputFile, "}\n");
-					fprintf(fpOutputFile, "\telse\n");
-					fprintf(fpOutputFile, "\t\tEASEA_Line << \"NULL\" << \" \";\n");
-				}
-			} else {
-				// it's not a user-defined class
-				if (sym->ObjectType == oObject) {
-					fprintf(fpOutputFile, "\tEASEA_Line << this->%s << \" \";\n",
-						sym->sName.c_str());
-				}
-
-				// it's a classical array
-				if (sym->ObjectType == oArray) {
-					fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-						sym->nSize / sym->pType->nSize);
-					fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s[EASEA_Ndx] <<\" \";\n",
-						sym->sName.c_str());
-				}
-			}
-		} // end while
-
-		fprintf(fp, "  \treturn EASEA_Line.str();\n");
-		fprintf(fp, "  }\n"); // end of serializer
-
-		// creation of deserializer
-		fprintf(fp,
-			"  void deserializer(istringstream* EASEA_Line) {  // deserialize\n"); // deserializer
-		fprintf(fp, "  \tstring line;\n");
-		
-		for (auto const& sym : pSymbolList) {
-			if (sym->pType->ObjectType == oUserClass) {
-				/* it's an array of pointer */
-				if (sym->ObjectType == oArrayPointer) {
-					fprintf(fp, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",
-						(int)(sym->nSize / sizeof(char*)));
-					fprintf(fpOutputFile, "\t\t(*EASEA_Line) >> line;\n");
-					fprintf(fpOutputFile, "\t\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
-					fprintf(fpOutputFile, "\t\t\tthis->%s[EASEA_Ndx] = NULL;\n", sym->sName.c_str());
-					fprintf(fpOutputFile, "\t\telse{\n");
-					fprintf(fpOutputFile, "\t\t\tthis->%s[EASEA_Ndx] = new %s;\n",
-						sym->sName.c_str(), sym->pType->sName.c_str());
-					fprintf(fpOutputFile, "\t\t\tthis->%s[EASEA_Ndx]->deserializer(EASEA_Line);\n",
-						sym->sName.c_str());
-					fprintf(fpOutputFile, "\t\t}");
-					fprintf(fpOutputFile, "\t}");
-				}
-				/* it's a classical array*/
-				else if (sym->ObjectType == oArray) {
-					fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-						sym->nSize / sym->pType->nSize);
-					fprintf(fpOutputFile, "\t\tthis->%s[EASEA_Ndx].deserializer(EASEA_Line) ;\n",
-						sym->sName.c_str());
-				}
-				/* it's a simple struct/class */
-				else if (sym->ObjectType == oObject) {
-					fprintf(fpOutputFile, "\t\tthis->%s.deserializer(EASEA_Line);\n",
-						sym->sName.c_str());
-				}
-				/*it's a pointer*/
-				else {
-					fprintf(fpOutputFile, "\t(*EASEA_Line) >> line;\n");
-					fprintf(fpOutputFile, "\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
-					fprintf(fpOutputFile, "\t\tthis->%s = NULL;\n", sym->sName.c_str());
-					fprintf(fpOutputFile, "\telse{\n");
-					fprintf(fpOutputFile, "\t\tthis->%s = new %s;\n", sym->sName.c_str(),
-						sName.c_str());
-					fprintf(fpOutputFile, "\t\tthis->%s->deserializer(EASEA_Line);\n",
-						sym->sName.c_str());
-					fprintf(fpOutputFile, "\t}");
-				}
-			} else {
-				if (sym->ObjectType == oObject) {
-					fprintf(fpOutputFile, "\t(*EASEA_Line) >> this->%s;\n", sym->sName.c_str());
-				}
-
-				if (sym->ObjectType == oArray) {
-					fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-						sym->nSize / sym->pType->nSize);
-					fprintf(fpOutputFile, "\t\t(*EASEA_Line) >> this->%s[EASEA_Ndx];\n",
-						sym->sName.c_str());
-				}
-			}
-		} // end while
-		fprintf(fp, "  }\n"); // end of deserializer
+			fprintf(fpOutputFile, "\t\tar & %s;\n", sym->sName.c_str());
+		}
+		fprintf(fp, "\t}\n"); // end of serializer
 
 		// creation of operator to assess individual equality
 		fprintf(fp, "  %s& operator=(const %s &EASEA_Var) {  // Operator=\n", sName.c_str(),
@@ -431,18 +285,6 @@ void CSymbol::print(FILE* fp)
 		}
 		fprintf(fp, "    return os;\n  }\n\n"); // end of output stream insertion operator
 
-		//     fprintf(fp,"  friend istream& operator>> (istream& is, %s& EASEA_Var) { // Input stream extraction operator\n",sName); // Output stream insertion operator
-		//           pSymbolList->reset();
-		//           while (pSym=pSymbolList->walkToNextItem()){
-		//             if ((sym->ObjectType==oObject)&&(strcmp(sym->pType->sName.c_str(), "bool")))
-		//               fprintf(fp,"    is >> EASEA_Var.%s;\n",sym->sName.c_str());
-		//             if ((sym->ObjectType==oArray)&&(strcmp(sym->pType->sName.c_str(), "bool"))) {
-		//               fprintf(fp,"    {for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sym->pType->nSize);
-		//               fprintf(fp,"       is >> EASEA_Var.%s[EASEA_Ndx];}\n",sym->sName.c_str());
-		//             }
-		//           }
-		//     fprintf(fp,"    return is;\n  }\n\n"); // Input stream extraction operator
-
 		if (sString != "") {
 			if (bVERBOSE)
 				printf("Inserting Methods into %s Class.\n", sName.c_str());
@@ -524,296 +366,23 @@ void CSymbol::printUserClasses(FILE* fp)
 void CSymbol::serializeIndividual(FILE* fp, char* sCompleteName)
 {
 	std::string sNewCompleteName(sCompleteName);
-
-	
 	for (auto const& sym : pSymbolList) {
-		// check the type of object
-		if (sym->pType->ObjectType == oUserClass) {
-			// if it's an user-defined class
-			if (sym->ObjectType == oArrayPointer) {
-				// if it's an array of pointers
-				fprintf(fp, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",
-					(int)(sym->nSize / sizeof(char*)));
-				fprintf(fpOutputFile, "\t\tif(this->%s[EASEA_Ndx] != NULL){\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\t\t\tEASEA_Line << \"\\a \";\n");
-				fprintf(fpOutputFile,
-					"\t\t\tEASEA_Line << this->%s[EASEA_Ndx]->serializer() << \" \";\n",
-					sym->sName.c_str());
-				fprintf(fpOutputFile, "\t}\n");
-				fprintf(fpOutputFile, "\t\telse\n");
-				fprintf(fpOutputFile, "\t\t\tEASEA_Line << \"NULL\" << \" \";\n");
-				fprintf(fpOutputFile, "}\n");
-
-			}
-			// it's a classical array
-			else if (sym->ObjectType == oArray) {
-				/*TODO: not clean at all*/
-				fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-					sym->nSize / sym->pType->nSize);
-				fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s[EASEA_Ndx].serializer() <<\" \";\n",
-					sym->sName.c_str());
-			}
-			// it's a simple struct/class
-			else if (sym->ObjectType == oObject) {
-				fprintf(fpOutputFile, "\tEASEA_Line << \"\\a \";\n");
-				fprintf(fpOutputFile, "\tEASEA_Line << this->%s.serializer() << \" \";\n",
-					sym->sName.c_str());
-			} else {
-				// if it's not an array of pointers
-				fprintf(fpOutputFile, "\tif(this->%s != NULL){\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\t\tEASEA_Line << \"\\a \";\n");
-				fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s->serializer() << \" \";\n",
-					sym->sName.c_str());
-				fprintf(fpOutputFile, "\t}\n");
-				fprintf(fpOutputFile, "\telse\n");
-				fprintf(fpOutputFile, "\t\tEASEA_Line << \"NULL\" << \" \";\n");
-			}
-		} else {
-			// if it's not a user-defined class
-			if (sym->ObjectType == oObject) {
-				fprintf(fpOutputFile, "\tEASEA_Line << this->%s << \" \";\n", sym->sName.c_str());
-			} else if (sym->ObjectType == oArray) {
-				// if it's an array of floats
-				fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-					sym->nSize / sym->pType->nSize);
-				fprintf(fpOutputFile, "\t\tEASEA_Line << this->%s[EASEA_Ndx] <<\" \";\n",
-					sym->sName.c_str());
-			} else if (sym->ObjectType == oPointer && strcmp(sym->pType->sName.c_str(), "GPNode") == 0) {
-				// it's a pointer to a GPNode!
-				fprintf(fpOutputFile, "\t// Serialize function for \"%s\"\n", sym->pType->sName.c_str());
-
-				// serialize function: it needs the <map> and <vector> includes, but those are added
-				// at the top of the class if it's a GPNode individual
-				fprintf(fpOutputFile,
-					"\tcout << \"Now serializing individual \" << toString(this->root) << endl;\n");
-				fprintf(fpOutputFile, "\t// build map used to associate GPNode pointers to indexes\n");
-				fprintf(fpOutputFile, "\tmap<GPNode*,int> indexes;\n");
-				fprintf(fpOutputFile, "\n");
-				fprintf(fpOutputFile, "\t// breadth-first visit of the tree\n");
-				fprintf(fpOutputFile, "\tint currentIndex = 0;\n");
-				fprintf(fpOutputFile, "\tlist<GPNode*> nodesToVisit;\n");
-				fprintf(fpOutputFile, "\tnodesToVisit.push_back(this->root);\n");
-				fprintf(fpOutputFile, "\n");
-				fprintf(fpOutputFile, "\twhile(nodesToVisit.size() != 0)\n");
-				fprintf(fpOutputFile, "\t{\n");
-				fprintf(fpOutputFile, "\t // remove current node from nodes to visit\n");
-				fprintf(fpOutputFile, "\t GPNode* currentNode = nodesToVisit.front();\n");
-				fprintf(fpOutputFile, "\t nodesToVisit.pop_front();\n");
-				fprintf(fpOutputFile, "\t\n");
-				fprintf(fpOutputFile,
-					"\t // add children of current node (by default, the tree is binary)\n");
-				fprintf(fpOutputFile,
-					"\t if( currentNode->children[0] != NULL ) nodesToVisit.push_back( currentNode->children[0] ); \n");
-				fprintf(fpOutputFile,
-					"\t if( currentNode->children[1] != NULL ) nodesToVisit.push_back( currentNode->children[1] ); \n");
-				fprintf(fpOutputFile, "\t // assign code to current node       \n");
-				fprintf(fpOutputFile, "\t indexes[currentNode] = currentIndex; \n");
-				fprintf(fpOutputFile, "\t currentIndex++;\n");
-				fprintf(fpOutputFile, "\t}\n");
-				fprintf(fpOutputFile,
-					"\t// the very first item in the line is the number of nodes in the tree \n");
-				fprintf(fpOutputFile, "\tEASEA_Line << currentIndex << \" \";\n");
-				fprintf(fpOutputFile, "\t// another visit to finally serialize the nodes \n");
-				fprintf(fpOutputFile, "\tvector<double> ercValues;          \n");
-				fprintf(fpOutputFile, "\tnodesToVisit.push_back(this->root);\n");
-				fprintf(fpOutputFile, "\twhile(nodesToVisit.size() != 0)                     \n");
-				fprintf(fpOutputFile, "\t{                                                   \n");
-				fprintf(fpOutputFile, "\t // remove current node from nodes to visit  \n");
-				fprintf(fpOutputFile, "\t GPNode* currentNode = nodesToVisit.front(); \n");
-				fprintf(fpOutputFile, "\t nodesToVisit.pop_front();	\n");
-				fprintf(fpOutputFile,
-					"\t // add children of current node (hoping it's binary)                                                       \n");
-				fprintf(fpOutputFile,
-					"\t if( currentNode->children[0] != NULL ) nodesToVisit.push_back( currentNode->children[0] );                 \n");
-				fprintf(fpOutputFile,
-					"\t if( currentNode->children[1] != NULL ) nodesToVisit.push_back( currentNode->children[1] );                 \n");
-				fprintf(fpOutputFile,
-					"\t                                                                                                           \n");
-				fprintf(fpOutputFile,
-					"\t // node to string: format is <index> <var_id> <opCode> <indexOfChild1> <indexOfChild2>                     \n");
-				fprintf(fpOutputFile,
-					"\t EASEA_Line << indexes[currentNode] << \" \" << currentNode->var_id << \" \" << (int)currentNode->opCode << \" \";\n");
-				fprintf(fpOutputFile,
-					"\t // if the children are not NULL, put their index; otherwise, put \"0\"              \n");
-				fprintf(fpOutputFile,
-					"\t if( currentNode->children[0] != NULL )                                            \n");
-				fprintf(fpOutputFile,
-					"\t  EASEA_Line << indexes[ currentNode->children[0] ] << \" \";                 \n");
-				fprintf(fpOutputFile,
-					"\t else                                                                              \n");
-				fprintf(fpOutputFile,
-					"\t  EASEA_Line << \"0 \";                                                       \n");
-				fprintf(fpOutputFile,
-					"\t                                                                                  \n");
-				fprintf(fpOutputFile,
-					"\t if( currentNode->children[1] != NULL )                                            \n");
-				fprintf(fpOutputFile,
-					"\t  EASEA_Line << indexes[ currentNode->children[1] ] << \" \";                 \n");
-				fprintf(fpOutputFile, "\t else             \n");
-				fprintf(fpOutputFile,
-					"\t  EASEA_Line << \"0 \";                                                       \n");
-				fprintf(fpOutputFile, "\t                 \n");
-				fprintf(fpOutputFile,
-					"\t // if the node is an ERC, the floating point value is stored for later            \n");
-				fprintf(fpOutputFile,
-					"\t if( currentNode->opCode == OP_ERC ) ercValues.push_back( currentNode->erc_value );\n");
-				fprintf(fpOutputFile, "\t} \n");
-				fprintf(fpOutputFile,
-					"\t// finally, put all the floating point ERC values             \n");
-				fprintf(fpOutputFile,
-					"\tfor(unsigned int i = 0; i < ercValues.size(); i++)            \n");
-				fprintf(fpOutputFile, "\t EASEA_Line << ercValues[i] << \" \";                    \n");
-				fprintf(fpOutputFile,
-					"\t                                                              \n");
-				fprintf(fpOutputFile,
-					"\t// debug                                                      \n");
-				fprintf(fpOutputFile, "\t//cout << \"EASEA_Line: \" << EASEA_Line.str() << endl; \n");
-			}
-
-		} // end if it's a user-defined class
-	} // end while
-
-	return;
+		fprintf(fp, "\t\tar & %s;\n", sym->sName.c_str());
+	}
 }
 
-void CSymbol::deserializeIndividual(FILE* fp, char* sCompleteName)
-{
-	
+void CSymbol::dtor(FILE *fp) {
 	for (auto const& sym : pSymbolList) {
-		if (sym->pType->ObjectType == oUserClass) {
-			if (sym->ObjectType == oArrayPointer) {
-				fprintf(fpOutputFile, "\tEASEA_Line >> line;\n");
-				fprintf(fp, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++){\n",
-					(int)(sym->nSize / sizeof(char*)));
-				fprintf(fpOutputFile, "\t\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
-				fprintf(fpOutputFile, "\t\t\tthis->%s[EASEA_Ndx] = NULL;\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\t\telse{\n");
-				fprintf(fpOutputFile, "\t\t\tthis->%s[EASEA_Ndx] = new %s;\n", sym->sName.c_str(),
-					sym->pType->sName.c_str());
-				fprintf(fpOutputFile, "\t\t\tthis->%s[EASEA_Ndx]->deserializer(&EASEA_Line);\n",
-					sym->sName.c_str());
-				fprintf(fpOutputFile, "\t\t}");
-				fprintf(fpOutputFile, "\t}");
-			} else if (sym->ObjectType == oArray) {
-				fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-					sym->nSize / sym->pType->nSize);
-				fprintf(fpOutputFile, "\t\tthis->%s[EASEA_Ndx].deserializer(&EASEA_Line);\n",
-					sym->sName.c_str());
-			} else if (sym->ObjectType == oObject) {
-				fprintf(fpOutputFile, "\t this->%s.deserializer(&EASEA_Line);", sym->sName.c_str());
-			} else {
-				fprintf(fpOutputFile, "\tEASEA_Line >> line;\n");
-				fprintf(fpOutputFile, "\tif(strcmp(line.c_str(),\"NULL\")==0)\n");
-				fprintf(fpOutputFile, "\t\tthis->%s = NULL;\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\telse{\n");
-				fprintf(fpOutputFile, "\t\tthis->%s = new %s;\n", sym->sName.c_str(), sym->pType->sName.c_str());
-				fprintf(fpOutputFile, "\t\tthis->%s->deserializer(&EASEA_Line);\n", sym->sName.c_str());
-				fprintf(fpOutputFile, "\t}");
-			}
-		} else {
-			if (sym->ObjectType == oObject) {
-				fprintf(fpOutputFile, "\tEASEA_Line >> this->%s;\n", sym->sName.c_str());
-			}
-
-			if (sym->ObjectType == oArray) {
-				fprintf(fpOutputFile, "\tfor(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",
-					sym->nSize / sym->pType->nSize);
-				fprintf(fpOutputFile, "\t\tEASEA_Line >> this->%s[EASEA_Ndx];\n", sym->sName.c_str());
-			}
-
-			if (sym->ObjectType == oPointer && strcmp(sym->pType->sName.c_str(), "GPNode") == 0) {
-				// it's a GPNode, so a tree-like structure used for GP
-				fprintf(fpOutputFile, "\t// debug\n");
-				fprintf(fpOutputFile, "\t//cout << \"Reading received individual...\" << endl;\n");
-				fprintf(fpOutputFile, "\t//cout << Line << endl;\n");
-				fprintf(fpOutputFile, "\t\n");
-				fprintf(fpOutputFile, "\t// first, read number of nodes\n");
-				fprintf(fpOutputFile, "\tint numberOfNodes; \n");
-				fprintf(fpOutputFile, "\tEASEA_Line >> numberOfNodes;\n");
-				fprintf(fpOutputFile, "\t// debug\n");
-				fprintf(fpOutputFile,
-					"\t//cout << \"The received individual has \" << numberOfNodes << \" nodes.\" << endl; \n");
-				fprintf(fpOutputFile, "\t\n");
-				fprintf(fpOutputFile,
-					"\t// iterate through the line, creating a map of <index> <GPNode*> <indexOfChild1> <indexOfChild2> \n");
-				fprintf(fpOutputFile,
-					"\tmap< int, pair< GPNode*,vector<int> > > nodeMap;                              \n");
-				fprintf(fpOutputFile,
-					"\tfor(int n = 0; n < numberOfNodes; n++)                                        \n");
-				fprintf(fpOutputFile,
-					"\t{                                                                             \n");
-				fprintf(fpOutputFile,
-					"\t int index, temp;                                                      \n");
-				fprintf(fpOutputFile,
-					"\t int opCode;                                                           \n");
-				fprintf(fpOutputFile,
-					"\t int var_id;                                                           \n");
-				fprintf(fpOutputFile,
-					"\t vector<int> childrenIndexes;                                          \n");
-				fprintf(fpOutputFile, "\t  \n");
-				fprintf(fpOutputFile,
-					"\t // format is <index> <var_id> <opCode> <indexOfChild1> <indexOfChild2>\n");
-				fprintf(fpOutputFile, "\t EASEA_Line >> index;             \n");
-				fprintf(fpOutputFile, "\t EASEA_Line >> var_id;            \n");
-				fprintf(fpOutputFile, "\t EASEA_Line >> opCode;            \n");
-				fprintf(fpOutputFile, "\t EASEA_Line >> temp;              \n");
-				fprintf(fpOutputFile, "\t childrenIndexes.push_back(temp); \n");
-				fprintf(fpOutputFile, "\t EASEA_Line >> temp;              \n");
-				fprintf(fpOutputFile, "\t childrenIndexes.push_back(temp); \n");
-				fprintf(fpOutputFile, "\t\n");
-				fprintf(fpOutputFile, "\t // create GPNode                   \n");
-				fprintf(fpOutputFile, "\t GPNode* currentNode = new GPNode();\n");
-				fprintf(fpOutputFile, "\t currentNode->var_id = var_id;\n");
-				fprintf(fpOutputFile, "\t currentNode->opCode = opCode;\n");
-				fprintf(fpOutputFile, "\t\n");
-				fprintf(fpOutputFile, "\t // debug \n");
-				fprintf(fpOutputFile,
-					"\t //cout 	<< \"Read node: \" << index << \" \" << var_id << \" \" << opCode << \" \" \n");
-				fprintf(fpOutputFile,
-					"\t //<< childrenIndexes[0] << \" \" << childrenIndexes[1] << endl;\n");
-				fprintf(fpOutputFile, "\t\n");
-				fprintf(fpOutputFile,
-					"\t // put everything into the map                                        \n");
-				fprintf(fpOutputFile,
-					"\t pair< GPNode*, vector<int> > tempPair (currentNode, childrenIndexes); \n");
-				fprintf(fpOutputFile, "\t nodeMap[index] = tempPair;\n");
-				fprintf(fpOutputFile, "\t}\n");
-				fprintf(fpOutputFile, "\t \n");
-				fprintf(fpOutputFile, "\t// rebuild the individual structure \n");
-				fprintf(fpOutputFile, "\tfor(int n = 0; n < numberOfNodes; n++) \n");
-				fprintf(fpOutputFile, "\t{ \n");
-				fprintf(fpOutputFile,
-					"\t // now, rebuild the individual by adding the pointers to the children                                  \n");
-				fprintf(fpOutputFile,
-					"\t if( nodeMap[n].second[0] != 0 ) nodeMap[n].first->children[0] = nodeMap[ nodeMap[n].second[0] ].first; \n");
-				fprintf(fpOutputFile,
-					"\t if( nodeMap[n].second[1] != 0 ) nodeMap[n].first->children[1] = nodeMap[ nodeMap[n].second[1] ].first; \n");
-				fprintf(fpOutputFile, "\t\n");
-				fprintf(fpOutputFile,
-					"\t // also, if the opCode of the node is the same as the OP_ERC, find the\n");
-				fprintf(fpOutputFile, "\t // corresponding real value at the end of the EASEA_Line\n");
-				fprintf(fpOutputFile, "\t if( nodeMap[n].first->opCode == OP_ERC )\n");
-				fprintf(fpOutputFile, "\t {                                          \n");
-				fprintf(fpOutputFile, "\t                                           \n");
-				fprintf(fpOutputFile, "\t  double temp;                       \n");
-				fprintf(fpOutputFile, "\t  EASEA_Line >> temp;                \n");
-				fprintf(fpOutputFile, "\t  nodeMap[n].first->erc_value = temp;\n");
-				fprintf(fpOutputFile, "\t// debug\n");
-				fprintf(fpOutputFile,
-					"\t//cout << \"-- Found ERC variable! Read value \" << temp << \" from the end of EASEA_Line.\" << endl;\n");
-				fprintf(fpOutputFile, "\t }\n");
-				fprintf(fpOutputFile, "\t}\n");
-				fprintf(fpOutputFile, "\t\n");
-				fprintf(fpOutputFile, "\t// link the tree to the current individual \n");
-				fprintf(fpOutputFile, "\tthis->root = nodeMap[0].first;\n");
-				fprintf(fpOutputFile, "\t\n");
-				fprintf(fpOutputFile, "\t// debug \n");
-				fprintf(fpOutputFile,
-					"\t//cout << \"Individual received: \" << toString(this->root) << endl;\n");
-			}
+		if (sym->ObjectType==oPointer) {
+			fprintf(fp,"  if (%s) delete %s;\n  %s=NULL;\n",sym->sName.c_str(),sym->sName.c_str(),sym->sName.c_str());
+		} else if( sym->ObjectType==oArrayPointer ) {
+			// here we handle array of pointer (developped for Tree GP)
+			fprintf(fp,"    for(int EASEA_Ndx=0; EASEA_Ndx<%ld; EASEA_Ndx++)\n",sym->nSize/sizeof(char*));
+			fprintf(fp,"      if(%s[EASEA_Ndx]) delete %s[EASEA_Ndx];\n",sym->sName.c_str(),sym->sName.c_str());
 		}
 	}
 }
+
 
 template <typename Iterator>
 void CSymbol::printAllSymbols(FILE* fp, char* sCompleteName, EObjectType FatherType, Iterator iSym,

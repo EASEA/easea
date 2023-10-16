@@ -137,7 +137,7 @@ static inline void print_bool(FILE* fp, bool value) { fprintf(fp, "%s", value ? 
 %start COPY_EO_INITIALISER COPY_GP_OPCODE
 %start COPY COPY_INITIALISER COPY_CROSSOVER COPY_MUTATOR COPY_EVALUATOR COPY_OPTIMISER COPY_FINALIZATION_FUNCTION
 %start COPY_DISPLAY COPY_USER_FUNCTION COPY_USER_GENERATION PARAMETERS_ANALYSIS GET_PARAMETERS 
-%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL GP_RULE_ANALYSIS GP_COPY_OPCODE_CODE COPY_GP_EVAL COPY_USER_HEADER
+%start COPY_USER_FUNCTIONS COPY_GENERATION_FUNCTION_BEFORE_REPLACEMENT GET_METHODS COPY_MAKEFILE_OPTION COPY_BOUND_CHECKING_FUNCTION COPY_BEG_GENERATION_FUNCTION COPY_END_GENERATION_FUNCTION COPY_INSTEAD_EVAL GP_RULE_ANALYSIS GP_COPY_OPCODE_CODE COPY_GP_EVAL COPY_USER_HEADER COPY_USER_SERIALIZATION
 
 %option yylineno noyywrap noinput nounput
 
@@ -258,7 +258,7 @@ exponent  ([Ee][+-]?[0-9]+)
   fprintf(fpOutputFile,"OPCODE_SIZE, OP_RETURN};\n");
 
 
-  fprintf(fpOutputFile,"const char* opCodeName[]={"); 
+  fprintf(fpOutputFile,"static constexpr const char* opCodeName[]={"); 
   bool first = true;
   for (auto const& op : opDesc) {
     if( !first )fprintf(fpOutputFile,",");
@@ -266,7 +266,7 @@ exponent  ([Ee][+-]?[0-9]+)
     fprintf(fpOutputFile,"%s",op.realName.c_str());
   }
   fprintf(fpOutputFile,"};\n"); 
-  fprintf(fpOutputFile,"unsigned opArity[]=     {"); 
+  fprintf(fpOutputFile,"static const unsigned opArity[]=     {"); 
   first = true;
   for (auto const& op : opDesc) {
     if( !first )fprintf(fpOutputFile,",");
@@ -824,17 +824,34 @@ return lhs.arity < rhs.arity;
  }
 
 <TEMPLATE_ANALYSIS>"\\GENOME_SERIAL"  {
-  if (bVERBOSE) printf ("Inserting default genome serializer.\n");
-  fprintf (fpOutputFile,"// Memberwise serialization\n");
-  pGENOME->serializeIndividual(fpOutputFile, "this");
-  //fprintf(fpOutputFile,"\tEASEA_Line << endl;\n");
+  if (bVERBOSE) printf("Inserting serialization code.\n");
+  switch_to_genome();
+  BEGIN COPY_USER_SERIALIZATION;
+}
+
+<COPY_USER_SERIALIZATION>"\\"("User"[ \t\n]+)?([Dd]e)?[Ss]"erialization"[ \t\n]*":" {
+  fprintf (fpOutputFile,"// User serialization\n"); 
+  print_line_indicator();
+  BEGIN COPY;
  }
 
-<TEMPLATE_ANALYSIS>"\\GENOME_DESERIAL"  {
-  if (bVERBOSE) printf ("Inserting default genome deserializer.\n");
-  fprintf (fpOutputFile,"// Memberwise deserialization\n");
-  pGENOME->deserializeIndividual(fpOutputFile, "this");
+<COPY_USER_SERIALIZATION><<EOF>> {
+  if (bVERBOSE) printf ("Inserting default genome serializer. You may provide your own using '\\Serialization:'\n");
+  fprintf (fpOutputFile,"// Automatic serialization\n"); 
+  pGENOME->serializeIndividual(fpOutputFile, "this");
+
+  rewind(fpGenomeFile);
+  yyin = fpTemplateFile;
+  yypop_buffer_state();
+  BEGIN TEMPLATE_ANALYSIS;
+  bNotFinishedYet=1;
  }
+
+<COPY_USER_SERIALIZATION>. {}
+<COPY_USER_SERIALIZATION>\n {
+  lineCounter++;
+ } 
+
 
 <TEMPLATE_ANALYSIS>"\\COPY_CUDA_CTOR"  {
   if (bVERBOSE) printf ("Creating default copy constructor.\n");
@@ -852,18 +869,8 @@ return lhs.arity < rhs.arity;
 
 <TEMPLATE_ANALYSIS>"\\GENOME_DTOR"  {
   if (bVERBOSE) printf ("Creating default destructor.\n");
-  fprintf (fpOutputFile,"// Destructing pointers\n");             
-  for (auto const& sym : pGENOME->pSymbolList){
-    if (sym->ObjectType==oPointer){
-      fprintf(fpOutputFile,"  if (%s) delete %s;\n  %s=NULL;\n",sym->sName.c_str(),sym->sName.c_str(),sym->sName.c_str());
-    }
-    else if( sym->ObjectType==oArrayPointer ){ 
-      // here we handle array of pointer (developped for Tree GP)
-      fprintf(fpOutputFile,"    for(int EASEA_Ndx=0; EASEA_Ndx<%d; EASEA_Ndx++)\n",sym->nSize/sizeof(char*));
-      fprintf(fpOutputFile,"      if(%s[EASEA_Ndx]) delete %s[EASEA_Ndx];\n",sym->sName.c_str(),sym->sName.c_str(),sym->pType->sName.c_str(),sym->sName.c_str());
-    }
-  }
- }
+  pGENOME->dtor(fpOutputFile);
+}
 
 <TEMPLATE_ANALYSIS>"\\EQUAL"  {       
   if (bVERBOSE) printf ("Creating default diversity test.\n");
