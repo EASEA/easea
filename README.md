@@ -102,13 +102,18 @@ Apple decided to remove OpenMP from the default C/C++ compiler. You can either c
 
 ## How to use
 
-**EASENA requires you to set the _EZ_PATH_ environment variable.** *_This variable must include the trailing "/" !_*
+### EZ_PATH
+⚠️ IMPORTANT ⚠️ 
+
+**EASENA requires you to set the _EZ_PATH_ environment variable. It should lead to where EASEA was installed (/usr/local/easena on Linux and MacOS, C:/Program Files (x86)/EASEA on Windows)** *_This variable must include the trailing "/" !_*
 
 * [Set environment variables on Windows](https://docs.oracle.com/en/database/oracle/machine-learning/oml4r/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html)
 
 * [Set environment variables on MacOS](https://phoenixnap.com/kb/set-environment-variable-mac)
 
 * [Set environment variables on Linux](https://phoenixnap.com/kb/linux-set-environment-variable)
+
+### Compiling using EASENA
 
 Compiling a .ez file into a binary is a two steps process :
 
@@ -129,7 +134,7 @@ Thanks for downloading and installing EASEA/EASENA. We hope it will be useful in
 
 ## Install EASEA GUI
 
-To install the EASEA UI, follow the README instructions in the `easea-ui/` directory.
+To install the EASEA UI, follow the README instructions in the `GUIDE/` directory.
 
 
 # EASEA -- EAsy Specification of Evolutionary Algorithms
