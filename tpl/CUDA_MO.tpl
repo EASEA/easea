@@ -2138,8 +2138,7 @@ find_package(Boost REQUIRED program_options)
 
 find_package(OpenMP REQUIRED)
 find_package(CUDAToolkit REQUIRED)
-
-message(STATUS ${libeasea_INCLUDE} ${CLOGGER} ${CUDAToolkit_INCLUDE_DIRS})
+cmake_policy(SET CMP0104 NEW)
 
 target_include_directories(EASEA PUBLIC ${Boost_INCLUDE_DIRS} ${libeasea_INCLUDE} ${CUDAToolkit_INCLUDE_DIRS})
 target_link_libraries(EASEA PUBLIC ${libeasea_LIB} $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX> $<$<CXX_COMPILER_ID:MSVC>:winmm> ${Boost_LIBRARIES})
