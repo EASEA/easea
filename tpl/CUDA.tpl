@@ -858,6 +858,7 @@ find_package(Boost REQUIRED program_options serialization)
 
 find_package(OpenMP REQUIRED)
 find_package(CUDAToolkit REQUIRED)
+cmake_policy(SET CMP0104 NEW)
 
 message(STATUS ${libeasea_INCLUDE} ${CLOGGER} ${CUDAToolkit_INCLUDE_DIRS})
 
