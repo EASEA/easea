@@ -265,16 +265,16 @@ params->parentReduction = 1;
     TIME_END(reduction);
     TIME_ACC(reduction);
 
+    //Receiving individuals if cluster island model
+    if(params->remoteIslandModel){
+  	this->receiveIndividuals();
+    }
+
     population->sortParentPopulation();
     bBest = population->Best;
     //if( this->params->printStats  || this->params->generateCSVFile )
     showPopulationStats(start); // (always calculate stats)
     EASEAEndGenerationFunction(this);
-
-    //Receiving individuals if cluster island model
-    if(params->remoteIslandModel){
-  this->receiveIndividuals();
-    }
 
     currentGeneration += 1;
   params->elitSize = tmpElitSize ;
