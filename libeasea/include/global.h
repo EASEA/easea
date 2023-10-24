@@ -16,7 +16,7 @@
 
 class CRandomGenerator;
 
-extern std::ofstream easena::log_file;
+extern std::ofstream easea::log_file;
 
 // used to track static value and ensure retrocompatibility :(
 struct globalRandomGeneratorWrapper {
@@ -41,7 +41,7 @@ extern int EZ_POP_SIZE;
 extern int OFFSPRING_SIZE;
 extern unsigned *EZ_current_generation;
 extern std::vector<char *> vArgv;
-extern easena::log_stream logg;
+extern easea::log_stream logg;
 
 #ifdef WIN32
 #define RNDMAX (RAND_MAX+1)

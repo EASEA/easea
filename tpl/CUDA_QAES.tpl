@@ -109,8 +109,8 @@ using namespace std;
 extern "C" __global__ void cudaEvaluatePopulation(void* d_population, unsigned popSize, TO* d_fitnesses, int offset);
 
 bool INSTEAD_EVAL_STEP = false;
-extern std::ofstream easena::log_file;
-extern easena::log_stream logg;
+extern std::ofstream easea::log_file;
+extern easea::log_stream logg;
 extern CEvolutionaryAlgorithm *EA;
 extern CEvolutionaryAlgorithm *EA;
 size_t limitGen;
@@ -566,7 +566,7 @@ void EvolutionaryAlgorithmImpl::runEvolutionaryLoop(){
         std::tm * ptm = std::localtime(&t);
         char buf_start_time[32];
 	std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
-        easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string(".log"));
+        easea::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string(".log"));
 
         /* koeff controls the local optimums - if koeff = 1, we are very probably in local optimum */
         bBest = new IndividualImpl();
@@ -1241,12 +1241,12 @@ target_compile_options(EASEA PRIVATE
 
 find_library(libeasea_LIB
 	NAMES libeasea easea
-	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easena ${CMAKE_INSTALL_PREFIX}/EASENA
-	PATH_SUFFIXES lib libeasea easea easena)
+	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easea ${CMAKE_INSTALL_PREFIX}/AESAE
+	PATH_SUFFIXES lib libeasea easea)
 find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
-	PATH_SUFFIXES include easena libeasea)
+	PATH_SUFFIXES include easea libeasea)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
 	add_definitions(-DBOOST_ALL_NO_LIB)

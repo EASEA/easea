@@ -238,7 +238,7 @@ ParametersImpl::ParametersImpl(std::string const& file, int argc, char* argv[]) 
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tmStart.time_since_epoch()) % 1000;
 	if (!this->noLogFile) {
 	    std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
-	    easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
+	    easea::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
 	    logg("DATA of TEST;", std::string(buf_start_time).c_str());
 	    logg("\n__RUN SETTINGS__");
 	    logg("SEED;", m_seed);
@@ -365,12 +365,12 @@ target_compile_options(EASEA PUBLIC
 
 find_library(libeasea_LIB
 	NAMES libeasea easea
-	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easena ${CMAKE_INSTALL_PREFIX}/EASENA
-	PATH_SUFFIXES lib libeasea easea easena)
+	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easea ${CMAKE_INSTALL_PREFIX}/AESAE
+	PATH_SUFFIXES lib libeasea easea)
 find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
-	PATH_SUFFIXES include easena libeasea)
+	PATH_SUFFIXES include easea libeasea)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
 	add_definitions(-DBOOST_ALL_NO_LIB)

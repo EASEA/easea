@@ -51,8 +51,8 @@ void EASEAGenerationFunctionBeforeReplacement(CEvolutionaryAlgorithm* evolutiona
 extern void evale_pop_chunk(CIndividual** pop, int popSize);
 extern bool INSTEAD_EVAL_STEP;
 extern bool bReevaluate;
-std::ofstream easena::log_file; 
-easena::log_stream logg;
+std::ofstream easea::log_file; 
+easea::log_stream logg;
 
 /*****
  * REAL CONSTRUCTOR
@@ -153,7 +153,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
   char buf_start_time[32];
   if (!params->noLogFile){
     std::strftime(buf_start_time, 32, "%Y-%m-%d_%H-%M-%S", ptm);
-    easena::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
+    easea::log_file.open(log_fichier_name.c_str() + std::string("_") + std::string(buf_start_time) + std::string("-") + std::to_string(ms.count()) + std::string(".log"));
   }
 
   TIME_ST(init);this->initializeParentPopulation();TIME_END(init);
@@ -190,7 +190,7 @@ void CEvolutionaryAlgorithm::runEvolutionaryLoop(){
 
   const char pbComplited = '#';
   const char pbIncomplited = '-';
-  easena::CProgressBar pb(pbCounts, pbComplited, pbIncomplited);
+  easea::CProgressBar pb(pbCounts, pbComplited, pbIncomplited);
 
   if (this->params->printStats == 0)
       pb.init();

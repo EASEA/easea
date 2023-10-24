@@ -752,12 +752,12 @@ target_compile_options(EASEA PRIVATE
 
 find_library(libeasea_LIB
 	NAMES libeasea easea
-	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easena ${CMAKE_INSTALL_PREFIX}/EASENA
-	PATH_SUFFIXES lib libeasea easea easena)
+	HINTS ${EZ_ROOT} ${CMAKE_INSTALL_PREFIX}/easea ${CMAKE_INSTALL_PREFIX}/AESAE
+	PATH_SUFFIXES lib libeasea easea)
 find_path(libeasea_INCLUDE
 	NAMES CLogger.h
 	HINTS ${EZ_ROOT}/libeasea ${CMAKE_INSTALL_PREFIX}/*/libeasea
-	PATH_SUFFIXES include easena libeasea)
+	PATH_SUFFIXES include easea libeasea)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
 	add_definitions(-DBOOST_ALL_NO_LIB)

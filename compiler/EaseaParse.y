@@ -766,7 +766,7 @@ int easeaParse(int argc, char *argv[]){
   TARGET=STD;
   bVERBOSE=0;
       
-    std::cout << "EASENA version: " << easea::version::as_string() << std::endl;
+    std::cout << "EASEA version: " << easea::version::as_string() << std::endl;
 
   while ((++nParamNb) < argc) {
     sTemp=&(argv[nParamNb][0]);
