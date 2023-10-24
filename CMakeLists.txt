@@ -32,14 +32,12 @@ endif(WIN32)
 ADD_LIBRARY(libeasea STATIC ${libeasea_src} ${libeasea_src_win})
 
 #Easea compiler
-SET(easena_src 
+SET(easea_src 
         ${CMAKE_SOURCE_DIR}/compiler/EaseaLex.cpp
         ${CMAKE_SOURCE_DIR}/compiler/EaseaParse.cpp
         ${CMAKE_SOURCE_DIR}/compiler/EaseaSym.cpp
         ${CMAKE_SOURCE_DIR}/compiler/EaseaYTools.cpp
         ${CMAKE_SOURCE_DIR}/compiler/easea.cpp
-        ${CMAKE_SOURCE_DIR}/compiler/NeuralLex.cpp
-        ${CMAKE_SOURCE_DIR}/compiler/NeuralParse.cpp
         ${CMAKE_SOURCE_DIR}/compiler/errors.cpp
 )
 ADD_EXECUTABLE(easea ${easea_src})
@@ -66,15 +64,15 @@ target_compile_options(easea PUBLIC
 	$<$<AND:$<NOT:$<CONFIG:Debug>>,$<CXX_COMPILER_ID:MSVC>>:/O2>
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG:FULL /W4 /fsanitize=address>
 	)
-TARGET_LINK_LIBRARIES(easena libeasea)
+TARGET_LINK_LIBRARIES(easea libeasea)
 target_link_options(libeasea PUBLIC
 	$<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr>
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/fsanitize=address>
 	)
-target_link_options(easena PUBLIC $<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr>
+target_link_options(easea PUBLIC $<$<AND:$<CONFIG:Debug>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=address -fsanitize=undefined -fno-sanitize=vptr>
 	$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/fsanitize=address>
 	)
-target_compile_definitions(easena PUBLIC $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>) # :(
+target_compile_definitions(easea PUBLIC $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>) # :(
 
 ### Includes ###
 
@@ -91,10 +89,9 @@ if (USE_OPENMP)
 endif ()
 if (OpenMP_CXX_FOUND)
 	target_link_libraries(libeasea PUBLIC OpenMP::OpenMP_CXX)
-	target_link_libraries(libeasna PUBLIC OpenMP::OpenMP_CXX)
 else ()
   	# Disable warnings for all the unknown OpenMP pragmas.
-	target_compile_options(libeasna PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-unknown-pragmas>)
+	target_compile_options(libeasea PUBLIC $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wno-unknown-pragmas>)
 endif ()
 
 ## Boost
