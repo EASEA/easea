@@ -340,7 +340,7 @@ if (!params->noLogFile){
     logg("Result: ");
     logg("Best fitness: ", population->Best->getFitness());
     logg("Best individual: ");
-    logg(population->Best);
+    logg(*population->Best);
 //    population->Best->printOn(std::cout);
     logg("\n");
     logg("Elapsed time: ", elapsed_seconds.count(), " s");
