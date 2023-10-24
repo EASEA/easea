@@ -52,7 +52,7 @@ class Parameters {
     float pMutationPerGene;
     CRandomGenerator* randomGenerator;
 
-    int seed;
+    unsigned int seed;
 
     unsigned int parentPopulationSize;
     unsigned int offspringPopulationSize;

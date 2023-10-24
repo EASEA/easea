@@ -26,7 +26,7 @@ Parameters::Parameters(std::string const& filename, int argc, char* argv[]) : op
 	alwaysEvaluate = setVariable("alwaysEvaluate", false);
 
 	seed = setVariable("seed", std::random_device{}()); // use hardware based entropy as seed
-	globGen = decltype(globGen){static_cast<unsigned int>(seed)};
+	globGen = decltype(globGen){seed};
 	globalRandomGenerator = &globGen;
 	randomGenerator = globalRandomGenerator;
 

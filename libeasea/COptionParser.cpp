@@ -46,7 +46,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
     options.add_options()
         ("help,h", "produce help message")
 	("version,v", "Print version")
-        ("seed,s", po::value<int>(), "set the global seed of the pseudo random generator")
+        ("seed,s", po::value<unsigned>(), "set the global seed of the pseudo random generator")
         ("popSize,p", po::value<int>(), "set the population size")
         ("nbOffspring", po::value<float>(), "set the offspring population size")
         ("survivingParents", po::value<float>(), "set the reduction size for parent population")

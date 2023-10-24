@@ -296,8 +296,8 @@ params->parentReduction = 1;
     else{
 	
 	/* Logging out the results */
-	LOG_MSG(msgType::INFO, "Seed: %d", params->seed);
-	LOG_MSG(msgType::INFO, "Best fitness: %ld", static_cast<long>(population->Best->getFitness()));
+	LOG_MSG(msgType::INFO, "Seed: %u", params->seed);
+	LOG_MSG(msgType::INFO, "Best fitness: %g", population->Best->getFitness());
 	LOG_MSG(msgType::INFO, "Elapsed time: %f", elapsed_seconds.count());
     }
 
