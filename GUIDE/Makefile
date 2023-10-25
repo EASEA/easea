@@ -61,13 +61,13 @@ endif
 
 	@echo "\n##### Installing executable #####\n"
 
-	@if test -f /usr/local/easena/bin/guide; then sudo rm -f /usr/local/easena/bin/guide; fi
-	@if test -f /usr/local/easena/bin/easea-compiler-app; then sudo rm -f /usr/local/easena/bin/easea-compiler-app; fi
+	@if test -f /usr/local/easea/bin/guide; then sudo rm -f /usr/local/easea/bin/guide; fi
+	@if test -f /usr/local/easea/bin/easea-compiler-app; then sudo rm -f /usr/local/easea/bin/easea-compiler-app; fi
 
 ifdef LOC
 	@sudo cp guide/guide $(LOC)
 else
-	@sudo cp guide/guide /usr/local/easena/bin/guide
+	@sudo cp guide/guide /usr/local/easea/bin/guide
 endif
 
 	@printf "\033[32m\n##### Installation complete #####\n\n\033[0m"
@@ -80,7 +80,7 @@ uninstall:
 
 	@echo "\n##### Uninstalling executable #####\n"
 
-	@sudo rm -rf /usr/local/easena/bin/guide
+	@sudo rm -rf /usr/local/easea/bin/guide
 
 	@printf "\033[32m\n##### Uninstallation completed #####\n\n\033[0m"
 

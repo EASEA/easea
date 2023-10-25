@@ -267,7 +267,7 @@ export class Compile {
                 var ez_makefile = this.ez_file_address.substring(0, this.ez_file_address.length - 2);
                 ez_makefile = ez_makefile.concat('mak');
 
-                var run = output_compile.compile('easena', params, dir_path);
+                var run = output_compile.compile('easea', params, dir_path);
 
                 output_compile.action_label.setText('Compiling ...');
                 output_compile.action_animation.setFileName(cwd() + '/src/assets/loader2.gif');
