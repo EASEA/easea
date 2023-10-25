@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iomanip>
 
-namespace easena {
+namespace easea {
     extern std::ofstream log_file;
 
     inline bool print() {

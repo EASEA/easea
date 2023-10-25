@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 
-namespace easena {
+namespace easea {
 
 class CPrintTable {
 

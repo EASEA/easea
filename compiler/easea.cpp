@@ -7,10 +7,7 @@
 
 #include "Easea.h"
 #include "EaseaLex.h"
-#include "NeuralLex.h"
 #include "EaseaParse.hpp"
-#include "NeuralParse.hpp"
-#include "../libeasna/src/perceptron.hpp"
 #include <version.h>
 #include <config.h>
 #include <iostream>
@@ -21,8 +18,7 @@
 enum Mode {ERROR, EVOLUTIONNARY_ALGORITHM, NEURAL_ALGORITHM, MIXED};
 
 void usage() {
-	std::cout << "EASEA : ./easena [-asrea | -cmaes | -cuda | -cuda_mo | -cuda_gp | -fastemo | -gp | -memetic | -nsgaii | nsgaiii | cdas | -std | -std_mo | -v ] file.ez | [--version]" << std::endl;
-	std::cout << "EASNA : ./easena [--help] [--help.activation] [--help.examples] [--help.randomDistribution] [--batch.size int] [--batch.error (average|sum)] [--compute string] [--learn.online string] [--learn.batch string] [--parse stringfile.nz] [--save.architecture stringfile.nz] [--save.weights string] [--term] [--update.weights string]" << std::endl;
+	std::cout << "EASEA : ./easea [-asrea | -cmaes | -cuda | -cuda_mo | -cuda_gp | -fastemo | -gp | -memetic | -nsgaii | nsgaiii | cdas | -std | -std_mo | -v ] file.ez | [--version]" << std::endl;
 }
 
 Mode detectModeUsed(int argc, char** argv) {
@@ -34,14 +30,14 @@ Mode detectModeUsed(int argc, char** argv) {
 
 	char *sTemp;
 	if (argc == 1){
-	    std::cerr << "Error: expected argument following easena\n";
+	    std::cerr << "Error: expected argument following easea\n";
 	    usage();
 	    exit(1);
 	}
         if ((argv[1][0]=='-')&&(argv[1][1]=='-')){
             sTemp=&(argv[1][2]);
             if (!mystricmp(sTemp,"version")){
-             std::cout << "EASENA version " << easea::version::as_string() << "\n" <<
+             std::cout << "EASEA version " << easea::version::as_string() << "\n" <<
 		   "Compiled in " << EZ_BUILD_TYPE << " mode using " << EZ_BUILT_BY << " " << EZ_BUILT_BY_VERSION << "\n";
 	     exit(0);
             }else{
@@ -82,14 +78,10 @@ int main(int argc, char** argv)
 			break;
 
 		case NEURAL_ALGORITHM:
-			EASNAmain(argc,argv);
-			break;
-
 		case MIXED:
-			std::cout << "EASENA !!! Coming soon ..." << std::endl;
-			neuralParse(argc, argv);
+			std::cout << "Sorry, .nz/.nez files are no longer supported as of version 3.2.0" << std::endl;
+			exit(1);
 			break;
-
 		case ERROR:
 			std::cout << "Usage :" << std::endl;
 			usage();

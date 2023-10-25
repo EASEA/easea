@@ -79,11 +79,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: installed-Linux
-          path: /usr/local/easena
+          path: /usr/local/easea
 
       - name: Build examples
         run: |
-          EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --ignore-errors "CUDA_GP CUDA_STD cmaes_cuda_test regression_cuda memetic_cuda memetic_cuda_custom" | tee examples.output
+          EZ_PATH=/usr/local/easea/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easea/bin/easea" --ignore-errors "CUDA_GP CUDA_STD cmaes_cuda_test regression_cuda memetic_cuda memetic_cuda_custom" | tee examples.output
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
@@ -142,11 +142,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: installed-MacOS
-          path: /usr/local/easena
+          path: /usr/local/easea
 
       - name: Build examples
         run: |
-          EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --no-cuda | tee examples.output
+          EZ_PATH=/usr/local/easea/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easea/bin/easea" --no-cuda | tee examples.output
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
@@ -211,11 +211,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: installed-Windows
-          path: C:/Program Files (x86)/EASENA/
+          path: C:/Program Files (x86)/EASEA/
 
       - name: Build examples
         run: |
-          EZ_PATH="C:/Program Files (x86)/EASENA/" bash ./examples/build-all.sh "C:/Program Files (x86)/EASENA/bin/easena.exe" --no-cuda | tee examples.output
+          EZ_PATH="C:/Program Files (x86)/EASEA/" bash ./examples/build-all.sh "C:/Program Files (x86)/EASEA/bin/easea.exe" --no-cuda | tee examples.output
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
@@ -435,7 +435,7 @@ jobs:
       - name: Test templates for UB, leaks and OOB
         if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
         run: |
-          CC=clang CXX=clang++ EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --no-cuda --ez-args "--savePopulation 1 --nbGen 3 --popSize 100 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --examples-directory ${{github.workspace}}/examples/templates --verbose | tee examples.output
+          CC=clang CXX=clang++ EZ_PATH=/usr/local/easea/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easea/bin/easea" --no-cuda --ez-args "--savePopulation 1 --nbGen 3 --popSize 100 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --examples-directory ${{github.workspace}}/examples/templates --verbose | tee examples.output
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
@@ -443,7 +443,7 @@ jobs:
       - name: Test templates for errors when loading population from .pop
         if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
         run: |
-         CC=clang CXX=clang++ EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --ez-args "--startFromFile 1 --nbGen 3 --popSize 100 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --no-cuda --examples-directory ${{github.workspace}}/examples/templates
+         CC=clang CXX=clang++ EZ_PATH=/usr/local/easea/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easea/bin/easea" --ez-args "--startFromFile 1 --nbGen 3 --popSize 100 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --no-cuda --examples-directory ${{github.workspace}}/examples/templates
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash
@@ -451,7 +451,7 @@ jobs:
       - name: Test remote island model for UB, leaks and OOB
         if: ${{ always() && steps.cmake-install.conclusion == 'success' }}
         run: |
-         CC=clang CXX=clang++ EZ_PATH=/usr/local/easena/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easena/bin/easena" --ez-args "--nbGen 1000 --popSize 1000 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --network --no-cuda --examples-directory ${{github.workspace}}/examples/templates
+         CC=clang CXX=clang++ EZ_PATH=/usr/local/easea/ bash ${{github.workspace}}/examples/build-all.sh "/usr/local/easea/bin/easea" --ez-args "--nbGen 1000 --popSize 1000 --nbOffspring 1.0" --cmake-args "-DCMAKE_BUILD_TYPE=Debug -DSANITIZE=ON" --verbose --network --no-cuda --examples-directory ${{github.workspace}}/examples/templates
           result_code=${PIPESTATUS[0]}
           exit $result_code
         shell: bash

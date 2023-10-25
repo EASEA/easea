@@ -3,7 +3,7 @@
 #include <chrono>
 #include <iostream>
 
-namespace easena {
+namespace easea {
 
 class CProgressBar {
 

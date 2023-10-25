@@ -110,7 +110,7 @@ void parseArguments(const char* parametersFileName, int ac, char** av, std::uniq
 	    std::cout << options;
 	    exit(0);
         } else if (vm->count("version")) {
-	   std::cout << "EASENA version " << easea::version::as_string() << "\n" <<
+	   std::cout << "EASEA version " << easea::version::as_string() << "\n" <<
 		   "Compiled in " << EZ_BUILD_TYPE << " mode using " << EZ_BUILT_BY << " " << EZ_BUILT_BY_VERSION << "\n";
 	   exit(0);
 	}

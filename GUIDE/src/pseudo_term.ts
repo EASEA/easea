@@ -127,7 +127,7 @@ export class Pseudo_term {
                 this.text.insertPlainText('\n$ ' + command + ' ' + res + '\n');
         }
 
-        // process.env.EZ_PATH = '/usr/local/easena/';
+        // process.env.EZ_PATH = '/usr/local/easea/';
         let child = spawnSync(command, array_params, {
             cwd: dir,
             env: process.env
@@ -169,7 +169,7 @@ export class Pseudo_term {
         for(let i = 0; i < params_tmp.length; i++)
             array_params.push(params_tmp[i]);
 
-        // process.env.EZ_PATH = '/usr/local/easena/';
+        // process.env.EZ_PATH = '/usr/local/easea/';
 
         let child = spawn('stdbuf', array_params, {     // stdbuf allows reducing buffer size to line size (live terminal)
             cwd: dir,
